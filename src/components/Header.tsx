@@ -5,11 +5,12 @@ import { FilterDropdown } from './FilterDropdown';
 interface HeaderProps {
     onPostClick: () => void;
     onLogoClick: () => void;
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
 }
 
-export function Header({ onPostClick, onLogoClick }: HeaderProps) {
+export function Header({ onPostClick, onLogoClick, searchQuery, onSearchChange }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-lg py-4 border-b border-white/20">
@@ -44,7 +45,7 @@ export function Header({ onPostClick, onLogoClick }: HeaderProps) {
                 <input 
                   type="text" 
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => onSearchChange(e.target.value)}
                   placeholder="Search by title, designer, or category..." 
                   className="w-full h-12 pl-14 pr-16 rounded-full border-2 border-[#FEC312] focus:outline-none focus:ring-4 focus:ring-[#FEC312]/10 transition-all font-sans text-base placeholder:text-gray-400"
                 />
@@ -69,7 +70,7 @@ export function Header({ onPostClick, onLogoClick }: HeaderProps) {
                  }}
                  onClose={() => setIsFilterOpen(false)}
                  searchQuery={searchQuery}
-                 onSearchChange={setSearchQuery}
+                 onSearchChange={onSearchChange}
                  className="top-0 left-0 w-full shadow-2xl"
             />
           </div>
