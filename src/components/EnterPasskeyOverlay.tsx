@@ -24,7 +24,7 @@ export function EnterPasskeyOverlay({ avatar, onClose, onSuccess }: EnterPasskey
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-white w-full max-w-sm rounded-3xl p-8 relative shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         
         <button onClick={onClose} className="absolute top-6 right-6 text-gray-400 hover:text-black transition-colors">

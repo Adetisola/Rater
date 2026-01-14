@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
@@ -70,7 +70,7 @@ export function FilterDropdown({
       
       {/* Expanded Container */}
       <div className={cn(
-        "absolute bg-white rounded-[2rem] border-2 border-[#FEC312] z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden shadow-2xl",
+        "absolute bg-white rounded-4xl border-2 border-[#FEC312] z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden shadow-2xl",
         className
       )}>
         

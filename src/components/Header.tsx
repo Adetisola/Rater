@@ -30,7 +30,7 @@ export function Header({
       <div className="max-w-[1600px] mx-auto px-6 flex items-center justify-between gap-6">
         
         {/* LOGO */}
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <div 
             onClick={onLogoClick}
             className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"

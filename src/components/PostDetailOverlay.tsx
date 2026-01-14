@@ -161,7 +161,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
             {/* FOOTER */}
             <div className="p-4 border-t border-gray-100 bg-gray-50 text-xs text-center text-gray-400">
                 attribution is claimed by the submitter and not independently verified.
-                <button className="ml-2 underline hover:text-gray-600 flex items-center justify-center gap-1 inline-flex">
+                <button className="ml-2 underline hover:text-gray-600 items-center justify-center gap-1 inline-flex">
                     <Flag className="w-3 h-3" /> Report
                 </button>
             </div>
