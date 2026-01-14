@@ -3,7 +3,7 @@ import { Header } from './components/Header';
 import { MasonryGrid } from './components/MasonryGrid';
 import { SubmitPage } from './components/SubmitPage';
 import { PostDetailOverlay } from './components/PostDetailOverlay';
-import { MOCK_POSTS, type Post } from './logic/mockData';
+import { MOCK_POSTS, MOCK_AVATARS, type Post } from './logic/mockData';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'submit'>('home');
@@ -13,10 +13,13 @@ function App() {
   // Filter posts based on search query
   const filteredPosts = MOCK_POSTS.filter(post => {
     const query = searchQuery.toLowerCase();
+    const designer = MOCK_AVATARS[post.designerId];
+    const designerName = designer ? designer.name.toLowerCase() : '';
+    
     return (
       post.title.toLowerCase().includes(query) ||
       post.category.toLowerCase().includes(query) ||
-      post.designerId.toLowerCase().includes(query)
+      designerName.includes(query)
     );
   });
 
