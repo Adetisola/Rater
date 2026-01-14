@@ -45,7 +45,7 @@ export function PostCard({ post }: { post: Post }) {
             </div>
 
             {/* CONTENT AREA */}
-            <div className="px-4 pt-4 pb-2">
+            <div className="px-4 pt-4 pb-3">
             
             {/* ROW 1: TAG & TIME */}
             <div className="flex justify-between items-center mb-3">
@@ -79,13 +79,13 @@ export function PostCard({ post }: { post: Post }) {
             <div className="pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
                 
                 {/* LEFT: Count */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-start gap-1.5">
                     <img src="/src/assets/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.stats.commentCount}</span>
+                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.rating.reviewCount}</span>
                 </div>
 
                 {/* RIGHT: Ratings */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-start gap-1.5">
                     <div className="flex gap-0.5 group-hover:brightness-0 group-hover:invert transition-all">
                         {[1,2,3,4,5].map(i => (
                             <img 

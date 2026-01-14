@@ -1,4 +1,4 @@
-export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Brand Identity' | 'Poster Design' | 'Flyer Design' | 'Social Media Design';
+export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Brand Identity Design' | 'Poster Design' | 'Flyer Design' | 'Social Media Design';
 
 export interface Avatar {
   id: string;
@@ -32,12 +32,9 @@ export interface Post {
   imageUrl: string;
   designerId: string;
   createdAt: string;
-  stats: {
-    commentCount: number;
-  };
   rating: {
     average: number;
-    count: number;
+    reviewCount: number;
     isLocked: boolean;
   };
 }
@@ -45,7 +42,7 @@ export interface Post {
 // --- MOCK DATABASE ---
 
 export const CATEGORIES: Category[] = [
-  'Web Design', 'Mobile App Design', 'Brand Identity', 
+  'Web Design', 'Mobile App Design', 'Brand Identity Design', 
   'Logo Design', 'Poster Design', 'Flyer Design', 'Social Media Design'
 ];
 
@@ -83,19 +80,17 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&q=80&w=800', // Placeholder
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-    stats: { commentCount: 15 },
-    rating: { average: 4.5, count: 15, isLocked: false }
+    rating: { average: 4.5, reviewCount: 15, isLocked: false }
   },
   {
     id: 'post_2',
     title: 'Coffee Brand Identity',
     description: 'Rebranding for a local coffee shop focusing on organic themes.',
-    category: 'Brand Identity',
+    category: 'Brand Identity Design',
     imageUrl: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_2',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-    stats: { commentCount: 2 },
-    rating: { average: 0, count: 2, isLocked: true }
+    rating: { average: 0, reviewCount: 2, isLocked: true }
   },
   {
     id: 'post_3',
@@ -105,7 +100,6 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-    stats: { commentCount: 5 },
-    rating: { average: 4.8, count: 5, isLocked: false }
+    rating: { average: 4.8, reviewCount: 5, isLocked: false }
   }
 ];

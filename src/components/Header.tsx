@@ -26,7 +26,7 @@ export function Header({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-lg py-4 border-b border-white/20">
+    <header className="sticky top-0 z-50 w-full bg-white/0 backdrop-blur-xl py-4 border-b border-white/20 rounded-bl-[30px] rounded-br-[30px]">
       <div className="max-w-[1600px] mx-auto px-6 flex items-center justify-between gap-6">
         
         {/* LOGO */}
@@ -91,12 +91,12 @@ export function Header({
 
         {/* ACTIONS */}
         <div className="flex items-center">
-            <Button 
+            <Button
                 variant="outline" 
                 onClick={onPostClick}
-                className="h-12 rounded-full px-8 text-base font-semibold gap-2 group"
+                className="h-12 rounded-full bg-transparent px-5 text-xl font-medium gap-2 group"
             >
-                <img src="/src/assets/icons/upload.svg" alt="Upload" className="h-5 w-5 transition-all group-hover:brightness-0 group-hover:invert" />
+                <img src="/src/assets/icons/upload.svg" alt="Upload" className="h-5 w-5 transition-all duration-300 group-hover:brightness-0 group-hover:invert" />
                 Post
             </Button>
         </div>

@@ -39,7 +39,7 @@ function App() {
       case 'Oldest':
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       case 'Most Reviewed':
-        return b.stats.commentCount - a.stats.commentCount;
+        return b.rating.reviewCount - a.rating.reviewCount;
       default:
         return 0;
     }

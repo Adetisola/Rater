@@ -27,7 +27,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   };
 
   // Mock unlock logic
-  const totalReviews = post.rating.count + reviews.length;
+  const totalReviews = post.rating.reviewCount + reviews.length;
   const isLocked = totalReviews < 3;
 
   return (

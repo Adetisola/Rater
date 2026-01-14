@@ -106,7 +106,7 @@ export function FilterDropdown({
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="w-64 h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
+                        className="w-50 h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
                     >
                         <span className="text-sm font-medium text-[#111111]">{sortBy}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -144,10 +144,10 @@ export function FilterDropdown({
                     key={cat}
                     onClick={() => toggleCategory(cat)}
                     className={cn(
-                    "group px-4 py-2 rounded-full border-[1.5px] text-sm font-medium transition-all duration-200 flex items-center gap-2.5",
+                    "group pl-1.5 pr-2.5 py-2 rounded-full border-2 text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                     isSelected 
-                        ? "bg-[#F5F5F5] border-[#111111] text-[#111111]" 
-                        : "bg-white border-[#E0E0E0] text-[#111111] hover:border-[#FEC312]"
+                        ? "bg-[#ebebeb] border-[#727272] text-[#111111]" 
+                        : "bg-white border-[#E0E0E0] text-[#111111] hover:bg-[#fafafa]"
                     )}
                 >
                     {/* Toggle Circle Indicator */}
@@ -155,7 +155,7 @@ export function FilterDropdown({
                         "w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200",
                         isSelected
                             ? "bg-[#FEC312]"
-                            : "border-[1.5px] border-[#E0E0E0] group-hover:border-[#FEC312]"
+                            : "border-[1.5px] border-[#E0E0E0]"
                     )}>
                         {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
                     </div>
@@ -173,12 +173,12 @@ export function FilterDropdown({
                 onSortChange('Highest Rated');
                 onCategoryChange([]);
                 }}
-                className="px-6 py-2 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
+                className="px-5 py-2 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
             >
                 Reset
             </button>
             <Button 
-                className="h-11 rounded-full px-10 bg-white border-2 border-[#FEC312] text-[#111111] font-bold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
+                className="rounded-full px-5 bg-white border-2 border-[#FEC312] text-[#111111] font-bold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
                 onClick={onClose}
             >
                 Apply
