@@ -33,7 +33,6 @@ export interface Post {
   designerId: string;
   createdAt: string;
   stats: {
-    views: number;
     commentCount: number;
   };
   rating: {
@@ -84,7 +83,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&q=80&w=800', // Placeholder
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-    stats: { views: 120, commentCount: 15 },
+    stats: { commentCount: 15 },
     rating: { average: 4.5, count: 15, isLocked: false }
   },
   {
@@ -95,7 +94,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_2',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
-    stats: { views: 45, commentCount: 2 },
+    stats: { commentCount: 2 },
     rating: { average: 0, count: 2, isLocked: true }
   },
   {
@@ -106,7 +105,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(), // 5 days ago
-    stats: { views: 890, commentCount: 5 },
+    stats: { commentCount: 5 },
     rating: { average: 4.8, count: 5, isLocked: false }
   }
 ];
