@@ -1,4 +1,5 @@
 import type { Post } from '../logic/mockData';
+import { formatTimeAgo } from '../lib/utils';
 
 export function PostCard({ post }: { post: Post }) {
   // Mock badges logic based on ID for visual replication
@@ -45,7 +46,7 @@ export function PostCard({ post }: { post: Post }) {
             </div>
 
             {/* CONTENT AREA */}
-            <div className="px-4 pt-4 pb-3">
+            <div className="px-4 pt-4 pb-2">
             
             {/* ROW 1: TAG & TIME */}
             <div className="flex justify-between items-center mb-3">
@@ -53,7 +54,7 @@ export function PostCard({ post }: { post: Post }) {
                     {post.category}
                 </span>
                 <span className="text-[10px] text-[#999999] font-medium group-hover:text-white/80 transition-colors">
-                    6d ago
+                    {formatTimeAgo(post.createdAt)}
                 </span>
             </div>
 
@@ -64,7 +65,7 @@ export function PostCard({ post }: { post: Post }) {
 
             {/* ROW 3: DESCRIPTION */}
             <p className="text-xs text-[#111111] leading-relaxed mb-4 line-clamp-3 group-hover:text-white/90 transition-colors">
-                On the other hand criteria of the point of the task analysis can partly be used for the impact steady practice.
+                {post.description}
             </p>
 
             {/* ROW 4: AUTHOR */}
