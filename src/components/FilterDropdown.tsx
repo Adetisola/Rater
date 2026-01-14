@@ -119,7 +119,7 @@ export function FilterDropdown({
                             <button
                             key={option}
                             onClick={() => {
-                                setSortBy(option);
+                                onSortChange(option);
                                 setIsSortOpen(false);
                             }}
                             className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#111111] hover:bg-gray-50 flex items-center justify-between transition-colors"
@@ -138,7 +138,7 @@ export function FilterDropdown({
             <label className="block text-sm font-bold text-[#111111] mb-3">Category</label>
             <div className="flex flex-wrap gap-2.5">
                 {CATEGORIES.map(cat => {
-                const isSelected = categories.includes(cat);
+                const isSelected = selectedCategories.includes(cat);
                 return (
                 <button
                     key={cat}
@@ -170,8 +170,8 @@ export function FilterDropdown({
             <div className="flex items-center justify-start gap-4 pt-6 border-t border-[#F5F5F5]">
             <button 
                 onClick={() => {
-                setSortBy('Highest Rated');
-                setCategories([]);
+                onSortChange('Highest Rated');
+                onCategoryChange([]);
                 }}
                 className="px-6 py-2 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
             >
@@ -179,10 +179,7 @@ export function FilterDropdown({
             </button>
             <Button 
                 className="h-11 rounded-full px-10 bg-white border-2 border-[#FEC312] text-[#111111] font-bold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
-                onClick={() => {
-                    onApply({ sortBy, categories });
-                    onClose();
-                }}
+                onClick={onClose}
             >
                 Apply
             </Button>
