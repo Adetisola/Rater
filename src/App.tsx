@@ -9,18 +9,40 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'submit'>('home');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('Highest Rated');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
-  // Filter posts based on search query
+  // Filter & Sort posts
   const filteredPosts = MOCK_POSTS.filter(post => {
+    // 1. Search Filter
     const query = searchQuery.toLowerCase();
     const designer = MOCK_AVATARS[post.designerId];
     const designerName = designer ? designer.name.toLowerCase() : '';
-    
-    return (
+    const matchesSearch = 
       post.title.toLowerCase().includes(query) ||
       post.category.toLowerCase().includes(query) ||
-      designerName.includes(query)
-    );
+      designerName.includes(query);
+
+    // 2. Category Filter
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(post.category);
+
+    return matchesSearch && matchesCategory;
+  }).sort((a, b) => {
+    // 3. Sorting Logic
+    switch (sortBy) {
+      case 'Highest Rated':
+        return b.rating.average - a.rating.average;
+      case 'Lowest Rated':
+        return a.rating.average - b.rating.average;
+      case 'Newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'Oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case 'Most Reviewed':
+        return b.stats.commentCount - a.stats.commentCount;
+      default:
+        return 0;
+    }
   });
 
   return (
@@ -30,6 +52,10 @@ function App() {
         onLogoClick={() => setCurrentPage('home')} 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        selectedCategories={selectedCategories}
+        onCategoryChange={setSelectedCategories}
       />
       
       <main className="flex-1 w-full pt-8">

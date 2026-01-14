@@ -7,9 +7,22 @@ interface HeaderProps {
     onLogoClick: () => void;
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    sortBy: string;
+    onSortChange: (sort: string) => void;
+    selectedCategories: string[];
+    onCategoryChange: (categories: string[]) => void;
 }
 
-export function Header({ onPostClick, onLogoClick, searchQuery, onSearchChange }: HeaderProps) {
+export function Header({ 
+    onPostClick, 
+    onLogoClick, 
+    searchQuery, 
+    onSearchChange,
+    sortBy,
+    onSortChange,
+    selectedCategories,
+    onCategoryChange
+}: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   return (
@@ -64,13 +77,13 @@ export function Header({ onPostClick, onLogoClick, searchQuery, onSearchChange }
             {/* Expanded Search + Filter Panel Overlay */}
             <FilterDropdown 
                  isOpen={isFilterOpen}
-                 onApply={(filters) => {
-                   console.log('Filters applied:', filters);
-                   setIsFilterOpen(false);
-                 }}
                  onClose={() => setIsFilterOpen(false)}
                  searchQuery={searchQuery}
                  onSearchChange={onSearchChange}
+                 sortBy={sortBy}
+                 onSortChange={onSortChange}
+                 selectedCategories={selectedCategories}
+                 onCategoryChange={onCategoryChange}
                  className="top-0 left-0 w-full shadow-2xl"
             />
           </div>

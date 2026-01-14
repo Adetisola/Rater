@@ -11,9 +11,12 @@ export interface FilterState {
 interface FilterDropdownProps {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (filters: FilterState) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  sortBy: string;
+  onSortChange: (sort: string) => void;
+  selectedCategories: string[];
+  onCategoryChange: (categories: string[]) => void;
   className?: string; // Allow positioning customization
 }
 
@@ -35,19 +38,26 @@ const CATEGORIES = [
   'Mobile App Design'
 ];
 
-export function FilterDropdown({ isOpen, onClose, onApply, searchQuery, onSearchChange, className }: FilterDropdownProps) {
+export function FilterDropdown({ 
+  isOpen, 
+  onClose, 
+  searchQuery, 
+  onSearchChange, 
+  sortBy,
+  onSortChange,
+  selectedCategories,
+  onCategoryChange,
+  className 
+}: FilterDropdownProps) {
   if (!isOpen) return null;
 
-  const [sortBy, setSortBy] = useState('Highest Rated');
-  const [categories, setCategories] = useState<string[]>([]);
   const [isSortOpen, setIsSortOpen] = useState(false);
 
   const toggleCategory = (cat: string) => {
-    setCategories(prev => 
-      prev.includes(cat) 
-        ? prev.filter(c => c !== cat) 
-        : [...prev, cat]
-    );
+    const newCategories = selectedCategories.includes(cat)
+      ? selectedCategories.filter(c => c !== cat)
+      : [...selectedCategories, cat];
+    onCategoryChange(newCategories);
   };
 
   return (
