@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Button } from './ui/Button';
+import { Check } from 'lucide-react';
+import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
 import { CATEGORIES, MOCK_AVATARS, type Avatar } from '../logic/mockData';
 import { AvatarPicker } from './AvatarPicker';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
-import { EnterPasskeyOverlay } from './EnterPasskeyOverlay';
+
 
 export function SubmitPage() {
   // FORM STATE
@@ -18,11 +20,14 @@ export function SubmitPage() {
   // IDENTITY STATE
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [showCreateOverlay, setShowCreateOverlay] = useState(false);
-  const [showPasskeyOverlay, setShowPasskeyOverlay] = useState(false);
+  const [avatarSearch, setAvatarSearch] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // MOCKED AVATARS (In real app, fetch this)
+  // MOCKED AVATARS
   const avatars = Object.values(MOCK_AVATARS);
+  const filteredAvatars = avatars.filter(avatar => 
+    avatar.name.toLowerCase().includes(avatarSearch.toLowerCase())
+  );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -33,14 +38,7 @@ export function SubmitPage() {
     }
   };
 
-  const handleAvatarSelect = (avatar: Avatar) => {
-    setSelectedAvatar(avatar);
-    setShowPasskeyOverlay(true);
-  };
-
-  const handlePasskeySuccess = () => {
-    setShowPasskeyOverlay(false);
-    
+  const handleSubmit = () => {
     // SUBMIT LOGIC HERE
     console.log("Submitting:", { title, category, description, image, avatarId: selectedAvatar?.id });
     setIsSuccess(true);
@@ -48,33 +46,29 @@ export function SubmitPage() {
 
   if (isSuccess) {
       return (
-          <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
-                  <img src="/src/assets/icons/status-success.svg" className="w-8 h-8" alt="Success" />
+          <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
+              <div className="w-20 h-20 bg-[#009241]/10 rounded-full flex items-center justify-center mb-6 text-[#009241]">
+                  <img src="/src/assets/icons/status-success.svg" className="w-10 h-10" alt="Success" />
               </div>
-              <h1 className="text-3xl font-bold mb-2">Design Submitted!</h1>
-              <p className="text-gray-500 max-w-md">Your work has been posted successfully. Get ready for some honest feedback.</p>
-              <Button className="mt-8" onClick={() => window.location.reload()}>Post Another</Button>
+              <h1 className="text-3xl font-bold mb-4 text-[#111111]">Post Submitted!</h1>
+              <p className="text-gray-500 max-w-md mx-auto leading-relaxed">Your design has been posted successfully. The community will start reviewing it shortly.</p>
+              <Button className="mt-10 px-8 py-6 text-base rounded-full" onClick={() => window.location.reload()}>Post Another Work</Button>
           </div>
       );
   }
 
   return (
-    <div className="max-w-3xl mx-auto pb-20">
+    <div className="max-w-[700px] mx-auto pb-32 pt-8 px-6">
       
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Submit Work</h1>
-        <p className="text-gray-500">Share your latest design for structured critique.</p>
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-3 text-[#111111]">Post your Work</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        
-        {/* LEFT COLUMN: CONTENT FORM */}
-        <div className="space-y-6">
+      <div className="space-y-10">
            
            {/* IMAGE UPLOAD */}
-           <div className="group relative w-full aspect-4/3 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer overflow-hidden">
+           <div className="group relative w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] rounded-[32px] flex flex-col items-center justify-center hover:bg-[#EBEBEB] transition-all cursor-pointer overflow-hidden">
                <input 
                  type="file" 
                  accept="image/*" 
@@ -85,81 +79,154 @@ export function SubmitPage() {
                {imagePreview ? (
                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                ) : (
-                   <>
-                     <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-3">
-                        <img src="/src/assets/icons/upload.svg" className="w-5 h-5 opacity-60" alt="Upload" />
+                   <div className="flex flex-col items-center text-center p-6">
+                     <div className="w-16 h-16 mb-4 flex items-center justify-center">
+                        <img src="/src/assets/icons/upload.svg" className="w-8 h-8 opacity-40 group-hover:opacity-60 transition-opacity" alt="Upload" />
                      </div>
-                     <p className="text-sm font-medium text-gray-500 group-hover:text-black transition-colors">Upload Design</p>
-                     <p className="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
-                   </>
+                     <p className="text-lg font-bold text-[#111111] mb-1">Drop your Design</p>
+                     <p className="text-sm text-gray-400">Supports PNG, JPG (Max 10MB)</p>
+                   </div>
                )}
            </div>
 
-           <div className="space-y-4">
-                <Input 
-                    placeholder="Project Title" 
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                />
+           {/* TITLE & DESCRIPTION */}
+           <div className="space-y-6">
+                <div>
+                     <Input 
+                        placeholder="Title" 
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="h-14 text-lg px-6 rounded-2xl border-2 border-[#111111] focus:ring-0 placeholder:text-gray-400 font-medium"
+                    />
+                </div>
                 
-                <div className="flex flex-wrap gap-2">
-                    {CATEGORIES.map(cat => (
+                <div className="relative">
+                    <Textarea 
+                        placeholder="Description" 
+                        value={description}
+                        maxLength={400}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="min-h-[180px] text-base p-6 pb-12 rounded-2xl border-2 border-[#111111] focus:ring-0 placeholder:text-gray-400 resize-none font-medium"
+                    />
+                    <div className="absolute bottom-4 right-4 text-xs font-bold text-gray-400 pointer-events-none">
+                        {description.length} / 400 chars
+                    </div>
+                </div>
+           </div>
+
+           {/* CATEGORIES */}
+           <div className="space-y-4">
+                <h3 className="font-bold text-lg text-[#111111]">Pick a Category</h3>
+                <div className="flex flex-wrap gap-2.5">
+                    {CATEGORIES.map(cat => {
+                        const isSelected = category === cat;
+                        return (
                         <button
                             key={cat}
                             type="button"
                             onClick={() => setCategory(cat)}
-                            className={`px-4 py-2 rounded-full text-xs font-medium border transition-all ${
-                                category === cat 
-                                ? 'bg-black text-white border-black' 
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                            }`}
+                            className={cn(
+                                "group pl-1.5 pr-4 py-2 rounded-full border-2 text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
+                                isSelected 
+                                    ? "bg-[#ebebeb] border-[#727272] text-[#111111]" 
+                                    : "bg-white border-[#E0E0E0] text-[#111111] hover:bg-[#fafafa]"
+                            )}
                         >
+                            {/* Toggle Circle Indicator */}
+                            <div className={cn(
+                                "w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200",
+                                isSelected
+                                    ? "bg-[#FEC312]"
+                                    : "border-[1.5px] border-[#E0E0E0]"
+                            )}>
+                                {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
+                            </div>
+                            
                             {cat}
                         </button>
-                    ))}
+                    )})}
                 </div>
-
-                <Textarea 
-                    placeholder="Description (Context, Goal, Role...)" 
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
            </div>
-        </div>
 
+           {/* AVATAR SECTION */}
+           <div className="space-y-6 pt-6 border-t border-gray-100">
+                {!selectedAvatar ? (
+                    <>
+                        <div className="flex items-center justify-between mb-2">
+                             <div className="flex items-baseline gap-2">
+                                <h3 className="font-bold text-lg text-[#111111]">Pick your Avatar</h3>
+                                <span className="text-gray-400">|</span>
+                                <span className="text-sm font-medium text-gray-500">New here? 
+                                    <button 
+                                        onClick={() => setShowCreateOverlay(true)} 
+                                        className="underline ml-1 text-[#111111] hover:text-[#FEC312] transition-colors"
+                                    >
+                                        Create your Avatar
+                                    </button>
+                                </span>
+                             </div>
+                        </div>
 
-        {/* RIGHT COLUMN: IDENTITY */}
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm h-fit sticky top-24">
-            <div className="mb-6">
-                <h3 className="font-bold text-lg">Attribution</h3>
-                <p className="text-xs text-gray-400 mt-1">Select who is posting this work.</p>
-                
-                <div className="mt-4 p-3 bg-blue-50 text-blue-800 text-xs rounded-xl flex gap-2">
-                     <span className="shrink-0">ℹ️</span>
-                     <p>Rater is a meritocracy. Attribution is claimed by the submitter and not independently verified.</p>
-                </div>
-            </div>
+                        {/* Search Input Visual */}
+                        <div className="relative mb-6">
+                            <img src="/src/assets/icons/search.svg" className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" alt="" />
+                            <input 
+                                type="text"
+                                placeholder="Search..." 
+                                value={avatarSearch}
+                                onChange={(e) => setAvatarSearch(e.target.value)}
+                                className="w-full h-12 rounded-full border border-gray-300 pl-12 pr-6 text-sm focus:border-[#111111] focus:outline-none transition-colors"
+                            />
+                        </div>
 
-            <AvatarPicker 
-                avatars={avatars} 
-                selectedAvatarId={selectedAvatar?.id}
-                onSelect={handleAvatarSelect}
-                onCreateNew={() => setShowCreateOverlay(true)}
-            />
-            
-            <div className="mt-6 pt-6 border-t border-gray-100">
-                <Button 
-                    className="w-full" 
-                    disabled={!title || !category || !image || !selectedAvatar}
-                    onClick={() => {
-                        // In real flow, this might trigger passkey again if not just verified
-                        if (selectedAvatar) setShowPasskeyOverlay(true)
-                    }}
-                >
-                    Post Work
-                </Button>
-            </div>
-        </div>
+                        <AvatarPicker 
+                            avatars={filteredAvatars} 
+                            selectedAvatarId={selectedAvatar?.id}
+                            onSelect={setSelectedAvatar} // Directly set selected avatar
+                            onCreateNew={() => setShowCreateOverlay(true)}
+                        />
+                    </>
+                ) : (
+                    // SELECTED AVATAR STATE
+                    <div className="space-y-4">
+                         <h3 className="font-bold text-lg text-[#111111]">Posting as</h3>
+                         
+                         <div className="border border-[#FEC312] bg-[#FFFBF0] rounded-[24px] p-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
+                             <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-white shadow-sm">
+                                 {selectedAvatar.avatarUrl ? (
+                                    <img src={selectedAvatar.avatarUrl} alt={selectedAvatar.name} className="w-full h-full object-cover" />
+                                 ) : (
+                                     <div 
+                                        className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
+                                        style={{ backgroundColor: selectedAvatar.bgColor }}
+                                     >
+                                         {selectedAvatar.name.substring(0, 2).toUpperCase()}
+                                     </div>
+                                 )}
+                             </div>
+                             <h4 className="font-bold text-lg text-[#111111] mb-2">{selectedAvatar.name}</h4>
+                             
+                             <button 
+                                onClick={() => setSelectedAvatar(null)}
+                                className="text-xs font-bold text-gray-500 hover:text-[#111111] underline transition-colors"
+                             >
+                                 Change avatar
+                             </button>
+                         </div>
+                    </div>
+                )}
+           </div>
+
+           {/* ACTIONS */}
+           <div className="pt-8">
+               <Button 
+                   className="w-full h-14 text-lg rounded-full font-bold shadow-lg shadow-[#FEC312]/20 hover:shadow-[#FEC312]/40 transition-all transform hover:-translate-y-0.5" 
+                   disabled={!title || !category || !image || !selectedAvatar}
+                   onClick={handleSubmit}
+               >
+                   Post
+               </Button>
+           </div>
 
       </div>
 
@@ -170,16 +237,8 @@ export function SubmitPage() {
             onCreate={(name, _passkey) => {
                 console.log("Creating:", name);
                 setShowCreateOverlay(false);
-                // In real app, this would modify the mock data
+                // Visual only - no real creation logic needed for this task
             }}
-          />
-      )}
-
-      {showPasskeyOverlay && selectedAvatar && (
-          <EnterPasskeyOverlay 
-             avatar={selectedAvatar}
-             onClose={() => setShowPasskeyOverlay(false)}
-             onSuccess={handlePasskeySuccess}
           />
       )}
 
