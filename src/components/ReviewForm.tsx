@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Textarea';
 import { StarRating } from './ui/StarRating';
+import { Input } from './ui/Input';
 
 interface ReviewFormProps {
-  onSubmit: (ratings: { clarity: number; purpose: number; aesthetics: number }, comment: string) => void;
+  onSubmit: (ratings: { clarity: number; purpose: number; aesthetics: number }, comment: string, reviewerName: string) => void;
 }
 
 export function ReviewForm({ onSubmit }: ReviewFormProps) {
@@ -12,10 +13,10 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
   const [purpose, setPurpose] = useState(0);
   const [aesthetics, setAesthetics] = useState(0);
   const [comment, setComment] = useState('');
+  const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Calculate average for display
-  const currentAverage = ((clarity + purpose + aesthetics) / 3).toFixed(1);
   const isComplete = clarity > 0 && purpose > 0 && aesthetics > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -25,58 +26,59 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
     setIsSubmitting(true);
     // Simulate network delay
     setTimeout(() => {
-        onSubmit({ clarity, purpose, aesthetics }, comment);
+        onSubmit({ clarity, purpose, aesthetics }, comment, name || 'Anonymous');
         setIsSubmitting(false);
-        // Reset form or close overlay logic typically handled by parent
     }, 800);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
-      <h3 className="font-bold text-lg mb-4">Rate this design</h3>
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
+      <h3 className="font-bold text-xl mb-8">Drop a Review</h3>
       
-      <div className="space-y-4 mb-6">
+      <div className="space-y-4 mb-8">
         {/* CLARITY */}
         <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Clarity</span>
-            <StarRating rating={clarity} onChange={setClarity} interactive />
+            <span className="text-base font-medium text-[#111111] border-b-2 border-dotted border-gray-300 pb-0.5 cursor-help">Clarity</span>
+            <StarRating rating={clarity} onChange={setClarity} interactive size="lg" />
         </div>
 
         {/* PURPOSE */}
         <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Purpose</span>
-            <StarRating rating={purpose} onChange={setPurpose} interactive />
+            <span className="text-base font-medium text-[#111111] border-b-2 border-dotted border-gray-300 pb-0.5 cursor-help">Purpose</span>
+            <StarRating rating={purpose} onChange={setPurpose} interactive size="lg" />
         </div>
 
         {/* AESTHETICS */}
         <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">Aesthetics</span>
-            <StarRating rating={aesthetics} onChange={setAesthetics} interactive />
+            <span className="text-base font-medium text-[#111111] border-b-2 border-dotted border-gray-300 pb-0.5 cursor-help">Aesthetics</span>
+            <StarRating rating={aesthetics} onChange={setAesthetics} interactive size="lg" />
         </div>
       </div>
 
-      <div className="mb-4">
-         <div className="flex justify-between items-center mb-2">
-            <label className="text-xs font-semibold uppercase text-gray-500">Comment (Optional)</label>
-            {isComplete && (
-                <span className="text-xs font-bold text-brand">Avg: {currentAverage}</span>
-            )}
-         </div>
+      <div className="space-y-4 mb-8">
+         <Input 
+            placeholder="Your name (Optional)" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="h-12 rounded-xl border-gray-200"
+         />
+
          <Textarea 
-            placeholder="What worked? What didn't?" 
+            placeholder="Comment..." 
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="bg-white min-h-[80px]"
+            className="min-h-[120px] rounded-xl border-gray-200 resize-none p-4"
          />
       </div>
 
       <Button 
         type="submit" 
-        className="w-full" 
+        className="w-full h-12 rounded-full text-base font-bold" 
+        variant="outline"
         disabled={!isComplete || isSubmitting}
         isLoading={isSubmitting}
       >
-        Submit Review
+        Rate
       </Button>
     </form>
   );

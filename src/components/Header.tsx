@@ -26,7 +26,7 @@ export function Header({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/0 backdrop-blur-xl py-4 border-b border-white/20 rounded-bl-[30px] rounded-br-[30px]">
+    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl py-4 border-b border-white/20 rounded-bl-[30px] rounded-br-[30px]">
       <div className="max-w-[1600px] mx-auto px-6 flex items-center justify-between gap-6">
         
         {/* LOGO */}
