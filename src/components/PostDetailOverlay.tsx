@@ -129,7 +129,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                     {[1,2,3,4,5].map(i => (
                                         <img 
                                             key={i} 
-                                            src={i <= Math.floor(post.rating.average) ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                            src={i <= Math.floor(post.rating.average) ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
                                             alt="star"
                                             className="w-6 h-6"
                                         />
@@ -193,7 +193,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                              {[1,2,3,4,5].map(i => (
                                 <img 
                                     key={i} 
-                                    src={i <= 3 ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                    src={i <= 3 ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
                                     className="w-3.5 h-3.5" 
                                     alt="" 
                                 />
