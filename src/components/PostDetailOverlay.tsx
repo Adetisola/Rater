@@ -5,6 +5,7 @@ import { StarRating } from './ui/StarRating';
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
 import { formatTimeAgo } from '../lib/utils';
+import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 
 interface PostDetailOverlayProps {
@@ -20,6 +21,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [sortBy, setSortBy] = useState('Highest Rated');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   // Static mock reviews to demonstrate sorting
   const MOCK_REVIEWS_LIST = [
@@ -163,7 +165,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                 {/* 6. Rating Summary & Actions */}
                 <div className="flex items-center justify-between border-t border-gray-100 pt-8">
                     <div className="flex items-center gap-2">
-                        <button className="flex items-center gap-2 text-[#111111] font-bold text-lg hover:opacity-70 transition-opacity">
+                        <button 
+                            onClick={() => setIsShareOpen(true)}
+                            className="flex items-center gap-2 text-[#111111] font-bold text-lg hover:opacity-70 transition-opacity"
+                        >
                             <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
                             Share
                         </button>
@@ -190,6 +195,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                          )}
                     </div>
                 </div>
+
+                {isShareOpen && (
+                    <SharePostOverlay onClose={() => setIsShareOpen(false)} postId={post.id} />
+                )}
 
                 <div className="text-xs text-[#EB5757] font-medium pt-2">
                      *Attribution is claimed by the submitter and not independently verified. 
