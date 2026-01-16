@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, ChevronDown, Check } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface ReportPostOverlayProps {

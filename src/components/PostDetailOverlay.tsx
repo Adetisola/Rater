@@ -5,6 +5,7 @@ import { StarRating } from './ui/StarRating';
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
 import { formatTimeAgo } from '../lib/utils';
+import { ReportPostOverlay } from './ReportPostOverlay';
 
 interface PostDetailOverlayProps {
   post: Post;
@@ -18,6 +19,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [isExpanded, setIsExpanded] = useState(false); // For description
   const [sortBy, setSortBy] = useState('Highest Rated');
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Static mock reviews to demonstrate sorting
   const MOCK_REVIEWS_LIST = [
@@ -191,8 +193,24 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                 <div className="text-xs text-[#EB5757] font-medium pt-2">
                      *Attribution is claimed by the submitter and not independently verified. 
-                     <button className="underline ml-1">Report</button> if you believe attribution is incorrect.
+                     <button 
+                        onClick={() => setIsReportOpen(true)}
+                        className="underline font-bold ml-1 hover:text-[#c0392b]"
+                     >
+                        Report
+                     </button> if you believe attribution is incorrect.
                 </div>
+                
+                {isReportOpen && (
+                    <ReportPostOverlay 
+                        onClose={() => setIsReportOpen(false)} 
+                        onSubmit={(reason, details) => {
+                            console.log('Report submitted:', reason, details);
+                            setIsReportOpen(false);
+                            // Add toast or notification here later
+                        }} 
+                    />
+                )}
 
             </div>
 
