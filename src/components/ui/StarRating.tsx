@@ -32,7 +32,7 @@ export function StarRating({
     <div className="flex items-center gap-1">
       <div className="flex gap-1">
         {stars.map((star) => {
-          const isFilled = star <= rating;
+          const isFilled = star <= Math.floor(rating);
           const isInteractive = interactive && !!onChange;
           
           return (

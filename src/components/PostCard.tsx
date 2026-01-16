@@ -91,7 +91,7 @@ export function PostCard({ post }: { post: Post }) {
                         {[1,2,3,4,5].map(i => (
                             <img 
                             key={i} 
-                            src={i <= Math.round(post.rating.average) ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
+                            src={i <= Math.floor(post.rating.average) ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
                             className="w-3 h-3" 
                             alt="" 
                             />
