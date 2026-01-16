@@ -16,6 +16,54 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [reviews, setReviews] = useState<any[]>([]); 
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // For description
+  const [sortBy, setSortBy] = useState('Highest Rated');
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
+  // Static mock reviews to demonstrate sorting
+  const MOCK_REVIEWS_LIST = [
+      {
+          id: 'r_mock_1',
+          name: 'Sarah Design',
+          timeAgo: '2d ago',
+          timestamp: Date.now() - 1000 * 60 * 60 * 48,
+          comment: 'The minimal aesthetic is exactly what modern e-commerce needs. The functionality seems intuitive.',
+          clarity: 5, purpose: 5, aesthetics: 5, average: 5.0
+      },
+      {
+          id: 'r_mock_2',
+          name: 'Timi',
+          timeAgo: '3s ago',
+          timestamp: Date.now() - 3000, 
+          comment: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim mauris, hendrerit a ante.',
+          clarity: 4, purpose: 2, aesthetics: 3, average: 3.0
+      },
+      {
+          id: 'r_mock_3',
+          name: 'Alex Dev',
+          timeAgo: '5d ago',
+          timestamp: Date.now() - 1000 * 60 * 60 * 24 * 5,
+          comment: 'Good effort, but I think the typography could be a bit more bold.',
+          clarity: 3, purpose: 4, aesthetics: 2, average: 3.0
+      }
+  ];
+
+  const allReviews = [...reviews, ...MOCK_REVIEWS_LIST];
+
+  const sortedReviews = [...allReviews].sort((a, b) => {
+      const getVal = (r: any) => {
+          const avg = r.average ?? ((r.ratings.clarity + r.ratings.purpose + r.ratings.aesthetics) / 3);
+          const time = r.timestamp ?? new Date(r.createdAt).getTime();
+          return { avg, time };
+      };
+      const valA = getVal(a);
+      const valB = getVal(b);
+
+      if (sortBy === 'Highest Rated') return valB.avg - valA.avg;
+      if (sortBy === 'Lowest Rated') return valA.avg - valB.avg;
+      if (sortBy === 'Newest') return valB.time - valA.time;
+      if (sortBy === 'Oldest') return valA.time - valB.time;
+      return 0;
+  });
 
   const handleReviewSubmit = (ratings: any, comment: string, reviewerName: string) => {
     const newReview = {
@@ -173,52 +221,82 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
         <div className="border-t border-gray-100 pt-12">
             
             <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-2xl font-bold text-[#111111]">Review ({totalReviews})</h2>
+                <h2 className="text-2xl font-bold text-[#111111]">Reviews ({totalReviews})</h2>
                 
-                {/* Mock Sort Dropdown */}
+                {/* Sort Dropdown */}
                 <div className="relative">
-                    <button className="px-4 py-2 border border-black rounded-lg text-xs font-bold flex items-center gap-2">
-                        Highest Rated
-                        <ChevronDown className="w-3 h-3" />
+                    <button 
+                        onClick={() => setIsSortOpen(!isSortOpen)}
+                        className="px-4 py-2 border border-black rounded-lg text-xs font-bold flex items-center gap-2 bg-white hover:bg-gray-50 bg-white"
+                    >
+                        {sortBy}
+                        <ChevronDown className={`w-3 h-3 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                     </button>
+                    
+                    {isSortOpen && (
+                        <div className="absolute top-full left-0 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            {['Highest Rated', 'Lowest Rated', 'Newest', 'Oldest'].map((option) => (
+                                <button
+                                    key={option}
+                                    onClick={() => {
+                                        setSortBy(option);
+                                        setIsSortOpen(false);
+                                    }}
+                                    className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-[#111111]'}`}
+                                >
+                                    {option}
+                                    {sortBy === option && <Check className="w-3 h-3" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
             <div className="space-y-6">
-                {/* MOCK REVIEW ITEM */}
-                <div className="bg-white border border-gray-200 rounded-[20px] p-8">
-                    <div className="flex items-center gap-3 mb-4">
-                        <span className="font-bold text-base text-[#111111]">Timi</span>
-                        <div className="flex gap-0.5">
-                             {[1,2,3,4,5].map(i => (
-                                <img 
-                                    key={i} 
-                                    src={i <= 3 ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
-                                    className="w-3.5 h-3.5" 
-                                    alt="" 
-                                />
-                             ))}
+                {sortedReviews.map((review) => {
+                    // Normalize data
+                    const isUserReview = !!review.createdAt;
+                    const ratingAvg = isUserReview 
+                        ? (review.ratings.clarity + review.ratings.purpose + review.ratings.aesthetics) / 3 
+                        : review.average;
+                    const timeLabel = isUserReview ? formatTimeAgo(review.createdAt) : review.timeAgo;
+                    const ratings = isUserReview ? review.ratings : { clarity: review.clarity, purpose: review.purpose, aesthetics: review.aesthetics };
+
+                    return (
+                        <div key={review.id} className="bg-white border border-gray-200 rounded-[20px] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-4">
+                                <span className="font-bold text-base text-[#111111]">{review.reviewerName || review.name}</span>
+                                <div className="flex gap-0.5">
+                                    {[1,2,3,4,5].map(i => (
+                                        <img 
+                                            key={i} 
+                                            src={i <= Math.floor(ratingAvg) ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                            className="w-3.5 h-3.5" 
+                                            alt="" 
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-xs text-gray-400 font-medium">{timeLabel}</span>
+                            </div>
+
+                            <p className="text-sm text-[#111111] leading-relaxed mb-6">
+                                {review.comment}
+                            </p>
+
+                            <div className="flex gap-6">
+                                <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
+                                <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
+                                <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
+                                
+                                <div className="ml-auto text-right">
+                                    <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
+                                    <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
+                                </div>
+                            </div>
                         </div>
-                        <span className="text-xs text-gray-400 font-medium">3s ago</span>
-                    </div>
-
-                    <p className="text-sm text-[#111111] leading-relaxed mb-6">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim mauris, hendrerit a ante dapibus, sollicitudin lobortis eros. Cras id facilisis nulla. Suspendisse potenti.
-                    </p>
-
-                    <div className="flex gap-6">
-                        <div className="text-xs font-bold text-[#111111]">Clarity: 4</div>
-                        <div className="text-xs font-bold text-[#111111]">Purpose: 2</div>
-                        <div className="text-xs font-bold text-[#111111]">Aesthetics: 3</div>
-                        
-                        <div className="ml-auto text-right">
-                             <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                             <div className="text-xl font-bold text-[#111111]">3.0/5.0</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Additional mock reviews would populate here */}
+                    );
+                })}
             </div>
 
         </div>
