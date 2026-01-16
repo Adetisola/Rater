@@ -87,15 +87,18 @@ export function PostCard({ post }: { post: Post }) {
 
                 {/* RIGHT: Ratings */}
                 <div className="flex items-start gap-1.5">
-                    <div className="flex gap-0.5 group-hover:brightness-0 group-hover:invert transition-all">
-                        {[1,2,3,4,5].map(i => (
-                            <img 
-                            key={i} 
-                            src={i <= Math.floor(post.rating.average) ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
-                            className="w-3 h-3" 
-                            alt="" 
-                            />
-                        ))}
+                    <div className="flex gap-0.5">
+                        {[1,2,3,4,5].map(i => {
+                            const isActive = i <= Math.floor(post.rating.average);
+                            return (
+                                <img 
+                                    key={i} 
+                                    src={isActive ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                    className={`w-3 h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
+                                    alt="" 
+                                />
+                            );
+                        })}
                     </div>
                     <span className="text-xs font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}/5.0</span>
                 </div>
