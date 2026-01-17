@@ -74,7 +74,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
-      <h3 className="font-bold text-xl mb-8">Drop a Review</h3>
+      <h3 className="font-bold text-xl mb-8">Rate this Design</h3>
       
       <div className="space-y-4 mb-8">
         {/* CLARITY */}
@@ -98,7 +98,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
       <div className="space-y-4 mb-8">
          <Input 
-            placeholder="Your name (Optional)" 
+            placeholder="Your name (or be Anonymous)" 
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="h-12 rounded-xl border-gray-200"
@@ -114,7 +114,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
       <Button 
         type="submit" 
-        className="w-full h-12 rounded-full text-base font-bold" 
+        className="w-22 h-12 rounded-full text-xl font-semibold" 
         variant="outline"
         disabled={!isComplete || isSubmitting}
         isLoading={isSubmitting}

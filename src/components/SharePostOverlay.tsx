@@ -41,13 +41,13 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
         <div className="flex items-center justify-center gap-4 mb-8">
             <button 
                 onClick={onClose}
-                className="px-8 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-gray-50 transition-colors"
+                className="px-8 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
             >
                 Close
             </button>
             <button 
                 onClick={handleCopy}
-                className="px-8 py-3 rounded-full text-sm font-bold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312]/10 transition-colors flex items-center gap-2"
+                className="px-8 py-3 rounded-full text-sm font-bold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all duration-300 flex items-center gap-2"
             >
                 Copy Link
             </button>

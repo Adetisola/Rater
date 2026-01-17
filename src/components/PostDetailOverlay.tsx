@@ -125,8 +125,14 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         </span>
                         {/* Top Rated Badge (Simulated) */}
                         {post.rating.average >= 4.5 && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-[#111111] px-3 py-1.5 rounded-full flex items-center gap-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-black px-3 py-1.5 rounded-full flex items-center gap-1">
                                 🏆 Top Rated
+                            </span>
+                        )}
+
+                        {post.rating.reviewCount >= 42 && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#7C2BED] text-white px-3 py-1.5 rounded-full flex items-center gap-1">
+                                💬 Most Discussed
                             </span>
                         )}
                      </div>
@@ -190,7 +196,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                         />
                                     ))}
                                 </div>
-                                <span className="text-3xl font-bold text-[#111111]">{post.rating.average}</span>
+                                <span className="text-3xl font-bold text-[#111111]">{post.rating.average}/5</span>
                              </>
                          )}
                     </div>

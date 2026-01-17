@@ -32,14 +32,14 @@ export function PostCard({ post }: { post: Post }) {
             {/* BADGES */}
             {/* 'Most Discussed' Badge - Purple Pill */}
             {isMostDiscussed && (
-                <div className="absolute bottom-3 left-3 bg-[#6A3EEA] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
+                <div className="absolute bottom-3 left-3 bg-[#7C3BED] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
                     <span>💬 Most Discussed</span>
                 </div>
             )}
             
             {/* 'Top Rated' Badge - Yellow Pill */}
             {isTopRated && (
-                <div className="absolute bottom-3 left-3 bg-[#FFB800] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
+                <div className="absolute bottom-3 left-3 bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
                     <span>🏆 Top Rated</span>
                 </div>
             )}
@@ -53,7 +53,7 @@ export function PostCard({ post }: { post: Post }) {
                 <span className="bg-white text-[#111111] text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">
                     {post.category}
                 </span>
-                <span className="text-[10px] text-[#999999] font-medium group-hover:text-white/80 transition-colors">
+                <span className="text-[10px] text-[#999999] font-semibold group-hover:text-white/80 transition-colors">
                     {formatTimeAgo(post.createdAt)}
                 </span>
             </div>
@@ -86,7 +86,7 @@ export function PostCard({ post }: { post: Post }) {
                 </div>
 
                 {/* RIGHT: Ratings */}
-                <div className="flex items-start gap-1.5">
+                <div className="flex items-center gap-1.5">
                     <div className="flex gap-0.5">
                         {[1,2,3,4,5].map(i => {
                             const isActive = i <= Math.floor(post.rating.average);
@@ -100,7 +100,7 @@ export function PostCard({ post }: { post: Post }) {
                             );
                         })}
                     </div>
-                    <span className="text-xs font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}/5.0</span>
+                    <span className="text-sm font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
                 </div>
 
             </div>
