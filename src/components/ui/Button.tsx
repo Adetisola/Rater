@@ -29,9 +29,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isLoading || props.disabled}
         {...props}
       >
-        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-        {!isLoading && icon && <span className="mr-2">{icon}</span>}
-        {children}
+        {isLoading ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <>
+            {icon && <span className="mr-2">{icon}</span>}
+            {children}
+          </>
+        )}
       </button>
     );
   }
