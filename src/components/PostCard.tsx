@@ -1,4 +1,5 @@
 import type { Post } from '../logic/mockData';
+import { MOCK_AVATARS } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
 
 export function PostCard({ post }: { post: Post }) {
@@ -73,7 +74,7 @@ export function PostCard({ post }: { post: Post }) {
                 <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden">
                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
-                <span className="text-xs font-bold text-[#111111] group-hover:text-white transition-colors">Timi</span>
+                <span className="text-xs font-bold text-[#111111] group-hover:text-white transition-colors">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
             </div>
 
             {/* ROW 5: FOOTER (STATS) */}

@@ -57,10 +57,31 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   },
   'user_2': {
     id: 'user_2',
-    name: 'Sarah Design',
-    bgColor: '#7C3BED', // Brand Purple
+    name: 'Sarah Chen',
+    bgColor: '#7C3BED',
     isBlocked: false,
     passkey: '1111'
+  },
+  'user_3': {
+    id: 'user_3',
+    name: 'Marcus Johnson',
+    bgColor: '#3B82F6',
+    isBlocked: false,
+    passkey: '2222'
+  },
+  'user_4': {
+    id: 'user_4',
+    name: 'Elena Rodriguez',
+    bgColor: '#10B981',
+    isBlocked: false,
+    passkey: '3333'
+  },
+  'user_5': {
+    id: 'user_5',
+    name: 'James Park',
+    bgColor: '#F59E0B',
+    isBlocked: false,
+    passkey: '4444'
   },
   'user_blocked': {
     id: 'user_blocked',
@@ -108,7 +129,7 @@ export const MOCK_POSTS: Post[] = [
     description: 'Mobile banking application interface focused on accessibility and data visualization.',
     category: 'Mobile App Design',
     imageUrl: 'https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?auto=format&fit=crop&q=80&w=800',
-    designerId: 'user_2', // Alex
+    designerId: 'user_3',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(), // 1 day ago
     rating: { average: 4.0, reviewCount: 1, isLocked: true }
   },
@@ -128,7 +149,7 @@ export const MOCK_POSTS: Post[] = [
     description: 'Minimalist geometric logo concept for an AI technology startup.',
     category: 'Logo Design',
     imageUrl: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800',
-    designerId: 'user_2', // John
+    designerId: 'user_4',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
     rating: { average: 0, reviewCount: 0, isLocked: true }
   },
@@ -148,7 +169,7 @@ export const MOCK_POSTS: Post[] = [
     description: 'Personal portfolio design highlighting creative works and resume.',
     category: 'Web Design',
     imageUrl: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&q=80&w=800',
-    designerId: 'user_2', // Sarah
+    designerId: 'user_5',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(), // 10 days ago
     rating: { average: 4.7, reviewCount: 19, isLocked: false }
   },
@@ -168,7 +189,7 @@ export const MOCK_POSTS: Post[] = [
     description: 'Calming user interface design for a daily meditation and mindfulness app.',
     category: 'Mobile App Design',
     imageUrl: 'https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?auto=format&fit=crop&q=80&w=800',
-    designerId: 'user_2', // Mike
+    designerId: 'user_3',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 21).toISOString(), // 3 weeks ago
     rating: { average: 4.4, reviewCount: 6, isLocked: false }
   }
