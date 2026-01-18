@@ -104,12 +104,24 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
             className="h-12 rounded-xl border-gray-200"
          />
 
-         <Textarea 
-            placeholder="Comment..." 
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="min-h-[120px] rounded-xl border-gray-200 resize-none p-4"
-         />
+         <div className="relative">
+             <Textarea 
+                placeholder="Comment..." 
+                value={comment}
+                onChange={(e) => {
+                    if (e.target.value.length <= 200) {
+                        setComment(e.target.value);
+                    }
+                }}
+                maxLength={200}
+                className="min-h-[120px] rounded-xl border-gray-200 resize-none p-4 pb-8"
+             />
+             <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${
+                 comment.length >= 200 ? 'text-red-500' : 'text-gray-400'
+             }`}>
+                 {comment.length} / 200
+             </div>
+         </div>
       </div>
 
       <Button 
