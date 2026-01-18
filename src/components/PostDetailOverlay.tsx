@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Flag, ChevronDown, Check } from 'lucide-react'; // Added icons
 import type { Post } from '../logic/mockData';
+import { MOCK_POSTS } from '../logic/mockData';
 import { StarRating } from './ui/StarRating';
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
 import { formatTimeAgo } from '../lib/utils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
+import { computeBadges } from '../logic/badgeUtils';
 
 interface PostDetailOverlayProps {
   post: Post;
@@ -22,6 +24,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+
+  // Compute badge for this post using centralized logic
+  const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
+  const badge = badgeMap[post.id];
 
   // Static mock reviews to demonstrate sorting
   const MOCK_REVIEWS_LIST = [
@@ -123,14 +129,14 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         <span className="text-[10px] font-bold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
                             {post.category}
                         </span>
-                        {/* Top Rated Badge (Simulated) */}
-                        {post.rating.average >= 4.5 && (
+                        {/* Badge - Only ONE badge per post, computed by badgeUtils */}
+                        {badge === 'top-rated' && (
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-black px-3 py-1.5 rounded-full flex items-center gap-1">
                                 🏆 Top Rated
                             </span>
                         )}
 
-                        {post.rating.reviewCount >= 42 && (
+                        {badge === 'most-discussed' && (
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-[#7C2BED] text-white px-3 py-1.5 rounded-full flex items-center gap-1">
                                 💬 Most Discussed
                             </span>
