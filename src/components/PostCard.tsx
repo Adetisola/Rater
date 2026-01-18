@@ -2,10 +2,14 @@ import type { Post } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
 
-export function PostCard({ post }: { post: Post }) {
-  // Mock badges logic based on ID for visual replication
-  const isMostDiscussed = post.id === 'post_2'; // Purple badge
-  const isTopRated = post.id === 'post_3'; // Yellow/Orange badge
+interface PostCardProps {
+  post: Post;
+  badge?: 'top-rated' | 'most-discussed' | null;
+}
+
+export function PostCard({ post, badge }: PostCardProps) {
+  const isTopRated = badge === 'top-rated';
+  const isMostDiscussed = badge === 'most-discussed';
 
   return (
     <div className="group relative break-inside-avoid mb-6">
