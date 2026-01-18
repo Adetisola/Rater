@@ -4,12 +4,13 @@ import { MasonryGrid } from './components/MasonryGrid';
 import { SubmitPage } from './components/SubmitPage';
 import { PostDetailOverlay } from './components/PostDetailOverlay';
 import { MOCK_POSTS, MOCK_AVATARS, type Post } from './logic/mockData';
+import { curatedFreshnessSort } from './logic/curatedSort';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'submit'>('home');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('Highest Rated');
+  const [sortBy, setSortBy] = useState('Curated Freshness');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // Filter & Sort posts
@@ -35,6 +36,9 @@ function App() {
     return matchesSearch && matchesCategory && matchesRatingSort;
   }).sort((a, b) => { // 4. Sorting Logic
     switch (sortBy) {
+      case 'Curated Freshness':
+        // Handled separately after filter
+        return 0;
       case 'Highest Rated':
         return b.rating.average - a.rating.average;
       case 'Lowest Rated':
@@ -49,6 +53,11 @@ function App() {
         return 0;
     }
   });
+
+  // Apply Curated Freshness sort if selected (needs full post list for bucket logic)
+  const sortedPosts = sortBy === 'Curated Freshness' 
+    ? curatedFreshnessSort(filteredPosts)
+    : filteredPosts;
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans text-[#111111]">
@@ -66,7 +75,7 @@ function App() {
       <main className="flex-1 w-full pt-8">
         {currentPage === 'home' ? (
            <MasonryGrid 
-              posts={filteredPosts} 
+              posts={sortedPosts} 
               onPostClick={(post) => setSelectedPost(post)}
            />
         ) : (

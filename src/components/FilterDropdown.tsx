@@ -21,6 +21,7 @@ interface FilterDropdownProps {
 }
 
 const SORT_OPTIONS = [
+  'Curated Freshness',
   'Highest Rated',
   'Lowest Rated',
   'Newest',
@@ -170,7 +171,7 @@ export function FilterDropdown({
             <div className="flex items-center justify-start gap-4 pt-6 border-t border-[#F5F5F5]">
             <button 
                 onClick={() => {
-                onSortChange('Highest Rated');
+                onSortChange('Curated Freshness');
                 onCategoryChange([]);
                 }}
                 className="px-5 py-2 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"

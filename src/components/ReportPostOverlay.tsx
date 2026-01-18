@@ -83,12 +83,18 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 {/* Details Textarea */}
                 <div className="mb-8">
                     <label className="block text-sm font-bold text-[#111111] mb-2">Tell us more (optional)</label>
-                    <textarea 
-                        value={details}
-                        onChange={(e) => setDetails(e.target.value)}
-                        className="w-full h-32 bg-white border border-gray-200 rounded-xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312] resize-none"
-                        placeholder=""
-                    />
+                    <div className="relative">
+                        <textarea 
+                            value={details}
+                            onChange={(e) => setDetails(e.target.value)}
+                            maxLength={100}
+                            className="w-full h-32 bg-white border border-gray-200 rounded-xl p-4 pb-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312] resize-none"
+                            placeholder=""
+                        />
+                        <div className="absolute bottom-3 right-4 text-xs font-medium text-gray-400">
+                            {details.length}/100
+                        </div>
+                    </div>
                 </div>
 
                 {/* Actions */}
