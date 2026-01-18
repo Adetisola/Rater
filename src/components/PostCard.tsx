@@ -14,7 +14,7 @@ export function PostCard({ post }: { post: Post }) {
         {/* HOVER BACKGROUND - Blurred Image */}
         <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
             <div 
-              className="absolute inset-0 bg-cover bg-center blur-xl scale-125 brightness-[0.6]"
+              className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
               style={{ backgroundImage: `url(${post.imageUrl})` }}
             />
         </div>

@@ -117,7 +117,7 @@ export const MOCK_POSTS: Post[] = [
     title: 'Summer Event Flyer',
     description: 'Bright and energetic flyer design for a summer music festival.',
     category: 'Flyer Design',
-    imageUrl: 'https://images.unsplash.com/photo-1572044162444-ad6021194360?auto=format&fit=crop&q=80&w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(), // 2 days ago
     rating: { average: 4.6, reviewCount: 8, isLocked: false }
@@ -127,7 +127,7 @@ export const MOCK_POSTS: Post[] = [
     title: 'Tech Startup Logo',
     description: 'Minimalist geometric logo concept for an AI technology startup.',
     category: 'Logo Design',
-    imageUrl: 'https://images.unsplash.com/photo-1626785774573-4b799314346d?auto=format&fit=crop&q=80&w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_2', // John
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(), // 3 days ago
     rating: { average: 0, reviewCount: 0, isLocked: true }
@@ -157,7 +157,7 @@ export const MOCK_POSTS: Post[] = [
     title: 'Eco Juice Packaging',
     description: 'Sustainable packaging concept for organic cold-pressed juices.',
     category: 'Brand Identity Design',
-    imageUrl: 'https://images.unsplash.com/photo-1634629377547-60f4cf067215?auto=format&fit=crop&q=80&w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 14).toISOString(), // 2 weeks ago
     rating: { average: 5.0, reviewCount: 2, isLocked: true }
