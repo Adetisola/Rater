@@ -87,12 +87,12 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                         <textarea 
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
-                            maxLength={100}
+                            maxLength={120}
                             className="w-full h-32 bg-white border border-gray-200 rounded-xl p-4 pb-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312] resize-none"
                             placeholder=""
                         />
                         <div className="absolute bottom-3 right-4 text-xs font-medium text-gray-400">
-                            {details.length}/100
+                            {details.length}/120
                         </div>
                     </div>
                 </div>
