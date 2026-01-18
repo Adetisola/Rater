@@ -303,36 +303,42 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                     const ratings = isUserReview ? review.ratings : { clarity: review.clarity, purpose: review.purpose, aesthetics: review.aesthetics };
 
                     return (
-                        <div key={review.id} className="bg-white border border-gray-200 rounded-[20px] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-4">
-                                <span className="font-bold text-base text-[#111111]">{review.reviewerName || review.name}</span>
-                                <div className="flex gap-0.5">
-                                    {[1,2,3,4,5].map(i => (
-                                        <img 
-                                            key={i} 
-                                            src={i <= Math.floor(ratingAvg) ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
-                                            className="w-3.5 h-3.5" 
-                                            alt="" 
-                                        />
-                                    ))}
+                        <div key={review.id} className="bg-white border border-gray-200 rounded-[20px] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex items-center justify-between gap-8">
+                            
+                            {/* Left Content */}
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <span className="font-bold text-base text-[#111111]">{review.reviewerName || review.name}</span>
+                                    <div className="flex gap-0.5">
+                                        {[1,2,3,4,5].map(i => (
+                                            <img 
+                                                key={i} 
+                                                src={i <= Math.floor(ratingAvg) ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                                className="w-3.5 h-3.5" 
+                                                alt="" 
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="text-xs text-gray-400 font-medium">{timeLabel}</span>
                                 </div>
-                                <span className="text-xs text-gray-400 font-medium">{timeLabel}</span>
+
+                                <p className="text-sm text-[#111111] leading-relaxed mb-6">
+                                    {review.comment}
+                                </p>
+
+                                <div className="flex gap-6">
+                                    <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
+                                    <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
+                                    <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
+                                </div>
                             </div>
 
-                            <p className="text-sm text-[#111111] leading-relaxed mb-6">
-                                {review.comment}
-                            </p>
-
-                            <div className="flex gap-6">
-                                <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
-                                <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
-                                <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
-                                
-                                <div className="ml-auto text-right">
-                                    <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                    <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
-                                </div>
+                            {/* Right Content - Centered Total Rating */}
+                            <div className="text-right shrink-0">
+                                <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
+                                <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
+
                         </div>
                     );
                 })}
