@@ -95,17 +95,17 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={onClose}
-                        className="flex-1 py-3.5 rounded-full text-sm font-bold text-[#111111] hover:bg-gray-50 transition-colors"
+                        className="flex-1 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-gray-50 transition-colors"
                     >
                         Cancel
                     </button>
-                    <Button 
+                    <button
                         disabled={reason === 'Select'}
                         onClick={handleSubmit}
-                        className="flex-1 rounded-full py-6 text-sm font-bold shadow-none"
+                        className="px-20 py-3 rounded-full text-sm font-bold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all duration-300 inline-flex items-end"
                     >
                         Report
-                    </Button>
+                    </button>
                 </div>
             </>
         ) : (
