@@ -21,7 +21,7 @@ interface FilterDropdownProps {
 }
 
 const SORT_OPTIONS = [
-  'Curated Freshness',
+  '✨Curated Freshness✨',
   'Highest Rated',
   'Lowest Rated',
   'Newest',
@@ -107,7 +107,7 @@ export function FilterDropdown({
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="w-50 h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
+                        className="w-60 h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
                     >
                         <span className="text-sm font-medium text-[#111111]">{sortBy}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -171,7 +171,7 @@ export function FilterDropdown({
             <div className="flex items-center justify-start gap-4 pt-6 border-t border-[#F5F5F5]">
             <button 
                 onClick={() => {
-                onSortChange('Curated Freshness');
+                onSortChange('✨Curated Freshness✨');
                 onCategoryChange([]);
                 }}
                 className="px-5 py-2 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"

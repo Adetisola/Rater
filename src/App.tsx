@@ -10,7 +10,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'submit'>('home');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('Curated Freshness');
+  const [sortBy, setSortBy] = useState('✨Curated Freshness✨');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   // Filter & Sort posts
@@ -36,7 +36,7 @@ function App() {
     return matchesSearch && matchesCategory && matchesRatingSort;
   }).sort((a, b) => { // 4. Sorting Logic
     switch (sortBy) {
-      case 'Curated Freshness':
+      case '✨Curated Freshness✨':
         // Handled separately after filter
         return 0;
       case 'Highest Rated':
@@ -55,7 +55,7 @@ function App() {
   });
 
   // Apply Curated Freshness sort if selected (needs full post list for bucket logic)
-  const sortedPosts = sortBy === 'Curated Freshness' 
+  const sortedPosts = sortBy === '✨Curated Freshness✨' 
     ? curatedFreshnessSort(filteredPosts)
     : filteredPosts;
 
