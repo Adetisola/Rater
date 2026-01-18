@@ -24,9 +24,9 @@ export function MasonryGrid({ posts, onPostClick }: MasonryGridProps) {
 
   return (
     <div className="w-full max-w-[1600px] mx-auto px-6 pb-20">
-      <div className="flex gap-6 items-start justify-center">
+      <div className="flex gap-4 items-start justify-center">
         {columns.map((colPosts, colIndex) => (
-          <div key={colIndex} className="flex-1 flex flex-col gap-6 w-full min-w-0">
+          <div key={colIndex} className="flex-1 flex flex-col gap-4 w-full min-w-0">
             {colPosts.map((post) => (
               <div key={post.id} onClick={() => onPostClick?.(post)}>
                 <PostCard post={post} badge={badgeMap[post.id]} />

@@ -12,7 +12,7 @@ export function PostCard({ post, badge }: PostCardProps) {
   const isMostDiscussed = badge === 'most-discussed';
 
   return (
-    <div className="group relative break-inside-avoid mb-6">
+    <div className="group relative break-inside-avoid">
       {/* CARD CONTAINER */}
       <div className="bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-300">
         
