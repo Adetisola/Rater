@@ -1,4 +1,5 @@
-import { Copy } from 'lucide-react';
+import { createPortal } from 'react-dom';
+
 
 interface SharePostOverlayProps {
   onClose: () => void;
@@ -13,7 +14,7 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
     // Could add toast here
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
@@ -69,6 +70,7 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
         <p className="text-[10px] text-gray-400 italic">Shared posts are public.</p>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
