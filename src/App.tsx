@@ -26,9 +26,14 @@ function App() {
     // 2. Category Filter
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(post.category);
 
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
-    // 3. Sorting Logic
+    // 3. Locked Rating Filter (Hide locked posts for Rating sorts)
+    const matchesRatingSort = 
+      (sortBy === 'Highest Rated' || sortBy === 'Lowest Rated') 
+        ? !post.rating.isLocked 
+        : true;
+
+    return matchesSearch && matchesCategory && matchesRatingSort;
+  }).sort((a, b) => { // 4. Sorting Logic
     switch (sortBy) {
       case 'Highest Rated':
         return b.rating.average - a.rating.average;
