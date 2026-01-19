@@ -1,4 +1,7 @@
 import { createPortal } from 'react-dom';
+import whatsappIcon from '../assets/icons/icons8-whatsapp.svg';
+import xIcon from '../assets/icons/icons8-x.svg';
+import linkedinIcon from '../assets/icons/icons8-linkedin.svg';
 
 
 interface SharePostOverlayProps {
@@ -56,14 +59,14 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
 
         {/* Social Icons */}
         <div className="flex justify-center gap-6 mb-4">
-            <button className="w-12 h-12 rounded-full border border-gray-100 flex items-center justify-center hover:scale-105 transition-transform">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" className="w-6 h-6" alt="WhatsApp" />
+            <button className="hover:scale-105 transition-transform">
+                <img src={whatsappIcon} className="h-12" alt="WhatsApp" />
             </button>
-            <button className="w-12 h-12 rounded-lg bg-black text-white flex items-center justify-center hover:scale-105 transition-transform">
-                <span className="font-bold text-xl">X</span>
+            <button className="hover:scale-105 transition-transform">
+                <img src={xIcon} className="h-12" alt="X" />
             </button>
-            <button className="w-12 h-12 rounded-lg bg-[#0077B5] text-white flex items-center justify-center hover:scale-105 transition-transform">
-                <span className="font-bold text-xl">in</span>
+            <button className="hover:scale-105 transition-transform">
+                <img src={linkedinIcon} className="h-14" alt="LinkedIn" />
             </button>
         </div>
         
