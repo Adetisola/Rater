@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Flag, ChevronDown, Check } from 'lucide-react'; // Added icons
+import { Flag, ChevronDown, Check, X } from 'lucide-react'; // Added icons
 import type { Post } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
 import { StarRating } from './ui/StarRating';
@@ -20,10 +20,11 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [reviews, setReviews] = useState<any[]>([]); 
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // For description
-  const [sortBy, setSortBy] = useState('Highest Rated');
+  const [sortBy, setSortBy] = useState('Newest');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
   // Compute badge for this post using centralized logic
   const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
@@ -115,12 +116,20 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
             <div className="md:col-span-7 space-y-8">
                 
                 {/* 1. Image Preview */}
-                <div className="relative w-full aspect-video rounded-[32px] overflow-hidden bg-gray-100">
+                <div 
+                    className="group relative w-full aspect-video rounded-[32px] overflow-hidden bg-gray-50 cursor-zoom-in"
+                    onClick={() => setIsImageFullscreen(true)}
+                >
                     <img 
                         src={post.imageUrl} 
                         alt={post.title} 
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                     />
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <span className="text-white font-bold text-sm bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
+                            Click to view full image
+                        </span>
+                    </div>
                 </div>
 
                 {/* 2. Metadata Row */}
@@ -347,6 +356,34 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
         </div>
 
       </div>
+
+      {/* Fullscreen Image Overlay */}
+      {isImageFullscreen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+               {/* Backdrop */}
+               <div 
+                  className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+                  onClick={() => setIsImageFullscreen(false)}
+               />
+
+               {/* Content */}
+               <div className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
+                    <button 
+                        className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors pointer-events-auto"
+                        onClick={() => setIsImageFullscreen(false)}
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+
+                    <img 
+                        src={post.imageUrl} 
+                        alt={post.title} 
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200 pointer-events-auto"
+                    />
+               </div>
+          </div>
+      )}
+
     </div>
   );
 }
