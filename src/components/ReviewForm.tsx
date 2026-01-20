@@ -73,7 +73,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm">
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border border-gray-100">
       <h3 className="font-bold text-xl mb-8">Rate this Design</h3>
       
       <div className="space-y-4 mb-8">

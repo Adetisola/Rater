@@ -162,7 +162,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                     window.open(post.imageUrl, '_blank');
                                 }
                             }}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                         >
                             <Download className="w-5 h-5 text-black" />
                         </button>
@@ -173,7 +173,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                 e.stopPropagation();
                                 setIsShareOpen(true);
                             }}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                         >
                             <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
                         </button>
