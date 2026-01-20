@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
+import { SearchResults } from './SearchResults';
+import { useDebounce } from '../hooks/useDebounce';
+import { createSearchIndex, searchPosts, filterSearchResultsByCategory, type SearchResult } from '../logic/searchUtils';
+import type { Post } from '../logic/mockData';
 
 interface HeaderProps {
     onPostClick: () => void;
@@ -12,6 +16,8 @@ interface HeaderProps {
     selectedCategories: string[];
     onCategoryChange: (categories: string[]) => void;
     hideControls?: boolean;
+    posts: Post[];  // Added for Fuse.js search
+    onPostSelect?: (post: Post) => void;  // Callback when search result is clicked
 }
 
 export function Header({ 
@@ -23,11 +29,72 @@ export function Header({
     onSortChange,
     selectedCategories,
     onCategoryChange,
-    hideControls = false
+    hideControls = false,
+    posts,
+    onPostSelect
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showWidgets, setShowWidgets] = useState(!hideControls);
   const [opacityTrigger, setOpacityTrigger] = useState(!hideControls);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Debounce search query for performance
+  const debouncedQuery = useDebounce(searchQuery, 150);
+
+  // Create Fuse index once and cache it (rebuilds when posts change)
+  const fuseIndex = useMemo(() => createSearchIndex(posts), [posts]);
+
+  // Perform search with debounced query
+  const searchResults = useMemo((): SearchResult[] => {
+    if (!debouncedQuery || debouncedQuery.trim().length < 2) {
+      return [];
+    }
+    
+    const results = searchPosts(fuseIndex, debouncedQuery, 10);
+    
+    // Post-process: apply category filters
+    return filterSearchResultsByCategory(results, selectedCategories);
+  }, [fuseIndex, debouncedQuery, selectedCategories]);
+
+  // Show results when typing
+  useEffect(() => {
+    if (debouncedQuery.trim().length >= 2 && searchResults.length > 0) {
+      setShowSearchResults(true);
+    } else {
+      setShowSearchResults(false);
+    }
+  }, [debouncedQuery, searchResults.length]);
+
+  // Handle result click
+  const handleResultClick = (post: Post) => {
+    setShowSearchResults(false);
+    searchInputRef.current?.blur();
+    onPostSelect?.(post);
+  };
+
+  // Handle closing search dropdown (with blur - for header area clicks)
+  const handleCloseSearch = () => {
+    setShowSearchResults(false);
+    searchInputRef.current?.blur();
+  };
+
+  // Handle soft close (without blur - for outside clicks like post grid)
+  const handleSoftCloseSearch = () => {
+    setShowSearchResults(false);
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      setShowSearchResults(false);
+      searchInputRef.current?.blur();
+    } else if (e.key === 'Escape') {
+      setShowSearchResults(false);
+      searchInputRef.current?.blur();
+      onSearchChange('');
+    }
+  };
 
   useEffect(() => {
     let t1: ReturnType<typeof setTimeout>;
@@ -73,7 +140,7 @@ export function Header({
           </div>
         </div>
 
-        {/* GHOST LOGO SPLACER (Preserves layout in Home mode) */}
+        {/* GHOST LOGO SPACER (Preserves layout in Home mode) */}
         {!hideControls && <div className="w-12 h-12 shrink-0 invisible" aria-hidden="true" />}
 
         {/* SEARCH BAR */}
@@ -85,9 +152,16 @@ export function Header({
             <div className={`relative w-full transition-opacity duration-200 ${isFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <img src="/src/assets/icons/search.svg" alt="Search" className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-focus-within:opacity-100 transition-opacity" />
                 <input 
+                  ref={searchInputRef}
                   type="text" 
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => {
+                    if (searchResults.length > 0) {
+                      setShowSearchResults(true);
+                    }
+                  }}
+                  onKeyDown={handleKeyDown}
                   placeholder="Search by title, designer, or category..." 
                   className="w-full h-12 pl-14 pr-16 rounded-full border-2 border-[#FEC312] focus:outline-none focus:ring-4 focus:ring-[#FEC312]/10 transition-all font-sans text-base placeholder:text-gray-400"
                 />
@@ -102,6 +176,15 @@ export function Header({
                     </button>
                 </div>
             </div>
+
+            {/* Search Results Dropdown */}
+            <SearchResults 
+              results={searchResults}
+              isVisible={showSearchResults && !isFilterOpen}
+              onResultClick={handleResultClick}
+              onClose={handleCloseSearch}
+              onSoftClose={handleSoftCloseSearch}
+            />
 
             {/* Expanded Search + Filter Panel Overlay */}
             <FilterDropdown 

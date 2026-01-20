@@ -83,6 +83,8 @@ function App() {
         selectedCategories={selectedCategories}
         onCategoryChange={setSelectedCategories}
         hideControls={currentPage === 'submit'}
+        posts={MOCK_POSTS}
+        onPostSelect={(post) => setSelectedPost(post)}
       />
       
       <main className="flex-1 w-full pt-8">
