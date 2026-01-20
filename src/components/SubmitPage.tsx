@@ -225,7 +225,7 @@ export function SubmitPage() {
                 {/* ACTIONS */}
                 <div className="pt-4">
                     <Button 
-                        className="w-[150px] h-12 rounded-full text-lg font-semibold" 
+                        className="w-[100px] h-12 rounded-full text-lg font-semibold" 
                         variant="outline"
                         disabled={!title || !category || !image || !selectedAvatar}
                         onClick={handleSubmit}

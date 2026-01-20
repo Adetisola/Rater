@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { ChevronLeft, User, Pencil } from 'lucide-react';
+import { User, Pencil } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface CreateAvatarOverlayProps {
@@ -35,17 +35,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
 
       <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center">
         
-        {/* BACK BUTTON */}
-        <div className="w-full flex justify-start mb-2">
-            <button 
-                onClick={onClose}
-                className="flex items-center gap-1 px-4 py-2 rounded-full border border-[#111111] text-sm font-bold hover:bg-gray-50 transition-colors"
-                type="button"
-            >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-            </button>
-        </div>
+
 
         <div className="text-center mb-6">
             <h2 className="text-2xl font-bold mb-6 text-[#111111]">Create your Avatar</h2>
@@ -95,7 +85,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                  <Button 
                     type="submit" 
                     variant="outline"
-                    className="px-12 h-12 rounded-full text-base font-bold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all text-[#111111]"
+                    className="px-6 h-12 rounded-full text-base font-bold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all text-[#111111]"
                 >
                     Create
                 </Button>
