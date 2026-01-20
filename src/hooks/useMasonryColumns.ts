@@ -6,7 +6,11 @@ export function useMasonryColumns() {
   useEffect(() => {
     const updateColumns = () => {
       const width = window.innerWidth;
-      if (width >= 1280) {
+      if (width >= 2400) {
+        setColumns(6);
+      } else if (width >= 1800) {
+        setColumns(5);
+      } else if (width >= 1280) {
         setColumns(4); // xl
       } else if (width >= 1024) {
         setColumns(3); // lg
