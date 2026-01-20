@@ -101,7 +101,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
             placeholder="Your name (or be Anonymous)" 
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="h-12 rounded-xl border-gray-200"
+            className="h-12 rounded-xl border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312]"
          />
 
          <div className="relative">
@@ -114,7 +114,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
                     }
                 }}
                 maxLength={200}
-                className="min-h-[120px] rounded-xl border-gray-200 resize-none p-4 pb-8"
+                className="min-h-[120px] rounded-xl border-gray-200 resize-none p-4 pb-8 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312]"
              />
              <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${
                  comment.length >= 200 ? 'text-red-500' : 'text-gray-400'
