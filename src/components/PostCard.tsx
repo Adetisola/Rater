@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { Post } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
@@ -5,9 +6,75 @@ import { formatTimeAgo } from '../lib/utils';
 interface PostCardProps {
   post: Post;
   badge?: 'top-rated' | 'most-discussed' | null;
+  isLoading?: boolean;
 }
 
-export function PostCard({ post, badge }: PostCardProps) {
+export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = post.imageUrl;
+    img.onload = () => setImageLoaded(true);
+    img.onerror = () => setImageLoaded(true); // Fail gracefully
+  }, [post.imageUrl]);
+
+  const showSkeleton = isLoading || !imageLoaded;
+
+  if (showSkeleton) {
+      return (
+        <div className="bg-[#ebebeb] p-1.5 rounded-[24px] overflow-hidden h-full">
+            <div className="relative z-10 h-full flex flex-col">
+                {/* SKELETON IMAGE */}
+                <div className="w-full aspect-[4/3] bg-[#d1d5db] rounded-[20px] animate-pulse mb-4" />
+                
+                <div className="px-4 pt-0 pb-2 flex-1 flex flex-col">
+                    {/* META ROW */}
+                    <div className="flex justify-between items-center mb-4">
+                         <div className="h-5 w-20 bg-[#d1d5db] rounded-full animate-pulse" /> {/* Category */}
+                         <div className="h-3 w-10 bg-[#d1d5db] rounded-full animate-pulse" /> {/* Timestamp */}
+                    </div>
+                    
+                    {/* TITLE */}
+                    <div className="h-7 w-3/4 bg-[#d1d5db] rounded-lg animate-pulse mb-3" />
+                    
+                    {/* DESCRIPTION */}
+                    <div className="space-y-2 mb-6">
+                        <div className="h-3 w-full bg-[#d1d5db] rounded animate-pulse" />
+                        <div className="h-3 w-11/12 bg-[#d1d5db] rounded animate-pulse" />
+                        <div className="h-3 w-2/3 bg-[#d1d5db] rounded animate-pulse" />
+                    </div>
+                    
+                    <div className="flex-1" />
+
+                    {/* AUTHOR */}
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-5 h-5 rounded-full bg-[#d1d5db] animate-pulse" />
+                        <div className="h-3 w-20 bg-[#d1d5db] rounded animate-pulse" />
+                    </div>
+                    
+                    {/* FOOTER */}
+                    <div className="pt-4 border-t border-black/5 flex items-center justify-between">
+                         <div className="h-4 w-8 bg-[#d1d5db] rounded animate-pulse" /> {/* Count */}
+                         
+                         {/* SKELETON STARS */}
+                         <div className="flex gap-0.5 animate-pulse">
+                             {[1, 2, 3, 4, 5].map((i) => (
+                                <img 
+                                    key={i}
+                                    src="/src/assets/icons/star-filled.svg" 
+                                    className="w-3 h-3 opacity-30 grayscale invert-0"
+                                    alt="" 
+                                />
+                             ))}
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      );
+  }
+
   const isTopRated = badge === 'top-rated';
   const isMostDiscussed = badge === 'most-discussed';
 
