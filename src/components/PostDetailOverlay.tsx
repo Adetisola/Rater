@@ -144,9 +144,23 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                     <div className="absolute top-6 right-6 flex gap-3 z-20">
                          {/* Download Button */}
                          <button 
-                            onClick={(e) => {
+                            onClick={async (e) => {
                                 e.stopPropagation();
-                                window.open(post.imageUrl, '_blank');
+                                try {
+                                    const response = await fetch(post.imageUrl);
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                } catch (err) {
+                                    console.error('Download failed', err);
+                                    window.open(post.imageUrl, '_blank');
+                                }
                             }}
                             className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
                         >
