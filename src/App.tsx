@@ -70,6 +70,7 @@ function App() {
         onSortChange={setSortBy}
         selectedCategories={selectedCategories}
         onCategoryChange={setSelectedCategories}
+        hideControls={currentPage === 'submit'}
       />
       
       <main className="flex-1 w-full pt-8">

@@ -11,6 +11,7 @@ interface HeaderProps {
     onSortChange: (sort: string) => void;
     selectedCategories: string[];
     onCategoryChange: (categories: string[]) => void;
+    hideControls?: boolean;
 }
 
 export function Header({ 
@@ -21,7 +22,8 @@ export function Header({
     sortBy,
     onSortChange,
     selectedCategories,
-    onCategoryChange
+    onCategoryChange,
+    hideControls = false
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -49,6 +51,7 @@ export function Header({
         </div>
 
         {/* SEARCH BAR */}
+        {!hideControls && (
         <div className="flex-1 max-w-3xl relative z-50">
           <div className="relative w-full group">
             
@@ -88,8 +91,10 @@ export function Header({
             />
           </div>
         </div>
+        )}
 
         {/* ACTIONS */}
+        {!hideControls && (
         <div className="flex items-center">
             <Button
                 variant="outline" 
@@ -100,6 +105,7 @@ export function Header({
                 Post
             </Button>
         </div>
+        )}
       </div>
     </header>
   );
