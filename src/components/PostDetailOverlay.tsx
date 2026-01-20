@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Flag, ChevronDown, Check, X } from 'lucide-react'; // Added icons
 import type { Post } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
@@ -25,6 +25,14 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+
+  // Lock body scroll when overlay is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Compute badge for this post using centralized logic
   const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
@@ -130,6 +138,17 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                             Click to view full image
                         </span>
                     </div>
+                    
+                    {/* Share Button - Top Right */}
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsShareOpen(true);
+                        }}
+                        className="absolute top-6 right-6 w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform z-20 shadow-lg"
+                    >
+                        <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
+                    </button>
                 </div>
 
                 {/* 2. Metadata Row */}
@@ -176,26 +195,16 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                 </div>
 
                 {/* 5. Author */}
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} className="w-full h-full object-cover" alt="Avatar" />
-                    </div>
-                    <span className="text-sm font-bold text-[#111111]">Timi</span>
-                </div>
-
-                {/* 6. Rating Summary & Actions */}
-                <div className="flex items-center justify-between border-t border-gray-100 pt-8">
-                    <div className="flex items-center gap-2">
-                        <button 
-                            onClick={() => setIsShareOpen(true)}
-                            className="flex items-center gap-2 text-[#111111] font-bold text-lg hover:opacity-70 transition-opacity"
-                        >
-                            <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
-                            Share
-                        </button>
+                {/* 5. Author & Rating */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} className="w-full h-full object-cover" alt="Avatar" />
+                        </div>
+                        <span className="text-sm font-bold text-[#111111]">Timi</span>
                     </div>
 
-                    {/* RATING DISPLAY */}
+                    {/* RATING DISPLAY (Moved Here) */}
                     <div className="flex items-center gap-3">
                          {isLocked ? (
                              <span className="text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
@@ -216,6 +225,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                          )}
                     </div>
                 </div>
+
+
 
                 {isShareOpen && (
                     <SharePostOverlay onClose={() => setIsShareOpen(false)} postId={post.id} />
