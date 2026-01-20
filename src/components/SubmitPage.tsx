@@ -99,7 +99,7 @@ export function SubmitPage() {
                             placeholder="Title" 
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="h-14 text-lg px-6 rounded-2xl border-2 border-[#111111] focus:ring-0 placeholder:text-gray-400 font-medium"
+                            className="h-12 text-base px-4 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                         />
                     </div>
                     
@@ -109,7 +109,7 @@ export function SubmitPage() {
                             value={description}
                             maxLength={400}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="min-h-[180px] text-base p-6 pb-12 rounded-2xl border-2 border-[#111111] focus:ring-0 placeholder:text-gray-400 resize-none font-medium"
+                            className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 resize-none font-medium"
                         />
                         <div className="absolute bottom-4 right-4 text-xs font-bold text-gray-400 pointer-events-none">
                             {description.length} / 400 chars
@@ -180,7 +180,7 @@ export function SubmitPage() {
                                  placeholder="Search..." 
                                  value={avatarSearch}
                                  onChange={(e) => setAvatarSearch(e.target.value)}
-                                 className="w-full h-12 rounded-full border border-gray-300 pl-12 pr-6 text-sm focus:border-[#111111] focus:outline-none transition-colors"
+                                 className="w-full h-12 rounded-full border border-gray-200 pl-12 pr-6 text-sm focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312] transition-colors"
                              />
                          </div>
 
