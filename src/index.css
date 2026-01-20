@@ -8,3 +8,8 @@
     @apply font-sans antialiased text-gray-900 bg-surface;
   }
 }
+
+/* Utility to hide scrollbar while keeping scroll functionality */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

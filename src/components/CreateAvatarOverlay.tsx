@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { User, Pencil } from 'lucide-react';
+import { User, Pencil, Eye, EyeOff } from 'lucide-react';
 import { validatePasskey, getStrengthColor, getStrengthLabel } from '../logic/passkeyValidation';
 
 interface CreateAvatarOverlayProps {
@@ -15,6 +15,17 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
   const [confirmPasskey, setConfirmPasskey] = useState('');
   const [email, setEmail] = useState('');
   const [showStrengthMeter, setShowStrengthMeter] = useState(false);
+  const [showPasskey, setShowPasskey] = useState(false);
+  const [showConfirmPasskey, setShowConfirmPasskey] = useState(false);
+
+  // Lock body scroll when overlay is open
+  useEffect(() => {
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
   // Real-time passkey validation
   const validation = useMemo(() => {
@@ -57,7 +68,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
         onClick={onClose}
       />
 
-      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto">
+      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         
 
         <div className="text-center mb-6">
@@ -82,21 +93,35 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
 
              {/* Passkey Input with Strength Meter */}
              <div className="space-y-2">
-                <Input 
-                    type="password"
-                    placeholder="Enter Passkey (min. 12 characters)" 
-                    value={passkey}
-                    onChange={(e) => setPasskey(e.target.value)}
-                    onFocus={() => setShowStrengthMeter(true)}
-                    maxLength={64}
-                    className={`h-12 rounded-xl text-base px-4 transition-colors ${
-                        passkey.length > 0 && !validation.canSubmit 
-                            ? 'border-amber-400 focus-visible:border-amber-400' 
-                            : validation.canSubmit 
-                                ? 'border-green-400 focus-visible:border-green-400'
-                                : 'border-gray-300'
-                    }`}
-                />
+                <div className="relative">
+                    <Input 
+                        type={showPasskey ? "text" : "password"}
+                        placeholder="Enter Passkey (min. 12 characters)" 
+                        value={passkey}
+                        onChange={(e) => setPasskey(e.target.value)}
+                        onFocus={() => setShowStrengthMeter(true)}
+                        maxLength={64}
+                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-colors ${
+                            passkey.length > 0 && !validation.canSubmit 
+                                ? 'border-amber-400 focus-visible:border-amber-400' 
+                                : validation.canSubmit 
+                                    ? 'border-green-400 focus-visible:border-green-400'
+                                    : 'border-gray-300'
+                        }`}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPasskey(!showPasskey)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        tabIndex={-1}
+                    >
+                        {showPasskey ? (
+                            <EyeOff className="w-5 h-5" />
+                        ) : (
+                            <Eye className="w-5 h-5" />
+                        )}
+                    </button>
+                </div>
                 
                 {/* Strength Meter */}
                 {showStrengthMeter && passkey.length > 0 && (
@@ -148,19 +173,33 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
 
              {/* Confirm Passkey */}
              <div className="space-y-1">
-                <Input 
-                    type="password"
-                    placeholder="Confirm Passkey" 
-                    value={confirmPasskey}
-                    onChange={(e) => setConfirmPasskey(e.target.value)}
-                    className={`h-12 rounded-xl text-base px-4 transition-colors ${
-                        passkeyMismatch
-                            ? 'border-red-400 focus-visible:border-red-400'
-                            : confirmPasskey.length > 0 && passkey === confirmPasskey
-                                ? 'border-green-400 focus-visible:border-green-400'
-                                : 'border-gray-300'
-                    }`}
-                />
+                <div className="relative">
+                    <Input 
+                        type={showConfirmPasskey ? "text" : "password"}
+                        placeholder="Confirm Passkey" 
+                        value={confirmPasskey}
+                        onChange={(e) => setConfirmPasskey(e.target.value)}
+                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-colors ${
+                            passkeyMismatch
+                                ? 'border-red-400 focus-visible:border-red-400'
+                                : confirmPasskey.length > 0 && passkey === confirmPasskey
+                                    ? 'border-green-400 focus-visible:border-green-400'
+                                    : 'border-gray-300'
+                        }`}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirmPasskey(!showConfirmPasskey)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        tabIndex={-1}
+                    >
+                        {showConfirmPasskey ? (
+                            <EyeOff className="w-5 h-5" />
+                        ) : (
+                            <Eye className="w-5 h-5" />
+                        )}
+                    </button>
+                </div>
                 {passkeyMismatch && (
                     <p className="text-xs text-red-500 ml-1 animate-in fade-in">
                         Passkeys don't match

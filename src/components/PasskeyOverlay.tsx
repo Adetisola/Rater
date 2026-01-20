@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { Eye, EyeOff } from 'lucide-react';
 import type { Avatar } from '../logic/mockData';
 import { ForgotPasskeyOverlay } from './ForgotPasskeyOverlay';
 
@@ -14,6 +15,7 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
   const [passkey, setPasskey] = useState('');
   const [error, setError] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
+  const [showPasskey, setShowPasskey] = useState(false);
 
   const handleEnter = () => {
     if (passkey === avatar.passkey) {
@@ -68,18 +70,32 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
 
             {/* Passkey Input */}
             <div className="w-full mb-2">
-                <Input 
-                    type="password"
-                    placeholder="Passkey"
-                    value={passkey}
-                    onChange={(e) => {
-                        setPasskey(e.target.value);
-                        setError(false);
-                    }}
-                    className={`h-12 rounded-xl text-lg transition-all ${error ? '!border-red-500 !ring-red-500/20 focus-visible:!border-red-500 focus-visible:!ring-red-500/20' : 'border-gray-200'}`}
-                    onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-                    autoFocus
-                />
+                <div className="relative">
+                    <Input 
+                        type={showPasskey ? "text" : "password"}
+                        placeholder="Passkey"
+                        value={passkey}
+                        onChange={(e) => {
+                            setPasskey(e.target.value);
+                            setError(false);
+                        }}
+                        className={`h-12 rounded-xl text-lg pr-12 transition-all ${error ? '!border-red-500 !ring-red-500/20 focus-visible:!border-red-500 focus-visible:!ring-red-500/20' : 'border-gray-200'}`}
+                        onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
+                        autoFocus
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPasskey(!showPasskey)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                        tabIndex={-1}
+                    >
+                        {showPasskey ? (
+                            <EyeOff className="w-5 h-5" />
+                        ) : (
+                            <Eye className="w-5 h-5" />
+                        )}
+                    </button>
+                </div>
                 {error && (
                     <p className="text-red-500 text-sm font-medium mt-1 ml-1 animate-in slide-in-from-top-1">
                         Incorrect passkey
