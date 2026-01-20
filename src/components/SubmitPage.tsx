@@ -7,6 +7,7 @@ import { Textarea } from './ui/Textarea';
 import { CATEGORIES, MOCK_AVATARS, type Avatar } from '../logic/mockData';
 import { AvatarPicker } from './AvatarPicker';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
+import { PasskeyOverlay } from './PasskeyOverlay';
 
 
 export function SubmitPage() {
@@ -21,6 +22,7 @@ export function SubmitPage() {
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [showCreateOverlay, setShowCreateOverlay] = useState(false);
   const [avatarSearch, setAvatarSearch] = useState('');
+  const [pendingAvatar, setPendingAvatar] = useState<Avatar | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
   // MOCKED AVATARS
@@ -186,7 +188,7 @@ export function SubmitPage() {
 
                          <AvatarPicker 
                              avatars={filteredAvatars} 
-                             onSelect={setSelectedAvatar}
+                             onSelect={(avatar) => setPendingAvatar(avatar)}
                              onCreateNew={() => setShowCreateOverlay(true)}
                          />
                      </>
@@ -245,6 +247,17 @@ export function SubmitPage() {
                 // Visual only - no real creation logic needed for this task
             }}
           />
+      )}
+      
+      {pendingAvatar && (
+        <PasskeyOverlay
+            avatar={pendingAvatar}
+            onClose={() => setPendingAvatar(null)}
+            onSuccess={() => {
+                setSelectedAvatar(pendingAvatar);
+                setPendingAvatar(null);
+            }}
+        />
       )}
 
     </div>
