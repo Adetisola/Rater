@@ -101,7 +101,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={onClose}
-                        className="flex-1 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-gray-50 transition-colors"
+                        className="flex-1 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
                     >
                         Cancel
                     </button>
