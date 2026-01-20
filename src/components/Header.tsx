@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
 
@@ -26,13 +26,36 @@ export function Header({
     hideControls = false
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showWidgets, setShowWidgets] = useState(!hideControls);
+  const [opacityTrigger, setOpacityTrigger] = useState(!hideControls);
+
+  useEffect(() => {
+    let t1: ReturnType<typeof setTimeout>;
+    let t2: ReturnType<typeof setTimeout>;
+
+    if (hideControls) {
+      setOpacityTrigger(false);
+      setShowWidgets(false);
+    } else {
+      t1 = setTimeout(() => {
+        setShowWidgets(true);
+        // Trigger fade in after mount
+        t2 = setTimeout(() => setOpacityTrigger(true), 50);
+      }, 700);
+    }
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [hideControls]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl py-4 border-b border-white/20 rounded-bl-[30px] rounded-br-[30px]">
-      <div className="max-w-[1600px] mx-auto px-6 flex items-center justify-between gap-6">
+      <div className={`relative max-w-[1600px] mx-auto px-6 flex items-center gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
         
-        {/* LOGO */}
-        <div className="shrink-0">
+        {/* ANIMATED LOGO (Absolute) */}
+        <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-6 translate-x-0'}`}>
           <div 
             onClick={onLogoClick}
             className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
@@ -50,9 +73,12 @@ export function Header({
           </div>
         </div>
 
+        {/* GHOST LOGO SPLACER (Preserves layout in Home mode) */}
+        {!hideControls && <div className="w-12 h-12 shrink-0 invisible" aria-hidden="true" />}
+
         {/* SEARCH BAR */}
-        {!hideControls && (
-        <div className="flex-1 max-w-3xl relative z-50">
+        {showWidgets && (
+        <div className={`flex-1 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
           <div className="relative w-full group">
             
             {/* Original Search Input - Hidden when Filter is Open to prevent duplication */}
@@ -94,8 +120,8 @@ export function Header({
         )}
 
         {/* ACTIONS */}
-        {!hideControls && (
-        <div className="flex items-center">
+        {showWidgets && (
+        <div className={`flex items-center transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
             <Button
                 variant="outline" 
                 onClick={onPostClick}

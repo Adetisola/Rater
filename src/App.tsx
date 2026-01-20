@@ -12,6 +12,18 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('✨Curated Freshness✨');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [isDelayed, setIsDelayed] = useState(false);
+
+  const handleHomeClick = () => {
+    if (currentPage === 'submit') {
+        setIsDelayed(true);
+        setCurrentPage('home');
+        // Wait for logo animation (700ms) + fade in (500ms partial)
+        setTimeout(() => setIsDelayed(false), 800);
+    } else {
+        setCurrentPage('home');
+    }
+  };
 
   // Filter & Sort posts
   const filteredPosts = MOCK_POSTS.filter(post => {
@@ -63,7 +75,7 @@ function App() {
     <div className="min-h-screen bg-white flex flex-col font-sans text-[#111111]">
       <Header 
         onPostClick={() => setCurrentPage('submit')} 
-        onLogoClick={() => setCurrentPage('home')} 
+        onLogoClick={handleHomeClick} 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         sortBy={sortBy}
@@ -74,7 +86,7 @@ function App() {
       />
       
       <main className="flex-1 w-full pt-8">
-        {currentPage === 'home' ? (
+        {currentPage === 'home' && !isDelayed ? (
            <MasonryGrid 
               posts={sortedPosts} 
               onPostClick={(post) => setSelectedPost(post)}
