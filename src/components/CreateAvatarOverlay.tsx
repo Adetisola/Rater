@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { User, Pencil } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { validatePasskey, getStrengthColor, getStrengthLabel } from '../logic/passkeyValidation';
 
 interface CreateAvatarOverlayProps {
   onClose: () => void;
@@ -14,16 +14,40 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
   const [email, setEmail] = useState('');
+  const [showStrengthMeter, setShowStrengthMeter] = useState(false);
+
+  // Real-time passkey validation
+  const validation = useMemo(() => {
+    return validatePasskey(passkey, {
+      userName: name,
+      email: email,
+    });
+  }, [passkey, name, email]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !passkey) return;
-    if (passkey !== confirmPasskey) {
-        alert("Passkeys do not match"); 
-        return;
+    
+    // Validate passkey strength
+    if (!validation.canSubmit) {
+      return;
     }
-    onCreate(name, passkey, email);
+    
+    // Check passkey match
+    if (passkey !== confirmPasskey) {
+      return;
+    }
+    
+    // Check name
+    if (!name.trim()) {
+      return;
+    }
+    
+    onCreate(name, passkey, email || undefined);
   };
+
+  const strengthColor = getStrengthColor(validation.strength);
+  const strengthLabel = getStrengthLabel(validation.strength);
+  const passkeyMismatch = confirmPasskey.length > 0 && passkey !== confirmPasskey;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -33,9 +57,8 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
         onClick={onClose}
       />
 
-      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center">
+      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto">
         
-
 
         <div className="text-center mb-6">
             <h2 className="text-2xl font-bold mb-6 text-[#111111]">Create your Avatar</h2>
@@ -57,21 +80,93 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                  className="h-12 rounded-xl border-gray-300 text-base px-4"
              />
 
-             <Input 
-                 type="password"
-                 placeholder="Enter Passkey" 
-                 value={passkey}
-                 onChange={(e) => setPasskey(e.target.value)}
-                 className="h-12 rounded-xl border-gray-300 text-base px-4"
-             />
+             {/* Passkey Input with Strength Meter */}
+             <div className="space-y-2">
+                <Input 
+                    type="password"
+                    placeholder="Enter Passkey (min. 12 characters)" 
+                    value={passkey}
+                    onChange={(e) => setPasskey(e.target.value)}
+                    onFocus={() => setShowStrengthMeter(true)}
+                    maxLength={64}
+                    className={`h-12 rounded-xl text-base px-4 transition-colors ${
+                        passkey.length > 0 && !validation.canSubmit 
+                            ? 'border-amber-400 focus-visible:border-amber-400' 
+                            : validation.canSubmit 
+                                ? 'border-green-400 focus-visible:border-green-400'
+                                : 'border-gray-300'
+                    }`}
+                />
+                
+                {/* Strength Meter */}
+                {showStrengthMeter && passkey.length > 0 && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {/* Progress Bar */}
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full rounded-full transition-all duration-300 ease-out"
+                                    style={{ 
+                                        width: `${validation.score}%`,
+                                        backgroundColor: strengthColor
+                                    }}
+                                />
+                            </div>
+                            <span 
+                                className="text-xs font-bold min-w-[70px] text-right"
+                                style={{ color: strengthColor }}
+                            >
+                                {strengthLabel}
+                            </span>
+                        </div>
+                        
+                        {/* Hints */}
+                        {validation.hints.length > 0 && (
+                            <div className="space-y-1">
+                                {validation.hints.slice(0, 2).map((hint, index) => (
+                                    <p 
+                                        key={index} 
+                                        className={`text-xs ${
+                                            hint.includes('Great') || hint.includes('💪')
+                                                ? 'text-green-600'
+                                                : 'text-gray-500'
+                                        }`}
+                                    >
+                                        {hint}
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+                        
+                        {/* Character Count */}
+                        <p className="text-[10px] text-gray-400 text-right">
+                            {passkey.length}/64 characters
+                        </p>
+                    </div>
+                )}
+             </div>
 
-             <Input 
-                 type="password"
-                 placeholder="Confirm Passkey" 
-                 value={confirmPasskey}
-                 onChange={(e) => setConfirmPasskey(e.target.value)}
-                 className="h-12 rounded-xl border-gray-300 text-base px-4"
-             />
+             {/* Confirm Passkey */}
+             <div className="space-y-1">
+                <Input 
+                    type="password"
+                    placeholder="Confirm Passkey" 
+                    value={confirmPasskey}
+                    onChange={(e) => setConfirmPasskey(e.target.value)}
+                    className={`h-12 rounded-xl text-base px-4 transition-colors ${
+                        passkeyMismatch
+                            ? 'border-red-400 focus-visible:border-red-400'
+                            : confirmPasskey.length > 0 && passkey === confirmPasskey
+                                ? 'border-green-400 focus-visible:border-green-400'
+                                : 'border-gray-300'
+                    }`}
+                />
+                {passkeyMismatch && (
+                    <p className="text-xs text-red-500 ml-1 animate-in fade-in">
+                        Passkeys don't match
+                    </p>
+                )}
+             </div>
 
             <Input 
                  type="email" 
@@ -81,11 +176,23 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                  className="h-12 rounded-xl border-gray-300 text-base px-4"
             />
 
-            <div className="pt-4 flex justify-center">
+            <div className="pt-4 flex items-center justify-center gap-6 w-full">
+                 <button 
+                    onClick={onClose}
+                    type="button"
+                    className="py-3 px-10 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
+                 >
+                    Cancel
+                 </button>
                  <Button 
                     type="submit" 
                     variant="outline"
-                    className="px-6 h-12 rounded-full text-base font-bold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all text-[#111111]"
+                    disabled={!validation.canSubmit || passkeyMismatch || !name.trim()}
+                    className={`px-12 h-12 rounded-full text-base font-bold border-[#FEC312] transition-all text-[#111111] min-w-[140px] ${
+                        !validation.canSubmit || passkeyMismatch || !name.trim()
+                            ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
+                            : 'hover:bg-[#FEC312] hover:text-white'
+                    }`}
                 >
                     Create
                 </Button>

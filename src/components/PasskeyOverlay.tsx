@@ -95,14 +95,22 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
                 Forgot Passkey?
             </button>
 
-            {/* Enter Button */}
-            <Button 
-                onClick={handleEnter}
-                variant="outline"
-                className="px-6 h-12 rounded-full text-base font-bold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all"
-            >
-                Enter
-            </Button>
+            {/* Actions */}
+            <div className="flex items-center justify-center gap-6 mt-2 w-full">
+                 <button 
+                    onClick={onClose}
+                    className="py-3 px-10 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
+                 >
+                    Cancel
+                 </button>
+                <Button 
+                    onClick={handleEnter}
+                    variant="outline"
+                    className="px-12 h-12 rounded-full text-base font-bold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all min-w-[140px]"
+                >
+                    Enter
+                </Button>
+            </div>
           </div>
       )}
     </div>
