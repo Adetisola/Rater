@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Flag, ChevronDown, Check, X } from 'lucide-react'; // Added icons
+import { Flag, ChevronDown, Check, X, Download } from 'lucide-react'; // Added icons
 import type { Post } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
 import { StarRating } from './ui/StarRating';
@@ -139,16 +139,31 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         </span>
                     </div>
                     
-                    {/* Share Button - Top Right */}
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsShareOpen(true);
-                        }}
-                        className="absolute top-6 right-6 w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform z-20 shadow-lg"
-                    >
-                        <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
-                    </button>
+                    
+                    {/* Action Buttons - Top Right */}
+                    <div className="absolute top-6 right-6 flex gap-3 z-20">
+                         {/* Download Button */}
+                         <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(post.imageUrl, '_blank');
+                            }}
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+                        >
+                            <Download className="w-5 h-5 text-black" />
+                        </button>
+
+                        {/* Share Button */}
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsShareOpen(true);
+                            }}
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform shadow-lg"
+                        >
+                            <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* 2. Metadata Row */}
