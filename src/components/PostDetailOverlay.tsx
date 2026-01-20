@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Flag, ChevronDown, Check, X, Download } from 'lucide-react'; // Added icons
+import { ChevronDown, Check, X, Download } from 'lucide-react'; // Added icons
 import type { Post } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
-import { StarRating } from './ui/StarRating';
+
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
 import { formatTimeAgo } from '../lib/utils';
@@ -315,7 +315,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="px-4 py-2 border border-black rounded-lg text-xs font-bold flex items-center gap-2 bg-white hover:bg-gray-50 bg-white"
+                        className="px-4 py-2 border border-black rounded-lg text-xs font-bold flex items-center gap-2 bg-white hover:bg-gray-50"
                     >
                         {sortBy}
                         <ChevronDown className={`w-3 h-3 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -399,7 +399,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
       {/* Fullscreen Image Overlay */}
       {isImageFullscreen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
                {/* Backdrop */}
                <div 
                   className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
