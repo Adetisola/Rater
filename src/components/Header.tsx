@@ -146,7 +146,7 @@ export function Header({
   }, [hideControls]);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl py-4 border-b border-white/20 rounded-bl-[30px] rounded-br-[30px]">
+    <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-4 border-b border-white/20 rounded-bl-[30px] rounded-br-[30px]">
       <div className={`relative max-w-[1600px] mx-auto px-6 flex items-center gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
         
         {/* ANIMATED LOGO (Absolute) */}
