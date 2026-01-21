@@ -1,66 +1,257 @@
 import Fuse, { type IFuseOptions, type FuseResultMatch } from 'fuse.js';
-import type { Post } from './mockData';
+import type { Post, Avatar, Category } from './mockData';
 
-// Fuse.js configuration with weighted fields
-// Threshold: 0.35 allows for ~2-3 character errors in longer words
-// Lower = stricter matching, Higher = more fuzzy
-const FUSE_OPTIONS: IFuseOptions<Post> = {
-  keys: [
-    { name: 'title', weight: 1.0 },       // Highest priority
-    { name: 'category', weight: 0.8 },    // Medium-high priority
-    { name: 'description', weight: 0.6 }, // Medium priority
-  ],
-  threshold: 0.35,           // Fuzzy tolerance (0 = exact, 1 = match anything)
-  includeMatches: true,      // Return match indices for highlighting
-  includeScore: true,        // Return relevance score
-  minMatchCharLength: 2,     // Minimum chars to trigger search
-  ignoreLocation: true,      // Match anywhere in string, not just beginning
-  useExtendedSearch: false,  // Standard fuzzy search
-  findAllMatches: true,      // Continue searching after first match
-};
+// ============================================================================
+// TEXT NORMALIZATION
+// ============================================================================
 
-export interface SearchResult {
-  item: Post;
+const STEMMING_RULES: Array<[RegExp, string]> = [
+  [/ies$/i, 'y'],
+  [/(ss|x|z|ch|sh)es$/i, '$1'],
+  [/([^s])s$/i, '$1'],
+  [/ing$/i, ''],
+  [/ed$/i, ''],
+];
+
+function stemWord(word: string): string {
+  let stemmed = word.toLowerCase();
+  for (const [pattern, replacement] of STEMMING_RULES) {
+    if (pattern.test(stemmed)) {
+      stemmed = stemmed.replace(pattern, replacement);
+      break;
+    }
+  }
+  return stemmed;
+}
+
+export function normalizeText(text: string): string {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s'-]/g, ' ')
+    .split(/\s+/)
+    .map(word => stemWord(word.trim()))
+    .filter(word => word.length > 0)
+    .join(' ')
+    .trim();
+}
+
+// ============================================================================
+// TYPES FOR SEARCH RESULTS
+// ============================================================================
+
+export interface DesignerSearchResult {
+  avatar: Avatar;
+  score: number;
+}
+
+export interface PostSearchResult {
+  post: Post;
   score: number;
   matches: readonly FuseResultMatch[] | undefined;
 }
 
-/**
- * Create a Fuse.js search instance.
- * Call this once and reuse to avoid rebuilding index.
- */
-export function createSearchIndex(posts: Post[]): Fuse<Post> {
-  return new Fuse(posts, FUSE_OPTIONS);
+export interface CategorySearchResult {
+  category: Category;
+  score: number;
+}
+
+export interface SectionedSearchResults {
+  designers: DesignerSearchResult[];
+  posts: PostSearchResult[];
+  categories: CategorySearchResult[];
+}
+
+// ============================================================================
+// NORMALIZED TYPES FOR FUSE INDEXING
+// ============================================================================
+
+interface NormalizedAvatar extends Avatar {
+  name_normalized: string;
+}
+
+interface NormalizedPost extends Post {
+  title_normalized: string;
+  category_normalized: string;
+  description_normalized: string;
+  designer_name: string;
+  designer_name_normalized: string;
+}
+
+interface NormalizedCategory {
+  name: Category;
+  name_normalized: string;
+}
+
+// ============================================================================
+// SEARCH INDEXES
+// ============================================================================
+
+export interface SearchIndexes {
+  designers: Fuse<NormalizedAvatar>;
+  posts: Fuse<NormalizedPost>;
+  categories: Fuse<NormalizedCategory>;
 }
 
 /**
- * Search posts using a pre-built Fuse index.
- * @param fuse - Pre-built Fuse instance
- * @param query - Search query string
- * @param limit - Maximum number of results (default: 10)
+ * Create all search indexes.
+ */
+export function createSearchIndexes(
+  posts: Post[],
+  avatars: Record<string, Avatar>,
+  categories: Category[]
+): SearchIndexes {
+  // Normalize Avatars
+  const normalizedAvatars: NormalizedAvatar[] = Object.values(avatars)
+    .filter(a => !a.isBlocked)
+    .map(avatar => ({
+      ...avatar,
+      name_normalized: normalizeText(avatar.name),
+    }));
+
+  // Normalize Posts with designer name
+  const normalizedPosts: NormalizedPost[] = posts.map(post => {
+    const designer = avatars[post.designerId];
+    const designerName = designer ? designer.name : '';
+    return {
+      ...post,
+      title_normalized: normalizeText(post.title),
+      category_normalized: normalizeText(post.category),
+      description_normalized: normalizeText(post.description),
+      designer_name: designerName,
+      designer_name_normalized: normalizeText(designerName),
+    };
+  });
+
+  // Normalize Categories
+  const normalizedCategories: NormalizedCategory[] = categories.map(cat => ({
+    name: cat,
+    name_normalized: normalizeText(cat),
+  }));
+
+  // Avatar Index - search by designer name only
+  const avatarOptions: IFuseOptions<NormalizedAvatar> = {
+    keys: [{ name: 'name_normalized', weight: 1.0 }],
+    threshold: 0.3,
+    includeScore: true,
+  };
+
+  // Post Index - weighted fields with designer_name as low weight
+  const postOptions: IFuseOptions<NormalizedPost> = {
+    keys: [
+      { name: 'title_normalized', weight: 1.0 },
+      { name: 'category_normalized', weight: 0.7 },
+      { name: 'description_normalized', weight: 0.5 },
+      { name: 'designer_name_normalized', weight: 0.3 },
+    ],
+    threshold: 0.35,
+    includeMatches: true,
+    includeScore: true,
+    minMatchCharLength: 2,
+    ignoreLocation: true,
+    findAllMatches: true,
+  };
+
+  // Category Index - exact category matching
+  const categoryOptions: IFuseOptions<NormalizedCategory> = {
+    keys: [{ name: 'name_normalized', weight: 1.0 }],
+    threshold: 0.3,
+    includeScore: true,
+  };
+
+  return {
+    designers: new Fuse(normalizedAvatars, avatarOptions),
+    posts: new Fuse(normalizedPosts, postOptions),
+    categories: new Fuse(normalizedCategories, categoryOptions),
+  };
+}
+
+// ============================================================================
+// SEARCH FUNCTIONS
+// ============================================================================
+
+/**
+ * Search all indexes and return sectioned results for the dropdown.
+ */
+export function searchAll(
+  indexes: SearchIndexes,
+  query: string,
+  limits: { designers: number; posts: number; categories: number } = { designers: 3, posts: 5, categories: 3 }
+): SectionedSearchResults {
+  if (!query || query.trim().length < 2) {
+    return { designers: [], posts: [], categories: [] };
+  }
+
+  const normalizedQuery = normalizeText(query);
+  if (normalizedQuery.length < 2) {
+    return { designers: [], posts: [], categories: [] };
+  }
+
+  // Search designers
+  const designerResults = indexes.designers
+    .search(normalizedQuery, { limit: limits.designers })
+    .map(result => ({
+      avatar: result.item as Avatar,
+      score: result.score ?? 1,
+    }));
+
+  // Search posts
+  const postResults = indexes.posts
+    .search(normalizedQuery, { limit: limits.posts })
+    .map(result => ({
+      post: result.item as Post,
+      score: result.score ?? 1,
+      matches: result.matches,
+    }));
+
+  // Search categories
+  const categoryResults = indexes.categories
+    .search(normalizedQuery, { limit: limits.categories })
+    .map(result => ({
+      category: result.item.name,
+      score: result.score ?? 1,
+    }));
+
+  return {
+    designers: designerResults,
+    posts: postResults,
+    categories: categoryResults,
+  };
+}
+
+/**
+ * Search posts only (for Enter key behavior and grid filtering).
+ * Designer name matches rank higher.
  */
 export function searchPosts(
-  fuse: Fuse<Post>,
+  indexes: SearchIndexes,
   query: string,
-  limit: number = 10
-): SearchResult[] {
+  limit: number = 100
+): PostSearchResult[] {
   if (!query || query.trim().length < 2) {
     return [];
   }
 
-  const results = fuse.search(query.trim(), { limit });
-  
-  return results.map(result => ({
-    item: result.item,
-    score: result.score ?? 1,
-    matches: result.matches,
-  }));
+  const normalizedQuery = normalizeText(query);
+  if (normalizedQuery.length < 2) {
+    return [];
+  }
+
+  const results = indexes.posts
+    .search(normalizedQuery, { limit })
+    .map(result => ({
+      post: result.item as Post,
+      score: result.score ?? 1,
+      matches: result.matches,
+    }));
+
+  return results;
 }
 
-/**
- * Highlight matched text in a string.
- * Returns an array of segments with isMatch flag.
- */
+// ============================================================================
+// HIGHLIGHTING (uses original text)
+// ============================================================================
+
 export interface HighlightSegment {
   text: string;
   isMatch: boolean;
@@ -75,79 +266,65 @@ export function highlightMatches(
     return [{ text, isMatch: false }];
   }
 
-  // Find matches for this specific key
-  const keyMatches = matches.filter(m => m.key === key);
+  const normalizedKey = key + '_normalized';
+  const keyMatches = matches.filter(m => m.key === key || m.key === normalizedKey);
+  
   if (keyMatches.length === 0) {
     return [{ text, isMatch: false }];
   }
 
-  // Collect all match indices
-  const allIndices: Array<[number, number]> = [];
+  const matchedWords = new Set<string>();
+  
   keyMatches.forEach(m => {
-    if (m.indices) {
-      allIndices.push(...(m.indices as Array<[number, number]>));
+    if (m.indices && m.value) {
+      m.indices.forEach(([start, end]) => {
+        const word = m.value!.slice(start, end + 1).toLowerCase();
+        matchedWords.add(word);
+        matchedWords.add(stemWord(word));
+      });
     }
   });
 
-  if (allIndices.length === 0) {
+  if (matchedWords.size === 0) {
     return [{ text, isMatch: false }];
   }
 
-  // Sort and merge overlapping indices
-  allIndices.sort((a, b) => a[0] - b[0]);
-  const mergedIndices: Array<[number, number]> = [];
-  
-  for (const [start, end] of allIndices) {
-    const last = mergedIndices[mergedIndices.length - 1];
-    if (last && start <= last[1] + 1) {
-      // Overlapping or adjacent, merge
-      last[1] = Math.max(last[1], end);
-    } else {
-      mergedIndices.push([start, end]);
-    }
-  }
-
-  // Build segments
   const segments: HighlightSegment[] = [];
-  let cursor = 0;
-
-  for (const [start, end] of mergedIndices) {
-    // Non-matching segment before this match
-    if (cursor < start) {
-      segments.push({
-        text: text.slice(cursor, start),
-        isMatch: false,
-      });
+  const words = text.split(/(\s+)/);
+  
+  for (const word of words) {
+    if (/^\s+$/.test(word)) {
+      if (segments.length > 0 && !segments[segments.length - 1].isMatch) {
+        segments[segments.length - 1].text += word;
+      } else {
+        segments.push({ text: word, isMatch: false });
+      }
+    } else {
+      const wordLower = word.toLowerCase();
+      const wordStemmed = stemWord(wordLower);
+      const isMatch = matchedWords.has(wordLower) || matchedWords.has(wordStemmed);
+      
+      if (segments.length > 0 && segments[segments.length - 1].isMatch === isMatch) {
+        segments[segments.length - 1].text += word;
+      } else {
+        segments.push({ text: word, isMatch });
+      }
     }
-    // Matching segment
-    segments.push({
-      text: text.slice(start, end + 1),
-      isMatch: true,
-    });
-    cursor = end + 1;
   }
 
-  // Remaining non-matching text
-  if (cursor < text.length) {
-    segments.push({
-      text: text.slice(cursor),
-      isMatch: false,
-    });
-  }
-
-  return segments;
+  return segments.length > 0 ? segments : [{ text, isMatch: false }];
 }
 
-/**
- * Filter search results by categories.
- * Use this to post-process Fuse results with existing category filters.
- */
+// ============================================================================
+// CATEGORY FILTERING (for post-processing)
+// ============================================================================
+
 export function filterSearchResultsByCategory(
-  results: SearchResult[],
+  results: PostSearchResult[],
   categories: string[]
-): SearchResult[] {
+): PostSearchResult[] {
   if (categories.length === 0) {
     return results;
   }
-  return results.filter(r => categories.includes(r.item.category));
+  return results.filter(r => categories.includes(r.post.category));
 }

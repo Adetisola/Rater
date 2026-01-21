@@ -3,8 +3,10 @@ import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
 import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
-import { createSearchIndex, searchPosts, filterSearchResultsByCategory, type SearchResult } from '../logic/searchUtils';
-import type { Post } from '../logic/mockData';
+import { createSearchIndexes, searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
+import type { Post, Avatar, Category } from '../logic/mockData';
+import { MOCK_AVATARS, CATEGORIES } from '../logic/mockData';
+import { X } from 'lucide-react';
 
 interface HeaderProps {
     onPostClick: () => void;
@@ -16,8 +18,10 @@ interface HeaderProps {
     selectedCategories: string[];
     onCategoryChange: (categories: string[]) => void;
     hideControls?: boolean;
-    posts: Post[];  // Added for Fuse.js search
-    onPostSelect?: (post: Post) => void;  // Callback when search result is clicked
+    posts: Post[];
+    onPostSelect?: (post: Post) => void;
+    onDesignerSelect?: (avatar: Avatar) => void;
+    searchIndexes: SearchIndexes;
 }
 
 export function Header({ 
@@ -31,7 +35,9 @@ export function Header({
     onCategoryChange,
     hideControls = false,
     posts,
-    onPostSelect
+    onPostSelect,
+    onDesignerSelect,
+    searchIndexes
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showWidgets, setShowWidgets] = useState(!hideControls);
@@ -42,35 +48,57 @@ export function Header({
   // Debounce search query for performance
   const debouncedQuery = useDebounce(searchQuery, 150);
 
-  // Create Fuse index once and cache it (rebuilds when posts change)
-  const fuseIndex = useMemo(() => createSearchIndex(posts), [posts]);
-
-  // Perform search with debounced query
-  const searchResults = useMemo((): SearchResult[] => {
+  // Perform sectioned search with debounced query
+  const searchResults = useMemo((): SectionedSearchResults => {
     if (!debouncedQuery || debouncedQuery.trim().length < 2) {
-      return [];
+      return { designers: [], posts: [], categories: [] };
     }
     
-    const results = searchPosts(fuseIndex, debouncedQuery, 10);
-    
-    // Post-process: apply category filters
-    return filterSearchResultsByCategory(results, selectedCategories);
-  }, [fuseIndex, debouncedQuery, selectedCategories]);
+    return searchAll(searchIndexes, debouncedQuery, {
+      designers: 3,
+      posts: 5,
+      categories: 3
+    });
+  }, [searchIndexes, debouncedQuery]);
+
+  // Check if there are any results
+  const hasResults = searchResults.designers.length > 0 || 
+                     searchResults.posts.length > 0 || 
+                     searchResults.categories.length > 0;
 
   // Show results when typing
   useEffect(() => {
-    if (debouncedQuery.trim().length >= 2 && searchResults.length > 0) {
+    if (debouncedQuery.trim().length >= 2 && hasResults) {
       setShowSearchResults(true);
     } else {
       setShowSearchResults(false);
     }
-  }, [debouncedQuery, searchResults.length]);
+  }, [debouncedQuery, hasResults]);
 
-  // Handle result click
-  const handleResultClick = (post: Post) => {
+  // Handle designer click - switch to filtered browsing
+  const handleDesignerClick = (avatar: Avatar) => {
+    setShowSearchResults(false);
+    onSearchChange(''); // Clear search
+    searchInputRef.current?.blur();
+    onDesignerSelect?.(avatar);
+  };
+
+  // Handle post click - open post detail
+  const handlePostClick = (post: Post) => {
     setShowSearchResults(false);
     searchInputRef.current?.blur();
     onPostSelect?.(post);
+  };
+
+  // Handle category click - add to category filter
+  const handleCategoryClick = (category: Category) => {
+    setShowSearchResults(false);
+    onSearchChange(''); // Clear search
+    searchInputRef.current?.blur();
+    // Add category to filter if not already selected
+    if (!selectedCategories.includes(category)) {
+      onCategoryChange([...selectedCategories, category]);
+    }
   };
 
   // Handle closing search dropdown (with blur - for header area clicks)
@@ -84,11 +112,12 @@ export function Header({
     setShowSearchResults(false);
   };
 
-  // Handle Enter key press
+  // Handle Enter key press - run mixed search (handled by App.tsx)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       setShowSearchResults(false);
       searchInputRef.current?.blur();
+      // Search query stays - App.tsx will use it a for grid filtering
     } else if (e.key === 'Escape') {
       setShowSearchResults(false);
       searchInputRef.current?.blur();
@@ -106,7 +135,6 @@ export function Header({
     } else {
       t1 = setTimeout(() => {
         setShowWidgets(true);
-        // Trigger fade in after mount
         t2 = setTimeout(() => setOpacityTrigger(true), 50);
       }, 700);
     }
@@ -140,7 +168,7 @@ export function Header({
           </div>
         </div>
 
-        {/* GHOST LOGO SPACER (Preserves layout in Home mode) */}
+        {/* GHOST LOGO SPACER */}
         {!hideControls && <div className="w-12 h-12 shrink-0 invisible" aria-hidden="true" />}
 
         {/* SEARCH BAR */}
@@ -148,26 +176,65 @@ export function Header({
         <div className={`flex-1 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
           <div className="relative w-full group">
             
-            {/* Original Search Input - Hidden when Filter is Open to prevent duplication */}
+            {/* Search Input Container */}
             <div className={`relative w-full transition-opacity duration-200 ${isFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                <img src="/src/assets/icons/search.svg" alt="Search" className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-focus-within:opacity-100 transition-opacity" />
-                <input 
-                  ref={searchInputRef}
-                  type="text" 
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  onFocus={() => {
-                    if (searchResults.length > 0) {
-                      setShowSearchResults(true);
-                    }
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search by title, designer, or category..." 
-                  className="w-full h-12 pl-14 pr-16 rounded-full border-2 border-[#FEC312] focus:outline-none focus:ring-4 focus:ring-[#FEC312]/10 transition-all font-sans text-base placeholder:text-gray-400"
+                
+                {/* Search Icon */}
+                <img 
+                  src="/src/assets/icons/search.svg" 
+                  alt="Search" 
+                  className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-focus-within:opacity-100 transition-opacity z-10" 
                 />
+
+                {/* Input Wrapper - Styles applied here instead of input to contain pills */}
+                <div 
+                  className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-[#FEC312] bg-white flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-[#FEC312]/10"
+                  onClick={() => searchInputRef.current?.focus()}
+                >
+                  {/* Category Pills */}
+                  {selectedCategories.map(cat => (
+                    <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap animate-in fade-in zoom-in duration-200">
+                      {cat}
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newCats = selectedCategories.filter(c => c !== cat);
+                          onCategoryChange(newCats);
+                        }}
+                        className="p-0.5 rounded-full hover:bg-gray-200 transition-colors"
+                      >
+                        <X size={12} className="text-gray-500" />
+                      </button>
+                    </span>
+                  ))}
+
+                  {/* Actual Input */}
+                  <input 
+                    ref={searchInputRef}
+                    type="text" 
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    onFocus={() => {
+                      if (hasResults) {
+                        setShowSearchResults(true);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      handleKeyDown(e);
+                      // Backspace to remove last tag if input is empty
+                      if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
+                        const newCats = [...selectedCategories];
+                        newCats.pop();
+                        onCategoryChange(newCats);
+                      }
+                    }}
+                    placeholder={selectedCategories.length === 0 ? "Search by title, designer, or category..." : ""} 
+                    className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 h-8"
+                  />
+                </div>
                 
                 {/* Filter Trigger Button */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
                     <button 
                         onClick={() => setIsFilterOpen(true)}
                         className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
@@ -177,16 +244,18 @@ export function Header({
                 </div>
             </div>
 
-            {/* Search Results Dropdown */}
+            {/* Search Results Dropdown - Sectioned */}
             <SearchResults 
               results={searchResults}
               isVisible={showSearchResults && !isFilterOpen}
-              onResultClick={handleResultClick}
+              onDesignerClick={handleDesignerClick}
+              onPostClick={handlePostClick}
+              onCategoryClick={handleCategoryClick}
               onClose={handleCloseSearch}
               onSoftClose={handleSoftCloseSearch}
             />
 
-            {/* Expanded Search + Filter Panel Overlay */}
+            {/* Filter Panel */}
             <FilterDropdown 
                  isOpen={isFilterOpen}
                  onClose={() => setIsFilterOpen(false)}

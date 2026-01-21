@@ -1,24 +1,30 @@
-import type { Post } from '../logic/mockData';
-import type { SearchResult, HighlightSegment } from '../logic/searchUtils';
+import type { Avatar, Category, Post } from '../logic/mockData';
+import type { SectionedSearchResults, HighlightSegment, PostSearchResult } from '../logic/searchUtils';
 import { highlightMatches } from '../logic/searchUtils';
 import { createPortal } from 'react-dom';
 
 interface SearchResultsProps {
-  results: SearchResult[];
+  results: SectionedSearchResults;
   isVisible: boolean;
-  onResultClick: (post: Post) => void;
-  onClose: () => void;  // Close with blur (for header clicks)
-  onSoftClose?: () => void;  // Close without blur (for outside clicks)
+  onDesignerClick: (avatar: Avatar) => void;
+  onPostClick: (post: Post) => void;
+  onCategoryClick: (category: Category) => void;
+  onClose: () => void;
+  onSoftClose?: () => void;
 }
 
 export function SearchResults({ 
   results, 
   isVisible, 
-  onResultClick,
+  onDesignerClick,
+  onPostClick,
+  onCategoryClick,
   onClose,
   onSoftClose
 }: SearchResultsProps) {
-  if (!isVisible || results.length === 0) {
+  const hasResults = results.designers.length > 0 || results.posts.length > 0 || results.categories.length > 0;
+  
+  if (!isVisible || !hasResults) {
     return null;
   }
 
@@ -29,7 +35,7 @@ export function SearchResults({
         <div 
             className="fixed inset-0 z-40 bg-transparent" 
             onMouseDown={(e) => {
-            e.preventDefault(); // Prevents input from losing focus
+            e.preventDefault();
             (onSoftClose || onClose)();
             }}
         />,
@@ -43,52 +49,133 @@ export function SearchResults({
       />
       
       {/* Results Dropdown */}
-      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[60vh] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-        <div className="p-2">
-          {results.map((result, index) => (
-            <SearchResultItem 
-              key={result.item.id}
-              result={result}
-              onClick={() => onResultClick(result.item)}
-              isFirst={index === 0}
-            />
-          ))}
-        </div>
+      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[70vh] overflow-y-auto">
         
-        {/* Footer hint */}
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
-          <p className="text-xs text-gray-400 text-center">
-            {results.length} result{results.length !== 1 ? 's' : ''} found
-          </p>
-        </div>
+        {/* DESIGNERS SECTION */}
+        {results.designers.length > 0 && (
+          <div className="border-b border-gray-100">
+            <div className="px-4 py-2 bg-gray-50">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Designers</span>
+            </div>
+            <div className="p-2">
+              {results.designers.map(({ avatar }) => (
+                <DesignerResultItem 
+                  key={avatar.id}
+                  avatar={avatar}
+                  onClick={() => onDesignerClick(avatar)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* POSTS SECTION */}
+        {results.posts.length > 0 && (
+          <div className="border-b border-gray-100">
+            <div className="px-4 py-2 bg-gray-50">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Posts</span>
+            </div>
+            <div className="p-2">
+              {results.posts.map((result) => (
+                <PostResultItem 
+                  key={result.post.id}
+                  result={result}
+                  onClick={() => onPostClick(result.post)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CATEGORIES SECTION */}
+        {results.categories.length > 0 && (
+          <div>
+            <div className="px-4 py-2 bg-gray-50">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Categories</span>
+            </div>
+            <div className="p-2">
+              {results.categories.map(({ category }) => (
+                <CategoryResultItem 
+                  key={category}
+                  category={category}
+                  onClick={() => onCategoryClick(category)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
 }
 
-interface SearchResultItemProps {
-  result: SearchResult;
+// ============================================================================
+// DESIGNER RESULT ITEM
+// ============================================================================
+
+interface DesignerResultItemProps {
+  avatar: Avatar;
   onClick: () => void;
-  isFirst: boolean;
 }
 
-function SearchResultItem({ result, onClick, isFirst }: SearchResultItemProps) {
-  const { item, matches } = result;
-  
-  // Get highlighted segments for each field
-  const titleSegments = highlightMatches(item.title, matches, 'title');
-  const descriptionSegments = highlightMatches(item.description, matches, 'description');
-  const categorySegments = highlightMatches(item.category, matches, 'category');
+function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
+  const initials = avatar.name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start group ${isFirst ? 'bg-gray-50/50' : ''}`}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
+    >
+      {/* Avatar */}
+      <div 
+        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
+        style={{ backgroundColor: avatar.bgColor }}
+      >
+        {avatar.avatarUrl ? (
+          <img src={avatar.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+        ) : (
+          initials
+        )}
+      </div>
+      
+      {/* Name */}
+      <div className="flex-1 min-w-0">
+        <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
+        <p className="text-xs text-gray-400">Designer</p>
+      </div>
+    </button>
+  );
+}
+
+// ============================================================================
+// POST RESULT ITEM
+// ============================================================================
+
+interface PostResultItemProps {
+  result: PostSearchResult;
+  onClick: () => void;
+}
+
+function PostResultItem({ result, onClick }: PostResultItemProps) {
+  const { post, matches } = result;
+  
+  const titleSegments = highlightMatches(post.title, matches, 'title');
+  const descriptionSegments = highlightMatches(post.description, matches, 'description');
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
     >
       {/* Thumbnail */}
-      <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0 bg-gray-100">
+      <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
         <img 
-          src={item.imageUrl} 
+          src={post.imageUrl} 
           alt="" 
           className="w-full h-full object-cover"
         />
@@ -96,24 +183,46 @@ function SearchResultItem({ result, onClick, isFirst }: SearchResultItemProps) {
       
       {/* Content */}
       <div className="flex-1 min-w-0">
-        {/* Title with highlights */}
-        <h4 className="font-bold text-sm text-[#111111] truncate group-hover:text-[#FEC312] transition-colors">
+        <h4 className="font-bold text-sm text-[#111111] truncate">
           <HighlightedText segments={titleSegments} />
         </h4>
-        
-        {/* Description preview with highlights */}
         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
           <HighlightedText segments={descriptionSegments} />
         </p>
-        
-        {/* Category badge with highlights */}
-        <span className="inline-block mt-1.5 px-2 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium text-gray-600 uppercase tracking-wide">
-          <HighlightedText segments={categorySegments} />
-        </span>
       </div>
     </button>
   );
 }
+
+// ============================================================================
+// CATEGORY RESULT ITEM
+// ============================================================================
+
+interface CategoryResultItemProps {
+  category: Category;
+  onClick: () => void;
+}
+
+function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
+    >
+      {/* Icon */}
+      <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">
+        <span className="text-[#FEC312] text-sm">📁</span>
+      </div>
+      
+      {/* Category Name */}
+      <span className="font-medium text-sm text-[#111111]">{category}</span>
+    </button>
+  );
+}
+
+// ============================================================================
+// HIGHLIGHTED TEXT
+// ============================================================================
 
 interface HighlightedTextProps {
   segments: HighlightSegment[];

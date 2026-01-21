@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { ChevronDown, Check } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 
@@ -63,11 +64,21 @@ export function FilterDropdown({
 
   return (
     <>
-      <div 
-        className="fixed inset-0 z-40 bg-transparent" 
-        onClick={onClose} 
-        aria-hidden="true"
-      />
+      {createPortal(
+        <div 
+          className="fixed inset-0 z-40 bg-transparent" 
+          onMouseDown={(e) => {
+             // Prevents focus loss if possible, though unmounting makes this tricky.
+             // Main goal: capture click outside to close.
+             if (e.target === e.currentTarget) {
+                 e.preventDefault();
+                 onClose();
+             }
+          }}
+          aria-hidden="true"
+        />,
+        document.body
+      )}
       
       {/* Expanded Container */}
       <div className={cn(
@@ -76,16 +87,48 @@ export function FilterDropdown({
       )}>
         
         {/* TOP SECTION: Search Bar Area */}
-        <div className="relative w-full h-12 flex items-center px-1">
-            <img src="/src/assets/icons/search.svg" alt="Search" className="absolute left-6 h-5 w-5 opacity-40" />
-            <input 
-              type="text" 
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search by title, designer, or category..." 
-              className="w-full h-full pl-14 pr-16 bg-transparent border-none focus:outline-none focus:ring-0 font-sans text-base placeholder:text-gray-400"
-              autoFocus
-            />
+        <div className="relative w-full min-h-[48px] flex items-center px-1 my-1">
+            <img src="/src/assets/icons/search.svg" alt="Search" className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 z-10" />
+            
+            <div 
+              className="w-full min-h-[48px] pl-12 pr-16 py-1.5 flex items-center flex-wrap gap-2"
+              onClick={() => document.getElementById('filter-search-input')?.focus()}
+            >
+              {/* Category Pills */}
+              {selectedCategories.map(cat => (
+                <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap animate-in fade-in zoom-in duration-200">
+                  {cat}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const newCats = selectedCategories.filter(c => c !== cat);
+                      onCategoryChange(newCats);
+                    }}
+                    className="p-0.5 rounded-full hover:bg-gray-200 transition-colors"
+                  >
+                    <X size={12} className="text-gray-500" />
+                  </button>
+                </span>
+              ))}
+
+              <input 
+                id="filter-search-input"
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={(e) => {
+                  // Backspace to remove last tag if input is empty
+                  if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
+                    const newCats = [...selectedCategories];
+                    newCats.pop();
+                    onCategoryChange(newCats);
+                  }
+                }}
+                placeholder={selectedCategories.length === 0 ? "Search by title, designer, or category..." : ""} 
+                className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 h-8"
+                autoFocus
+              />
+            </div>
             
             {/* Active Filter Toggle */}
             <button 
@@ -151,9 +194,9 @@ export function FilterDropdown({
                         : "bg-white border-[#E0E0E0] text-[#111111] hover:bg-[#fafafa]"
                     )}
                 >
-                    {/* Toggle Circle Indicator */}
+                    {/* Toggle Indicator */}
                     <div className={cn(
-                        "w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200",
+                        "w-5 h-5 rounded-md flex items-center justify-center transition-all duration-200",
                         isSelected
                             ? "bg-[#FEC312]"
                             : "border-[1.5px] border-[#E0E0E0]"
