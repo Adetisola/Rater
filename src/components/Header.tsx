@@ -277,7 +277,7 @@ export function Header({
             <Button
                 variant="outline" 
                 onClick={onPostClick}
-                className="h-12 rounded-full bg-transparent px-5 text-xl font-medium gap-2 group"
+                className="h-12 rounded-full px-5 text-xl font-medium gap-2 group"
             >
                 <img src="/src/assets/icons/upload.svg" alt="Upload" className="h-5 w-5 transition-all duration-300 group-hover:brightness-0 group-hover:invert" />
                 Post
