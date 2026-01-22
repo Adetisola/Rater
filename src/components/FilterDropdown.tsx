@@ -22,7 +22,7 @@ interface FilterDropdownProps {
 }
 
 const SORT_OPTIONS = [
-  '✨Curated Freshness✨',
+  '✨Curated Freshness',
   'Highest Rated',
   'Lowest Rated',
   'Newest',

@@ -6,6 +6,7 @@ import { PostDetailOverlay } from './components/PostDetailOverlay';
 import { MOCK_POSTS, MOCK_AVATARS, CATEGORIES, type Post, type Avatar } from './logic/mockData';
 import { curatedFreshnessSort } from './logic/curatedSort';
 import { createSearchIndexes, searchPosts } from './logic/searchUtils';
+import { computeBadges } from './logic/badgeUtils';
 import { useDebounce } from './hooks/useDebounce';
 import { X } from 'lucide-react';
 
@@ -13,7 +14,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'submit'>('home');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('✨Curated Freshness✨');
+  const [sortBy, setSortBy] = useState('✨Curated Freshness');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isDelayed, setIsDelayed] = useState(false);
   
@@ -27,6 +28,12 @@ function App() {
   const searchIndexes = useMemo(
     () => createSearchIndexes(MOCK_POSTS, MOCK_AVATARS, CATEGORIES),
     []
+  );
+
+  // Compute badges once globally (simulates daily backend calculation)
+  const globalBadgeMap = useMemo(
+    () => computeBadges(MOCK_POSTS),
+    [] // Never recompute - badges are global and stable
   );
 
   const handleHomeClick = () => {
@@ -86,7 +93,7 @@ function App() {
     // Otherwise: apply selected sort
     if (selectedDesigner || debouncedSearchQuery.trim().length < 2) {
       switch (sortBy) {
-        case '✨Curated Freshness✨':
+        case '✨Curated Freshness':
           // Handled separately
           break;
         case 'Highest Rated':
@@ -112,7 +119,7 @@ function App() {
 
   // Apply Curated Freshness sort
   const sortedPosts = (
-    sortBy === '✨Curated Freshness✨' && 
+    sortBy === '✨Curated Freshness' && 
     debouncedSearchQuery.trim().length < 2
   )
     ? curatedFreshnessSort(filteredPosts)
@@ -157,6 +164,7 @@ function App() {
             
             <MasonryGrid 
               posts={sortedPosts} 
+              badgeMap={globalBadgeMap}
               onPostClick={(post) => setSelectedPost(post)}
             />
           </>

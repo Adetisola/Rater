@@ -4,10 +4,9 @@ import { Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
-import { CATEGORIES, MOCK_AVATARS, type Avatar } from '../logic/mockData';
-import { AvatarPicker } from './AvatarPicker';
+import { CATEGORIES, type Avatar } from '../logic/mockData';
+import { AccessAvatarForm } from './AccessAvatarForm';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
-import { PasskeyOverlay } from './PasskeyOverlay';
 
 
 export function SubmitPage() {
@@ -21,15 +20,7 @@ export function SubmitPage() {
   // IDENTITY STATE
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [showCreateOverlay, setShowCreateOverlay] = useState(false);
-  const [avatarSearch, setAvatarSearch] = useState('');
-  const [pendingAvatar, setPendingAvatar] = useState<Avatar | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-
-  // MOCKED AVATARS
-  const avatars = Object.values(MOCK_AVATARS);
-  const filteredAvatars = avatars.filter(avatar => 
-    avatar.name.toLowerCase().includes(avatarSearch.toLowerCase())
-  );
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,6 +35,24 @@ export function SubmitPage() {
     // SUBMIT LOGIC HERE
     console.log("Submitting:", { title, category, description, image, avatarId: selectedAvatar?.id });
     setIsSuccess(true);
+  };
+
+  const handleAvatarAccess = (avatar: Avatar) => {
+    setSelectedAvatar(avatar);
+  };
+
+  const handleCreateAvatar = (name: string, passkey: string) => {
+      // MOCK CREATION
+      const newAvatar: Avatar = {
+          id: `new-${Date.now()}`,
+          name: name,
+          passkey: passkey,
+          bgColor: '#FEC312', // Default brand color
+          isBlocked: false
+      };
+      
+      setSelectedAvatar(newAvatar);
+      setShowCreateOverlay(false);
   };
 
   if (isSuccess) {
@@ -159,38 +168,15 @@ export function SubmitPage() {
                 {/* AVATAR SECTION */}
                 {!selectedAvatar ? (
                      <>
-                         <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-baseline gap-2">
-                                 <h3 className="font-bold text-lg text-[#111111]">Pick your Avatar</h3>
-                                 <span className="text-gray-400">|</span>
-                                 <span className="text-sm font-medium text-gray-500">New here? 
-                                     <button 
-                                         onClick={() => setShowCreateOverlay(true)} 
-                                         className="underline ml-1 text-[#111111] hover:text-[#FEC312] transition-colors"
-                                     >
-                                         Create your Avatar
-                                     </button>
-                                 </span>
+                         <div className="bg-white border border-gray-200 rounded-[24px] p-8 shadow-sm flex flex-col items-center justify-center">
+                              <div className="flex w-full items-baseline justify-center gap-2 mb-6">
+                                 <h3 className="font-bold text-lg text-[#111111]">Post as</h3>
                               </div>
-                         </div>
-
-                         {/* Search Input Visual */}
-                         <div className="relative mb-6">
-                             <img src="/src/assets/icons/search.svg" className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40" alt="" />
-                             <input 
-                                 type="text"
-                                 placeholder="Search..." 
-                                 value={avatarSearch}
-                                 onChange={(e) => setAvatarSearch(e.target.value)}
-                                 className="w-full h-12 rounded-full border border-gray-200 pl-12 pr-6 text-sm focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312] transition-colors"
+                             <AccessAvatarForm 
+                                onSuccess={handleAvatarAccess}
+                                onCreateNew={() => setShowCreateOverlay(true)}
                              />
                          </div>
-
-                         <AvatarPicker 
-                             avatars={filteredAvatars} 
-                             onSelect={(avatar) => setPendingAvatar(avatar)}
-                             onCreateNew={() => setShowCreateOverlay(true)}
-                         />
                      </>
                  ) : (
                      // SELECTED AVATAR STATE
@@ -216,7 +202,7 @@ export function SubmitPage() {
                                  onClick={() => setSelectedAvatar(null)}
                                  className="text-xs font-bold text-gray-500 hover:text-[#111111] underline transition-colors"
                               >
-                                  Change avatar
+                                  Change Avatar
                               </button>
                           </div>
                      </div>
@@ -241,25 +227,10 @@ export function SubmitPage() {
       {showCreateOverlay && (
           <CreateAvatarOverlay 
             onClose={() => setShowCreateOverlay(false)}
-            onCreate={(name, _passkey) => {
-                console.log("Creating:", name);
-                setShowCreateOverlay(false);
-                // Visual only - no real creation logic needed for this task
-            }}
+            onCreate={handleCreateAvatar}
           />
       )}
       
-      {pendingAvatar && (
-        <PasskeyOverlay
-            avatar={pendingAvatar}
-            onClose={() => setPendingAvatar(null)}
-            onSuccess={() => {
-                setSelectedAvatar(pendingAvatar);
-                setPendingAvatar(null);
-            }}
-        />
-      )}
-
     </div>
   );
 }

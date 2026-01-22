@@ -1,17 +1,18 @@
 import { useMemo } from 'react';
 import type { Post } from '../logic/mockData';
 import { PostCard } from './PostCard';
-import { computeBadges } from '../logic/badgeUtils';
 import { useMasonryColumns } from '../hooks/useMasonryColumns';
+
+type BadgeType = 'top-rated' | 'most-discussed' | null;
 
 interface MasonryGridProps {
   posts: Post[];
+  badgeMap: Record<string, BadgeType>;
   onPostClick?: (post: Post) => void;
 }
 
-export function MasonryGrid({ posts, onPostClick }: MasonryGridProps) {
+export function MasonryGrid({ posts, badgeMap, onPostClick }: MasonryGridProps) {
   const columnCount = useMasonryColumns();
-  const badgeMap = useMemo(() => computeBadges(posts), [posts]);
 
   // Distribute posts into columns
   const columns = useMemo(() => {
@@ -38,4 +39,3 @@ export function MasonryGrid({ posts, onPostClick }: MasonryGridProps) {
     </div>
   );
 }
-

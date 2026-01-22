@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
+// Using skeleton for loading state
 
 interface PostCardProps {
   post: Post;
@@ -11,13 +12,24 @@ interface PostCardProps {
 
 export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
+    setImageLoaded(false);
+    
     const img = new Image();
     img.src = post.imageUrl;
-    img.onload = () => setImageLoaded(true);
-    img.onerror = () => setImageLoaded(true); // Fail gracefully
-  }, [post.imageUrl]);
+    img.onload = () => {
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      // Auto-retry after 3 seconds
+      const timer = setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+      }, 3000);
+      return () => clearTimeout(timer);
+    };
+  }, [post.imageUrl, retryCount]);
 
   const showSkeleton = isLoading || !imageLoaded;
 
@@ -26,7 +38,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
         <div className="bg-[#ebebeb] p-1.5 rounded-[24px] overflow-hidden h-full">
             <div className="relative z-10 h-full flex flex-col">
                 {/* SKELETON IMAGE */}
-                <div className="w-full aspect-[4/3] bg-[#d1d5db] rounded-[20px] animate-pulse mb-4" />
+                <div className="w-full aspect-4/3 bg-[#d1d5db] rounded-[20px] animate-pulse mb-4" />
                 
                 <div className="px-4 pt-0 pb-2 flex-1 flex flex-col">
                     {/* META ROW */}
@@ -95,6 +107,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
         <div className="relative z-10">
             {/* IMAGE AREA (Inset) */}
             <div className={`relative w-full overflow-hidden rounded-[20px] ${isTopRated ? 'border-2 border-[#FEC312]' : isMostDiscussed ? 'border-2 border-[#7C3BED]' : ''}`}>
+            
             <img 
                 src={post.imageUrl} 
                 alt={post.title} 
