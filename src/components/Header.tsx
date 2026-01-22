@@ -3,9 +3,9 @@ import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
 import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
-import { createSearchIndexes, searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
+import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
-import { MOCK_AVATARS, CATEGORIES } from '../logic/mockData';
+
 import { X } from 'lucide-react';
 
 interface HeaderProps {
@@ -18,7 +18,7 @@ interface HeaderProps {
     selectedCategories: string[];
     onCategoryChange: (categories: string[]) => void;
     hideControls?: boolean;
-    posts: Post[];
+
     onPostSelect?: (post: Post) => void;
     onDesignerSelect?: (avatar: Avatar) => void;
     searchIndexes: SearchIndexes;
@@ -34,7 +34,7 @@ export function Header({
     selectedCategories,
     onCategoryChange,
     hideControls = false,
-    posts,
+
     onPostSelect,
     onDesignerSelect,
     searchIndexes

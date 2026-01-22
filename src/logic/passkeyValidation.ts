@@ -142,7 +142,7 @@ function containsUserInfo(passkey: string, userName?: string, email?: string): b
 
 // Calculate entropy-based score
 function calculateEntropy(passkey: string): number {
-  const { groupCount } = getCharacterGroups(passkey);
+  getCharacterGroups(passkey);
   
   // Estimate character pool size based on groups used
   let poolSize = 0;

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';

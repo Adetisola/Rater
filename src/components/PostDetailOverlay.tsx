@@ -106,11 +106,13 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
+      exit={{ 
+        opacity: 0,
+        transition: { duration: 0.15, ease: "easeIn" }
+      }}
       transition={{ 
         duration: 0.25, 
-        ease: "easeOut",
-        exit: { duration: 0.15, ease: "easeIn" }
+        ease: "easeOut"
       }}
       className="fixed inset-0 z-50 bg-white overflow-y-auto custom-scrollbar"
     >

@@ -89,7 +89,7 @@ export function SubmitPage() {
            <div className="space-y-10">
            
                {/* IMAGE UPLOAD */}
-               <div className="group relative w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] rounded-[32px] flex flex-col items-center justify-center hover:bg-[#EBEBEB] hover:border-[#FEC312] transition-all cursor-pointer overflow-hidden">
+               <div className="group relative w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] rounded-[32px] flex flex-col items-center justify-center hover:bg-surface hover:border-[#FEC312] transition-all cursor-pointer overflow-hidden">
                    <input 
                      type="file" 
                      accept="image/*" 

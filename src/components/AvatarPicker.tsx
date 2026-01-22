@@ -1,5 +1,5 @@
 import type { Avatar } from '../logic/mockData';
-import { Button } from './ui/Button';
+
 import { cn } from '../lib/utils';
 
 interface AvatarPickerProps {
