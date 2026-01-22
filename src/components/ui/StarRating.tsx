@@ -48,7 +48,7 @@ export function StarRating({
             >
                {/* Using SVG assets as strictly requested */}
                <img 
-                 src={isFilled ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-outline.svg"} 
+                 src={isFilled ? "/icons/star-active-yellow.svg" : "/icons/star-outline.svg"} 
                  alt={isFilled ? "Filled Star" : "Empty Star"} 
                  className={cn(sizeClasses[size], "transition-all")}
                />

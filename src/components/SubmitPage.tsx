@@ -60,7 +60,7 @@ export function SubmitPage() {
       return (
           <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
               <div className="w-20 h-20 bg-[#009241]/10 rounded-full flex items-center justify-center mb-6 text-[#009241]">
-                  <img src="/src/assets/icons/status-success.svg" className="w-10 h-10" alt="Success" />
+                  <img src="/icons/status-success.svg" className="w-10 h-10" alt="Success" />
               </div>
               <h1 className="text-3xl font-bold mb-4 text-[#111111]">Post Submitted!</h1>
               <p className="text-gray-500 max-w-md mx-auto leading-relaxed">Your design has been posted successfully. The community will start reviewing it shortly.</p>
@@ -102,7 +102,7 @@ export function SubmitPage() {
                    ) : (
                        <div className="flex flex-col items-center text-center p-6">
                          <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                            <img src="/src/assets/icons/upload.svg" className="w-8 h-8 opacity-40 group-hover:opacity-60 transition-opacity" alt="Upload" />
+                            <img src="/icons/upload.svg" className="w-8 h-8 opacity-40 group-hover:opacity-60 transition-opacity" alt="Upload" />
                          </div>
                          <p className="text-lg font-bold text-[#111111] mb-1">Drop your Design</p>
                          <p className="text-sm text-gray-400">Supports PNG, JPG (Max 10MB)</p>

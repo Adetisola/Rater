@@ -156,12 +156,12 @@ export function Header({
             className="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
           >
             <img 
-              src="/src/assets/icons/logo-rater.svg" 
+              src="/icons/logo-rater.svg" 
               alt="Rater Logo" 
               className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
             />
             <img 
-              src="/src/assets/icons/logo-rater-hover.svg" 
+              src="/icons/logo-rater-hover.svg" 
               alt="Rater Logo Hover" 
               className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
             />
@@ -181,7 +181,7 @@ export function Header({
                 
                 {/* Search Icon */}
                 <img 
-                  src="/src/assets/icons/search.svg" 
+                  src="/icons/search.svg" 
                   alt="Search" 
                   className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-focus-within:opacity-100 transition-opacity z-10" 
                 />
@@ -239,7 +239,7 @@ export function Header({
                         onClick={() => setIsFilterOpen(true)}
                         className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
                     >
-                        <img src="/src/assets/icons/filter.svg" alt="Filter" className="h-5 w-5 opacity-70" />
+                        <img src="/icons/filter.svg" alt="Filter" className="h-5 w-5 opacity-70" />
                     </button>
                 </div>
             </div>
@@ -279,7 +279,7 @@ export function Header({
                 onClick={onPostClick}
                 className="h-12 rounded-full px-5 text-xl font-medium gap-2 group"
             >
-                <img src="/src/assets/icons/upload.svg" alt="Upload" className="h-5 w-5 transition-all duration-300 group-hover:brightness-0 group-hover:invert" />
+                <img src="/icons/upload.svg" alt="Upload" className="h-5 w-5 transition-all duration-300 group-hover:brightness-0 group-hover:invert" />
                 Post
             </Button>
         </div>

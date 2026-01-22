@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from './components/Header';
 import { MasonryGrid } from './components/MasonryGrid';
@@ -21,6 +21,11 @@ function App() {
   
   // Designer filter state - when a designer is selected from search
   const [selectedDesigner, setSelectedDesigner] = useState<Avatar | null>(null);
+
+  // Scroll to top on page/route changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [currentPage]);
 
   // Debounce search query for grid filtering
   const debouncedSearchQuery = useDebounce(searchQuery, 150);

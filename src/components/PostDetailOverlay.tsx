@@ -188,7 +188,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                             }}
                             className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                         >
-                            <img src="/src/assets/icons/share.svg" className="w-5 h-5" alt="Share" />
+                            <img src="/icons/share.svg" className="w-5 h-5" alt="Share" />
                         </button>
                     </div>
                 </div>
@@ -256,7 +256,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                     {[1,2,3,4,5].map(i => (
                                         <img 
                                             key={i} 
-                                            src={i <= Math.floor(post.rating.average) ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                            src={i <= Math.floor(post.rating.average) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
                                             alt="star"
                                             className="w-6 h-6"
                                         />
@@ -375,7 +375,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                         {[1,2,3,4,5].map(i => (
                                             <img 
                                                 key={i} 
-                                                src={i <= Math.floor(ratingAvg) ? "/src/assets/icons/star-active-yellow.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                                src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
                                                 className="w-3.5 h-3.5" 
                                                 alt="" 
                                             />

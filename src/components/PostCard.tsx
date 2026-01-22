@@ -74,7 +74,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                              {[1, 2, 3, 4, 5].map((i) => (
                                 <img 
                                     key={i}
-                                    src="/src/assets/icons/star-filled.svg" 
+                                    src="/icons/star-filled.svg" 
                                     className="w-3 h-3 opacity-30 grayscale invert-0"
                                     alt="" 
                                 />
@@ -166,7 +166,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                 
                 {/* LEFT: Count */}
                 <div className="flex items-start gap-1.5">
-                    <img src="/src/assets/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
+                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
                     <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.rating.reviewCount}</span>
                 </div>
 
@@ -185,7 +185,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                                     return (
                                         <img 
                                             key={i} 
-                                            src={isActive ? "/src/assets/icons/star-active.svg" : "/src/assets/icons/star-inactive.svg"} 
+                                            src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
                                             className={`w-3 h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
                                             alt="" 
                                         />

@@ -88,7 +88,7 @@ export function FilterDropdown({
         
         {/* TOP SECTION: Search Bar Area */}
         <div className="relative w-full min-h-[48px] flex items-center px-1 my-1">
-            <img src="/src/assets/icons/search.svg" alt="Search" className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 z-10" />
+            <img src="/icons/search.svg" alt="Search" className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 z-10" />
             
             <div 
               className="w-full min-h-[48px] pl-12 pr-16 py-1.5 flex items-center flex-wrap gap-2"
@@ -135,7 +135,7 @@ export function FilterDropdown({
                 onClick={onClose}
                 className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-[#FEC312] text-white hover:bg-[#eeb40e] transition-colors"
             >
-               <img src="/src/assets/icons/filter.svg" alt="Filter" className="h-5 w-5 brightness-0 invert" />
+               <img src="/icons/filter.svg" alt="Filter" className="h-5 w-5 brightness-0 invert" />
             </button>
         </div>
 
