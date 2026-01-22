@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from './ui/Button';
 import { Check } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -69,7 +70,13 @@ export function SubmitPage() {
   }
 
   return (
-    <div className="max-w-[1200px] mx-auto pb-32 pt-8 px-6">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="max-w-[1200px] mx-auto pb-32 pt-8 px-6"
+    >
       
       {/* HEADER */}
       <div className="text-left mb-12">
@@ -231,6 +238,6 @@ export function SubmitPage() {
           />
       )}
       
-    </div>
+    </motion.div>
   );
 }

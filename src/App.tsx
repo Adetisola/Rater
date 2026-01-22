@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Header } from './components/Header';
 import { MasonryGrid } from './components/MasonryGrid';
 import { SubmitPage } from './components/SubmitPage';
@@ -144,42 +145,53 @@ function App() {
       />
       
       <main className="flex-1 w-full pt-8">
-        {currentPage === 'home' && !isDelayed ? (
-          <>
-            {/* Designer Filter Pill */}
-            {selectedDesigner && (
-              <div className="max-w-[1600px] mx-auto px-6 mb-6">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                  <span className="text-sm font-medium text-gray-600">Designer:</span>
-                  <span className="text-sm font-bold text-[#111111]">{selectedDesigner.name}</span>
-                  <button 
-                    onClick={clearDesignerFilter}
-                    className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
-                  >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
+        <AnimatePresence mode="wait">
+          {currentPage === 'home' && !isDelayed ? (
+            <motion.div 
+              key="home"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              {/* Designer Filter Pill */}
+              {selectedDesigner && (
+                <div className="max-w-[1600px] mx-auto px-6 mb-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
+                    <span className="text-sm font-medium text-gray-600">Designer:</span>
+                    <span className="text-sm font-bold text-[#111111]">{selectedDesigner.name}</span>
+                    <button 
+                      onClick={clearDesignerFilter}
+                      className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            <MasonryGrid 
-              posts={sortedPosts} 
-              badgeMap={globalBadgeMap}
-              onPostClick={(post) => setSelectedPost(post)}
-            />
-          </>
-        ) : (
-           <SubmitPage />
-        )}
+              )}
+              
+              <MasonryGrid 
+                posts={sortedPosts} 
+                badgeMap={globalBadgeMap}
+                onPostClick={(post) => setSelectedPost(post)}
+              />
+            </motion.div>
+          ) : (
+            <SubmitPage key="submit" />
+          )}
+        </AnimatePresence>
       </main>
 
       {/* OVERLAYS */}
-      {selectedPost && (
-          <PostDetailOverlay 
-             post={selectedPost} 
-             onClose={() => setSelectedPost(null)}
-          />
-      )}
+      <AnimatePresence>
+        {selectedPost && (
+            <PostDetailOverlay 
+               key="post-detail-overlay"
+               post={selectedPost} 
+               onClose={() => setSelectedPost(null)}
+            />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

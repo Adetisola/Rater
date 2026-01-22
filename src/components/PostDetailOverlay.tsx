@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { ChevronDown, Check, X, Download } from 'lucide-react'; // Added icons
 import type { Post } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
@@ -102,7 +103,17 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const isLocked = totalReviews < 3;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ 
+        duration: 0.25, 
+        ease: "easeOut",
+        exit: { duration: 0.15, ease: "easeIn" }
+      }}
+      className="fixed inset-0 z-50 bg-white overflow-y-auto custom-scrollbar"
+    >
       
       <div className="max-w-[1200px] mx-auto px-6 py-8">
         
@@ -424,6 +435,6 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
           </div>
       )}
 
-    </div>
+    </motion.div>
   );
 }
