@@ -136,12 +136,12 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                              setNameError(null);
                          }
                      }}
-                     className={`h-12 rounded-xl text-base px-4 pr-10 border transition-all outline-none focus-visible:ring-4 ${
+                     className={`h-12 rounded-xl text-base px-4 pr-10 border transition-all outline-none ${
                         nameError || nameStatus === 'taken' 
-                            ? 'border-red-400 text-red-600 focus-visible:border-red-400 focus-visible:ring-red-400/10' 
+                            ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
                             : nameStatus === 'available' 
-                                ? 'border-green-400 text-green-700 focus-visible:border-green-400 focus-visible:ring-green-400/10' 
-                                : 'border-gray-300 focus-visible:border-[#FEC312] focus-visible:ring-[#FEC312]/20'
+                                ? 'border-green-400 text-green-700 focus-visible:border-green-400' 
+                                : 'border-gray-300 focus-visible:border-[#FEC312]'
                      }`}
                  />
                  
@@ -179,12 +179,12 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                         onChange={(e) => setPasskey(e.target.value)}
                         onFocus={() => setShowStrengthMeter(true)}
                         maxLength={64}
-                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border focus-visible:ring-4 ${
+                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${
                             passkey.length > 0 && !validation.canSubmit 
-                                ? 'border-amber-400 focus-visible:border-amber-400 focus-visible:ring-amber-400/10' 
+                                ? 'border-amber-400 focus-visible:border-amber-400' 
                                 : validation.canSubmit 
-                                    ? 'border-green-400 focus-visible:border-green-400 focus-visible:ring-green-400/10'
-                                    : 'border-gray-300 focus-visible:border-[#FEC312] focus-visible:ring-[#FEC312]/20'
+                                    ? 'border-green-400 focus-visible:border-green-400'
+                                    : 'border-gray-300 focus-visible:border-[#FEC312]'
                         }`}
                     />
                     <button
@@ -257,12 +257,12 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                         placeholder="Confirm Passkey" 
                         value={confirmPasskey}
                         onChange={(e) => setConfirmPasskey(e.target.value)}
-                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border focus-visible:ring-4 ${
+                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${
                             passkeyMismatch
-                                ? 'border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/10'
+                                ? 'border-red-400 focus-visible:border-red-400'
                                 : confirmPasskey.length > 0 && passkey === confirmPasskey
-                                    ? 'border-green-400 focus-visible:border-green-400 focus-visible:ring-green-400/10'
-                                    : 'border-gray-300 focus-visible:border-[#FEC312] focus-visible:ring-[#FEC312]/20'
+                                    ? 'border-green-400 focus-visible:border-green-400'
+                                    : 'border-gray-300 focus-visible:border-[#FEC312]'
                         }`}
                     />
                     <button
@@ -290,7 +290,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                  placeholder="Recovery Email (optional)" 
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
-                 className="h-12 rounded-xl border-gray-300 text-base px-4 border transition-all outline-none focus-visible:border-[#FEC312] focus-visible:ring-4 focus-visible:ring-[#FEC312]/20"
+                 className="h-12 rounded-xl text-base px-4 border transition-all outline-none focus-visible:border-[#FEC312]"
             />
 
             <div className="pt-4 flex items-center justify-center gap-6 w-full">

@@ -89,7 +89,7 @@ export function SubmitPage() {
            <div className="space-y-10">
            
                {/* IMAGE UPLOAD */}
-               <div className="group relative w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] rounded-[32px] flex flex-col items-center justify-center hover:bg-surface hover:border-[#FEC312] transition-all cursor-pointer overflow-hidden">
+               <div className="group relative w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] rounded-[32px] flex flex-col items-center justify-center hover:bg-[#FFF6DD] hover:border-[#FEC312] transition-all cursor-pointer overflow-hidden">
                    <input 
                      type="file" 
                      accept="image/*" 
@@ -117,7 +117,7 @@ export function SubmitPage() {
                             placeholder="Title" 
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            className="h-12 text-base px-4 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                            className="h-12 text-base px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                         />
                     </div>
                     
@@ -127,7 +127,7 @@ export function SubmitPage() {
                             value={description}
                             maxLength={400}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 resize-none font-medium"
+                            className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 resize-none font-medium"
                         />
                         <div className="absolute bottom-4 right-4 text-xs font-bold text-gray-400 pointer-events-none">
                             {description.length} / 400 chars

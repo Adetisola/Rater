@@ -108,7 +108,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                   placeholder="e.g. Timi" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-12 text-base px-4 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                  className="h-12 text-base px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                   disabled={isLoading}
               />
             </div>
@@ -121,7 +121,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                     placeholder="Enter your passkey" 
                     value={passkey}
                     onChange={(e) => setPasskey(e.target.value)}
-                    className="h-12 text-base px-4 pr-12 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                    className="h-12 text-base px-4 pr-12 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                     disabled={isLoading}
                 />
                 <button
