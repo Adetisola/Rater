@@ -27,7 +27,7 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
@@ -78,7 +78,7 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
                             setPasskey(e.target.value);
                             setError(false);
                         }}
-                        className={`h-12 rounded-xl text-lg pr-12 transition-all ${error ? '!border-red-500 !ring-red-500/20 focus-visible:!border-red-500 focus-visible:!ring-red-500/20' : 'border-gray-200'}`}
+                        className={`h-12 rounded-xl text-lg pr-12 transition-all ${error ? 'border-red-500! ring-red-500/20! focus-visible:border-red-500! focus-visible:ring-red-500/20!' : 'border-gray-200'}`}
                         onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
                         autoFocus
                     />

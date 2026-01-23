@@ -110,7 +110,6 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                   onChange={(e) => setName(e.target.value)}
                   className="h-12 text-base px-4 rounded-xl border border-gray-200 focus-visible:ring-2 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                   disabled={isLoading}
-                  autoFocus
               />
             </div>
 
