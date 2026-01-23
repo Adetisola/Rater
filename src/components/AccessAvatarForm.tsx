@@ -4,6 +4,7 @@ import { Input } from './ui/Input';
 import { MOCK_AVATARS, type Avatar } from '../logic/mockData';
 import { Eye, EyeOff, AlertCircle, Lock } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { ForgotPasskeyOverlay } from './ForgotPasskeyOverlay';
 
 interface AccessAvatarFormProps {
   onSuccess: (avatar: Avatar) => void;
@@ -21,6 +22,9 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
   const [attempts, setAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
+  
+  // Forgot passkey overlay state
+  const [showForgotOverlay, setShowForgotOverlay] = useState(false);
 
   // Clear startup delay
   useEffect(() => {
@@ -131,6 +135,16 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                     {showPasskey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              <div className="text-left">
+                <button 
+                    type="button"
+                    onClick={() => setShowForgotOverlay(true)}
+                    className="text-xs font-semibold text-gray-500 hover:text-[#FEC312] transition-colors"
+                    disabled={isLoading}
+                >
+                    Forgot passkey?
+                </button>
+              </div>
             </div>
 
             <div className="flex justify-center">
@@ -168,6 +182,19 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             </button>
           </p>
        </div>
+
+       {/* Forgot Passkey Overlay */}
+       {showForgotOverlay && (
+           <ForgotPasskeyOverlay 
+
+             onCancel={() => setShowForgotOverlay(false)}
+             onSend={(email) => {
+               console.log('Recovery link sent to:', email);
+               setShowForgotOverlay(false);
+               // Show success message or notification here
+             }}
+           />
+       )}
     </div>
   );
 }
