@@ -158,6 +158,7 @@ function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
+              className="pt-4 md:pt-0"
             >
               {/* Designer Filter Pill */}
               {selectedDesigner && (

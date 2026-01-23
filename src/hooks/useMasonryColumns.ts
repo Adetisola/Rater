@@ -15,9 +15,9 @@ export function useMasonryColumns() {
       } else if (width >= 1024) {
         setColumns(3); // lg
       } else if (width >= 768) {
-        setColumns(2); // md
+        setColumns(2); // tablet portrait
       } else {
-        setColumns(1);
+        setColumns(1); // mobile
       }
     };
 
