@@ -36,7 +36,6 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
 
       {showForgot ? (
           <ForgotPasskeyOverlay 
-              avatar={avatar} 
               onCancel={() => setShowForgot(false)}
               onSend={(email) => {
                   // Mock sending email

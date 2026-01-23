@@ -115,9 +115,9 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
             <h2 className="text-2xl font-bold mb-6 text-[#111111]">Create your Avatar</h2>
             
             <p className="text-[10px] uppercase font-bold text-[#111111] mb-2 tracking-wide">upload a pic</p>
-            <div className="w-16 h-16 bg-[#EBEBEB] rounded-full flex items-center justify-center mx-auto mb-4 relative cursor-pointer hover:bg-gray-200 transition-colors">
+            <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4 relative cursor-pointer hover:bg-gray-200 transition-colors">
                  <User className="w-8 h-8 text-[#111111]" />
-                 <div className="absolute bottom-0 right-0 bg-[#EBEBEB] rounded-full p-1 border border-white">
+                 <div className="absolute bottom-0 right-0 bg-surface rounded-full p-1 border border-white">
                     <Pencil className="w-3 h-3 text-[#111111]" />
                  </div>
             </div>
@@ -136,10 +136,12 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                              setNameError(null);
                          }
                      }}
-                     className={`h-12 rounded-xl text-base px-4 pr-10 focus:ring-0 ${
-                        nameError || nameStatus === 'taken' ? 'border-red-400 text-red-600 focus:border-red-400' : 
-                        nameStatus === 'available' ? 'border-green-400 text-green-700 focus:border-green-400' : 
-                        'border-gray-300'
+                     className={`h-12 rounded-xl text-base px-4 pr-10 border transition-all outline-none focus-visible:ring-4 ${
+                        nameError || nameStatus === 'taken' 
+                            ? 'border-red-400 text-red-600 focus-visible:border-red-400 focus-visible:ring-red-400/10' 
+                            : nameStatus === 'available' 
+                                ? 'border-green-400 text-green-700 focus-visible:border-green-400 focus-visible:ring-green-400/10' 
+                                : 'border-gray-300 focus-visible:border-[#FEC312] focus-visible:ring-[#FEC312]/20'
                      }`}
                  />
                  
@@ -177,12 +179,12 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                         onChange={(e) => setPasskey(e.target.value)}
                         onFocus={() => setShowStrengthMeter(true)}
                         maxLength={64}
-                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-colors ${
+                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border focus-visible:ring-4 ${
                             passkey.length > 0 && !validation.canSubmit 
-                                ? 'border-amber-400 focus-visible:border-amber-400' 
+                                ? 'border-amber-400 focus-visible:border-amber-400 focus-visible:ring-amber-400/10' 
                                 : validation.canSubmit 
-                                    ? 'border-green-400 focus-visible:border-green-400'
-                                    : 'border-gray-300'
+                                    ? 'border-green-400 focus-visible:border-green-400 focus-visible:ring-green-400/10'
+                                    : 'border-gray-300 focus-visible:border-[#FEC312] focus-visible:ring-[#FEC312]/20'
                         }`}
                     />
                     <button
@@ -255,12 +257,12 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                         placeholder="Confirm Passkey" 
                         value={confirmPasskey}
                         onChange={(e) => setConfirmPasskey(e.target.value)}
-                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-colors ${
+                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border focus-visible:ring-4 ${
                             passkeyMismatch
-                                ? 'border-red-400 focus-visible:border-red-400'
+                                ? 'border-red-400 focus-visible:border-red-400 focus-visible:ring-red-400/10'
                                 : confirmPasskey.length > 0 && passkey === confirmPasskey
-                                    ? 'border-green-400 focus-visible:border-green-400'
-                                    : 'border-gray-300'
+                                    ? 'border-green-400 focus-visible:border-green-400 focus-visible:ring-green-400/10'
+                                    : 'border-gray-300 focus-visible:border-[#FEC312] focus-visible:ring-[#FEC312]/20'
                         }`}
                     />
                     <button
@@ -288,7 +290,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                  placeholder="Recovery Email (optional)" 
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
-                 className="h-12 rounded-xl border-gray-300 text-base px-4"
+                 className="h-12 rounded-xl border-gray-300 text-base px-4 border transition-all outline-none focus-visible:border-[#FEC312] focus-visible:ring-4 focus-visible:ring-[#FEC312]/20"
             />
 
             <div className="pt-4 flex items-center justify-center gap-6 w-full">
