@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Analytics } from '@vercel/analytics/react';
 import { Header } from './components/Header';
 import { MasonryGrid } from './components/MasonryGrid';
 import { SubmitPage } from './components/SubmitPage';
@@ -224,6 +225,7 @@ function App() {
             />
         )}
       </AnimatePresence>
+      <Analytics />
     </div>
   )
 }
