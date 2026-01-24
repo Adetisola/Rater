@@ -4,6 +4,7 @@ import { Header } from './components/Header';
 import { MasonryGrid } from './components/MasonryGrid';
 import { SubmitPage } from './components/SubmitPage';
 import { PostDetailOverlay } from './components/PostDetailOverlay';
+import { MobileSearchOverlay } from './components/MobileSearchOverlay';
 import { MOCK_POSTS, MOCK_AVATARS, CATEGORIES, type Post, type Avatar } from './logic/mockData';
 import { curatedFreshnessSort } from './logic/curatedSort';
 import { createSearchIndexes, searchPosts } from './logic/searchUtils';
@@ -21,6 +22,9 @@ function App() {
   
   // Designer filter state - when a designer is selected from search
   const [selectedDesigner, setSelectedDesigner] = useState<Avatar | null>(null);
+
+  // Mobile search overlay state
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
   // Scroll to top on page/route changes
   useEffect(() => {
@@ -146,6 +150,28 @@ function App() {
 
         onPostSelect={(post) => setSelectedPost(post)}
         onDesignerSelect={handleDesignerSelect}
+        searchIndexes={searchIndexes}
+        onMobileSearchOpen={() => setIsMobileSearchOpen(true)}
+      />
+
+      {/* Mobile Search Overlay */}
+      <MobileSearchOverlay
+        isOpen={isMobileSearchOpen}
+        onClose={() => setIsMobileSearchOpen(false)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        selectedCategories={selectedCategories}
+        onCategoryChange={setSelectedCategories}
+        onPostSelect={(post) => {
+          setSelectedPost(post);
+          setIsMobileSearchOpen(false);
+        }}
+        onDesignerSelect={(avatar) => {
+          handleDesignerSelect(avatar);
+          setIsMobileSearchOpen(false);
+        }}
         searchIndexes={searchIndexes}
       />
       

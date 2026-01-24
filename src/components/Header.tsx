@@ -22,6 +22,7 @@ interface HeaderProps {
     onPostSelect?: (post: Post) => void;
     onDesignerSelect?: (avatar: Avatar) => void;
     searchIndexes: SearchIndexes;
+    onMobileSearchOpen?: () => void;
 }
 
 export function Header({ 
@@ -37,7 +38,8 @@ export function Header({
 
     onPostSelect,
     onDesignerSelect,
-    searchIndexes
+    searchIndexes,
+    onMobileSearchOpen
 }: HeaderProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showWidgets, setShowWidgets] = useState(!hideControls);
@@ -171,9 +173,9 @@ export function Header({
         {/* GHOST LOGO SPACER - visible on all screens to reserve space for absolute logo */}
         {!hideControls && <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 invisible" aria-hidden="true" />}
 
-        {/* SEARCH BAR */}
+        {/* DESKTOP SEARCH BAR - hidden on mobile ≤425px */}
         {showWidgets && (
-        <div className={`flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`hidden xs:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
           <div className="relative w-full group">
             
             {/* Search Input Container */}
@@ -273,7 +275,15 @@ export function Header({
 
         {/* ACTIONS */}
         {showWidgets && (
-        <div className={`flex items-center shrink-0 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`flex items-center gap-2 shrink-0 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+            {/* MOBILE SEARCH ICON - visible only on ≤425px, styled with yellow border */}
+            <button 
+              onClick={onMobileSearchOpen}
+              className="flex xs:hidden w-10 h-10 items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group"
+            >
+              <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
+            </button>
+
             <Button
                 variant="outline" 
                 onClick={onPostClick}

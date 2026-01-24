@@ -6,6 +6,10 @@ export default {
   ],
   theme: {
     extend: {
+      // xs breakpoint at 426px for mobile search/header behavior only (≤425px portrait)
+      screens: {
+        'xs': '426px',
+      },
       fontFamily: {
         sans: ['Poppins', 'sans-serif'],
       },
