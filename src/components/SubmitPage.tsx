@@ -79,8 +79,8 @@ export function SubmitPage() {
     >
       
       {/* HEADER */}
-      <div className="text-left mb-12">
-        <h1 className="text-4xl font-bold mb-3 text-[#111111]">Post your Work</h1>
+      <div className="text-center xs:text-left mb-12">
+        <h1 className="text-2xl font-bold mb-3 text-[#111111]">Post your Work</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
