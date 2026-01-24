@@ -175,7 +175,7 @@ export function SubmitPage() {
                 {/* AVATAR SECTION */}
                 {!selectedAvatar ? (
                      <>
-                         <div className="bg-white border border-gray-200 rounded-[24px] p-8 flex flex-col items-center justify-center">
+                         <div className="bg-white border-2 border-gray-100 rounded-[24px] p-8 flex flex-col items-center justify-center">
                               <div className="flex w-full items-baseline justify-center gap-2 mb-6">
                                  <h3 className="font-bold text-lg text-[#111111]">Post as</h3>
                               </div>
