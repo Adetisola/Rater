@@ -149,8 +149,8 @@ export function Header({
     <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
       <div className={`relative max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center gap-2 sm:gap-3 md:gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
         
-        {/* ANIMATED LOGO - Absolute on desktop, flow on mobile */}
-        <div className={`${hideControls ? 'absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2' : 'relative md:absolute md:top-1/2 md:-translate-y-1/2 md:left-6'} z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] shrink-0`}>
+        {/* ANIMATED LOGO - Always absolute for smooth animation */}
+        <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
           <div 
             onClick={onLogoClick}
             className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
@@ -168,8 +168,8 @@ export function Header({
           </div>
         </div>
 
-        {/* GHOST LOGO SPACER - only on desktop where logo is absolute */}
-        {!hideControls && <div className="hidden md:block w-12 h-12 shrink-0 invisible" aria-hidden="true" />}
+        {/* GHOST LOGO SPACER - visible on all screens to reserve space for absolute logo */}
+        {!hideControls && <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 invisible" aria-hidden="true" />}
 
         {/* SEARCH BAR */}
         {showWidgets && (

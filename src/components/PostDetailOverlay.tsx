@@ -225,8 +225,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                 {/* 4. Description */}
                 <div>
                     <p className={`text-base text-gray-600 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                        {post.description}
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim mauris, hendrerit a ante dapibus, sollicitudin lobortis eros. Cras id facilisis nulla. Suspendisse potenti. Fusce quam risus, ultricies quis imperdiet sit.
+                        {post.description} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim mauris, hendrerit a ante dapibus, sollicitudin lobortis eros. Cras id facilisis nulla. Suspendisse potenti. Fusce quam risus, ultricies quis imperdiet sit.
                     </p>
                     <button 
                         onClick={() => setIsExpanded(!isExpanded)}
