@@ -387,15 +387,24 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                     {review.comment}
                                 </p>
 
-                                <div className="flex flex-wrap gap-3 xs:gap-6">
-                                    <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
-                                    <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
-                                    <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
+                                {/* Footer row: Criteria + Total Rating on same line */}
+                                <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
+                                    <div className="flex flex-wrap gap-3 xs:gap-6">
+                                        <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
+                                        <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
+                                        <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
+                                    </div>
+
+                                    {/* Total Rating - visible on mobile only, desktop has separate column */}
+                                    <div className="text-right shrink-0 xs:hidden">
+                                        <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
+                                        <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Right Content - Centered Total Rating */}
-                            <div className="text-left xs:text-right shrink-0 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
+                            {/* Right Content - Total Rating (desktop only) */}
+                            <div className="hidden xs:block text-right shrink-0">
                                 <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
                                 <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
