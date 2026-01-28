@@ -318,7 +318,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
         </div>
 
         {/* BOTTOM SECTION: Reviews List */}
-        <div className="border-t border-gray-100 pt-12">
+        <div className="border-t border-gray-100 pt-8 xs:pt-12">
             
             <div className="flex items-center gap-4 mb-8">
                 <h2 className="text-2xl font-bold text-[#111111]">Reviews ({totalReviews})</h2>
@@ -364,7 +364,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                     const ratings = isUserReview ? review.ratings : { clarity: review.clarity, purpose: review.purpose, aesthetics: review.aesthetics };
 
                     return (
-                        <div key={review.id} className="bg-white border border-gray-200 rounded-[20px] p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex items-center justify-between gap-8">
+                        <div key={review.id} className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col xs:flex-row xs:items-center justify-between gap-4 xs:gap-8">
                             
                             {/* Left Content */}
                             <div className="flex-1">
@@ -387,7 +387,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                     {review.comment}
                                 </p>
 
-                                <div className="flex gap-6">
+                                <div className="flex flex-wrap gap-3 xs:gap-6">
                                     <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
                                     <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
                                     <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
@@ -395,7 +395,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                             </div>
 
                             {/* Right Content - Centered Total Rating */}
-                            <div className="text-right shrink-0">
+                            <div className="text-left xs:text-right shrink-0 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                 <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
                                 <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
