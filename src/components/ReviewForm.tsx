@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Textarea';
 import { StarRating } from './ui/StarRating';
@@ -24,16 +24,59 @@ const CRITERIA_INFO = {
 };
 
 function CriteriaLabel({ label, info }: { label: string, info: { question: string, points: string[] } }) {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Handle tap to toggle tooltip
+  const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsTooltipVisible(prev => !prev);
+  };
+
+  // Close tooltip when clicking outside
+  React.useEffect(() => {
+    if (!isTooltipVisible) return;
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsTooltipVisible(false);
+      }
+    };
+
+    // Small delay to prevent immediate close on the same tap
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 10);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isTooltipVisible]);
+
   return (
-    <div className="relative group cursor-help">
-      <span className="text-base font-medium text-[#111111] border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black group-hover:text-black">
+    <div 
+      ref={containerRef}
+      className="relative group cursor-help"
+      onClick={handleTap}
+    >
+      <span className="text-base font-medium text-[#111111] border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black group-hover:text-black select-none">
         {label}
       </span>
       
-      {/* Tooltip */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-4 bg-[#111111] text-white text-xs rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none transform translate-y-2 group-hover:translate-y-0">
-        {/* Arrow */}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-[#111111]" />
+      {/* Tooltip - visible on hover (desktop) or tap (mobile) */}
+      {/* On mobile: left-aligned to prevent overflow. On desktop: centered */}
+      <div className={`absolute bottom-full left-0 xs:left-1/2 xs:-translate-x-1/2 mb-3 w-[calc(100vw-3rem)] xs:w-64 max-w-64 p-4 bg-[#111111] text-white text-xs rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+        ${isTooltipVisible 
+          ? 'opacity-100 visible translate-y-0' 
+          : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
+        }`}
+      >
+        {/* Arrow - positioned at label on mobile, centered on desktop */}
+        <div className="absolute top-full left-4 xs:left-1/2 xs:-translate-x-1/2 border-8 border-transparent border-t-[#111111]" />
         
         <p className="font-semibold mb-2.5 leading-relaxed text-white">{info.question}</p>
         <ul className="space-y-1.5 text-gray-300">
