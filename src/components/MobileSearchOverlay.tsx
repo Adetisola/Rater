@@ -162,34 +162,34 @@ export function MobileSearchOverlay({
       <div className="flex-1 overflow-y-auto">
         {/* Active Filters Pills (Sort + Categories) */}
         {(sortBy !== '✨Curated Freshness' || selectedCategories.length > 0) && (
-          <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap gap-2">
-            {/* Sort Pill */}
+          <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
+            {/* Sort Pill - matches homepage exactly */}
             {sortBy !== '✨Curated Freshness' && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FEC312]/15 border border-[#FEC312] text-xs font-bold text-[#111111] whitespace-nowrap">
-                {sortBy}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
+                <span className="text-xs font-medium text-[#111111]">{sortBy}</span>
                 <button 
                   onClick={() => onSortChange('✨Curated Freshness')}
-                  className="p-0.5 rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
+                  className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
                 >
-                  <X size={10} className="text-white" />
+                  <X className="w-2.5 h-2.5 text-white" />
                 </button>
-              </span>
+              </div>
             )}
             
-            {/* Category Pills */}
+            {/* Category Pills - matches homepage exactly */}
             {selectedCategories.map(cat => (
-              <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap">
-                {cat}
+              <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
+                <span className="text-xs font-medium text-[#111111]">{cat}</span>
                 <button 
                   onClick={() => {
                     const newCats = selectedCategories.filter(c => c !== cat);
                     onCategoryChange(newCats);
                   }}
-                  className="p-0.5 rounded-full hover:bg-gray-200 transition-colors"
+                  className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
                 >
-                  <X size={12} className="text-gray-500" />
+                  <X className="w-2.5 h-2.5 text-white" />
                 </button>
-              </span>
+              </div>
             ))}
           </div>
         )}
