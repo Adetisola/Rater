@@ -175,7 +175,7 @@ function App() {
         searchIndexes={searchIndexes}
       />
       
-      <main className="flex-1 w-full pt-8">
+      <main className="flex-1 w-full pt-2">
         <AnimatePresence mode="wait">
           {currentPage === 'home' && !isDelayed ? (
             <motion.div 
@@ -198,6 +198,52 @@ function App() {
                     >
                       <X className="w-3 h-3 text-white" />
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Active Filters Display - Mobile Only (≤425px) */}
+              {(sortBy !== '✨Curated Freshness' || selectedCategories.length > 0) && (
+                <div className="xs:hidden max-w-[1600px] mx-auto px-6 mb-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Sort Filter Pill */}
+                    {sortBy !== '✨Curated Freshness' && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
+                        <span className="text-xs font-medium text-[#111111]">{sortBy}</span>
+                        <button 
+                          onClick={() => setSortBy('✨Curated Freshness')}
+                          className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
+                        >
+                          <X className="w-2.5 h-2.5 text-white" />
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Category Filter Pills */}
+                    {selectedCategories.map(cat => (
+                      <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
+                        <span className="text-xs font-medium text-[#111111]">{cat}</span>
+                        <button 
+                          onClick={() => setSelectedCategories(selectedCategories.filter(c => c !== cat))}
+                          className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
+                        >
+                          <X className="w-2.5 h-2.5 text-white" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Clear All Button */}
+                    {(selectedCategories.length > 1 || (sortBy !== '✨Curated Freshness' && selectedCategories.length > 0)) && (
+                      <button 
+                        onClick={() => {
+                          setSortBy('✨Curated Freshness');
+                          setSelectedCategories([]);
+                        }}
+                        className="text-xs font-medium text-gray-500 hover:text-[#111111] underline transition-colors"
+                      >
+                        Clear all
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

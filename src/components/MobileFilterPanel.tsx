@@ -7,6 +7,7 @@ import { Button } from './ui/Button';
 interface MobileFilterPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onApply?: () => void; // Called when Apply is clicked - closes entire search overlay
   sortBy: string;
   onSortChange: (sort: string) => void;
   selectedCategories: string[];
@@ -35,6 +36,7 @@ const CATEGORIES = [
 export function MobileFilterPanel({
   isOpen,
   onClose,
+  onApply,
   sortBy,
   onSortChange,
   selectedCategories,
@@ -68,7 +70,8 @@ export function MobileFilterPanel({
   };
 
   const handleApply = () => {
-    onClose(); // Apply closes panel
+    onClose(); // Close filter panel
+    onApply?.(); // Close search overlay and return to homepage
   };
 
   return createPortal(

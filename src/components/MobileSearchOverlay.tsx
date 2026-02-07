@@ -160,9 +160,23 @@ export function MobileSearchOverlay({
 
       {/* Search Results - scrollable */}
       <div className="flex-1 overflow-y-auto">
-        {/* Selected Category Pills */}
-        {selectedCategories.length > 0 && (
+        {/* Active Filters Pills (Sort + Categories) */}
+        {(sortBy !== '✨Curated Freshness' || selectedCategories.length > 0) && (
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap gap-2">
+            {/* Sort Pill */}
+            {sortBy !== '✨Curated Freshness' && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FEC312]/15 border border-[#FEC312] text-xs font-bold text-[#111111] whitespace-nowrap">
+                {sortBy}
+                <button 
+                  onClick={() => onSortChange('✨Curated Freshness')}
+                  className="p-0.5 rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
+                >
+                  <X size={10} className="text-white" />
+                </button>
+              </span>
+            )}
+            
+            {/* Category Pills */}
             {selectedCategories.map(cat => (
               <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap">
                 {cat}
@@ -252,6 +266,7 @@ export function MobileSearchOverlay({
       <MobileFilterPanel
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
+        onApply={onClose} // Close entire search overlay when Apply is clicked
         sortBy={sortBy}
         onSortChange={onSortChange}
         selectedCategories={selectedCategories}
