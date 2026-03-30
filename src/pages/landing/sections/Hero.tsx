@@ -65,14 +65,14 @@ export function Hero() {
 
       {/* HERO SECTION */}
       <section className="bg-white">
-      <div className="relative w-full px-6 md:px-12 lg:px-20 pt-4 pb-8">
+      <div className="relative w-full px-0 md:px-12 lg:px-20 md:pt-4 pb-8">
         {/* Hero Background Container */}
         <div className="relative w-full max-w-[1400px] mx-auto overflow-hidden">
-          {/* SVG Background - natural flow, defines container height */}
+          {/* SVG Background - defines container height. Fixed taller height on mobile to prevent text overlap */}
           <img 
             src={heroBg}
             alt=""
-            className="w-full h-auto block"
+            className="w-full h-[520px] sm:h-[600px] md:h-auto object-cover object-center block"
             aria-hidden="true"
           />
           {/* Hero Visual - middle layer: above card, behind text
@@ -83,25 +83,28 @@ export function Hero() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[95%] w-auto max-w-none"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[95%] md:h-[95%] w-auto max-w-none"
           />
 
           {/* Text Content - top layer: above everything */}
-          <div className="absolute inset-0 z-10 flex flex-col items-center pt-6 md:pt-8 lg:pt-10 xl:pt-14 pointer-events-none">
+          <div className="absolute inset-0 z-10 flex flex-col items-center pt-16 md:pt-8 lg:pt-10 xl:pt-14 pointer-events-none">
             {/* Main Headline */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
-              className="text-[32px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-[#111111] text-center leading-tight tracking-tight px-4 w-full"
+              className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-[#111111] text-center leading-tight tracking-tight px-4 w-full"
             >
-              Judgment is built, not{' '}
-              <span className="relative inline-block">
-                found
+              <span className="block sm:inline">Judgment is built, </span>
+              <span className="block sm:inline">
+                not{' '}
+                <span className="relative inline-block">
+                  found
                 {/* Animated yellow scribble on top of the word */}
                 <AnimatedScribble 
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-auto pointer-events-none select-none"
                 />
+              </span>
               </span>
             </motion.h1>
 
@@ -110,7 +113,7 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-              className="mt-3 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto whitespace-nowrap"
+              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0"
             >
               Rater helps designers train their eye by actively evaluating real design work.
             </motion.p>
@@ -120,12 +123,12 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-              className="mt-5 md:mt-6 xl:mt-8 flex items-center justify-center gap-4 md:gap-5 xl:gap-6 w-full pointer-events-auto"
+              className="mt-10 sm:mt-8 md:mt-6 xl:mt-8 flex items-center justify-center gap-5 sm:gap-4 md:gap-5 xl:gap-6 w-full pointer-events-auto"
             >
               {/* Primary CTA */}
               <Link 
                 to="/app"
-                className="px-5 py-1.5 lg:px-6 lg:py-2 rounded-full bg-[#FEC312] text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-white hover:bg-[#e6b00f] transition-all duration-300"
+                className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-[#FEC312] text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-white hover:bg-[#e6b00f] transition-all duration-300"
               >
                 Enter Rater
               </Link>
@@ -133,7 +136,7 @@ export function Hero() {
               {/* Secondary CTA */}
               <a 
                 href="#what-is-rater"
-                className="text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-[#111111] hover:text-[#FEC312] transition-colors"
+                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-[#111111] hover:text-[#FEC312] transition-colors"
               >
                 What is Rater
               </a>
@@ -144,7 +147,7 @@ export function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="absolute bottom-4 right-12 md:bottom-5 md:right-10 text-[10px] text-black italic pointer-events-none"
+              className="absolute bottom-4 right-12 md:bottom-5 md:right-10 text-[12px] text-black italic pointer-events-none"
             >
               *An ongoing design experiment
             </motion.p>
