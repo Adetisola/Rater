@@ -1,6 +1,8 @@
 // Hero Section - Rater Landing Page
 // Contains: Navbar + "Judgment is built, not found" hero content
+// Animations are deferred until hero images are loaded to prevent layout shift
 
+import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -10,6 +12,14 @@ import heroBg from '../../../assets/landing/hero/hero-bg.svg';
 import { AnimatedScribble } from '../../../components/AnimatedScribble';
 
 export function Hero() {
+  // Track image loading to prevent animation-before-layout-stable glitch
+  const [bgLoaded, setBgLoaded] = useState(false);
+  const [visualLoaded, setVisualLoaded] = useState(false);
+  const isReady = bgLoaded && visualLoaded;
+
+  const onBgLoad = useCallback(() => setBgLoaded(true), []);
+  const onVisualLoad = useCallback(() => setVisualLoaded(true), []);
+
   return (
     <>
       {/* STICKY NAVBAR - matches app header background effect */}
@@ -74,6 +84,7 @@ export function Hero() {
             alt=""
             className="w-full h-[520px] sm:h-[600px] md:h-auto object-cover object-center block"
             aria-hidden="true"
+            onLoad={onBgLoad}
           />
           {/* Hero Visual - middle layer: above card, behind text
               h-full = always matches card height, w-auto = scales proportionally */}
@@ -81,9 +92,10 @@ export function Hero() {
             src={heroVisual}
             alt="Rater app showing design feedback with star ratings"
             initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
             className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[95%] md:h-[95%] w-auto max-w-none"
+            onLoad={onVisualLoad}
           />
 
           {/* Text Content - top layer: above everything */}
@@ -91,7 +103,7 @@ export function Hero() {
             {/* Main Headline */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-[#111111] text-center leading-tight tracking-tight px-4 w-full"
             >
@@ -111,7 +123,7 @@ export function Hero() {
             {/* Subheadline */}
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0"
             >
@@ -121,7 +133,7 @@ export function Hero() {
             {/* CTA Buttons */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
               className="mt-10 sm:mt-8 md:mt-6 xl:mt-8 flex items-center justify-center gap-5 sm:gap-4 md:gap-5 xl:gap-6 w-full pointer-events-auto"
             >
@@ -145,7 +157,7 @@ export function Hero() {
             {/* Footer Text - inside the card, at bottom */}
             <motion.p 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={isReady ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
               className="absolute bottom-4 right-6 sm:right-12 md:bottom-5 md:right-10 text-[8px] max-[376px]:text-[7px] sm:text-[12px] text-black italic pointer-events-none"
             >
