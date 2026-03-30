@@ -147,7 +147,7 @@ export function Hero() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="absolute bottom-4 right-12 md:bottom-5 md:right-10 text-[12px] text-black italic pointer-events-none"
+              className="absolute bottom-4 right-6 sm:right-12 md:bottom-5 md:right-10 text-[10px] max-[376px]:text-[7px] sm:text-[12px] text-black italic pointer-events-none"
             >
               *An ongoing design experiment
             </motion.p>
