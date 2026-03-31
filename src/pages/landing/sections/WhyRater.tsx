@@ -2,17 +2,23 @@ import gradientArrow from '../../../assets/landing/why-rater/Gradient Arrow.svg'
 import whyRaterVisual from '../../../assets/landing/why-rater/why rater-visual.png';
 import starIcon from '../../../assets/icons/star-active-yellow.svg';
 import { useTiltEffect } from '../../../hooks/useTiltEffect';
+import { useScrollReveal } from '../../../hooks/useScrollReveal';
 import { ShimmerOverlay } from '../../../components/ShimmerOverlay';
 
 export function WhyRater() {
   const tiltRef = useTiltEffect<HTMLDivElement>();
+  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>();
+
+  const stateClass =
+    state === 'visible' ? 'reveal-visible' :
+    state === 'exited'  ? 'reveal-exited'  : '';
 
   return (
     <section id="why-rater" className="py-16 md:py-24 relative z-10">
-      <div className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-14 md:gap-20">
+      <div ref={sectionRef} className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-14 md:gap-20">
         
         {/* Left Side — Supporting Visual */}
-        <div className="w-full md:w-[50%] relative flex justify-center md:justify-start mt-4 md:mt-0 order-2 md:order-1">
+        <div className={`w-full md:w-[50%] relative flex justify-center md:justify-start mt-4 md:mt-0 order-2 md:order-1 reveal-fade reveal-delay-1 ${stateClass}`}>
           <div ref={tiltRef} className="relative inline-block w-full max-w-[400px] md:max-w-[500px]">
             <img 
               src={whyRaterVisual} 
@@ -29,7 +35,7 @@ export function WhyRater() {
         <div className="w-full md:w-[50%] flex flex-col items-center md:items-start text-center md:text-left mt-10 md:mt-0 order-1 md:order-2">
           
           {/* Header & CTA Wrapper */}
-          <div className="flex flex-col items-center md:items-start justify-center md:justify-start gap-4 md:gap-0 mb-8 md:mb-12">
+          <div className={`flex flex-col items-center md:items-start justify-center md:justify-start gap-4 md:gap-0 mb-8 md:mb-12 reveal-fade-rise ${stateClass}`}>
             <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#111111] tracking-tight leading-tight max-w-[380px] md:max-w-none mx-auto md:mx-0 text-center md:text-left">
               Feedback Shouldn't Be A Guessing Game.
             </h2>
@@ -43,7 +49,7 @@ export function WhyRater() {
           </div>
 
           {/* Key Points */}
-          <ul className="flex flex-col gap-5 w-full max-w-[420px] md:max-w-[500px] lg:max-w-[550px] mx-auto md:mx-0">
+          <ul className={`flex flex-col gap-5 w-full max-w-[420px] md:max-w-[500px] lg:max-w-[550px] mx-auto md:mx-0 reveal-fade-rise reveal-delay-2 ${stateClass}`}>
             <li className="flex flex-row items-start gap-4">
               <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
               <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
@@ -53,13 +59,13 @@ export function WhyRater() {
             <li className="flex flex-row items-start gap-4">
               <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
               <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
-                Vague praise alone doesn’t help you grow.
+                Vague praise alone doesn't help you grow.
               </p>
             </li>
             <li className="flex flex-row items-start gap-4">
               <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
               <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
-                Ratings without context don’t teach you anything.
+                Ratings without context don't teach you anything.
               </p>
             </li>
           </ul>

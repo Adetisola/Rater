@@ -94,7 +94,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 40 }}
             animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[95%] md:h-[95%] w-auto max-w-none"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[95%] md:h-[90%] w-auto max-w-none"
             onLoad={onVisualLoad}
           />
 

@@ -4,6 +4,11 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 90px; /* offset for sticky navbar height */
+  }
+
   body {
     @apply font-sans antialiased text-gray-900 bg-surface;
   }
@@ -43,3 +48,48 @@
   opacity: 1;
   animation: shimmer-sweep 1s ease-in-out forwards;
 }
+
+/* ── Scroll-reveal transitions ────────────────────────────────── */
+
+/* Base hidden state: fade + rise (for text elements) */
+.reveal-fade-rise {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
+}
+
+/* Base hidden state: fade only (for visuals) */
+.reveal-fade {
+  opacity: 0;
+  transition: opacity 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity;
+}
+
+/* ── Enter state (in viewport) ── */
+.reveal-visible.reveal-fade-rise,
+.reveal-visible.reveal-fade {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Exit state (scrolled away — soft, NOT full hide) ── */
+.reveal-exited.reveal-fade-rise {
+  opacity: 0.45;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease-in,
+              transform 0.5s ease-in;
+  transition-delay: 0ms !important; /* no staggered delays on exit */
+}
+
+.reveal-exited.reveal-fade {
+  opacity: 0.55;
+  transition: opacity 0.5s ease-in;
+  transition-delay: 0ms !important;
+}
+
+/* Staggered delay variants (enter only — overridden on exit above) */
+.reveal-delay-1 { transition-delay: 100ms; }
+.reveal-delay-2 { transition-delay: 200ms; }
+.reveal-delay-3 { transition-delay: 300ms; }

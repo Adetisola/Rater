@@ -2,20 +2,27 @@
 import gradientArrow from '../../../assets/landing/what-is-rater/Gradient Arrow.svg';
 import whatIsRaterVisual from '../../../assets/landing/what-is-rater/what is rater-visual.png';
 import { useTiltEffect } from '../../../hooks/useTiltEffect';
+import { useScrollReveal } from '../../../hooks/useScrollReveal';
 import { ShimmerOverlay } from '../../../components/ShimmerOverlay';
 
 export function WhatIsRater() {
   const tiltRef = useTiltEffect<HTMLDivElement>();
+  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>();
+
+  // Map state → CSS class
+  const stateClass =
+    state === 'visible' ? 'reveal-visible' :
+    state === 'exited'  ? 'reveal-exited'  : '';
 
   return (
     <section id="what-is-rater" className="py-16 md:py-24 relative z-10">
-      <div className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center gap-14 md:gap-20">
+      <div ref={sectionRef} className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center gap-14 md:gap-20">
         
         {/* Left Side — Text Content */}
         <div className="w-full md:w-[45%] flex flex-col items-center md:items-start text-center md:text-left md:ml-4 lg:ml-8">
           
           {/* Header & CTA Wrapper */}
-          <div className="flex flex-row md:flex-col items-center md:items-start justify-center md:justify-start flex-wrap gap-3 md:gap-0 mb-8 md:mb-14 lg:mb-16">
+          <div className={`flex flex-row md:flex-col items-center md:items-start justify-center md:justify-start flex-wrap gap-3 md:gap-0 mb-8 md:mb-14 lg:mb-16 reveal-fade-rise ${stateClass}`}>
             <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#111111] tracking-tight leading-tight">
               What is Rater, really?
             </h2>
@@ -28,7 +35,7 @@ export function WhatIsRater() {
             </div>
           </div>
 
-          <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] leading-[1.6] max-w-[420px]">
+          <p className={`text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] leading-[1.6] max-w-[420px] reveal-fade-rise reveal-delay-2 ${stateClass}`}>
             Instead of likes and comments, Rater centers on <span className="font-bold text-[#111111]">structured ratings and context.</span>
             <br />
             Helping designers understand <span className="font-bold text-[#111111]">why something works</span>, not just whether it's popular.
@@ -36,7 +43,7 @@ export function WhatIsRater() {
         </div>
 
         {/* Right Side — Supporting Visual */}
-        <div className="w-full md:w-[55%] relative flex justify-center md:justify-end mt-4 md:mt-0">
+        <div className={`w-full md:w-[55%] relative flex justify-center md:justify-end mt-4 md:mt-0 reveal-fade reveal-delay-1 ${stateClass}`}>
           <div ref={tiltRef} className="relative inline-block w-full max-w-[460px] md:max-w-[550px] lg:max-w-[600px]">
             <img 
               src={whatIsRaterVisual} 
