@@ -11,6 +11,8 @@ import { Footer } from './sections/Footer';
 import { RevealSection } from '../../components/RevealSection';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
+import yellowMeshBg from '../../assets/landing/Yellow mesh gradient background.jpg';
+
 // Delay before non-hero sections are allowed to mount (ms)
 // Gives the hero animation time to settle without layout interference
 const SECTION_MOUNT_DELAY = 800;
@@ -24,14 +26,20 @@ export function LandingPage() {
       {/* Hero always mounts first and immediately */}
       <Hero />
 
-      {/* Remaining sections delay-mount and reveal on scroll */}
-      <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-        <WhatIsRater />
-      </RevealSection>
+      {/* Unified Background Wrapper for Rater Features */}
+      <div 
+        className="transition-colors duration-500 relative bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${yellowMeshBg})` }}
+      >
+        {/* Remaining sections delay-mount and reveal on scroll */}
+        <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
+          <WhatIsRater />
+        </RevealSection>
 
-      <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-        <WhyRater />
-      </RevealSection>
+        <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
+          <WhyRater />
+        </RevealSection>
+      </div>
 
       <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
         <HowItWorks />

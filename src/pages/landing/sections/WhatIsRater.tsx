@@ -1,10 +1,14 @@
 
 import gradientArrow from '../../../assets/landing/what-is-rater/Gradient Arrow.svg';
 import whatIsRaterVisual from '../../../assets/landing/what-is-rater/what is rater-visual.png';
+import { useTiltEffect } from '../../../hooks/useTiltEffect';
+import { ShimmerOverlay } from '../../../components/ShimmerOverlay';
 
 export function WhatIsRater() {
+  const tiltRef = useTiltEffect<HTMLDivElement>();
+
   return (
-    <section id="what-is-rater" className="py-16 md:py-24 bg-[#fffdd0] transition-colors duration-500">
+    <section id="what-is-rater" className="py-16 md:py-24 relative z-10">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center gap-14 md:gap-20">
         
         {/* Left Side — Text Content */}
@@ -12,7 +16,7 @@ export function WhatIsRater() {
           
           {/* Header & CTA Wrapper */}
           <div className="flex flex-row md:flex-col items-center md:items-start justify-center md:justify-start flex-wrap gap-3 md:gap-0 mb-8 md:mb-14 lg:mb-16">
-            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-bold text-[#111111] tracking-tight leading-tight">
+            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#111111] tracking-tight leading-tight">
               What is Rater, really?
             </h2>
             
@@ -33,16 +37,20 @@ export function WhatIsRater() {
 
         {/* Right Side — Supporting Visual */}
         <div className="w-full md:w-[55%] relative flex justify-center md:justify-end mt-4 md:mt-0">
-          <div className="relative inline-block w-full max-w-[400px] md:max-w-[500px]">
+          <div ref={tiltRef} className="relative inline-block w-full max-w-[400px] md:max-w-[550px] lg:max-w-[600px]">
             <img 
               src={whatIsRaterVisual} 
               alt="Rater structured rating system interface" 
-              className="w-full h-auto object-contain relative z-10 drop-shadow-sm pointer-events-none"
+              className="w-full h-auto object-contain relative z-10 drop-shadow-sm select-none"
+              draggable={false}
             />
+
+            {/* Shimmer Effect */}
+            <ShimmerOverlay />
             
             {/* Overlay Label */}
-            <div className="absolute -bottom-1 right-18 xs:right-12 md:right-24 lg:right-32 z-20 pointer-events-none">
-              <span className="text-[12px] md:text-[13.5px] text-gray-400 font-medium tracking-wide italic">
+            <div className="absolute -bottom-1 right-18 xs:right-12 md:right-24 lg:right-36 z-20 pointer-events-none">
+              <span className="text-[12px] md:text-[13.5px] text-[#555555] font-semibold tracking-wide italic">
                 Evaluation beats reaction
               </span>
             </div>

@@ -13,3 +13,33 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Shimmer sweep effect ─────────────────────────────────────── */
+@keyframes shimmer-sweep {
+  0%   { transform: translateX(-100%) rotate(-25deg); }
+  100% { transform: translateX(250%)  rotate(-25deg); }
+}
+
+.shimmer-band {
+  position: absolute;
+  top: -40%;
+  left: -10%;
+  width: 35%;
+  height: 180%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 35%,
+    rgba(255, 255, 255, 0.14) 50%,
+    rgba(255, 255, 255, 0.08) 65%,
+    transparent 100%
+  );
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.shimmer-band--active {
+  opacity: 1;
+  animation: shimmer-sweep 1s ease-in-out forwards;
+}
