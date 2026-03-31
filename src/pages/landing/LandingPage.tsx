@@ -27,18 +27,24 @@ export function LandingPage() {
       <Hero />
 
       {/* Unified Background Wrapper for Rater Features */}
-      <div 
-        className="transition-colors duration-500 relative bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${yellowMeshBg})` }}
-      >
-        {/* Remaining sections delay-mount and reveal on scroll */}
-        <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-          <WhatIsRater />
-        </RevealSection>
+      <div className="bg-[#fffdd0] transition-colors duration-500 relative">
+        {/* Desktop-only background image layer */}
+        <div 
+          className="absolute inset-0 hidden md:block bg-cover bg-center bg-no-repeat pointer-events-none"
+          style={{ backgroundImage: `url(${yellowMeshBg})` }}
+        />
+        
+        {/* Content container */}
+        <div className="relative z-10">
+          {/* Remaining sections delay-mount and reveal on scroll */}
+          <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
+            <WhatIsRater />
+          </RevealSection>
 
-        <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-          <WhyRater />
-        </RevealSection>
+          <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
+            <WhyRater />
+          </RevealSection>
+        </div>
       </div>
 
       <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">

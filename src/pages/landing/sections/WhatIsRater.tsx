@@ -12,7 +12,7 @@ export function WhatIsRater() {
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center gap-14 md:gap-20">
         
         {/* Left Side — Text Content */}
-        <div className="w-full md:w-[45%] flex flex-col items-center md:items-start text-center md:text-left">
+        <div className="w-full md:w-[45%] flex flex-col items-center md:items-start text-center md:text-left md:ml-4 lg:ml-8">
           
           {/* Header & CTA Wrapper */}
           <div className="flex flex-row md:flex-col items-center md:items-start justify-center md:justify-start flex-wrap gap-3 md:gap-0 mb-8 md:mb-14 lg:mb-16">
@@ -37,7 +37,7 @@ export function WhatIsRater() {
 
         {/* Right Side — Supporting Visual */}
         <div className="w-full md:w-[55%] relative flex justify-center md:justify-end mt-4 md:mt-0">
-          <div ref={tiltRef} className="relative inline-block w-full max-w-[400px] md:max-w-[550px] lg:max-w-[600px]">
+          <div ref={tiltRef} className="relative inline-block w-full max-w-[460px] md:max-w-[550px] lg:max-w-[600px]">
             <img 
               src={whatIsRaterVisual} 
               alt="Rater structured rating system interface" 
@@ -49,7 +49,7 @@ export function WhatIsRater() {
             <ShimmerOverlay />
             
             {/* Overlay Label */}
-            <div className="absolute -bottom-1 right-18 xs:right-12 md:right-24 lg:right-36 z-20 pointer-events-none">
+            <div className="absolute -bottom-1 right-18 xs:right-28 md:right-24 lg:right-36 z-20 pointer-events-none">
               <span className="text-[12px] md:text-[13.5px] text-[#555555] font-semibold tracking-wide italic">
                 Evaluation beats reaction
               </span>
