@@ -23,22 +23,22 @@ export function WhatIsRater() {
           
           {/* Header & CTA Wrapper */}
           <div className={`flex flex-row md:flex-col items-center md:items-start justify-center md:justify-start flex-wrap gap-3 md:gap-0 mb-8 md:mb-14 lg:mb-16 reveal-fade-rise ${stateClass}`}>
-            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#111111] tracking-tight leading-tight">
+            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#000000] tracking-tight leading-tight">
               What is Rater, really?
             </h2>
             
             {/* CTA Element (Inline) */}
             <div className="md:mt-2">
-              <div className="inline-flex items-center justify-start pl-[16px] border-2 border-[#FEC312] rounded-[30px] w-[100px] h-[36px]">
+              <div className="inline-flex items-center justify-start pl-[16px] border-3 border-[#FEC312] rounded-[30px] w-[100px] h-[36px]">
                 <img src={gradientArrow} alt="" className="w-[17px] h-[17px] object-contain" />
               </div>
             </div>
           </div>
 
           <p className={`text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] leading-[1.6] max-w-[420px] reveal-fade-rise reveal-delay-2 ${stateClass}`}>
-            Instead of likes and comments, Rater centers on <span className="font-bold text-[#111111]">structured ratings and context.</span>
+            Instead of likes and comments, Rater centers on <span className="font-bold text-[#000000]">structured ratings and context.</span>
             <br />
-            Helping designers understand <span className="font-bold text-[#111111]">why something works</span>, not just whether it's popular.
+            Helping designers understand <span className="font-bold text-[#000000]">why something works</span>, not just whether it's popular.
           </p>
         </div>
 

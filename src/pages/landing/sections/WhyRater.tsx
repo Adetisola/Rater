@@ -19,7 +19,7 @@ export function WhyRater() {
         
         {/* Left Side — Supporting Visual */}
         <div className={`w-full md:w-[50%] relative flex justify-center md:justify-start mt-4 md:mt-0 order-2 md:order-1 reveal-fade reveal-delay-1 ${stateClass}`}>
-          <div ref={tiltRef} className="relative inline-block w-full max-w-[400px] md:max-w-[500px]">
+          <div ref={tiltRef} className="relative inline-block w-full max-w-[400px] md:max-w-[420px]">
             <img 
               src={whyRaterVisual} 
               alt="Design feedback rating interface" 
@@ -36,13 +36,13 @@ export function WhyRater() {
           
           {/* Header & CTA Wrapper */}
           <div className={`flex flex-col items-center md:items-start justify-center md:justify-start gap-4 md:gap-0 mb-8 md:mb-12 reveal-fade-rise ${stateClass}`}>
-            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#111111] tracking-tight leading-tight max-w-[380px] md:max-w-none mx-auto md:mx-0 text-center md:text-left">
+            <h2 className="text-[28px] md:text-[36px] lg:text-[42px] font-semibold text-[#000000] tracking-tight leading-tight max-w-[380px] md:max-w-none mx-auto md:mx-0 text-center md:text-left">
               Feedback Shouldn't Be A Guessing Game.
             </h2>
             
             {/* CTA Element (Inline) */}
             <div className="md:mt-4">
-              <div className="inline-flex items-center justify-start pl-[16px] border-2 border-[#FEC312] rounded-[30px] w-[100px] h-[36px]">
+              <div className="inline-flex items-center justify-start pl-[16px] border-3 border-[#FEC312] rounded-[30px] w-[100px] h-[36px]">
                 <img src={gradientArrow} alt="" className="w-[17px] h-[17px] object-contain" />
               </div>
             </div>
@@ -52,19 +52,19 @@ export function WhyRater() {
           <ul className={`flex flex-col gap-5 w-full max-w-[420px] md:max-w-[500px] lg:max-w-[550px] mx-auto md:mx-0 reveal-fade-rise reveal-delay-2 ${stateClass}`}>
             <li className="flex flex-row items-start gap-4">
               <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
-              <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
+              <p className="text-[#000000] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
                 Rater makes feedback intentional.
               </p>
             </li>
             <li className="flex flex-row items-start gap-4">
               <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
-              <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
+              <p className="text-[#000000] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
                 Vague praise alone doesn't help you grow.
               </p>
             </li>
             <li className="flex flex-row items-start gap-4">
               <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
-              <p className="text-[#333333] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
+              <p className="text-[#000000] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
                 Ratings without context don't teach you anything.
               </p>
             </li>
