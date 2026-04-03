@@ -284,7 +284,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                     </div>
 
                     {/* RATING DISPLAY (Moved Here) */}
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                          {isLocked ? (
                              <span className="text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
                          ) : (
