@@ -58,7 +58,7 @@ export function HowItWorks() {
           </div>
 
           {/* Mobile Cards — stacked vertically, visuals always shown */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-8">
             {CARDS.map((card) => (
               <div
                 key={card.label}
