@@ -248,6 +248,35 @@ function App() {
                 </div>
               )}
               
+              {/* Search Results Indicator */}
+              {debouncedSearchQuery.trim().length >= 2 && !selectedDesigner && (
+                <div className="max-w-[1600px] mx-auto px-6 mb-5">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {/* Label */}
+                    <span className="text-sm text-gray-500 font-medium">Results for</span>
+
+                    {/* Query chip */}
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111] rounded-full">
+                      <span className="text-sm font-semibold text-white">"{debouncedSearchQuery.trim()}"</span>
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                        aria-label="Clear search"
+                      >
+                        <X className="w-2.5 h-2.5 text-white" />
+                      </button>
+                    </div>
+
+                    {/* Result count */}
+                    <span className="text-sm text-gray-400">
+                      {sortedPosts.length === 0
+                        ? 'No posts found'
+                        : `${sortedPosts.length} post${sortedPosts.length === 1 ? '' : 's'} found`}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <MasonryGrid 
                 posts={sortedPosts} 
                 badgeMap={globalBadgeMap}
