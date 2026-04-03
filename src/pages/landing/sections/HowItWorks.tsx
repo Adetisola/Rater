@@ -44,8 +44,60 @@ export function HowItWorks() {
     <section id="how-it-works" className="py-16 md:py-24 relative z-10">
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
 
-        {/* Island Background Container */}
-        <div className="relative w-full">
+        {/* ── MOBILE LAYOUT (<768px): normal flow, no absolute positioning ── */}
+        <div className="md:hidden rounded-[24px] border border-[#EEEEEE] bg-[#FAFAFA] px-5 pt-7 pb-7">
+
+          {/* Mobile Header */}
+          <div className="flex flex-row items-center justify-center gap-3 mb-6">
+            <h2 className="text-[22px] font-semibold text-[#000000] tracking-tight leading-tight">
+              How it works
+            </h2>
+            <div className="inline-flex items-center justify-start pl-[14px] border-[3px] border-[#FEC312] rounded-[30px] w-[80px] h-[30px]">
+              <img src={gradientArrow} alt="" className="w-[14px] h-[14px] object-contain" />
+            </div>
+          </div>
+
+          {/* Mobile Cards — stacked vertically, visuals always shown */}
+          <div className="flex flex-col gap-3">
+            {CARDS.map((card) => (
+              <div
+                key={card.label}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: '#EEEEEE', padding: '2px' }}
+              >
+                <div
+                  className="rounded-[14px] flex flex-col overflow-hidden"
+                  style={{ background: card.gradient }}
+                >
+                  {/* Visual — always visible on mobile */}
+                  <div className="w-full">
+                    <img
+                      src={card.visual}
+                      alt={`${card.label} visual`}
+                      className="w-full h-auto block"
+                    />
+                  </div>
+
+                  {/* Text content */}
+                  <div className="px-5 pb-5 pt-4 flex flex-col gap-1">
+                    <h3 className="text-[20px] font-medium text-[#C4C4C4] tracking-tight leading-tight">
+                      {card.label}
+                    </h3>
+                    <p className="text-[13px] font-medium text-[#000000] leading-snug pt-2 max-w-[85%]">
+                      {card.description}
+                    </p>
+                    <p className="text-[11px] text-[#555555] leading-snug mt-1 max-w-[90%]">
+                      {card.supportingText}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── DESKTOP LAYOUT (≥768px): island SVG background with absolute content ── */}
+        <div className="hidden md:block relative w-full">
           {/* SVG Background — defines the island shape */}
           <img
             src={howItWorksBg}
