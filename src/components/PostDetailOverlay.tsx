@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, Check, X, Download } from 'lucide-react'; // Added icons
-import type { Post } from '../logic/mockData';
+import type { Post, Review } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
+import { MOCK_AVATARS } from '../logic/mockData';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -11,6 +12,8 @@ import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { computeBadges } from '../logic/badgeUtils';
 
+const REVIEWS_PER_PAGE = 5;
+
 interface PostDetailOverlayProps {
   post: Post;
   onClose: () => void;
@@ -18,7 +21,7 @@ interface PostDetailOverlayProps {
 
 export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   // Local state to simulate new reviews being added
-  const [reviews, setReviews] = useState<any[]>([]); 
+  const [userReviews, setUserReviews] = useState<Review[]>([]); 
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false); // For description
   const [sortBy, setSortBy] = useState('Newest');
@@ -26,6 +29,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
 
   // Lock body scroll when overlay is open
   useEffect(() => {
@@ -35,58 +39,37 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
     };
   }, []);
 
+  // Reset visible count when sort changes
+  useEffect(() => {
+    setVisibleCount(REVIEWS_PER_PAGE);
+  }, [sortBy]);
+
   // Compute badge for this post using centralized logic
   const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
   const badge = badgeMap[post.id];
 
-  // Static mock reviews to demonstrate sorting
-  const MOCK_REVIEWS_LIST = [
-      {
-          id: 'r_mock_1',
-          name: 'Sarah Design',
-          timeAgo: '2d ago',
-          timestamp: Date.now() - 1000 * 60 * 60 * 48,
-          comment: 'The minimal aesthetic is exactly what modern e-commerce needs. The functionality seems intuitive.',
-          clarity: 5, purpose: 5, aesthetics: 5, average: 5.0
-      },
-      {
-          id: 'r_mock_2',
-          name: 'Timi',
-          timeAgo: '3s ago',
-          timestamp: Date.now() - 3000, 
-          comment: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim mauris, hendrerit a ante.',
-          clarity: 4, purpose: 2, aesthetics: 3, average: 3.0
-      },
-      {
-          id: 'r_mock_3',
-          name: 'Alex Dev',
-          timeAgo: '5d ago',
-          timestamp: Date.now() - 1000 * 60 * 60 * 24 * 5,
-          comment: 'Good effort, but I think the typography could be a bit more bold.',
-          clarity: 3, purpose: 4, aesthetics: 2, average: 3.0
-      }
-  ];
+  // Use actual reviews from the post data + any user-submitted reviews
+  const allReviews = [...userReviews, ...post.reviews];
 
-  const allReviews = [...reviews, ...MOCK_REVIEWS_LIST];
+  const sortedReviews = useMemo(() => {
+    return [...allReviews].sort((a, b) => {
+      const getAvg = (r: Review) => (r.ratings.clarity + r.ratings.purpose + r.ratings.aesthetics) / 3;
+      const getTime = (r: Review) => new Date(r.createdAt).getTime();
 
-  const sortedReviews = [...allReviews].sort((a, b) => {
-      const getVal = (r: any) => {
-          const avg = r.average ?? ((r.ratings.clarity + r.ratings.purpose + r.ratings.aesthetics) / 3);
-          const time = r.timestamp ?? new Date(r.createdAt).getTime();
-          return { avg, time };
-      };
-      const valA = getVal(a);
-      const valB = getVal(b);
-
-      if (sortBy === 'Highest Rated') return valB.avg - valA.avg;
-      if (sortBy === 'Lowest Rated') return valA.avg - valB.avg;
-      if (sortBy === 'Newest') return valB.time - valA.time;
-      if (sortBy === 'Oldest') return valA.time - valB.time;
+      if (sortBy === 'Highest Rated') return getAvg(b) - getAvg(a);
+      if (sortBy === 'Lowest Rated') return getAvg(a) - getAvg(b);
+      if (sortBy === 'Newest') return getTime(b) - getTime(a);
+      if (sortBy === 'Oldest') return getTime(a) - getTime(b);
       return 0;
-  });
+    });
+  }, [allReviews, sortBy]);
+
+  const visibleReviews = sortedReviews.slice(0, visibleCount);
+  const hasMoreReviews = visibleCount < sortedReviews.length;
+  const remainingReviews = sortedReviews.length - visibleCount;
 
   const handleReviewSubmit = (ratings: any, comment: string, reviewerName: string) => {
-    const newReview = {
+    const newReview: Review = {
         id: Math.random().toString(),
         postId: post.id,
         ratings,
@@ -94,13 +77,17 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
         reviewerName,
         createdAt: new Date().toISOString()
     };
-    setReviews([newReview, ...reviews]);
+    setUserReviews([newReview, ...userReviews]);
     setHasReviewed(true);
   };
 
-  // Mock unlock logic
-  const totalReviews = post.rating.reviewCount + reviews.length;
+  // Total reviews = actual post reviews + user-submitted reviews
+  const totalReviews = allReviews.length;
   const isLocked = totalReviews < 3;
+
+  const handleLoadMore = () => {
+    setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
+  };
 
   return (
     <motion.div 
@@ -242,7 +229,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} className="w-full h-full object-cover" alt="Avatar" />
                         </div>
-                        <span className="text-sm font-bold text-[#111111]">Timi</span>
+                        <span className="text-sm font-bold text-[#111111]">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
                     </div>
 
                     {/* RATING DISPLAY (Moved Here) */}
@@ -354,22 +341,23 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
             </div>
 
             <div className="space-y-6">
-                {sortedReviews.map((review) => {
-                    // Normalize data
-                    const isUserReview = !!review.createdAt;
-                    const ratingAvg = isUserReview 
-                        ? (review.ratings.clarity + review.ratings.purpose + review.ratings.aesthetics) / 3 
-                        : review.average;
-                    const timeLabel = isUserReview ? formatTimeAgo(review.createdAt) : review.timeAgo;
-                    const ratings = isUserReview ? review.ratings : { clarity: review.clarity, purpose: review.purpose, aesthetics: review.aesthetics };
+                {visibleReviews.map((review) => {
+                    const ratingAvg = (review.ratings.clarity + review.ratings.purpose + review.ratings.aesthetics) / 3;
+                    const timeLabel = formatTimeAgo(review.createdAt);
 
                     return (
-                        <div key={review.id} className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500 flex flex-col xs:flex-row xs:items-center justify-between gap-4 xs:gap-8">
+                        <motion.div 
+                            key={review.id} 
+                            initial={{ opacity: 0, y: 16 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
+                            className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-8 flex flex-col xs:flex-row xs:items-center justify-between gap-4 xs:gap-8"
+                        >
                             
                             {/* Left Content */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <span className="font-bold text-base text-[#111111]">{review.reviewerName || review.name}</span>
+                                    <span className="font-bold text-base text-[#111111]">{review.reviewerName || 'Anonymous'}</span>
                                     <div className="flex gap-0.5">
                                         {[1,2,3,4,5].map(i => (
                                             <img 
@@ -383,16 +371,18 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                     <span className="text-xs text-gray-400 font-medium">{timeLabel}</span>
                                 </div>
 
-                                <p className="text-sm text-[#111111] leading-relaxed mb-6">
-                                    {review.comment}
-                                </p>
+                                {review.comment && (
+                                    <p className="text-sm text-[#111111] leading-relaxed mb-6">
+                                        {review.comment}
+                                    </p>
+                                )}
 
                                 {/* Footer row: Criteria + Total Rating on same line */}
                                 <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
-                                        <div className="text-xs font-bold text-[#111111]">Clarity: {ratings.clarity}</div>
-                                        <div className="text-xs font-bold text-[#111111]">Purpose: {ratings.purpose}</div>
-                                        <div className="text-xs font-bold text-[#111111]">Aesthetics: {ratings.aesthetics}</div>
+                                        <div className="text-xs font-bold text-[#111111]">Clarity: {review.ratings.clarity}</div>
+                                        <div className="text-xs font-bold text-[#111111]">Purpose: {review.ratings.purpose}</div>
+                                        <div className="text-xs font-bold text-[#111111]">Aesthetics: {review.ratings.aesthetics}</div>
                                     </div>
 
                                     {/* Total Rating - visible on mobile only, desktop has separate column */}
@@ -409,10 +399,32 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                 <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
 
-                        </div>
+                        </motion.div>
                     );
                 })}
             </div>
+
+            {/* Load More Button */}
+            {hasMoreReviews && (
+                <div className="flex justify-center mt-10">
+                    <button
+                        onClick={handleLoadMore}
+                        className="group relative px-8 py-3.5 bg-[#111111] text-white text-sm font-bold rounded-full hover:bg-[#222222] active:scale-[0.97] transition-all duration-200 flex items-center gap-2"
+                    >
+                        Load More Reviews
+                        <span className="text-white/60 text-xs font-medium">
+                            ({Math.min(REVIEWS_PER_PAGE, remainingReviews)} of {remainingReviews} remaining)
+                        </span>
+                    </button>
+                </div>
+            )}
+
+            {/* All reviews shown indicator */}
+            {!hasMoreReviews && sortedReviews.length > REVIEWS_PER_PAGE && (
+                <div className="flex justify-center mt-10">
+                    <span className="text-sm text-gray-400 font-medium">All reviews shown</span>
+                </div>
+            )}
 
         </div>
 

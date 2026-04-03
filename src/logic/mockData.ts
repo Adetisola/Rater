@@ -1030,3 +1030,113 @@ export const MOCK_POSTS: Post[] = [
     ]
   }
 ];
+
+// --- REVIEW GENERATOR ---
+// Fills each post's reviews[] to match its reviewCount with realistic data
+
+const GENERATED_REVIEWER_NAMES = [
+  'Alice Dev', 'DesignGuru', 'Sarah Design', 'Alex Dev', 'UI_Explorer',
+  'CreativeDir', 'DataNerd', 'UX_Lead', 'FrontendFan', 'PixelPerfect',
+  'TypeNerd', 'ColorTheory', 'GridMaster', 'ResponsiveKing', 'A11yChamp',
+  'MotionDesigner', 'BrandStrat', 'ArtDirector', 'ProductDesigner', 'VisualDev',
+  'DesignLead', 'UIEngineer', 'WebArtist', 'DigitalCrafter', 'LayoutPro',
+  'StyleGuide', 'DesignOps', 'UXWriter', 'InteractionDev', 'SystemDesigner',
+  'InfoArchitect', 'UserResearcher', 'PrototypePro', 'DesignThinkr', 'SketchMaster',
+  'FigmaFan', 'VectorWizard', 'AnimationPro', 'MicroInteract', 'DesignReviewer',
+  'CritiquePro', 'PortfolioRev', 'HireDesigner', 'DesignMentor', 'JuniorDev',
+  'SeniorUX', 'StudioHead', 'FreelanceGuru', 'AgencyReview', 'ClientView'
+];
+
+const GENERATED_COMMENTS: (string | null)[] = [
+  'Excellent work! The attention to detail is remarkable.',
+  'Love the color palette choices here.',
+  'Great visual hierarchy throughout the design.',
+  'The spacing and typography feel very balanced.',
+  'Clean and professional execution.',
+  'This really stands out from similar designs.',
+  'Would love to see more iterations on this concept.',
+  'Strong composition and layout decisions.',
+  'The visual flow guides the eye naturally.',
+  'Impressive use of whitespace.',
+  'The design system feels cohesive and well-thought-out.',
+  'Nice balance between form and function.',
+  'The accessibility considerations are appreciated.',
+  'Solid responsive design approach.',
+  'This feels very polished and production-ready.',
+  'The micro-interactions add a nice touch.',
+  'Great use of contrast to draw attention.',
+  'The branding integration feels seamless.',
+  'Love how the design tells a story.',
+  'Very modern and trendy approach.',
+  'The layout is intuitive and easy to navigate.',
+  'Good balance of creativity and usability.',
+  'The iconography is consistent and clear.',
+  'This would work well across different screen sizes.',
+  'Bold design choices that really pay off.',
+  'The gradient usage is tasteful and modern.',
+  'Clear content hierarchy makes this easy to scan.',
+  'The dark mode implementation is thoughtful.',
+  'Great font pairing choices.',
+  'The animation timing feels just right.',
+  'This could use some more visual variety.',
+  'Consider increasing the contrast for better readability.',
+  'The concept is strong but execution could be tighter.',
+  'A few alignment issues but overall solid work.',
+  'Interesting direction, keep pushing the boundaries.',
+  'Well-executed concept with a professional feel.',
+  'The imagery selection complements the design well.',
+  'Smooth transitions and polished feel overall.',
+  'A standout piece in this category.',
+  'Really like the use of negative space here.',
+  null, null, null, null, null // ~10% of reviews have no comment
+];
+
+function _hashSeed(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function _generateReview(postId: string, index: number, postCreatedAt: string): Review {
+  const seed = _hashSeed(`${postId}_review_${index}`);
+  const nameIdx = seed % GENERATED_REVIEWER_NAMES.length;
+  const commentIdx = (seed * 7 + index * 13) % GENERATED_COMMENTS.length;
+  const isAnon = index % 6 === 0;
+
+  // Ratings between 2-5, biased toward 3-5
+  const clarity = Math.min(5, Math.max(2, 3 + (seed * 3 + index) % 3));
+  const purpose = Math.min(5, Math.max(2, 3 + (seed * 5 + index * 2) % 3));
+  const aesthetics = Math.min(5, Math.max(2, 3 + (seed * 7 + index * 3) % 3));
+
+  // Spread reviews over time, older reviews further back
+  const postTime = new Date(postCreatedAt).getTime();
+  const hoursBack = 1 + index * 3 + (seed % 12);
+  const reviewTime = postTime - hoursBack * 60 * 60 * 1000;
+
+  const comment = GENERATED_COMMENTS[commentIdx];
+
+  return {
+    id: `r_${postId.replace('post_', '')}_gen_${index}`,
+    postId,
+    reviewerName: isAnon ? undefined : GENERATED_REVIEWER_NAMES[nameIdx],
+    ratings: { clarity, purpose, aesthetics },
+    ...(comment ? { comment } : {}),
+    createdAt: new Date(reviewTime).toISOString(),
+  };
+}
+
+// Fill each post's reviews array to match its stated reviewCount
+MOCK_POSTS.forEach(post => {
+  const target = post.rating.reviewCount;
+  const existing = post.reviews.length;
+
+  for (let i = existing; i < target; i++) {
+    post.reviews.push(_generateReview(post.id, i, post.createdAt));
+  }
+
+  // Sync reviewCount to actual reviews length (ensures consistency)
+  post.rating.reviewCount = post.reviews.length;
+});

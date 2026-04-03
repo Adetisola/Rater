@@ -167,7 +167,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                 {/* LEFT: Count */}
                 <div className="flex items-start gap-1.5">
                     <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.rating.reviewCount}</span>
+                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.reviews.length}</span>
                 </div>
 
                 {/* RIGHT: Ratings */}
