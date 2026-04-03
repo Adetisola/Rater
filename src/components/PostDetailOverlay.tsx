@@ -299,7 +299,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                         />
                                     ))}
                                 </div>
-                                <span className="text-3xl font-bold text-[#111111]">{post.rating.average}/5</span>
+                                <span className="text-2xl font-bold text-[#111111]">{post.rating.average}/5</span>
                              </>
                          )}
                     </div>
