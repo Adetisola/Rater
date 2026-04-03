@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronDown, Check, X, Download } from 'lucide-react'; // Added icons
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { motion, useMotionValue } from 'framer-motion';
+import { ChevronDown, Check, X, Download, Plus, Minus } from 'lucide-react'; // Added icons
 import type { Post, Review } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
@@ -29,7 +29,58 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
+  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
+
+  const ZOOM_IN_SCALE = 2.5;
+
+  // Recompute pan boundaries whenever zoom changes
+  const updateConstraints = useCallback((scale: number) => {
+    if (!imgRef.current) return;
+    const { offsetWidth: w, offsetHeight: h } = imgRef.current;
+    const maxX = (w * (scale - 1)) / 2;
+    const maxY = (h * (scale - 1)) / 2;
+    setDragConstraints({ left: -maxX, right: maxX, top: -maxY, bottom: maxY });
+    return { maxX, maxY };
+  }, []);
+
+  useEffect(() => {
+    const bounds = updateConstraints(zoomScale);
+    // When zooming back out, snap position to center
+    if (zoomScale === 1) {
+      x.set(0);
+      y.set(0);
+    } else if (bounds) {
+      // Clamp current position within new bounds
+      x.set(Math.max(-bounds.maxX, Math.min(bounds.maxX, x.get())));
+      y.set(Math.max(-bounds.maxY, Math.min(bounds.maxY, y.get())));
+    }
+  }, [zoomScale, updateConstraints, x, y]);
+
+  // Scroll-to-pan: translate wheel events into image position when zoomed
+  useEffect(() => {
+    if (!isImageFullscreen) return;
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (zoomScale <= 1) return;
+      e.preventDefault();
+      const { left: minX, right: maxX, top: minY, bottom: maxY } = dragConstraints;
+      const newX = Math.max(minX, Math.min(maxX, x.get() - e.deltaX));
+      const newY = Math.max(minY, Math.min(maxY, y.get() - e.deltaY));
+      x.set(newX);
+      y.set(newY);
+    };
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [isImageFullscreen, zoomScale, dragConstraints, x, y]);
 
   // Lock body scroll when overlay is open
   useEffect(() => {
@@ -432,26 +483,67 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
       {/* Fullscreen Image Overlay */}
       {isImageFullscreen && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 overflow-hidden">
                {/* Backdrop */}
                <div 
-                  className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-                  onClick={() => setIsImageFullscreen(false)}
+                  className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+                  onClick={() => {
+                      setIsImageFullscreen(false);
+                      setZoomScale(1);
+                  }}
                />
 
                {/* Content */}
-               <div className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
+               <div ref={containerRef} className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
                     <button 
-                        className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors pointer-events-auto"
-                        onClick={() => setIsImageFullscreen(false)}
+                        className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors pointer-events-auto z-50"
+                        onClick={() => {
+                            setIsImageFullscreen(false);
+                            setZoomScale(1);
+                        }}
                     >
                         <X className="w-6 h-6" />
                     </button>
 
-                    <img 
+                    {/* Zoom Controls */}
+                    <div className="absolute bottom-6 right-6 flex flex-col gap-3 pointer-events-auto z-50">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }}
+                            className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={zoomScale >= ZOOM_IN_SCALE}
+                            title="Zoom In"
+                        >
+                            <Plus className="w-6 h-6 text-black" />
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setZoomScale(1); }}
+                            className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            disabled={zoomScale <= 1}
+                            title="Zoom Out"
+                        >
+                            <Minus className="w-6 h-6 text-black" />
+                        </button>
+                    </div>
+
+                    <motion.img 
+                        ref={imgRef}
                         src={post.imageUrl} 
                         alt={post.title} 
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-200 pointer-events-auto"
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl pointer-events-auto"
+                        style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
+                        whileDrag={{ cursor: 'grabbing' }}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: zoomScale }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        drag={zoomScale > 1}
+                        dragConstraints={dragConstraints}
+                        dragMomentum={false}
+                        dragElastic={0}
+                        onLoad={() => updateConstraints(zoomScale)}
+                        onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE);
+                        }}
                     />
                </div>
           </div>
