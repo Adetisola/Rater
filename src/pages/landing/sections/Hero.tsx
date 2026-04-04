@@ -67,10 +67,10 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
               What is Rater
             </a>
             <a 
-              href="#why-rater" 
+              href="#what-changes" 
               className="text-[15px] font-medium text-[#111111] hover:text-[#FEC312] transition-colors"
             >
-              Why Rater
+              What Changes
             </a>
             <a 
               href="#how-it-works" 

@@ -1,11 +1,11 @@
-import gradientArrow from '../../../assets/landing/why-rater/Gradient Arrow.svg';
-import whyRaterVisual from '../../../assets/landing/why-rater/why rater-visual.png';
+import gradientArrow from '../../../assets/landing/what-changes/Gradient Arrow.svg';
+import whatChangesVisual from '../../../assets/landing/what-changes/what changes-visual.png';
 import starIcon from '../../../assets/icons/star-active-yellow.svg';
 import { useTiltEffect } from '../../../hooks/useTiltEffect';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
 import { ShimmerOverlay } from '../../../components/ShimmerOverlay';
 
-export function WhyRater() {
+export function WhatChanges() {
   const tiltRef = useTiltEffect<HTMLDivElement>();
   const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>({ triggerOnce: true });
 
@@ -14,14 +14,14 @@ export function WhyRater() {
     state === 'exited'  ? 'reveal-exited'  : '';
 
   return (
-    <section id="why-rater" className="py-16 md:py-24 relative z-10">
+    <section id="what-changes" className="py-16 md:py-24 relative z-10">
       <div ref={sectionRef} className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-14 md:gap-20">
         
         {/* Left Side — Supporting Visual */}
         <div className={`w-full md:w-[50%] relative flex justify-center md:justify-start mt-4 md:mt-0 order-2 md:order-1 reveal-fade reveal-delay-1 ${stateClass}`}>
           <div ref={tiltRef} className="relative inline-block w-full max-w-[400px] md:max-w-[420px]">
             <img 
-              src={whyRaterVisual} 
+              src={whatChangesVisual} 
               alt="Design feedback rating interface" 
               width={420}
               height={400}

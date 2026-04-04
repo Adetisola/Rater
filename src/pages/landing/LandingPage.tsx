@@ -13,7 +13,7 @@ import loaderLogoAnim from '../../assets/icons/Rater Logo Black Animation.svg';
 
 // Code-split non-critical sections (Hero stays eagerly loaded)
 const WhatIsRater = lazy(() => import('./sections/WhatIsRater').then(m => ({ default: m.WhatIsRater })));
-const WhyRater = lazy(() => import('./sections/WhyRater').then(m => ({ default: m.WhyRater })));
+const WhatChanges = lazy(() => import('./sections/WhatChanges').then(m => ({ default: m.WhatChanges })));
 const HowItWorks = lazy(() => import('./sections/HowItWorks').then(m => ({ default: m.HowItWorks })));
 const StatusFooter = lazy(() => import('./sections/StatusFooter').then(m => ({ default: m.StatusFooter })));
 
@@ -151,7 +151,7 @@ export function LandingPage() {
             <WhatIsRater />
           </Suspense>
           <Suspense fallback={null}>
-            <WhyRater />
+            <WhatChanges />
           </Suspense>
         </div>
       </div>
