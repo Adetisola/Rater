@@ -2,7 +2,7 @@
 // Contains: Navbar + "Judgment is built, not found" hero content
 // Animations are deferred until hero images are loaded to prevent layout shift
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -11,11 +11,24 @@ import heroVisual from '../../../assets/landing/hero/hero-visual.png';
 import heroBg from '../../../assets/landing/hero/hero-bg.svg';
 import { AnimatedScribble } from '../../../components/AnimatedScribble';
 
-export function Hero() {
+interface HeroProps {
+  onReady?: () => void;
+  animationReady?: boolean;
+}
+
+export function Hero({ onReady, animationReady }: HeroProps = {}) {
   // Track image loading to prevent animation-before-layout-stable glitch
   const [bgLoaded, setBgLoaded] = useState(false);
   const [visualLoaded, setVisualLoaded] = useState(false);
-  const isReady = bgLoaded && visualLoaded;
+  
+  // If parent controls animation, wait for it, otherwise use local loading state
+  const isReady = animationReady !== undefined ? animationReady : (bgLoaded && visualLoaded);
+
+  useEffect(() => {
+    if (bgLoaded && visualLoaded) {
+      onReady?.();
+    }
+  }, [bgLoaded, visualLoaded, onReady]);
 
   const onBgLoad = useCallback(() => setBgLoaded(true), []);
   const onVisualLoad = useCallback(() => setVisualLoaded(true), []);

@@ -8,6 +8,7 @@ import howItWorksBg from '../../../assets/landing/how-it-works/how it works-bg.s
 import observeVisual from '../../../assets/landing/how-it-works/observe card-visual.png';
 import evaluateVisual from '../../../assets/landing/how-it-works/evaluate card-visual.png';
 import reflectVisual from '../../../assets/landing/how-it-works/reflect card-visual.png';
+import { useScrollReveal } from '../../../hooks/useScrollReveal';
 
 const CARDS = [
   {
@@ -40,8 +41,12 @@ export function HowItWorks() {
   // null = no card hovered (all equal), number = index of hovered card
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
+  // Trigger animation only once when component enters viewport
+  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>({ triggerOnce: true, enterThreshold: 0.15 });
+  const stateClass = state === 'visible' ? 'reveal-visible' : '';
+
   return (
-    <section id="how-it-works" className="py-16 md:py-24 relative z-10">
+    <section id="how-it-works" className="py-16 md:py-24 relative z-10" ref={sectionRef}>
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
 
         {/* ── MOBILE LAYOUT (<768px): normal flow, no absolute positioning ── */}
@@ -59,10 +64,12 @@ export function HowItWorks() {
 
           {/* Mobile Cards — stacked vertically, visuals always shown */}
           <div className="flex flex-col gap-8">
-            {CARDS.map((card) => (
+            {CARDS.map((card, index) => {
+              const delayClass = index === 0 ? '' : index === 1 ? 'reveal-delay-120' : 'reveal-delay-240';
+              return (
               <div
                 key={card.label}
-                className="rounded-2xl overflow-hidden"
+                className={`rounded-2xl overflow-hidden reveal-card ${delayClass} ${stateClass}`}
                 style={{ background: '#EEEEEE', padding: '2px' }}
               >
                 <div
@@ -92,7 +99,8 @@ export function HowItWorks() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -131,11 +139,12 @@ export function HowItWorks() {
 
                 // Flex grow values: expanded card gets 1.2, others shrink to 0.9
                 const flexGrow = !hasHover ? 1 : isHovered ? 1.2 : 0.9;
+                const delayClass = index === 0 ? '' : index === 1 ? 'reveal-delay-120' : 'reveal-delay-240';
 
                 return (
                   <div
                     key={card.label}
-                    className="rounded-2xl flex flex-col justify-between min-h-[160px] md:min-h-[240px] relative overflow-hidden"
+                    className={`rounded-2xl flex flex-col justify-between min-h-[160px] md:min-h-[240px] relative overflow-hidden reveal-card ${delayClass} ${stateClass}`}
                     style={{
                       flexGrow,
                       flexBasis: 0,

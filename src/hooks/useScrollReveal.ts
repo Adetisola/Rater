@@ -11,12 +11,14 @@ interface ScrollRevealOptions {
   enterThreshold?: number;
   /** Root margin for buffer zone (default '-8% 0px') */
   rootMargin?: string;
+  /** Trigger animation only once and never exit (default false) */
+  triggerOnce?: boolean;
 }
 
 export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
   options: ScrollRevealOptions = {}
 ) {
-  const { enterThreshold = 0.2, rootMargin = '-8% 0px' } = options;
+  const { enterThreshold = 0.2, rootMargin = '-8% 0px', triggerOnce = false } = options;
   const ref = useRef<T>(null);
   const [state, setState] = useState<RevealState>('hidden');
   const hasBeenVisible = useRef(false);
@@ -25,12 +27,25 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     const el = ref.current;
     if (!el) return;
 
+    // Do NOT animate on initial load if already well in view to prevent flashing
+    // We check initial bounding client rect
+    if (triggerOnce) {
+      const rect = el.getBoundingClientRect();
+      const inViewOnLoad = rect.top < window.innerHeight && rect.bottom >= 0;
+      if (inViewOnLoad && document.readyState === 'complete') {
+        hasBeenVisible.current = true;
+        setState('visible');
+        return; // Don't even start observer
+      }
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && entry.intersectionRatio >= enterThreshold) {
           hasBeenVisible.current = true;
           setState('visible');
-        } else if (!entry.isIntersecting && hasBeenVisible.current) {
+          if (triggerOnce) observer.unobserve(el);
+        } else if (!entry.isIntersecting && hasBeenVisible.current && !triggerOnce) {
           setState('exited');
         }
       },
@@ -45,7 +60,7 @@ export function useScrollReveal<T extends HTMLElement = HTMLDivElement>(
     return () => {
       observer.disconnect();
     };
-  }, [enterThreshold, rootMargin]);
+  }, [enterThreshold, rootMargin, triggerOnce]);
 
   return { ref, state };
 }

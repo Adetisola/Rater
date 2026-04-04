@@ -94,6 +94,43 @@
 .reveal-delay-2 { transition-delay: 200ms; }
 .reveal-delay-3 { transition-delay: 300ms; }
 
+/* ── Additional Scroll-Reveal Variants ────────────────────────── */
+
+/* How It Works cards specific animation */
+.reveal-card {
+  opacity: 0;
+  transform: translateY(40px) scale(0.98);
+  transition: opacity 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              transform 0.65s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
+}
+
+/* Status block custom large rise */
+.reveal-fade-rise-lg {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity, transform;
+}
+
+/* Enter states */
+.reveal-visible.reveal-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.reveal-visible.reveal-fade-rise-lg {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom delays for HowItWorks and StatusFooter */
+.reveal-delay-120 { transition-delay: 120ms; }
+.reveal-delay-240 { transition-delay: 240ms; }
+.reveal-delay-200 { transition-delay: 200ms; }
+.reveal-delay-300 { transition-delay: 300ms; }
+
 /* ── Status + Footer Section ─────────────────────────────────── */
 
 /* Unified island container */
