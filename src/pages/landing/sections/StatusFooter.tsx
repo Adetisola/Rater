@@ -11,7 +11,7 @@ export function StatusFooter() {
   const stateClass = state === 'visible' ? 'reveal-visible' : '';
 
   return (
-    <section id="status-footer" className="py-16 md:py-24 relative z-10" ref={sectionRef}>
+    <section id="status-footer" className="pt-4 pb-6 md:pt-24 md:pb-24 relative z-10" ref={sectionRef}>
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
 
         {/* ── Unified Island Container ── */}
@@ -21,7 +21,7 @@ export function StatusFooter() {
           <div className="flex flex-col items-center text-center px-4 md:px-12 lg:px-16 pt-8 md:pt-12 lg:pt-10">
 
             {/* Gradient Status Text */}
-            <p className={`status-gradient-text text-[15px] md:text-[17px] lg:text-[18px] font-semibold leading-normal w-full mb-1 reveal-fade-rise ${stateClass}`}>
+            <p className={`status-gradient-text text-[12px] sm:text-[15px] md:text-[17px] lg:text-[18px] font-semibold leading-normal w-full mb-1 reveal-fade-rise ${stateClass}`}>
               This is an ongoing product experiment. Shaped by real usage, real feedback, and deliberate iteration.
             </p>
 
