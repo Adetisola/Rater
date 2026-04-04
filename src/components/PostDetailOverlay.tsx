@@ -495,15 +495,57 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                {/* Content */}
                <div ref={containerRef} className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
-                    <button 
-                        className="absolute top-4 right-4 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors pointer-events-auto z-50"
-                        onClick={() => {
-                            setIsImageFullscreen(false);
-                            setZoomScale(1);
-                        }}
-                    >
-                        <X className="w-6 h-6" />
-                    </button>
+                    {/* Navigation Actions - Top Right Vertical Stack */}
+                    <div className="absolute top-4 right-4 flex flex-col gap-4 pointer-events-auto z-50">
+                        <button 
+                            className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95"
+                            onClick={() => {
+                                setIsImageFullscreen(false);
+                                setZoomScale(1);
+                            }}
+                            title="Close Overlay"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+
+                        {/* Fullscreen Download Button */}
+                        <button 
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                    const response = await fetch(post.imageUrl);
+                                    const blob = await response.blob();
+                                    const url = window.URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    window.URL.revokeObjectURL(url);
+                                } catch (err) {
+                                    console.error('Download failed', err);
+                                    window.open(post.imageUrl, '_blank');
+                                }
+                            }}
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                            title="Download Image"
+                        >
+                            <Download className="w-5 h-5 text-black" />
+                        </button>
+
+                        {/* Fullscreen Share Button */}
+                        <button 
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsShareOpen(true);
+                            }}
+                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                            title="Share Post"
+                        >
+                            <img src="/icons/share.svg" className="w-5 h-5" alt="Share" />
+                        </button>
+                    </div>
 
                     {/* Zoom Controls */}
                     <div className="absolute bottom-6 right-6 flex flex-col gap-3 pointer-events-auto z-50">
