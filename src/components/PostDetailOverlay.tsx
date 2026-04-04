@@ -495,10 +495,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                {/* Content */}
                <div ref={containerRef} className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
-                    {/* Navigation Actions - Top Right Vertical Stack */}
-                    <div className="absolute top-4 right-4 flex flex-col gap-4 pointer-events-auto z-50">
+                    {/* Navigation Actions - Top Right (Desktop) / Bottom Left (Mobile) */}
+                    <div className="absolute md:top-4 md:right-4 bottom-6 left-6 flex md:flex-col flex-row gap-4 pointer-events-auto z-50">
                         <button 
-                            className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95"
+                            className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex"
                             onClick={() => {
                                 setIsImageFullscreen(false);
                                 setZoomScale(1);
@@ -547,8 +547,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         </button>
                     </div>
 
-                    {/* Zoom Controls */}
-                    <div className="absolute bottom-6 right-6 flex flex-col gap-3 pointer-events-auto z-50">
+                    {/* Zoom Controls - Responsive Orientation */}
+                    <div className="absolute bottom-6 right-6 flex md:flex-col flex-row gap-3 pointer-events-auto z-50">
                         <button 
                             onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }}
                             className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`}
