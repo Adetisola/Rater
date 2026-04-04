@@ -1,0 +1,62 @@
+// StatusFooter Section - Rater Landing Page
+// Combined Status + Footer in one unified island container
+// Status: gradient text statement + large "Rater" typographic stamp
+// Footer: logo, tagline, copyright — horizontal on desktop, stacked on mobile
+
+import logoRaterHover from '../../../assets/landing/footer/logo-rater-hover.svg';
+
+export function StatusFooter() {
+  return (
+    <section id="status-footer" className="py-16 md:py-24 relative z-10">
+      <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
+
+        {/* ── Unified Island Container ── */}
+        <div className="status-footer-island">
+
+          {/* ══════ STATUS BLOCK ══════ */}
+          <div className="flex flex-col items-center text-center px-4 md:px-12 lg:px-16 pt-8 md:pt-12 lg:pt-10">
+
+            {/* Gradient Status Text */}
+            <p className="status-gradient-text text-[15px] md:text-[17px] lg:text-[18px] font-semibold leading-normal w-full mb-1">
+              This is an ongoing product experiment. Shaped by real usage, real feedback, and deliberate iteration.
+            </p>
+
+            {/* Large "Rater" Typographic Stamp */}
+            <h2 className="status-rater-stamp w-full text-center">
+              Rater
+            </h2>
+          </div>
+
+          {/* ══════ DIVIDER ══════ */}
+          <div className="px-8 md:px-12 lg:px-16">
+            <div className="h-px w-full bg-[#E8E8E8]" />
+          </div>
+
+          {/* ══════ FOOTER BLOCK ══════ */}
+          <div className="status-footer-bar">
+
+            {/* Left: Logo */}
+            <div className="flex items-center justify-center">
+              <img
+                src={logoRaterHover}
+                alt="Rater logo"
+                className="w-8 h-8 md:w-9 md:h-9"
+              />
+            </div>
+
+            {/* Center: Tagline */}
+            <p className="text-[13px] md:text-[14px] text-[#111111] font-semibold">
+              A design exploration experiment.
+            </p>
+
+            {/* Right: Copyright */}
+            <p className="text-[13px] md:text-[14px] text-[#111111] font-semibold">
+              ©2026
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}

@@ -93,3 +93,60 @@
 .reveal-delay-1 { transition-delay: 100ms; }
 .reveal-delay-2 { transition-delay: 200ms; }
 .reveal-delay-3 { transition-delay: 300ms; }
+
+/* ── Status + Footer Section ─────────────────────────────────── */
+
+/* Unified island container */
+.status-footer-island {
+  border: 4px solid #FEC312;
+  border-radius: 20px;
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+/* Gradient text for status statement */
+.status-gradient-text {
+  background: linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent; /* fallback */
+}
+
+/* Large "Rater" typographic stamp */
+.status-rater-stamp {
+  font-size: clamp(120px, 28vw, 380px);
+  font-weight: 600;
+  background: linear-gradient(100deg, #fec312 0%, #ffe270 45%, #fec312 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #fec312; /* fallback */
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  margin-top: 0px;
+  margin-bottom: 24px;
+  user-select: none;
+}
+
+/* Footer horizontal bar */
+.status-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 45px 140px 45px;
+}
+
+/* Responsive: stack footer on small screens */
+@media (max-width: 639px) {
+  .status-footer-bar {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    padding: 20px 24px 28px;
+  }
+
+  .status-rater-stamp {
+    margin-bottom: 16px;
+  }
+}

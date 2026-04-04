@@ -200,7 +200,13 @@ export function HowItWorks() {
 
                         {/* Card Description */}
                         <div className="mt-auto pt-6 md:pt-10">
-                          <p className="text-[13px] md:text-[14px] lg:text-[20px] font-medium text-[#000000] leading-snug max-w-[85%] lg:max-w-[80%]">
+                          <p
+                            className="text-[13px] md:text-[14px] lg:text-[20px] font-medium text-[#000000] leading-snug max-w-[85%] lg:max-w-[80%]"
+                            style={{
+                              opacity: hasHover && !isHovered ? 0 : 1,
+                              transition: 'opacity 300ms ease-in-out',
+                            }}
+                          >
                             {card.description}
                           </p>
 

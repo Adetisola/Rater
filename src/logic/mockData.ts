@@ -1,4 +1,4 @@
-export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Brand Identity Design' | 'Poster Design' | 'Flyer Design' | 'Social Media Design';
+export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Brand Identity Design' | 'Poster Design' | 'Flyer Design' | 'Social Media Design' | 'AI Image' | '3D Design';
 
 export interface Avatar {
   id: string;
@@ -44,7 +44,7 @@ export interface Post {
 
 export const CATEGORIES: Category[] = [
   'Web Design', 'Mobile App Design', 'Brand Identity Design', 
-  'Logo Design', 'Poster Design', 'Flyer Design', 'Social Media Design'
+  'Logo Design', 'Poster Design', 'Flyer Design', 'Social Media Design', 'AI Image', '3D Design'
 ];
 
 export const MOCK_AVATARS: Record<string, Avatar> = {

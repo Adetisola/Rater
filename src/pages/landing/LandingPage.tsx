@@ -6,8 +6,7 @@ import { Hero } from './sections/Hero';
 import { WhatIsRater } from './sections/WhatIsRater';
 import { WhyRater } from './sections/WhyRater';
 import { HowItWorks } from './sections/HowItWorks';
-import { Status } from './sections/Status';
-import { Footer } from './sections/Footer';
+import { StatusFooter } from './sections/StatusFooter';
 import { RevealSection } from '../../components/RevealSection';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
@@ -27,7 +26,8 @@ export function LandingPage() {
       <Hero />
 
       {/* Unified Background Wrapper for Rater Features */}
-      <div className="bg-[#fffdd0] transition-colors duration-500 relative">
+      {/* The mt-16 md:mt-16 lg:mt-24 creates the white gap matching the spacing before HowItWorks */}
+      <div className="bg-[#fffdd0] transition-colors duration-500 relative mt-8 md:mt-16 lg:mt-16">
         {/* Desktop-only background image layer */}
         <div 
           className="absolute inset-0 hidden md:block bg-cover bg-center bg-no-repeat pointer-events-none"
@@ -52,11 +52,7 @@ export function LandingPage() {
       </RevealSection>
 
       <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-        <Status />
-      </RevealSection>
-
-      <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="80px">
-        <Footer />
+        <StatusFooter />
       </RevealSection>
     </>
   );

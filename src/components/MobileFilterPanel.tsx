@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
+import { CATEGORIES } from '../logic/mockData';
 
 interface MobileFilterPanelProps {
   isOpen: boolean;
@@ -23,15 +24,7 @@ const SORT_OPTIONS = [
   'Most Reviewed'
 ];
 
-const CATEGORIES = [
-  'Web Design',
-  'Poster Design',
-  'Social Media Design',
-  'Flyer Design',
-  'Logo Design',
-  'Brand Identity Design',
-  'Mobile App Design'
-];
+
 
 export function MobileFilterPanel({
   isOpen,
