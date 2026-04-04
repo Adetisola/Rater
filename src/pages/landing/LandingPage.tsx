@@ -4,6 +4,7 @@
 // Scroll is forced to top on mount to prevent flicker
 
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Hero } from './sections/Hero';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
@@ -24,8 +25,19 @@ export function LandingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showLoader, setShowLoader] = useState(true);
 
+  const [dots, setDots] = useState('');
+
   // Force scroll to top on mount (prevents scroll restoration flicker)
   useScrollToTop();
+
+  // Progressively cycle loader dots for subtle motion
+  useEffect(() => {
+    if (!showLoader) return;
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
+    }, 400); // 1.2s cycle
+    return () => clearInterval(interval);
+  }, [showLoader]);
 
   // 1. Force scroll & track DOM loaded
   useEffect(() => {
@@ -88,23 +100,39 @@ export function LandingPage() {
   return (
     <>
       {/* LOADER OVERLAY */}
-      {showLoader && (
-        <div 
-          className="fixed top-0 left-0 w-full h-[100vh] bg-white z-[99999] flex items-center justify-center transform-gpu"
-          style={{
-            opacity: isLoading ? 1 : 0,
-            transition: 'opacity 500ms ease-out',
-          }}
-        >
-          {/* Using object allows SVGator JS to animate gracefully. img tag strips inner script. */}
-          <object 
-            data={loaderLogoAnim} 
-            type="image/svg+xml" 
-            className="w-[100px] h-[100px] md:w-[120px] md:h-[120px]" 
-            aria-label="Loading Rater"
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {showLoader && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            animate={{ opacity: isLoading ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="fixed top-0 left-0 w-full h-[100vh] bg-white z-[99999] flex flex-col items-center justify-center gap-6"
+          >
+            {/* Logo Wrapper */}
+            <object 
+              data={loaderLogoAnim} 
+              type="image/svg+xml" 
+              className="w-[100px] h-[100px] md:w-[120px] md:h-[120px]" 
+              aria-label="Loading Rater"
+            />
+
+            {/* Emotional Copy */}
+            <motion.p
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ 
+                duration: 0.4, 
+                delay: 0.2, // ~200ms after logo starts
+                ease: "easeOut" 
+              }}
+              className="pl-4 text-[14px] md:text-[14px] text-[#888888] font-medium tracking-wide pointer-events-none select-none"
+            >
+              Judgment is built<span className="inline-block w-4 text-left">{dots}</span>
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero automatically triggers handleHeroReady when images download */}
       <Hero onReady={handleHeroReady} animationReady={!isLoading} />
