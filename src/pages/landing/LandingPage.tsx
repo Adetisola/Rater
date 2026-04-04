@@ -44,15 +44,15 @@ export function LandingPage() {
     }
   }, []);
 
-  // 2. Enforce a minimum display time for the loader animation (1s minimum)
+  // 2. Enforce a minimum display time for the loader animation (5 seconds minimum)
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 1000); 
+    }, 4000); 
     return () => clearTimeout(timer);
   }, []);
 
-  // 3. Maximum failsafe — Force loader off after 1.5s regardless of assets
+  // 3. Maximum failsafe — Force loader off after 8s if something gets stuck
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading) {
@@ -60,7 +60,7 @@ export function LandingPage() {
         setDomReady(true);
         setMinTimeElapsed(true);
       }
-    }, 1500);
+    }, 8000);
     return () => clearTimeout(timer);
   }, [isLoading]);
 
