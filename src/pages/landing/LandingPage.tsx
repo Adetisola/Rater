@@ -8,15 +8,10 @@ import { WhatIsRater } from './sections/WhatIsRater';
 import { WhyRater } from './sections/WhyRater';
 import { HowItWorks } from './sections/HowItWorks';
 import { StatusFooter } from './sections/StatusFooter';
-import { RevealSection } from '../../components/RevealSection';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 import yellowMeshBg from '../../assets/landing/Yellow mesh gradient background.jpg';
 import loaderLogoAnim from '../../assets/icons/Rater Logo Black Animation.svg';
-
-// Delay before non-hero sections are allowed to mount (ms)
-// Gives the hero animation time to settle without layout interference
-const SECTION_MOUNT_DELAY = 800;
 
 export function LandingPage() {
   // Loading states
@@ -33,12 +28,16 @@ export function LandingPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    if (document.readyState === 'complete') {
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
       setDomReady(true);
     } else {
       const handleLoad = () => setDomReady(true);
+      document.addEventListener('DOMContentLoaded', handleLoad);
       window.addEventListener('load', handleLoad);
-      return () => window.removeEventListener('load', handleLoad);
+      return () => {
+        document.removeEventListener('DOMContentLoaded', handleLoad);
+        window.removeEventListener('load', handleLoad);
+      };
     }
   }, []);
 
@@ -117,24 +116,13 @@ export function LandingPage() {
         
         {/* Content container */}
         <div className="relative z-10">
-          {/* Remaining sections delay-mount and reveal on scroll */}
-          <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-            <WhatIsRater />
-          </RevealSection>
-
-          <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-            <WhyRater />
-          </RevealSection>
+          <WhatIsRater />
+          <WhyRater />
         </div>
       </div>
 
-      <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-        <HowItWorks />
-      </RevealSection>
-
-      <RevealSection mountDelay={SECTION_MOUNT_DELAY} minHeight="120px">
-        <StatusFooter />
-      </RevealSection>
+      <HowItWorks />
+      <StatusFooter />
     </>
   );
 }

@@ -7,7 +7,7 @@ import { ShimmerOverlay } from '../../../components/ShimmerOverlay';
 
 export function WhatIsRater() {
   const tiltRef = useTiltEffect<HTMLDivElement>();
-  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>();
+  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>({ triggerOnce: true });
 
   // Map state → CSS class
   const stateClass =

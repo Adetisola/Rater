@@ -7,7 +7,7 @@ import { ShimmerOverlay } from '../../../components/ShimmerOverlay';
 
 export function WhyRater() {
   const tiltRef = useTiltEffect<HTMLDivElement>();
-  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>();
+  const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>({ triggerOnce: true });
 
   const stateClass =
     state === 'visible' ? 'reveal-visible' :
