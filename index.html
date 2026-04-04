@@ -7,11 +7,18 @@
     <meta name="description" content="Train your design eye by observing, evaluating, and reflecting on real design work." />
     <title>Rater</title>
 
-    <!-- Preload critical landing page assets -->
-    <link rel="preload" as="image" href="/src/assets/landing/hero/hero-bg.svg" />
-    <link rel="preload" as="image" href="/src/assets/landing/hero/hero-visual.png" />
+    <!-- Preconnect to Google Fonts for faster font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload critical hero assets (fetchpriority=high ensures browser starts these first) -->
+    <link rel="preload" as="image" href="/src/assets/landing/hero/hero-bg.svg" fetchpriority="high" />
+    <link rel="preload" as="image" href="/src/assets/landing/hero/hero-visual.png" fetchpriority="high" />
+    
+    <!-- Preload visuals for non-critical sections that are code-split (prevents layout lag) -->
     <link rel="preload" as="image" href="/src/assets/landing/what-is-rater/what is rater-visual.png" />
     <link rel="preload" as="image" href="/src/assets/landing/why-rater/why rater-visual.png" />
+    <link rel="preload" as="image" href="/src/assets/landing/Yellow mesh gradient background.jpg" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="Rater — Judgment is built, not found" />

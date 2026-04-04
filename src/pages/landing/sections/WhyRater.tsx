@@ -23,6 +23,9 @@ export function WhyRater() {
             <img 
               src={whyRaterVisual} 
               alt="Design feedback rating interface" 
+              width={420}
+              height={400}
+              loading="lazy"
               className="w-full h-auto object-contain relative z-10 drop-shadow-sm pointer-events-none"
             />
 
@@ -43,7 +46,7 @@ export function WhyRater() {
             {/* CTA Element (Inline) */}
             <div className="md:mt-4">
               <div className="inline-flex items-center justify-start pl-[16px] border-3 border-[#FEC312] rounded-[30px] w-[100px] h-[36px]">
-                <img src={gradientArrow} alt="" className="w-[17px] h-[17px] object-contain" />
+                <img src={gradientArrow} alt="" width={17} height={17} className="w-[17px] h-[17px] object-contain" />
               </div>
             </div>
           </div>
@@ -51,19 +54,19 @@ export function WhyRater() {
           {/* Key Points */}
           <ul className={`flex flex-col gap-5 w-full max-w-[420px] md:max-w-[500px] lg:max-w-[550px] mx-auto md:mx-0 reveal-fade-rise reveal-delay-2 ${stateClass}`}>
             <li className="flex flex-row items-start gap-4">
-              <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
+              <img src={starIcon} alt="Star" width={20} height={20} className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
               <p className="text-[#000000] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
                 Rater makes feedback intentional.
               </p>
             </li>
             <li className="flex flex-row items-start gap-4">
-              <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
+              <img src={starIcon} alt="Star" width={20} height={20} className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
               <p className="text-[#000000] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
                 Vague praise alone doesn't help you grow.
               </p>
             </li>
             <li className="flex flex-row items-start gap-4">
-              <img src={starIcon} alt="Star" className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
+              <img src={starIcon} alt="Star" width={20} height={20} className="w-[20px] h-[20px] shrink-0 object-contain mt-[3px]" />
               <p className="text-[#000000] text-[15px] md:text-[16px] lg:text-[17px] font-semibold text-left leading-snug">
                 Ratings without context don't teach you anything.
               </p>

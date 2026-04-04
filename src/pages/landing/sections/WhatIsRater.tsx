@@ -30,7 +30,7 @@ export function WhatIsRater() {
             {/* CTA Element (Inline) */}
             <div className="md:mt-2">
               <div className="inline-flex items-center justify-start pl-[16px] border-3 border-[#FEC312] rounded-[30px] w-[100px] h-[36px]">
-                <img src={gradientArrow} alt="" className="w-[17px] h-[17px] object-contain" />
+                <img src={gradientArrow} alt="" width={17} height={17} className="w-[17px] h-[17px] object-contain" />
               </div>
             </div>
           </div>
@@ -48,6 +48,9 @@ export function WhatIsRater() {
             <img 
               src={whatIsRaterVisual} 
               alt="Rater structured rating system interface" 
+              width={600}
+              height={400}
+              loading="lazy"
               className="w-full h-auto object-contain relative z-10 drop-shadow-sm select-none"
               draggable={false}
             />

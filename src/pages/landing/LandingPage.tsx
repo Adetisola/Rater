@@ -1,17 +1,20 @@
 // LandingPage - Top-level landing page component
-// Hero mounts immediately; other sections delay-mount via RevealSection
+// Hero mounts immediately; other sections are code-split via React.lazy
+// All sections render in DOM immediately — animations are CSS-driven via useScrollReveal
 // Scroll is forced to top on mount to prevent flicker
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Hero } from './sections/Hero';
-import { WhatIsRater } from './sections/WhatIsRater';
-import { WhyRater } from './sections/WhyRater';
-import { HowItWorks } from './sections/HowItWorks';
-import { StatusFooter } from './sections/StatusFooter';
 import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 import yellowMeshBg from '../../assets/landing/Yellow mesh gradient background.jpg';
 import loaderLogoAnim from '../../assets/icons/Rater Logo Black Animation.svg';
+
+// Code-split non-critical sections (Hero stays eagerly loaded)
+const WhatIsRater = lazy(() => import('./sections/WhatIsRater').then(m => ({ default: m.WhatIsRater })));
+const WhyRater = lazy(() => import('./sections/WhyRater').then(m => ({ default: m.WhyRater })));
+const HowItWorks = lazy(() => import('./sections/HowItWorks').then(m => ({ default: m.HowItWorks })));
+const StatusFooter = lazy(() => import('./sections/StatusFooter').then(m => ({ default: m.StatusFooter })));
 
 export function LandingPage() {
   // Loading states
@@ -41,22 +44,23 @@ export function LandingPage() {
     }
   }, []);
 
-  // 2. Enforce a minimum display time for the loader animation (5 seconds)
+  // 2. Enforce a minimum display time for the loader animation (1s minimum)
   useEffect(() => {
     const timer = setTimeout(() => {
       setMinTimeElapsed(true);
-    }, 5000); // 5 seconds mandatory minimum
+    }, 1000); 
     return () => clearTimeout(timer);
   }, []);
 
-  // 3. Maximum failsafe to avoid getting trapped (adjusted to 8s so it exceeds the 5s minimum)
+  // 3. Maximum failsafe — Force loader off after 1.5s regardless of assets
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isLoading) {
         setHeroImagesLoaded(true);
         setDomReady(true);
+        setMinTimeElapsed(true);
       }
-    }, 8000);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [isLoading]);
 
@@ -106,7 +110,6 @@ export function LandingPage() {
       <Hero onReady={handleHeroReady} animationReady={!isLoading} />
 
       {/* Unified Background Wrapper for Rater Features */}
-      {/* The mt-16 md:mt-16 lg:mt-24 creates the white gap matching the spacing before HowItWorks */}
       <div className="bg-transparent md:bg-[#fffdd0] transition-colors duration-500 relative mt-8 md:mt-16 lg:mt-16">
         {/* Desktop-only background image layer */}
         <div 
@@ -116,13 +119,21 @@ export function LandingPage() {
         
         {/* Content container */}
         <div className="relative z-10">
-          <WhatIsRater />
-          <WhyRater />
+          <Suspense fallback={null}>
+            <WhatIsRater />
+          </Suspense>
+          <Suspense fallback={null}>
+            <WhyRater />
+          </Suspense>
         </div>
       </div>
 
-      <HowItWorks />
-      <StatusFooter />
+      <Suspense fallback={null}>
+        <HowItWorks />
+      </Suspense>
+      <Suspense fallback={null}>
+        <StatusFooter />
+      </Suspense>
     </>
   );
 }

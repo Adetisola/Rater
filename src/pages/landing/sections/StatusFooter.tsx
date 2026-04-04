@@ -44,6 +44,9 @@ export function StatusFooter() {
               <img
                 src={logoRaterHover}
                 alt="Rater logo"
+                width={36}
+                height={36}
+                loading="lazy"
                 className="w-8 h-8 md:w-9 md:h-9"
               />
             </div>

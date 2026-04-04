@@ -106,8 +106,8 @@ export function useTiltEffect<T extends HTMLElement = HTMLDivElement>() {
     el.style.willChange = 'transform';
     el.style.transition = 'none'; // we handle easing manually
 
-    el.addEventListener('mousemove', onMouseMove);
-    el.addEventListener('mouseleave', onMouseLeave);
+    el.addEventListener('mousemove', onMouseMove, { passive: true });
+    el.addEventListener('mouseleave', onMouseLeave, { passive: true });
 
     return () => {
       el.removeEventListener('mousemove', onMouseMove);

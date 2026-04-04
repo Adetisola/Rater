@@ -44,11 +44,15 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
               <img 
                 src="/icons/logo-rater.svg" 
                 alt="Rater Logo" 
+                width={48}
+                height={48}
                 className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
               />
               <img 
                 src="/icons/logo-rater-hover.svg" 
                 alt="Rater Logo Hover" 
+                width={48}
+                height={48}
                 className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
               />
             </div>
@@ -95,6 +99,9 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
           <img 
             src={heroBg}
             alt=""
+            width={1400}
+            height={700}
+            fetchPriority="high"
             className="w-full h-[520px] sm:h-[600px] md:h-auto object-cover object-center block"
             aria-hidden="true"
             onLoad={onBgLoad}
@@ -104,10 +111,13 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
           <motion.img 
             src={heroVisual}
             alt="Rater app showing design feedback with star ratings"
+            width={600}
+            height={900}
             initial={{ opacity: 0, y: 40 }}
             animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
             className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[95%] md:h-[90%] w-auto max-w-none"
+            style={{ willChange: 'transform, opacity' }}
             onLoad={onVisualLoad}
           />
 
@@ -118,6 +128,7 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
               initial={{ opacity: 0, y: 20 }}
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
+              style={{ willChange: 'transform, opacity' }}
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-[#111111] text-center leading-tight tracking-tight px-4 w-full"
             >
               <span className="block sm:inline">Judgment is built, </span>
@@ -138,6 +149,7 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
               initial={{ opacity: 0, y: 20 }}
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
+              style={{ willChange: 'transform, opacity' }}
               className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0"
             >
               Rater helps designers train their eye by actively evaluating real design work.
@@ -148,6 +160,7 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
               initial={{ opacity: 0, y: 20 }}
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              style={{ willChange: 'transform, opacity' }}
               className="mt-10 sm:mt-8 md:mt-6 xl:mt-8 flex items-center justify-center gap-5 sm:gap-4 md:gap-5 xl:gap-6 w-full pointer-events-auto"
             >
               {/* Primary CTA */}
@@ -160,10 +173,10 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
 
               {/* Secondary CTA */}
               <a 
-                href="#what-is-rater"
+                href="#how-it-works"
                 className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-[#111111] hover:text-[#FEC312] transition-colors"
               >
-                What is Rater
+                How it works
               </a>
             </motion.div>
 

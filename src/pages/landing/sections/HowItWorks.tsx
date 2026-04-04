@@ -58,7 +58,7 @@ export function HowItWorks() {
               How it works
             </h2>
             <div className="inline-flex items-center justify-start pl-[14px] border-[3px] border-[#FEC312] rounded-[30px] w-[80px] h-[30px]">
-              <img src={gradientArrow} alt="" className="w-[14px] h-[14px] object-contain" />
+              <img src={gradientArrow} alt="" width={14} height={14} className="w-[14px] h-[14px] object-contain" />
             </div>
           </div>
 
@@ -81,6 +81,9 @@ export function HowItWorks() {
                     <img
                       src={card.visual}
                       alt={`${card.label} visual`}
+                      width={400}
+                      height={300}
+                      loading="lazy"
                       className="w-full h-auto block"
                     />
                   </div>
@@ -110,6 +113,9 @@ export function HowItWorks() {
           <img
             src={howItWorksBg}
             alt=""
+            width={1200}
+            height={600}
+            loading="lazy"
             className="w-full h-auto block"
             aria-hidden="true"
           />
@@ -126,7 +132,7 @@ export function HowItWorks() {
               {/* CTA Pill — reuses the same pattern */}
               <div>
                 <div className="inline-flex items-center justify-start pl-[14px] border-3 border-[#FEC312] rounded-[30px] w-[90px] h-[32px] md:w-[100px] md:h-[36px]">
-                  <img src={gradientArrow} alt="" className="w-[15px] h-[15px] md:w-[17px] md:h-[17px] object-contain" />
+                  <img src={gradientArrow} alt="" width={17} height={17} className="w-[15px] h-[15px] md:w-[17px] md:h-[17px] object-contain" />
                 </div>
               </div>
             </div>
@@ -192,6 +198,9 @@ export function HowItWorks() {
                         <img
                           src={card.visual}
                           alt={`${card.label} visual`}
+                          width={400}
+                          height={300}
+                          loading="lazy"
                           className="w-full max-w-none h-auto block"
                         />
                       </div>
