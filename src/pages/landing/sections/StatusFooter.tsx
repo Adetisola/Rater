@@ -52,12 +52,12 @@ export function StatusFooter() {
             </div>
 
             {/* Center: Tagline */}
-            <p className="text-[12px] md:text-[14px] text-[#111111] font-semibold">
+            <p className="text-[12px] md:text-[14px] text-[#111111] font-medium">
               A design exploration experiment.
             </p>
 
             {/* Right: Copyright */}
-            <p className="text-[13px] md:text-[14px] text-[#111111] font-semibold">
+            <p className="text-[13px] md:text-[14px] text-[#111111] font-medium">
               ©2026
             </p>
           </div>
