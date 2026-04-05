@@ -2,7 +2,7 @@
 // Contains: Navbar + "Judgment is built, not found" hero content
 // Animations are deferred until hero images are loaded to prevent layout shift
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -14,9 +14,11 @@ import { AnimatedScribble } from '../../../components/AnimatedScribble';
 interface HeroProps {
   onReady?: () => void;
   animationReady?: boolean;
+  activeSection?: string | null;           // ADD
+  onSectionClick?: (id: string) => void;   // ADD
 }
 
-export function Hero({ onReady, animationReady }: HeroProps = {}) {
+export function Hero({ onReady, animationReady, activeSection, onSectionClick }: HeroProps = {}) {
   // Track image loading to prevent animation-before-layout-stable glitch
   const [bgLoaded, setBgLoaded] = useState(false);
   const [visualLoaded, setVisualLoaded] = useState(false);
@@ -30,63 +32,115 @@ export function Hero({ onReady, animationReady }: HeroProps = {}) {
     }
   }, [bgLoaded, visualLoaded, onReady]);
 
+  useEffect(() => {
+    if (!activeSection) {
+      setDotStyle(prev => ({ ...prev, opacity: 0 }));
+      return;
+    }
+    const el = navRefs.current[activeSection];
+    const container = el?.closest('.nav-links-container') as HTMLElement | null;
+    if (!el || !container) return;
+    const rect = el.getBoundingClientRect();
+    const parentRect = container.getBoundingClientRect();
+    setDotStyle({
+      left: rect.left - parentRect.left + rect.width / 2 - 3,
+      opacity: 1,
+    });
+  }, [activeSection]);
+
   const onBgLoad = useCallback(() => setBgLoaded(true), []);
   const onVisualLoad = useCallback(() => setVisualLoaded(true), []);
+  const navRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
+  const [dotStyle, setDotStyle] = useState({ left: 0, opacity: 0 });
 
   return (
     <>
       {/* STICKY NAVBAR - matches app header background effect */}
       <nav className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-4 md:py-5 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
         <div className="w-full px-6 md:px-12 lg:px-20 flex items-center justify-between">
-          {/* Logo - matches app header exactly */}
-          <Link to="/" className="flex items-center">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative">
-              <img 
-                src="/icons/logo-rater.svg" 
-                alt="Rater Logo" 
-                width={48}
-                height={48}
-                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
-              />
-              <img 
-                src="/icons/logo-rater-hover.svg" 
-                alt="Rater Logo Hover" 
-                width={48}
-                height={48}
-                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
-              />
-            </div>
-          </Link>
-
-          {/* Navigation Links - Desktop */}
-          <div className="hidden md:flex items-center gap-10">
-            <a 
-              href="#what-is-rater" 
-              className="text-[15px] font-medium text-[#111111] hover:text-[#FEC312] transition-colors"
-            >
-              What is Rater
-            </a>
-            <a 
-              href="#what-changes" 
-              className="text-[15px] font-medium text-[#111111] hover:text-[#FEC312] transition-colors"
-            >
-              What Changes
-            </a>
-            <a 
-              href="#how-it-works" 
-              className="text-[15px] font-medium text-[#111111] hover:text-[#FEC312] transition-colors"
-            >
-              How it works
-            </a>
+          {/* Left Side: Logo (fixed space for balance) */}
+          <div className="flex-1 flex justify-start">
+            <Link to="/" className="flex items-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative">
+                <img 
+                  src="/icons/logo-rater.svg" 
+                  alt="Rater Logo" 
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
+                />
+                <img 
+                  src="/icons/logo-rater-hover.svg" 
+                  alt="Rater Logo Hover" 
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
+                />
+              </div>
+            </Link>
           </div>
 
-          {/* CTA Button */}
-          <Link 
-            to="/app"
-            className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-semibold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
-          >
-            Enter Rater
-          </Link>
+          {/* Center Side: Navigation Links */}
+          <div className="nav-links-container hidden md:flex flex-1 justify-center items-center gap-10 relative">
+            <div className="flex flex-col items-center gap-1">
+              <a 
+                ref={el => { navRefs.current['what-is-rater'] = el; }}
+                href="#what-is-rater"
+                onClick={() => onSectionClick?.('what-is-rater')}
+                className={`text-[15px] font-medium transition-colors ${
+                  activeSection === 'what-is-rater' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+                }`}
+              >
+                What is Rater
+              </a>
+            </div>
+
+            <div className="flex flex-col items-center gap-1">
+              <a 
+                ref={el => { navRefs.current['what-changes'] = el; }}
+                href="#what-changes"
+                onClick={() => onSectionClick?.('what-changes')}
+                className={`text-[15px] font-medium transition-colors ${
+                  activeSection === 'what-changes' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+                }`}
+              >
+                What Changes
+              </a>
+            </div>
+
+            <div className="flex flex-col items-center gap-1">
+              <a 
+                ref={el => { navRefs.current['how-it-works'] = el; }}
+                href="#how-it-works"
+                onClick={() => onSectionClick?.('how-it-works')}
+                className={`text-[15px] font-medium transition-colors ${
+                  activeSection === 'how-it-works' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+                }`}
+              >
+                How it works
+              </a>
+            </div>
+
+            {/* Single moving dot */}
+            <span
+              className="absolute -bottom-[14px] h-2 w-2 rounded-full bg-[#FEC312] pointer-events-none"
+              style={{
+                left: dotStyle.left,
+                opacity: dotStyle.opacity,
+                transition: 'left 0.3s ease, opacity 0.2s ease',
+              }}
+            />
+          </div>
+
+          {/* Right Side: CTA Button */}
+          <div className="flex-1 flex justify-end">
+            <Link 
+              to="/app"
+              className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-semibold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
+            >
+              Enter Rater
+            </Link>
+          </div>
         </div>
       </nav>
 

@@ -27,6 +27,8 @@ export function LandingPage() {
 
   const [dots, setDots] = useState('');
 
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
   // Force scroll to top on mount (prevents scroll restoration flicker)
   useScrollToTop();
 
@@ -90,8 +92,48 @@ export function LandingPage() {
         setShowLoader(false);
       }, 500); // wait time matches opacity transition duration
       return () => clearTimeout(timer);
+      
     }
   }, [isLoading, showLoader]);
+
+  useEffect(() => {
+  if (showLoader) return; // don't observe while loader is up
+
+  const sectionIds = ['what-is-rater', 'what-changes', 'how-it-works'];
+  const observers: IntersectionObserver[] = [];
+
+  sectionIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setActiveSection(id);
+        }
+      },
+      { threshold: 0.4 } // section must be 40% visible
+    );
+
+    observer.observe(el);
+    observers.push(observer);
+  });
+
+  // Handle hero/footer: clear indicator when no tracked section is visible
+  const allSections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+  const clearObserver = new IntersectionObserver(() => {
+    const anyVisible = allSections.some(el => {
+      const rect = el!.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    });
+    if (!anyVisible) setActiveSection(null);
+  }, { threshold: 0 });
+
+  allSections.forEach(el => clearObserver.observe(el!));
+  observers.push(clearObserver);
+
+  return () => observers.forEach(o => o.disconnect());
+}, [showLoader]);
 
   const handleHeroReady = useCallback(() => {
     setHeroImagesLoaded(true);
@@ -135,7 +177,12 @@ export function LandingPage() {
       </AnimatePresence>
 
       {/* Hero automatically triggers handleHeroReady when images download */}
-      <Hero onReady={handleHeroReady} animationReady={!isLoading} />
+      <Hero
+      onReady={handleHeroReady} 
+      animationReady={!isLoading} 
+      activeSection={activeSection}
+      onSectionClick={setActiveSection}
+      />
 
       {/* Unified Background Wrapper for Rater Features */}
       <div className="bg-transparent md:bg-[#fffdd0] transition-colors duration-500 relative mt-8 md:mt-16 lg:mt-16">
