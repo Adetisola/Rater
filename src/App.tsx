@@ -282,6 +282,19 @@ function App() {
                 badgeMap={globalBadgeMap}
                 onPostClick={(post) => setSelectedPost(post)}
               />
+
+              {/* End of Feed Feedback */}
+              <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
+                  <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] select-none">
+                      {sortedPosts.length > 0 
+                        ? "You've reached the end of the feed"
+                        : sortedPosts.length === 0 && debouncedSearchQuery.trim() 
+                          ? "No matches found for your search"
+                          : "No posts found in this category"}
+                  </p>
+                  <p className="text-[10px] text-gray-300 mt-2 font-medium">✨ Refined & Curated Daily</p>
+              </div>
             </motion.div>
           ) : (
             <SubmitPage key="submit" />
