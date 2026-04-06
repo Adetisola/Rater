@@ -155,9 +155,24 @@ export function LandingPage() {
             <object 
               data={loaderLogoAnim} 
               type="image/svg+xml" 
-              className="w-[100px] h-[100px] md:w-[120px] md:h-[120px]" 
+              className="w-[84px] h-[84px] md:w-[96px] md:h-[96px] mb-2" 
               aria-label="Loading Rater"
             />
+
+            {/* Loading Bar */}
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+              className="w-[140px] h-[2px] bg-gray-100 rounded-full overflow-hidden"
+            >
+              <motion.div
+                className="h-full bg-black rounded-full"
+                initial={{ width: '0%' }}
+                animate={{ width: isLoading ? '85%' : '100%' }}
+                transition={{ duration: isLoading ? 4 : 0.4, ease: 'easeOut' }}
+              />
+            </motion.div>
 
             {/* Emotional Copy */}
             <motion.p
@@ -168,7 +183,7 @@ export function LandingPage() {
                 delay: 0.2, // ~200ms after logo starts
                 ease: "easeOut" 
               }}
-              className="pl-4 text-[14px] md:text-[14px] text-[#888888] font-medium tracking-wide pointer-events-none select-none"
+              className="pl-4 text-[14px] md:text-[14px] text-[#888888] font-medium tracking-wide pointer-events-none select-none mt-1"
             >
               Judgment is built<span className="inline-block w-4 text-left">{dots}</span>
             </motion.p>
