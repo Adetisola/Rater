@@ -23,7 +23,7 @@ const CRITERIA_INFO = {
   }
 };
 
-function CriteriaLabel({ label, info }: { label: string, info: { question: string, points: string[] } }) {
+function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { question: string, points: string[] }, iconUrl?: string }) {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -60,12 +60,15 @@ function CriteriaLabel({ label, info }: { label: string, info: { question: strin
   return (
     <div 
       ref={containerRef}
-      className="relative group cursor-help"
+      className="relative group cursor-help flex items-center"
       onClick={handleTap}
     >
-      <span className="text-base font-medium text-[#111111] border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black group-hover:text-black select-none">
-        {label}
-      </span>
+      <div className="flex items-center gap-2 border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black select-none">
+        {iconUrl && <img src={iconUrl} alt={`${label} icon`} className="w-5 h-5 object-contain" />}
+        <span className="text-base font-medium text-[#111111] group-hover:text-black">
+          {label}
+        </span>
+      </div>
       
       {/* Tooltip - visible on hover (desktop) or tap (mobile) */}
       {/* On mobile: left-aligned to prevent overflow. On desktop: centered */}
@@ -117,24 +120,36 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border-2 border-gray-100">
-      <h3 className="font-bold text-xl mb-8">Rate this Design</h3>
+      <h3 className="font-semibold text-xl mb-8">Rate this Design</h3>
       
       <div className="space-y-4 mb-8">
         {/* CLARITY */}
         <div className="flex items-center justify-between">
-            <CriteriaLabel label="Clarity" info={CRITERIA_INFO.Clarity} />
+            <CriteriaLabel 
+                label="Clarity" 
+                info={CRITERIA_INFO.Clarity} 
+                iconUrl="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" 
+            />
             <StarRating rating={clarity} onChange={setClarity} interactive size="lg" />
         </div>
 
         {/* PURPOSE */}
         <div className="flex items-center justify-between">
-            <CriteriaLabel label="Purpose" info={CRITERIA_INFO.Purpose} />
+            <CriteriaLabel 
+                label="Purpose" 
+                info={CRITERIA_INFO.Purpose} 
+                iconUrl="https://img.icons8.com/color/96/goal--v1.png" 
+            />
             <StarRating rating={purpose} onChange={setPurpose} interactive size="lg" />
         </div>
 
         {/* AESTHETICS */}
         <div className="flex items-center justify-between">
-            <CriteriaLabel label="Aesthetics" info={CRITERIA_INFO.Aesthetics} />
+            <CriteriaLabel 
+                label="Aesthetics" 
+                info={CRITERIA_INFO.Aesthetics} 
+                iconUrl="https://img.icons8.com/color/96/color-palette.png" 
+            />
             <StarRating rating={aesthetics} onChange={setAesthetics} interactive size="lg" />
         </div>
       </div>

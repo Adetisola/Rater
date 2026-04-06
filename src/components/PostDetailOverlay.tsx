@@ -434,9 +434,18 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                 {/* Footer row: Criteria + Total Rating on same line */}
                                 <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
-                                        <div className="text-xs font-bold text-[#111111]">Clarity: {review.ratings.clarity}</div>
-                                        <div className="text-xs font-bold text-[#111111]">Purpose: {review.ratings.purpose}</div>
-                                        <div className="text-xs font-bold text-[#111111]">Aesthetics: {review.ratings.aesthetics}</div>
+                                        <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Clarity">
+                                            <img src="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" alt="Clarity" className="w-5 h-5 object-contain" />
+                                            {review.ratings.clarity}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Purpose">
+                                            <img src="https://img.icons8.com/color/96/goal--v1.png" alt="Purpose" className="w-5 h-5 object-contain" />
+                                            {review.ratings.purpose}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Aesthetics">
+                                            <img src="https://img.icons8.com/color/96/color-palette.png" alt="Aesthetics" className="w-5 h-5 object-contain" />
+                                            {review.ratings.aesthetics}
+                                        </div>
                                     </div>
 
                                     {/* Total Rating - visible on mobile only, desktop has separate column */}
