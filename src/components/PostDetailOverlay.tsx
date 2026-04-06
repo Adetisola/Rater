@@ -503,7 +503,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                <div className="absolute bottom-6 left-6 md:top-4 md:right-4 md:bottom-auto md:left-auto flex md:flex-col flex-row gap-4 z-50 pointer-events-auto">
                     <button 
                         className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex"
-                        onPointerDown={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             setIsImageFullscreen(false);
                             setZoomScale(1);
                         }}
@@ -514,7 +515,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                     {/* Fullscreen Download Button */}
                     <button 
-                        onPointerDown={async () => {
+                        onClick={async (e) => {
+                            e.stopPropagation();
                             try {
                                 const response = await fetch(post.imageUrl);
                                 const blob = await response.blob();
@@ -539,7 +541,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                     {/* Fullscreen Share Button */}
                     <button 
-                        onPointerDown={() => setIsShareOpen(true)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsShareOpen(true);
+                        }}
                         className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
                         title="Share Post"
                     >
@@ -550,7 +555,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                {/* Zoom Controls - Responsive Orientation */}
                <div className="absolute bottom-6 right-6 flex md:flex-col flex-row gap-3 z-50 pointer-events-auto">
                     <button 
-                        onPointerDown={() => setZoomScale(ZOOM_IN_SCALE)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setZoomScale(ZOOM_IN_SCALE);
+                        }}
                         className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={zoomScale >= ZOOM_IN_SCALE}
                         title="Zoom In"
@@ -558,7 +566,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         <Plus className="w-6 h-6 text-black" />
                     </button>
                     <button 
-                        onPointerDown={() => setZoomScale(1)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setZoomScale(1);
+                        }}
                         className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={zoomScale <= 1}
                         title="Zoom Out"
