@@ -155,7 +155,7 @@ export function LandingPage() {
             <object 
               data={loaderLogoAnim} 
               type="image/svg+xml" 
-              className="w-[84px] h-[84px] md:w-[96px] md:h-[96px] mb-2" 
+              className="w-[80px] h-[80px] md:w-[92px] md:h-[92px] mb-2" 
               aria-label="Loading Rater"
             />
 
