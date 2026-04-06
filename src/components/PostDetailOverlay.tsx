@@ -33,6 +33,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastTapRef = useRef(0);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
@@ -483,111 +484,118 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
       {/* Fullscreen Image Overlay */}
       {isImageFullscreen && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 overflow-hidden">
-               {/* Backdrop */}
-               <div 
-                  className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-                  onClick={() => {
+          <div 
+              ref={containerRef}
+              className="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-hidden"
+              onPointerDown={(e) => {
+                  // Only close if clicking directly on the empty wrapper space
+                  // By using PointerDown instead of Click, we avoid false-positives after dragging the image.
+                  if (e.target === e.currentTarget) {
                       setIsImageFullscreen(false);
                       setZoomScale(1);
-                  }}
-               />
+                  }
+              }}
+          >
+               {/* Visual Backdrop */}
+               <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-none" />
 
-               {/* Content */}
-               <div ref={containerRef} className="relative z-10 w-full h-full flex items-center justify-center pointer-events-none">
-                    {/* Navigation Actions - Top Right (Desktop) / Bottom Left (Mobile) */}
-                    <div className="absolute md:top-4 md:right-4 bottom-6 left-6 flex md:flex-col flex-row gap-4 pointer-events-auto z-50">
-                        <button 
-                            className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex"
-                            onClick={() => {
-                                setIsImageFullscreen(false);
-                                setZoomScale(1);
-                            }}
-                            title="Close Overlay"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
-
-                        {/* Fullscreen Download Button */}
-                        <button 
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                    const response = await fetch(post.imageUrl);
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    window.URL.revokeObjectURL(url);
-                                } catch (err) {
-                                    console.error('Download failed', err);
-                                    window.open(post.imageUrl, '_blank');
-                                }
-                            }}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
-                            title="Download Image"
-                        >
-                            <Download className="w-5 h-5 text-black" />
-                        </button>
-
-                        {/* Fullscreen Share Button */}
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsShareOpen(true);
-                            }}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
-                            title="Share Post"
-                        >
-                            <img src="/icons/share.svg" className="w-5 h-5" alt="Share" />
-                        </button>
-                    </div>
-
-                    {/* Zoom Controls - Responsive Orientation */}
-                    <div className="absolute bottom-6 right-6 flex md:flex-col flex-row gap-3 pointer-events-auto z-50">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }}
-                            className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={zoomScale >= ZOOM_IN_SCALE}
-                            title="Zoom In"
-                        >
-                            <Plus className="w-6 h-6 text-black" />
-                        </button>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); setZoomScale(1); }}
-                            className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            disabled={zoomScale <= 1}
-                            title="Zoom Out"
-                        >
-                            <Minus className="w-6 h-6 text-black" />
-                        </button>
-                    </div>
-
-                    <motion.img 
-                        ref={imgRef}
-                        src={post.imageUrl} 
-                        alt={post.title} 
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl pointer-events-auto"
-                        style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
-                        whileDrag={{ cursor: 'grabbing' }}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: zoomScale }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                        drag={zoomScale > 1}
-                        dragConstraints={dragConstraints}
-                        dragMomentum={false}
-                        dragElastic={0}
-                        onLoad={() => updateConstraints(zoomScale)}
-                        onDoubleClick={(e) => {
-                            e.stopPropagation();
-                            setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE);
+               {/* Navigation Actions - Top Right (Desktop) / Bottom Left (Mobile) */}
+               <div className="absolute bottom-6 left-6 md:top-4 md:right-4 md:bottom-auto md:left-auto flex md:flex-col flex-row gap-4 z-50 pointer-events-auto">
+                    <button 
+                        className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex"
+                        onPointerDown={() => {
+                            setIsImageFullscreen(false);
+                            setZoomScale(1);
                         }}
-                    />
+                        title="Close Overlay"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+
+                    {/* Fullscreen Download Button */}
+                    <button 
+                        onPointerDown={async () => {
+                            try {
+                                const response = await fetch(post.imageUrl);
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                            } catch (err) {
+                                console.error('Download failed', err);
+                                window.open(post.imageUrl, '_blank');
+                            }
+                        }}
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                        title="Download Image"
+                    >
+                        <Download className="w-5 h-5 text-black" />
+                    </button>
+
+                    {/* Fullscreen Share Button */}
+                    <button 
+                        onPointerDown={() => setIsShareOpen(true)}
+                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                        title="Share Post"
+                    >
+                        <img src="/icons/share.svg" className="w-5 h-5" alt="Share" />
+                    </button>
                </div>
+
+               {/* Zoom Controls - Responsive Orientation */}
+               <div className="absolute bottom-6 right-6 flex md:flex-col flex-row gap-3 z-50 pointer-events-auto">
+                    <button 
+                        onPointerDown={() => setZoomScale(ZOOM_IN_SCALE)}
+                        className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={zoomScale >= ZOOM_IN_SCALE}
+                        title="Zoom In"
+                    >
+                        <Plus className="w-6 h-6 text-black" />
+                    </button>
+                    <button 
+                        onPointerDown={() => setZoomScale(1)}
+                        className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        disabled={zoomScale <= 1}
+                        title="Zoom Out"
+                    >
+                        <Minus className="w-6 h-6 text-black" />
+                    </button>
+               </div>
+
+               <motion.img 
+                   ref={imgRef}
+                   src={post.imageUrl} 
+                   alt={post.title} 
+                   className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
+                   style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
+                   whileDrag={{ cursor: 'grabbing' }}
+                   initial={{ opacity: 0, scale: 0.95 }}
+                   animate={{ opacity: 1, scale: zoomScale }}
+                   transition={{ duration: 0.25, ease: "easeOut" }}
+                   drag={zoomScale > 1}
+                   dragConstraints={dragConstraints}
+                   dragMomentum={false}
+                   dragElastic={0}
+                   onLoad={() => updateConstraints(zoomScale)}
+                   onPointerDown={() => {
+                        // CRITICAL: DO NOT use e.stopPropagation() here!
+                        // Framer Motion REQUIRES the PointerDown event to trigger its drag gesture system.
+                        
+                        // Manual double tap detection that bypasses Framer/React interference natively
+                        const now = Date.now();
+                        if (now - lastTapRef.current < 300) {
+                            setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE);
+                            lastTapRef.current = 0;
+                        } else {
+                            lastTapRef.current = now;
+                        }
+                   }}
+               />
           </div>
       )}
 
