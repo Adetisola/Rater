@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
-import { ChevronDown, Check, X, Download, Plus, Minus } from 'lucide-react'; // Added icons
+import { ChevronDown, Check, X, Download, Plus, Minus, Share2, ArrowLeft} from 'lucide-react'; // Added icons
 import type { Post, Review } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
@@ -163,8 +163,9 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
             <Button 
                 variant="secondary" 
                 onClick={onClose}
-                className="rounded-full px-6 border-2 border-gray-100 font-bold hover:bg-gray-50"
+                className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-bold hover:bg-gray-50"
             >
+                <ArrowLeft className="w-5 h-5 text-black" />
                 Back
             </Button>
         </div>
@@ -227,7 +228,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                             }}
                             className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                         >
-                            <img src="/icons/share.svg" className="w-5 h-5" alt="Share" />
+                            {/* <img src="/icons/share.svg" className="w-5 h-5" alt="Share" /> */}
+                            <Share2 className="w-5 h-5 text-black" />
                         </button>
                     </div>
                 </div>
@@ -461,7 +463,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                 <div className="flex justify-center mt-10">
                     <button
                         onClick={handleLoadMore}
-                        className="group relative px-8 py-3.5 bg-[#111111] text-white text-sm font-bold rounded-full hover:bg-[#222222] active:scale-[0.97] transition-all duration-200 flex items-center gap-2"
+                        className="group relative px-8 py-3.5 bg-[#111111] text-white text-sm font-medium rounded-full hover:bg-[#222222] active:scale-[0.97] transition-all duration-200 flex items-center gap-2"
                     >
                         Load More Reviews
                         <span className="text-white/60 text-xs font-medium">
@@ -548,7 +550,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
                         title="Share Post"
                     >
-                        <img src="/icons/share.svg" className="w-5 h-5" alt="Share" />
+                        {/* <img src="/icons/share.svg" className="w-5 h-5" alt="Share" /> */}
+                        <Share2 className="w-5 h-5 text-black" />
                     </button>
                </div>
 
