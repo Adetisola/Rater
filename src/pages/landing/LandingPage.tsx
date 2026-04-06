@@ -159,34 +159,37 @@ export function LandingPage() {
               aria-label="Loading Rater"
             />
 
-            {/* Loading Bar */}
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
-              className="w-[140px] h-[2px] bg-gray-100 rounded-full overflow-hidden"
-            >
+            {/* Progress/Text Group */}
+            <div className="flex flex-col items-center gap-2">
+              {/* Loading Bar */}
               <motion.div
-                className="h-full bg-black rounded-full"
-                initial={{ width: '0%' }}
-                animate={{ width: isLoading ? '85%' : '100%' }}
-                transition={{ duration: isLoading ? 4 : 0.4, ease: 'easeOut' }}
-              />
-            </motion.div>
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+                className="w-[140px] h-[2px] bg-gray-100 rounded-full overflow-hidden"
+              >
+                <motion.div
+                  className="h-full bg-black rounded-full"
+                  initial={{ width: '0%' }}
+                  animate={{ width: isLoading ? '85%' : '100%' }}
+                  transition={{ duration: isLoading ? 4 : 0.4, ease: 'easeOut' }}
+                />
+              </motion.div>
 
-            {/* Emotional Copy */}
-            <motion.p
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ 
-                duration: 0.4, 
-                delay: 0.2, // ~200ms after logo starts
-                ease: "easeOut" 
-              }}
-              className="pl-4 text-[14px] md:text-[14px] text-[#888888] font-medium tracking-wide pointer-events-none select-none mt-1"
-            >
-              Judgment is built<span className="inline-block w-4 text-left">{dots}</span>
-            </motion.p>
+              {/* Emotional Copy */}
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: 0.2, // ~200ms after logo starts
+                  ease: "easeOut" 
+                }}
+                className="pl-4 text-[14px] md:text-[14px] text-[#888888] font-medium tracking-wide pointer-events-none select-none"
+              >
+                Judgment is built<span className="inline-block w-4 text-left">{dots}</span>
+              </motion.p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
