@@ -338,12 +338,12 @@ export function Header({
                 <Button
                     variant="outline" 
                     onClick={onPostClick}
-                    className="absolute top-0 right-0 h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
+                    className="absolute top-0 right-0 h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
                 >
                     <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
                     <span className="hidden sm:flex items-center">
                         Post
-                        <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
+                        <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
                             <span className="pl-1.5">your work</span>
                         </span>
                     </span>

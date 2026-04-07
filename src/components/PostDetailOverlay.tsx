@@ -497,7 +497,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
       {isImageFullscreen && (
           <div 
               ref={containerRef}
-              className="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-hidden"
+              className="fixed inset-0 z-60 flex items-center justify-center p-4 overflow-hidden"
               onPointerDown={(e) => {
                   // Only close if clicking directly on the empty wrapper space
                   // By using PointerDown instead of Click, we avoid false-positives after dragging the image.

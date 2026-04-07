@@ -209,7 +209,7 @@ export function HowItWorks() {
                       <div className="p-5 md:p-6 lg:p-8 flex flex-col justify-between flex-1">
                         {/* Card Label */}
                         <h3 
-                          className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[34px] font-medium text-[#C4C4C4] tracking-tight leading-tight transition-all ease-in-out duration-[350ms] overflow-hidden ${
+                          className={`text-[22px] sm:text-[26px] md:text-[30px] lg:text-[34px] font-medium text-[#C4C4C4] tracking-tight leading-tight transition-all ease-in-out duration-350 overflow-hidden ${
                             isHovered ? 'md:max-h-0 md:opacity-0' : 'md:max-h-[50px] md:opacity-100'
                           }`}
                         >
