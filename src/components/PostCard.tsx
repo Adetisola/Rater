@@ -124,7 +124,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             </div>
 
             {/* CONTENT AREA */}
-            <div className="px-2 xs:px-4 pt-4 pb-2">
+            <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
             
             {/* ROW 1: TAG & TIME */}
             <div className="flex justify-between items-center mb-3">
@@ -137,34 +137,34 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             </div>
 
             {/* ROW 2: TITLE */}
-            <h3 className="font-bold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate xs:whitespace-normal">
+            <h3 className="font-medium lg:font-semibold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate md:whitespace-normal">
                 {post.title}
             </h3>
 
             {/* ROW 3: DESCRIPTION */}
-            <div className="hidden min-[769px]:block mb-4">
+            <div className="hidden md:block mb-4">
                 <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors">
                     {post.description}
                 </p>
             </div>
 
             {/* ROW 4: AUTHOR */}
-            <div className="flex items-center gap-2 mb-4">
-                <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden">
+            <div className="flex items-center gap-2 mb-2 sm:mb-4">
+                <div className="w-4 h-4 xs:w-5 xs:h-5 rounded-full bg-gray-200 overflow-hidden">
                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
-                <span className="text-xs font-bold text-[#111111] group-hover:text-white transition-colors">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
+                <span className="text-xs md:text-sm font-semibold text-[#111111] group-hover:text-white transition-colors">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
             </div>
 
             {/* ROW 5: FOOTER (STATS) */}
-            <div className="pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
+            <div className="pt-2 sm:pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
                 
                 {/* LEFT: Review Count Metadata */}
-                <div className="flex items-start gap-1.5">
+                <div className="flex items-start gap-1 xs:gap-1.5">
                     <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors flex items-center gap-1">
+                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors flex items-center xs:gap-1">
                         {reviewCount}
-                        {isHot && <span className="text-[10px]">🔥</span>}
+                        {isHot && <span className="text-[12px]">🔥</span>}
                     </span>
                 </div>
 
@@ -189,7 +189,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                                     );
                                 })}
                             </div>
-                            <span className="text-sm xs:text-sm font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
+                            <span className="text-sm xs:text-sm font-semibold lg:font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
                         </>
                     )}
                 </div>
