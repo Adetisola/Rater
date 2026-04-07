@@ -25,6 +25,7 @@ function App() {
 
   // Mobile search overlay state
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
 
   // Scroll to top on page/route changes
   useEffect(() => {
@@ -151,13 +152,17 @@ function App() {
         onPostSelect={(post) => setSelectedPost(post)}
         onDesignerSelect={handleDesignerSelect}
         searchIndexes={searchIndexes}
-        onMobileSearchOpen={() => setIsMobileSearchOpen(true)}
+        onMobileSearchOpen={(id) => {
+          if (id) setSearchLayoutId(id);
+          setIsMobileSearchOpen(true);
+        }}
       />
 
       {/* Mobile Search Overlay */}
       <MobileSearchOverlay
         isOpen={isMobileSearchOpen}
         onClose={() => setIsMobileSearchOpen(false)}
+        activeLayoutId={searchLayoutId}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         sortBy={sortBy}

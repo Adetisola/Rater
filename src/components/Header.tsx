@@ -8,6 +8,7 @@ import type { Post, Avatar, Category } from '../logic/mockData';
 import { CloudUpload } from 'lucide-react';
 
 import { X } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface HeaderProps {
     onPostClick: () => void;
@@ -23,7 +24,7 @@ interface HeaderProps {
     onPostSelect?: (post: Post) => void;
     onDesignerSelect?: (avatar: Avatar) => void;
     searchIndexes: SearchIndexes;
-    onMobileSearchOpen?: () => void;
+    onMobileSearchOpen?: (activeId: string) => void;
 }
 
 export function Header({ 
@@ -174,9 +175,9 @@ export function Header({
         {/* GHOST LOGO SPACER - visible on all screens to reserve space for absolute logo */}
         {!hideControls && <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 invisible" aria-hidden="true" />}
 
-        {/* DESKTOP SEARCH BAR - hidden on mobile ≤425px */}
+        {/* DESKTOP SEARCH BAR - visible on screens strictly larger than 768px (>768px) */}
         {showWidgets && (
-        <div className={`hidden xs:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`hidden min-[769px]:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
           <div className="relative w-full group">
             
             {/* Search Input Container */}
@@ -274,16 +275,51 @@ export function Header({
         </div>
         )}
 
+        {/* TABLET CONDENSED SEARCH PILL - strictly for tablet/small laptops (426px to 768px) */}
+        {showWidgets && (
+        <div className={`hidden xs:flex min-[769px]:hidden flex-1 justify-end relative z-40 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+            <motion.button 
+                layoutId="tablet-search-pill"
+                onClick={() => onMobileSearchOpen?.('tablet-search-pill')}
+                className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[40px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-[#FEC312] bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
+                style={{ borderRadius: 9999 }}
+            >
+                <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
+                    <img 
+                      src="/icons/search.svg" 
+                      alt="Search" 
+                      className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" 
+                    />
+                    <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
+                        {/* Show category pill if active, otherwise show query/placeholder */}
+                        {selectedCategories.length > 0 ? (
+                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-[#111111] whitespace-nowrap overflow-hidden">
+                                <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedCategories[0]}</span>
+                                {selectedCategories.length > 1 && <span className="ml-1 text-gray-500 shrink-0">+{selectedCategories.length - 1}</span>}
+                            </span>
+                        ) : (
+                            <span className="text-sm font-sans text-gray-400 truncate w-full text-left">
+                                {searchQuery || "Search..."}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            </motion.button>
+        </div>
+        )}
+
         {/* ACTIONS */}
         {showWidgets && (
         <div className={`flex items-center gap-2 shrink-0 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
-            {/* MOBILE SEARCH ICON - visible only on ≤425px, styled with yellow border */}
-            <button 
-              onClick={onMobileSearchOpen}
-              className="flex xs:hidden w-10 h-10 items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group"
+            {/* PURE MOBILE SEARCH ICON - visible only on ≤425px, styled with yellow border */}
+            <motion.button 
+              layoutId="mobile-search-circle"
+              onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
+              className="flex xs:hidden w-10 h-10 items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group overflow-hidden"
+              style={{ borderRadius: 9999 }}
             >
               <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
-            </button>
+            </motion.button>
 
             {/* Post Button Container - Uses placeholder trick for grid stability */}
             <div className="relative">
@@ -304,7 +340,7 @@ export function Header({
                     onClick={onPostClick}
                     className="absolute top-0 right-0 h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
                 >
-                    <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-all duration-[500ms] group-hover:brightness-0 group-hover:invert" />
+                    <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
                     <span className="hidden sm:flex items-center">
                         Post
                         <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)]">

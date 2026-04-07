@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
@@ -18,6 +19,7 @@ interface MobileSearchOverlayProps {
   onPostSelect?: (post: Post) => void;
   onDesignerSelect?: (avatar: Avatar) => void;
   searchIndexes: SearchIndexes;
+  activeLayoutId?: string;
 }
 
 export function MobileSearchOverlay({
@@ -31,7 +33,8 @@ export function MobileSearchOverlay({
   onCategoryChange,
   onPostSelect,
   onDesignerSelect,
-  searchIndexes
+  searchIndexes,
+  activeLayoutId
 }: MobileSearchOverlayProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -60,10 +63,10 @@ export function MobileSearchOverlay({
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       
-      // Focus input on open
+      // Focus input perfectly after animation finishes
       setTimeout(() => {
         searchInputRef.current?.focus();
-      }, 100);
+      }, 400);
 
       // Handle Android back button (popstate event)
       const handlePopState = (e: PopStateEvent) => {
@@ -117,37 +120,47 @@ export function MobileSearchOverlay({
     }
   };
 
-  if (!isOpen) return null;
-
   return createPortal(
-    <div className="fixed inset-0 z-60 bg-white flex flex-col animate-in fade-in duration-200">
-      {/* Header */}
-      <div className="sticky top-0 px-3 py-3 border-b border-gray-100 flex items-center gap-3 bg-white z-10 shrink-0">
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.98 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-0 z-60 bg-white flex flex-col"
         >
-          <X size={20} className="text-gray-600" />
-        </button>
+          {/* Header */}
+          <div className="sticky top-0 px-3 py-3 border-b border-gray-100 flex items-center gap-3 bg-white z-10 shrink-0">
+            {/* Close Button */}
+            <button 
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
+            >
+              <X size={20} className="text-gray-600" />
+            </button>
 
-        {/* Search Input */}
-        <div className="flex-1 relative">
-          <img 
-            src="/icons/search.svg" 
-            alt="Search" 
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 z-10" 
-          />
-          <input 
-            ref={searchInputRef}
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Start typing to search..." 
-            className="w-full h-12 pl-12 pr-4 rounded-full border-2 border-[#FEC312] bg-white font-sans text-base placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-[#FEC312]/10"
-          />
-        </div>
+            {/* Search Input */}
+            <motion.div 
+              layoutId={activeLayoutId}
+              className="flex-1 relative flex items-center bg-white rounded-full border-2 border-[#FEC312] overflow-hidden focus-within:ring-4 focus-within:ring-[#FEC312]/10"
+              style={{ borderRadius: 9999 }}
+            >
+              <img 
+                src="/icons/search.svg" 
+                alt="Search" 
+                className="absolute left-4 h-5 w-5 opacity-40 z-10 shrink-0 pointer-events-none" 
+              />
+              <input 
+                ref={searchInputRef}
+                type="text" 
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Start typing to search..." 
+                className="w-full h-11 pl-12 pr-4 bg-transparent font-sans text-base placeholder:text-gray-400 focus:outline-none"
+              />
+            </motion.div>
 
         {/* Filter Button */}
         <button 
@@ -272,7 +285,9 @@ export function MobileSearchOverlay({
         selectedCategories={selectedCategories}
         onCategoryChange={onCategoryChange}
       />
-    </div>,
+        </motion.div>
+      )}
+    </AnimatePresence>,
     document.body
   );
 }
