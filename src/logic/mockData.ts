@@ -173,7 +173,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_2',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    rating: { average: 4.9, reviewCount: 45, isLocked: false }, // Top Rated & Most Discussed for Web Design
+    rating: { average: 4.9, reviewCount: 45, isLocked: false }, // Top Rated for Web Design, high review activity
     reviews: [
       {
         id: 'r_11_1',
@@ -301,7 +301,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
-    rating: { average: 4.8, reviewCount: 52, isLocked: false }, // Top Rated & Most Discussed for Mobile App
+    rating: { average: 4.8, reviewCount: 52, isLocked: false }, // Top Rated for Mobile App, high review activity
     reviews: [
       {
         id: 'r_13_1',
@@ -373,7 +373,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_2',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    rating: { average: 4.2, reviewCount: 42, isLocked: false }, // Most Discussed
+    rating: { average: 4.2, reviewCount: 42, isLocked: false }, // High review activity
     reviews: [
         {
             id: 'r_2_1',
@@ -519,7 +519,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1626785774625-ddcddc3445e9?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-    rating: { average: 4.8, reviewCount: 38, isLocked: false }, // Top Rated & Most Discussed
+    rating: { average: 4.8, reviewCount: 38, isLocked: false }, // High review activity
     reviews: [
         {
             id: 'r_17_1',
@@ -661,7 +661,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_5',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    rating: { average: 4.6, reviewCount: 47, isLocked: false }, // Most Discussed
+    rating: { average: 4.6, reviewCount: 47, isLocked: false }, // High review activity
     reviews: [
         {
             id: 'r_20_1',
@@ -794,7 +794,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_3',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-    rating: { average: 4.9, reviewCount: 31, isLocked: false }, // Top Rated & Most Discussed
+    rating: { average: 4.9, reviewCount: 31, isLocked: false }, // Top Rated, high review activity
     reviews: [
         {
             id: 'r_23_1',
@@ -933,7 +933,7 @@ export const MOCK_POSTS: Post[] = [
     imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800',
     designerId: 'user_4',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    rating: { average: 4.7, reviewCount: 41, isLocked: false }, // Top Rated & Most Discussed
+    rating: { average: 4.7, reviewCount: 41, isLocked: false }, // High review activity
     reviews: [
         {
             id: 'r_26_1',

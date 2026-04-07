@@ -1,6 +1,6 @@
 import type { Post, Review } from './mockData';
 
-type BadgeType = 'top-rated' | 'most-discussed' | null;
+type BadgeType = 'top-rated' | null;
 
 // Constants
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -28,7 +28,7 @@ function getMostRecentReviewTime(reviews: Review[]): number {
 }
 
 /**
- * Check if a post is eligible for any badge.
+ * Check if a post is eligible for a badge.
  * 
  * Eligibility rules:
  * - Post must have ≥5 structured reviews (locked posts cannot win any badge)
@@ -46,7 +46,6 @@ function isEligibleForBadge(post: Post): boolean {
   }
   
   // Must have at least one review within the last 7 days
-  // Note: This checks the reviews array which may be a subset of all reviews
   const recentReviews = getReviewsInWindow(post.reviews);
   if (recentReviews.length === 0) {
     return false;
@@ -90,44 +89,12 @@ function compareForTopRated(a: Post, b: Post): number {
 }
 
 /**
- * Comparator for Most Discussed badge selection.
- * Returns negative if `a` should rank higher, positive if `b` should rank higher.
- * 
- * Selection order:
- * 1. Highest review count in last 7 days
- * 2. Most recent review (tie-breaker 1)
- * 3. Older post (tie-breaker 2)
- */
-function compareForMostDiscussed(a: Post, b: Post): number {
-  // 1. Highest review count in last 7 days
-  const aRecentCount = getReviewsInWindow(a.reviews).length;
-  const bRecentCount = getReviewsInWindow(b.reviews).length;
-  if (aRecentCount !== bRecentCount) {
-    return bRecentCount - aRecentCount;
-  }
-  
-  // 2. Most recent review wins
-  const aRecentTime = getMostRecentReviewTime(a.reviews);
-  const bRecentTime = getMostRecentReviewTime(b.reviews);
-  if (aRecentTime !== bRecentTime) {
-    return bRecentTime - aRecentTime;
-  }
-  
-  // 3. Older post wins
-  const aCreated = new Date(a.createdAt).getTime();
-  const bCreated = new Date(b.createdAt).getTime();
-  return aCreated - bCreated;
-}
-
-/**
  * Computes which badge (if any) each post should display.
  * 
  * Badge System Rules (Rater v1):
- * - Total badges: 2 (global, not per-category)
+ * - Total badges: 1 (global, not per-category)
  * - Top Rated: 1 post with highest average rating
- * - Most Discussed: 1 post with highest review count in last 7 days
- * - No badge stacking: a post can only hold ONE badge
- * - If a post qualifies for both: Top Rated wins, Most Discussed goes to runner-up
+ * - "Most Discussed" is NOT a badge — it's shown as lightweight review count metadata
  * 
  * Eligibility:
  * - Post must have ≥5 structured reviews
@@ -145,26 +112,11 @@ export function computeBadges(posts: Post[]): Record<string, BadgeType> {
   }
   
   // --- TOP RATED ---
-  // Sort eligible posts by Top Rated criteria
   const sortedForTopRated = [...eligiblePosts].sort(compareForTopRated);
   const topRatedPost = sortedForTopRated[0];
   
   if (topRatedPost) {
     badges[topRatedPost.id] = 'top-rated';
-  }
-  
-  // --- MOST DISCUSSED ---
-  // Filter out the Top Rated winner (no badge stacking)
-  const remainingForMostDiscussed = eligiblePosts.filter(p => p.id !== topRatedPost?.id);
-  
-  if (remainingForMostDiscussed.length > 0) {
-    // Sort remaining posts by Most Discussed criteria
-    const sortedForMostDiscussed = [...remainingForMostDiscussed].sort(compareForMostDiscussed);
-    const mostDiscussedPost = sortedForMostDiscussed[0];
-    
-    if (mostDiscussedPost) {
-      badges[mostDiscussedPost.id] = 'most-discussed';
-    }
   }
   
   return badges;

@@ -11,6 +11,7 @@ import { formatTimeAgo } from '../lib/utils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { computeBadges } from '../logic/badgeUtils';
+import { computeHotPosts } from '../logic/hotPostUtils';
 
 const REVIEWS_PER_PAGE = 5;
 
@@ -99,6 +100,11 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   // Compute badge for this post using centralized logic
   const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
   const badge = badgeMap[post.id];
+  const reviewCount = post.rating.reviewCount;
+
+  // Compute 🔥 hot status using centralized logic
+  const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
+  const isHot = hotPostIds.has(post.id);
 
   // Use actual reviews from the post data + any user-submitted reviews
   const allReviews = [...userReviews, ...post.reviews];
@@ -236,26 +242,27 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* 2. Metadata Row */}
                 <div className="flex items-center justify-between">
-                     <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                         <span className="text-[10px] font-bold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
                             {post.category}
                         </span>
-                        {/* Badge - Only ONE badge per post, computed by badgeUtils */}
+                        {/* Badge - Only Top Rated badge */}
                         {badge === 'top-rated' && (
                             <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-black px-3 py-1.5 rounded-full flex items-center gap-1">
                                 🏆 Top Rated
                             </span>
                         )}
-
-                        {badge === 'most-discussed' && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#7C2BED] text-white px-3 py-1.5 rounded-full flex items-center gap-1">
-                                💬 Most Discussed
-                            </span>
-                        )}
                      </div>
-                     <span className="text-xs font-medium text-gray-400">
-                        {formatTimeAgo(post.createdAt)}
-                     </span>
+                     <div className="flex items-center gap-3">
+                        {/* Review Count Metadata */}
+                        <span className="text-xs font-medium text-gray-400">
+                            {isHot && <span className="mr-0.5">🔥</span>}
+                            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                        </span>
+                        <span className="text-xs font-medium text-gray-400">
+                            {formatTimeAgo(post.createdAt)}
+                        </span>
+                     </div>
                 </div>
 
                 {/* 3. Title */}

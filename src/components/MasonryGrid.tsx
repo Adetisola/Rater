@@ -3,15 +3,16 @@ import type { Post } from '../logic/mockData';
 import { PostCard } from './PostCard';
 import { useMasonryColumns } from '../hooks/useMasonryColumns';
 
-type BadgeType = 'top-rated' | 'most-discussed' | null;
+type BadgeType = 'top-rated' | null;
 
 interface MasonryGridProps {
   posts: Post[];
   badgeMap: Record<string, BadgeType>;
+  hotPostIds: Set<string>;
   onPostClick?: (post: Post) => void;
 }
 
-export function MasonryGrid({ posts, badgeMap, onPostClick }: MasonryGridProps) {
+export function MasonryGrid({ posts, badgeMap, hotPostIds, onPostClick }: MasonryGridProps) {
   const columnCount = useMasonryColumns();
 
   // Distribute posts into columns
@@ -30,7 +31,7 @@ export function MasonryGrid({ posts, badgeMap, onPostClick }: MasonryGridProps) 
           <div key={colIndex} className="flex-1 flex flex-col gap-2 xs:gap-4 w-full min-w-0">
             {colPosts.map((post) => (
               <div key={post.id} onClick={() => onPostClick?.(post)}>
-                <PostCard post={post} badge={badgeMap[post.id]} />
+                <PostCard post={post} badge={badgeMap[post.id]} isHot={hotPostIds.has(post.id)} />
               </div>
             ))}
           </div>
@@ -39,3 +40,4 @@ export function MasonryGrid({ posts, badgeMap, onPostClick }: MasonryGridProps) 
     </div>
   );
 }
+

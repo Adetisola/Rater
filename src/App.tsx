@@ -9,6 +9,7 @@ import { MOCK_POSTS, MOCK_AVATARS, CATEGORIES, type Post, type Avatar } from './
 import { curatedFreshnessSort } from './logic/curatedSort';
 import { createSearchIndexes, searchPosts } from './logic/searchUtils';
 import { computeBadges } from './logic/badgeUtils';
+import { computeHotPosts } from './logic/hotPostUtils';
 import { useDebounce } from './hooks/useDebounce';
 import { X } from 'lucide-react';
 
@@ -45,6 +46,12 @@ function App() {
   const globalBadgeMap = useMemo(
     () => computeBadges(MOCK_POSTS),
     [] // Never recompute - badges are global and stable
+  );
+
+  // Compute 🔥 hot post IDs (top 10% by review_count among last-7-day posts)
+  const hotPostIds = useMemo(
+    () => computeHotPosts(MOCK_POSTS),
+    []
   );
 
   const handleHomeClick = () => {
@@ -285,6 +292,7 @@ function App() {
               <MasonryGrid 
                 posts={sortedPosts} 
                 badgeMap={globalBadgeMap}
+                hotPostIds={hotPostIds}
                 onPostClick={(post) => setSelectedPost(post)}
               />
 

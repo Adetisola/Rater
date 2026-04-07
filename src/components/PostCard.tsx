@@ -6,11 +6,12 @@ import { formatTimeAgo } from '../lib/utils';
 
 interface PostCardProps {
   post: Post;
-  badge?: 'top-rated' | 'most-discussed' | null;
+  badge?: 'top-rated' | null;
+  isHot?: boolean;
   isLoading?: boolean;
 }
 
-export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
+export function PostCard({ post, badge, isHot = false, isLoading = false }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -88,7 +89,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
   }
 
   const isTopRated = badge === 'top-rated';
-  const isMostDiscussed = badge === 'most-discussed';
+  const reviewCount = post.rating.reviewCount;
 
   return (
     <div className="group relative break-inside-avoid">
@@ -106,21 +107,13 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
         {/* CONTENT WRAPPER */}
         <div className="relative z-10">
             {/* IMAGE AREA (Inset) */}
-            <div className={`relative w-full overflow-hidden rounded-[20px] ${isTopRated ? 'border-2 border-[#FEC312]' : isMostDiscussed ? 'border-2 border-[#7C3BED]' : ''}`}>
+            <div className={`relative w-full overflow-hidden rounded-[20px] ${isTopRated ? 'border-2 border-[#FEC312]' : ''}`}>
             
             <img 
                 src={post.imageUrl} 
                 alt={post.title} 
                 className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
             />
-            
-            {/* BADGES */}
-            {/* 'Most Discussed' Badge - Purple Pill */}
-            {isMostDiscussed && (
-                <div className="absolute bottom-3 left-3 bg-[#7C3BED] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
-                    <span>💬 Most Discussed</span>
-                </div>
-            )}
             
             {/* 'Top Rated' Badge - Yellow Pill */}
             {isTopRated && (
@@ -166,16 +159,19 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
             {/* ROW 5: FOOTER (STATS) */}
             <div className="pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
                 
-                {/* LEFT: Count */}
-                <div className="hidden xs:flex items-start gap-1.5">
+                {/* LEFT: Review Count Metadata */}
+                <div className="flex items-center gap-1.5">
                     <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.reviews.length}</span>
+                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors flex items-center gap-1">
+                        {reviewCount}
+                        {isHot && <span className="text-[10px]">🔥</span>}
+                    </span>
                 </div>
 
                 {/* RIGHT: Ratings */}
-                <div className="flex items-center gap-1.5 w-full xs:w-auto justify-between xs:justify-end">
+                <div className="flex items-center gap-1.5 w-auto justify-end">
                     {post.rating.isLocked ? (
-                        <span className="text-[10px] font-bold text-[#009241] group-hover:text-[#4ade80] transition-colors w-full text-center xs:text-right">
+                        <span className="text-[10px] font-bold text-[#009241] group-hover:text-[#4ade80] transition-colors text-right">
                             Rating Unlocks at 3 Reviews
                         </span>
                     ) : (
@@ -187,13 +183,13 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                                         <img 
                                             key={i} 
                                             src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
-                                            className={`w-4 h-4 xs:w-3 xs:h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
+                                            className={`w-3 h-3 xs:w-3 xs:h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
                                             alt="" 
                                         />
                                     );
                                 })}
                             </div>
-                            <span className="text-base xs:text-sm font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
+                            <span className="text-sm xs:text-sm font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
                         </>
                     )}
                 </div>

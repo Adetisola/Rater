@@ -2,12 +2,12 @@
  * Curated Freshness V1 — Default Homepage Sorting Algorithm
  * 
  * Buckets:
- * - Bucket A (Standout): Posts with badges. Rate-limited to 1 per 6-8 cards.
+ * - Bucket A (Standout): Posts with the Top Rated badge. Rate-limited to 1 per 6-8 cards.
  * - Bucket B (Active & Emerging): Posts from the last 14-21 days.
  * - Bucket C (Older Archive): All other posts.
  * 
  * Ordering:
- * - Bucket A: Badge priority (Top Rated > Most Discussed), then recency.
+ * - Bucket A: Top Rated badge, then recency.
  * - Bucket B: Recency with light engagement signal (review count).
  * - Bucket C: Recency only.
  */
@@ -68,7 +68,7 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
   const badgeMap = computeBadges(posts);
 
   // Categorize into buckets
-  const bucketA: Post[] = []; // Standout (badge posts)
+  const bucketA: Post[] = []; // Standout (Top Rated badge)
   const bucketB: Post[] = []; // Active & Emerging (recent)
   const bucketC: Post[] = []; // Older Archive
 
@@ -85,16 +85,8 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
     }
   });
 
-  // --- Sort Bucket A: Badge priority, then recency ---
+  // --- Sort Bucket A: Recency (only Top Rated badge exists) ---
   bucketA.sort((a, b) => {
-    const aBadge = badgeMap[a.id];
-    const bBadge = badgeMap[b.id];
-    
-    // Top Rated > Most Discussed
-    if (aBadge === 'top-rated' && bBadge !== 'top-rated') return -1;
-    if (bBadge === 'top-rated' && aBadge !== 'top-rated') return 1;
-
-    // Same badge type: sort by recency
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
