@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Post } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 // Using skeleton for loading state
 
 interface PostCardProps {
@@ -164,7 +165,15 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                     <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
                     <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center xs:gap-1">
                         {reviewCount}
-                        {isHot && <span className="text-[12px]">🔥</span>}
+                        {isHot && (
+                            <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
+                                <DotLottieReact
+                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                    loop
+                                    autoplay
+                                />
+                            </div>
+                        )}
                     </span>
                 </div>
 

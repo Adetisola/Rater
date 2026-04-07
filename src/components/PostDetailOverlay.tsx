@@ -4,6 +4,7 @@ import { ChevronDown, Check, X, Download, Plus, Minus, Share2, ArrowLeft} from '
 import type { Post, Review } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -255,8 +256,16 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                      </div>
                      <div className="flex items-center gap-3">
                         {/* Review Count Metadata */}
-                        <span className="text-sm font-semibold text-black">
-                            {isHot && <span className="mr-0.5">🔥</span>}
+                        <span className="text-sm font-semibold text-black flex items-center">
+                            {isHot && (
+                                <div className="w-8 h-8 -ml-2 -mt-3">
+                                    <DotLottieReact
+                                        src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                        loop
+                                        autoplay
+                                    />
+                                </div>
+                            )}
                             {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
                         </span>
                         <span className="text-xs font-medium text-gray-400">
