@@ -207,9 +207,9 @@ function App() {
                 </div>
               )}
 
-              {/* Active Filters Display - Mobile Only (≤425px) */}
+              {/* Active Filters Display - Mobile & Tablet Only (≤768px) */}
               {(sortBy !== '✨Curated Freshness' || selectedCategories.length > 0) && (
-                <div className="xs:hidden max-w-[1600px] mx-auto px-6 mb-4">
+                <div className="min-[769px]:hidden max-w-[1600px] mx-auto px-6 mb-4">
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Sort Filter Pill */}
                     {sortBy !== '✨Curated Freshness' && (

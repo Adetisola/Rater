@@ -40,7 +40,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                 {/* SKELETON IMAGE */}
                 <div className="w-full aspect-4/3 bg-[#d1d5db] rounded-[20px] animate-pulse mb-4" />
                 
-                <div className="px-4 pt-0 pb-2 flex-1 flex flex-col">
+                <div className="px-2 xs:px-4 pt-0 pb-2 flex-1 flex flex-col">
                     {/* META ROW */}
                     <div className="flex justify-between items-center mb-4">
                          <div className="h-5 w-20 bg-[#d1d5db] rounded-full animate-pulse" /> {/* Category */}
@@ -48,10 +48,10 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                     </div>
                     
                     {/* TITLE */}
-                    <div className="h-7 w-3/4 bg-[#d1d5db] rounded-lg animate-pulse mb-3" />
+                    <div className="h-5 xs:h-7 w-3/4 bg-[#d1d5db] rounded-lg animate-pulse mb-3" />
                     
                     {/* DESCRIPTION */}
-                    <div className="space-y-2 mb-6">
+                    <div className="hidden min-[769px]:block space-y-2 mb-6">
                         <div className="h-3 w-full bg-[#d1d5db] rounded animate-pulse" />
                         <div className="h-3 w-11/12 bg-[#d1d5db] rounded animate-pulse" />
                         <div className="h-3 w-2/3 bg-[#d1d5db] rounded animate-pulse" />
@@ -67,7 +67,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                     
                     {/* FOOTER */}
                     <div className="pt-4 border-t border-black/5 flex items-center justify-between">
-                         <div className="h-4 w-8 bg-[#d1d5db] rounded animate-pulse" /> {/* Count */}
+                         <div className="hidden xs:block h-4 w-8 bg-[#d1d5db] rounded animate-pulse" /> {/* Count */}
                          
                          {/* SKELETON STARS */}
                          <div className="flex gap-0.5 animate-pulse">
@@ -131,27 +131,29 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
             </div>
 
             {/* CONTENT AREA */}
-            <div className="px-4 pt-4 pb-2">
+            <div className="px-2 xs:px-4 pt-4 pb-2">
             
             {/* ROW 1: TAG & TIME */}
             <div className="flex justify-between items-center mb-3">
-                <span className="bg-white text-[#111111] text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full">
+                <span className="bg-white text-[#111111] text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
                     {post.category}
                 </span>
-                <span className="text-[10px] text-[#999999] font-semibold group-hover:text-white/80 transition-colors">
+                <span className="text-[10px] text-[#999999] font-semibold group-hover:text-white/80 transition-colors shrink-0 ml-2">
                     {formatTimeAgo(post.createdAt)}
                 </span>
             </div>
 
             {/* ROW 2: TITLE */}
-            <h3 className="font-bold text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors">
+            <h3 className="font-bold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate xs:whitespace-normal">
                 {post.title}
             </h3>
 
             {/* ROW 3: DESCRIPTION */}
-            <p className="text-xs text-[#111111] leading-relaxed mb-4 line-clamp-3 group-hover:text-white/90 transition-colors">
-                {post.description}
-            </p>
+            <div className="hidden min-[769px]:block mb-4">
+                <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors">
+                    {post.description}
+                </p>
+            </div>
 
             {/* ROW 4: AUTHOR */}
             <div className="flex items-center gap-2 mb-4">
@@ -165,7 +167,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
             <div className="pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
                 
                 {/* LEFT: Count */}
-                <div className="flex items-start gap-1.5">
+                <div className="hidden xs:flex items-start gap-1.5">
                     <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
                     <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors">{post.reviews.length}</span>
                 </div>

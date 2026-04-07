@@ -13,6 +13,17 @@ export function useMasonryColumns() {
       // Get the width of the main viewport (excluding scrollbars)
       const width = document.documentElement.clientWidth;
       
+      // Explicit viewport breakpoints for Mobile and Tablet explicitly requested by design
+      if (width > 375 && width <= 768) {
+        setColumns(2);
+        return;
+      }
+      
+      if (width <= 375) {
+        setColumns(1);
+        return;
+      }
+      
       // Estimate the available container width by subtracting side padding 
       // Accounts for Tailwind classes px-4 (32px total) on mobile, px-6 (48px total) on desktop
       const padding = width >= 768 ? 48 : 32;
