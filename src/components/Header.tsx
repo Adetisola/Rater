@@ -5,7 +5,7 @@ import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
-import { CloudUpload, ListFilter } from 'lucide-react';
+import { CloudUpload, ListFilter, Search } from 'lucide-react';
 
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -184,10 +184,8 @@ export function Header({
             <div className={`relative w-full transition-opacity duration-200 ${isFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 
                 {/* Search Icon */}
-                <img 
-                  src="/icons/search.svg" 
-                  alt="Search" 
-                  className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 group-focus-within:opacity-100 transition-opacity z-10" 
+                <Search 
+                  className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 opacity-40 group-focus-within:opacity-100 transition-opacity z-10" 
                 />
 
                 {/* Input Wrapper - Styles applied here instead of input to contain pills */}
@@ -243,7 +241,7 @@ export function Header({
                         onClick={() => setIsFilterOpen(true)}
                         className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
                     >
-                        <ListFilter className="h-5 w-5 opacity-70" />
+                        <ListFilter className="h-5 w-5" />
                     </button>
                 </div>
             </div>
@@ -341,7 +339,7 @@ export function Header({
                     className="absolute top-0 right-0 w-[45px] sm:w-auto h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
                 >
                     <CloudUpload strokeWidth={2.25} className="h-6 w-6 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
-                    <span className="hidden sm:flex items-center">
+                    <span className="hidden text-[18px] sm:flex items-center">
                         Post
                         <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
                             <span className="pl-1.5">your work</span>

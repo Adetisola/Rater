@@ -4,7 +4,7 @@ import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { CATEGORIES } from '../logic/mockData';
-import { ListFilter } from 'lucide-react';
+import { ListFilter, Search } from 'lucide-react';
 
 export interface FilterState {
   sortBy: string;
@@ -82,7 +82,7 @@ export function FilterDropdown({
         
         {/* TOP SECTION: Search Bar Area */}
         <div className="relative w-full min-h-[48px] flex items-center px-1 my-1">
-            <img src="/icons/search.svg" alt="Search" className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 opacity-40 z-10" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 opacity-40 z-10" />
             
             <div 
               className="w-full min-h-[48px] pl-12 pr-16 py-1.5 flex items-center flex-wrap gap-2"
@@ -140,7 +140,7 @@ export function FilterDropdown({
 
             {/* SORT BY SECTION */}
             <div className="mb-8 relative flex items-center gap-4">
-                <label className="text-sm font-bold text-[#111111] whitespace-nowrap">Sort by</label>
+                <label className="text-sm font-semibold text-[#111111] whitespace-nowrap">Sort by</label>
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
@@ -173,7 +173,7 @@ export function FilterDropdown({
 
             {/* CATEGORY SECTION */}
             <div className="mb-10">
-            <label className="block text-sm font-bold text-[#111111] mb-3">Category</label>
+            <label className="block text-sm font-semibold text-[#111111] mb-3">Category</label>
             <div className="flex flex-wrap gap-2.5">
                 {CATEGORIES.map(cat => {
                 const isSelected = selectedCategories.includes(cat);
@@ -211,12 +211,12 @@ export function FilterDropdown({
                 onSortChange('✨Curated Freshness✨');
                 onCategoryChange([]);
                 }}
-                className="px-5 py-2 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
+                className="px-5 py-2 rounded-full text-sm font-semibold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
             >
                 Reset
             </button>
             <Button 
-                className="rounded-full px-5 bg-white border-2 border-[#FEC312] text-[#111111] font-bold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
+                className="rounded-full px-5 bg-white border-2 border-[#FEC312] text-[#111111] font-semibold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
                 onClick={onClose}
             >
                 Apply

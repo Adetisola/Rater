@@ -46,13 +46,13 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
             <>
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-[#111111] mb-2">Report this Post</h2>
+                    <h2 className="text-2xl font-semibold text-[#111111] mb-2">Report this Post</h2>
                     <p className="text-sm text-gray-500">Help us understand what's wrong with this post.</p>
                 </div>
 
                 {/* Reason Dropdown */}
                 <div className="mb-6 relative">
-                    <label className="block text-sm font-bold text-[#111111] mb-2">Reason for report</label>
+                    <label className="block text-sm font-semibold text-[#111111] mb-2">Reason for report</label>
                     <button 
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -82,7 +82,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
 
                 {/* Details Textarea */}
                 <div className="mb-8">
-                    <label className="block text-sm font-bold text-[#111111] mb-2">Tell us more (optional)</label>
+                    <label className="block text-sm font-semibold text-[#111111] mb-2">Tell us more (optional)</label>
                     <div className="relative">
                         <textarea 
                             value={details}
@@ -98,17 +98,17 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center gap-4">
                     <button 
                         onClick={onClose}
-                        className="flex-1 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
+                        className="px-10 py-3 rounded-full text-sm font-semibold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         disabled={reason === 'Select'}
                         onClick={handleSubmit}
-                        className="px-20 py-3 rounded-full text-sm font-bold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all duration-300 inline-flex items-end"
+                        className="px-10 py-3 rounded-full text-sm font-semibold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all duration-300 inline-flex items-end"
                     >
                         Report
                     </button>

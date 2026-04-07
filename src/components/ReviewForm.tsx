@@ -184,7 +184,7 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
       <Button 
         type="submit" 
-        className="w-23 h-12 rounded-full text-lg font-semibold" 
+        className="w-23 h-12 rounded-full text-lg font-medium" 
         variant="outline"
         disabled={!isComplete || isSubmitting}
         isLoading={isSubmitting}

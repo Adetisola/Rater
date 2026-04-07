@@ -40,9 +40,9 @@ export interface PasskeyConfig {
 }
 
 const DEFAULT_CONFIG: PasskeyConfig = {
-  minLength: 12,
+  minLength: 8,
   maxLength: 64,
-  recommendedLength: 14,
+  recommendedLength: 10,
 };
 
 // Check character diversity
@@ -308,10 +308,10 @@ export function validatePasskey(
     isCommonPassword(passkey) || 
     hasKeyboardPattern(passkey);
   
-  // Can submit only if: length >= 12, strength is strong/very-strong, no critical violations
+  // Can submit only if: length >= 8, strength is fair/strong/very-strong, no critical violations
   const canSubmit = 
     length >= fullConfig.minLength &&
-    (strength === 'strong' || strength === 'very-strong') &&
+    (strength === 'fair' || strength === 'strong' || strength === 'very-strong') &&
     !hasCriticalViolation;
   
   return {

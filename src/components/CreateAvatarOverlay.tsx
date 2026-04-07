@@ -112,9 +112,9 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
       <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         
         <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-6 text-[#111111]">Create your Avatar</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-[#111111]">Create your Avatar</h2>
             
-            <p className="text-[10px] uppercase font-bold text-[#111111] mb-2 tracking-wide">upload a pic</p>
+            <p className="text-[12px] uppercase font-semibold text-[#111111] mb-2 tracking-wide">upload a pic</p>
             <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4 relative cursor-pointer hover:bg-gray-200 transition-colors">
                  <User className="w-8 h-8 text-[#111111]" />
                  <div className="absolute bottom-0 right-0 bg-surface rounded-full p-1 border border-white">
@@ -174,7 +174,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                 <div className="relative">
                     <Input 
                         type={showPasskey ? "text" : "password"}
-                        placeholder="Enter Passkey (min. 12 characters)" 
+                        placeholder="Enter Passkey (min. 8 characters)" 
                         value={passkey}
                         onChange={(e) => setPasskey(e.target.value)}
                         onFocus={() => setShowStrengthMeter(true)}
@@ -242,8 +242,8 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                         )}
                         
                         {/* Character Count */}
-                        <p className="text-[10px] text-gray-400 text-right">
-                            {passkey.length}/64 characters
+                        <p className="text-[12px] font-medium text-gray-400 text-right">
+                            {passkey.length} / 64 chars
                         </p>
                     </div>
                 )}
@@ -297,7 +297,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                  <button 
                     onClick={onClose}
                     type="button"
-                    className="py-3 px-10 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
+                    className="py-3 px-10 rounded-full text-sm font-medium text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
                  >
                     Cancel
                  </button>
@@ -305,7 +305,7 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                     type="submit" 
                     variant="outline"
                     disabled={!validation.canSubmit || passkeyMismatch || nameStatus !== 'available' || isCheckingName}
-                    className={`px-12 h-12 rounded-full text-base font-bold border-[#FEC312] transition-all text-[#111111] min-w-[140px] ${
+                    className={`px-12 h-12 rounded-full text-base font-semibold border-[#FEC312] transition-all text-[#111111] min-w-[140px] ${
                         !validation.canSubmit || passkeyMismatch || nameStatus !== 'available' || isCheckingName
                             ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
                             : 'hover:bg-[#FEC312] hover:text-white'

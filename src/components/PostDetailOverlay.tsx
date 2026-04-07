@@ -169,7 +169,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
             <Button 
                 variant="secondary" 
                 onClick={onClose}
-                className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-bold hover:bg-gray-50"
+                className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
             >
                 <ArrowLeft className="w-5 h-5 text-black" />
                 Back
@@ -255,7 +255,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                      </div>
                      <div className="flex items-center gap-3">
                         {/* Review Count Metadata */}
-                        <span className="text-xs font-medium text-gray-400">
+                        <span className="text-sm font-semibold text-black">
                             {isHot && <span className="mr-0.5">🔥</span>}
                             {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
                         </span>
@@ -266,7 +266,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                 </div>
 
                 {/* 3. Title */}
-                <h1 className="text-2xl font-bold text-[#111111] leading-tight">
+                <h1 className="text-2xl font-semibold text-[#111111] leading-tight">
                     {post.title}
                 </h1>
 
@@ -290,7 +290,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} className="w-full h-full object-cover" alt="Avatar" />
                         </div>
-                        <span className="text-sm font-bold text-[#111111]">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
+                        <span className="text-sm font-semibold text-[#111111]">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
                     </div>
 
                     {/* RATING DISPLAY (Moved Here) */}
@@ -309,7 +309,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                         />
                                     ))}
                                 </div>
-                                <span className="text-2xl font-bold text-[#111111]">{post.rating.average}</span>
+                                <span className="text-2xl font-semibold text-[#111111]">{post.rating.average}</span>
                              </>
                          )}
                     </div>
@@ -325,7 +325,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                      *Attribution is claimed by the submitter and not independently verified. 
                      <button 
                         onClick={() => setIsReportOpen(true)}
-                        className="underline font-bold ml-1 hover:text-[#c0392b]"
+                        className="underline text-sm font-semibold ml-1 hover:text-[#c0392b]"
                      >
                         Report
                      </button> if you believe attribution is incorrect.
@@ -369,16 +369,16 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
         <div className="border-t border-gray-100 pt-8 xs:pt-12">
             
             <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-2xl font-bold text-[#111111]">Reviews ({totalReviews})</h2>
+                <h2 className="text-2xl font-semibold text-[#111111]">Reviews ({totalReviews})</h2>
                 
                 {/* Sort Dropdown */}
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="px-4 py-2 border border-black rounded-lg text-xs font-bold flex items-center gap-2 bg-white hover:bg-gray-50"
+                        className="px-4 py-2 border border-black rounded-lg text-sm font-semibold flex items-center gap-2 bg-white hover:bg-gray-50"
                     >
                         {sortBy}
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
                     {isSortOpen && (
@@ -390,10 +390,10 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                                         setSortBy(option);
                                         setIsSortOpen(false);
                                     }}
-                                    className={`w-full text-left px-4 py-3 text-xs font-bold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-[#111111]'}`}
+                                    className={`w-full text-left px-4 py-3 text-sm font-semibold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-[#111111]'}`}
                                 >
                                     {option}
-                                    {sortBy === option && <Check className="w-3 h-3" />}
+                                    {sortBy === option && <Check className="w-4 h-4" />}
                                 </button>
                             ))}
                         </div>
@@ -418,7 +418,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                             {/* Left Content */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <span className="font-bold text-base text-[#111111]">{review.reviewerName || 'Anonymous'}</span>
+                                    <span className="font-semibold text-base text-[#111111]">{review.reviewerName || 'Anonymous'}</span>
                                     <div className="flex gap-0.5">
                                         {[1,2,3,4,5].map(i => (
                                             <img 
@@ -466,7 +466,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                             {/* Right Content - Total Rating (desktop only) */}
                             <div className="hidden xs:block text-right shrink-0">
                                 <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
+                                <div className="text-xl font-semibold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
 
                         </motion.div>

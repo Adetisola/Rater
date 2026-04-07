@@ -103,25 +103,25 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-gray-400 tracking-wider ml-1">Avatar Name</label>
+              <label className="text-xs font-semibold uppercase text-gray-400 tracking-wider ml-1">Avatar Name</label>
               <Input 
-                  placeholder="e.g. Timi" 
+                  placeholder="Enter your avatar name" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-12 text-base px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                  className="h-12 text-sm px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                   disabled={isLoading}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-gray-400 tracking-wider ml-1">Passkey</label>
+              <label className="text-xs font-semibold uppercase text-gray-400 tracking-wider ml-1">Passkey</label>
               <div className="relative">
                 <Input 
                     type={showPasskey ? "text" : "password"}
                     placeholder="Enter your passkey" 
                     value={passkey}
                     onChange={(e) => setPasskey(e.target.value)}
-                    className="h-12 text-base px-4 pr-12 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                    className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
                     disabled={isLoading}
                 />
                 <button
@@ -138,7 +138,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                 <button 
                     type="button"
                     onClick={() => setShowForgotOverlay(true)}
-                    className="text-xs font-semibold text-gray-500 hover:text-[#FEC312] transition-colors"
+                    className="text-xs font-medium text-gray-500 hover:text-[#FEC312] transition-colors"
                     disabled={isLoading}
                 >
                     Forgot passkey?
@@ -174,10 +174,10 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             Don't have an avatar?{' '}
             <button 
                 onClick={onCreateNew}
-                className="text-[#111111] font-semibold hover:underline hover:text-[#FEC312]"
+                className="text-[#111111] font-semibold hover:text-[#FEC312]"
                 disabled={isLoading}
             >
-                Create new
+                Create one
             </button>
           </p>
        </div>

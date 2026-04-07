@@ -8,6 +8,7 @@ import { Textarea } from './ui/Textarea';
 import { CATEGORIES, type Avatar } from '../logic/mockData';
 import { AccessAvatarForm } from './AccessAvatarForm';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
+import { FileUp } from 'lucide-react'
 
 
 export function SubmitPage() {
@@ -80,7 +81,7 @@ export function SubmitPage() {
       
       {/* HEADER */}
       <div className="text-center xs:text-left mb-12">
-        <h1 className="text-2xl font-bold mb-3 text-[#111111]">Post your Work</h1>
+        <h1 className="text-2xl font-semibold mb-3 text-[#111111]">Post your Work</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -98,13 +99,25 @@ export function SubmitPage() {
                    />
                    
                    {imagePreview ? (
-                       <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                       <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/5">
+                           {/* Blurred Background filling the area */}
+                           <div 
+                               className="absolute inset-0 bg-cover bg-center blur-lg scale-110 opacity-60"
+                               style={{ backgroundImage: `url(${imagePreview})` }}
+                           />
+                           {/* Fixed image centered and fitted */}
+                           <img 
+                               src={imagePreview} 
+                               alt="Preview" 
+                               className="relative z-10 max-w-full max-h-full object-contain" 
+                           />
+                       </div>
                    ) : (
                        <div className="flex flex-col items-center text-center p-6">
                          <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                            <img src="/icons/upload.svg" className="w-8 h-8 opacity-40 group-hover:opacity-60 transition-opacity" alt="Upload" />
+                            <FileUp strokeWidth={1.5} className="w-15 h-15 opacity-40 group-hover:opacity-60 transition-opacity" />
                          </div>
-                         <p className="text-lg font-bold text-[#111111] mb-1">Drop your Design</p>
+                         <p className="text-lg font-medium text-[#111111] mb-1">Drop your Design</p>
                          <p className="text-sm text-gray-400">Supports PNG, JPG (Max 10MB)</p>
                        </div>
                    )}
@@ -129,7 +142,7 @@ export function SubmitPage() {
                             onChange={(e) => setDescription(e.target.value)}
                             className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 resize-none font-medium"
                         />
-                        <div className="absolute bottom-4 right-4 text-xs font-bold text-gray-400 pointer-events-none">
+                        <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
                             {description.length} / 400 chars
                         </div>
                     </div>
@@ -137,7 +150,7 @@ export function SubmitPage() {
 
                {/* CATEGORIES */}
                <div className="space-y-4">
-                    <h3 className="font-bold text-lg text-[#111111]">Pick a Category</h3>
+                    <h3 className="font-medium text-lg text-[#111111]">Pick a Category</h3>
                     <div className="flex flex-wrap gap-2.5">
                         {CATEGORIES.map(cat => {
                             const isSelected = category === cat;
@@ -177,7 +190,7 @@ export function SubmitPage() {
                      <>
                          <div className="bg-white border-2 border-gray-100 rounded-[24px] p-8 flex flex-col items-center justify-center">
                               <div className="flex w-full items-baseline justify-center gap-2 mb-6">
-                                 <h3 className="font-bold text-lg text-[#111111]">Post as</h3>
+                                 <h3 className="font-semibold text-lg text-[#111111]">Post as</h3>
                               </div>
                              <AccessAvatarForm 
                                 onSuccess={handleAvatarAccess}
