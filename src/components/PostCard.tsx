@@ -75,7 +75,7 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                                 <img 
                                     key={i}
                                     src="/icons/star-filled.svg" 
-                                    className="w-3 h-3 opacity-30 grayscale invert-0"
+                                    className="w-4 h-4 xs:w-3 xs:h-3 opacity-30 grayscale invert-0"
                                     alt="" 
                                 />
                              ))}
@@ -173,28 +173,27 @@ export function PostCard({ post, badge, isLoading = false }: PostCardProps) {
                 </div>
 
                 {/* RIGHT: Ratings */}
-                {/* RIGHT: Ratings */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 w-full xs:w-auto justify-between xs:justify-end">
                     {post.rating.isLocked ? (
-                        <span className="text-[10px] font-bold text-[#009241] group-hover:text-[#4ade80] transition-colors">
+                        <span className="text-[10px] font-bold text-[#009241] group-hover:text-[#4ade80] transition-colors w-full text-center xs:text-right">
                             Rating Unlocks at 3 Reviews
                         </span>
                     ) : (
                         <>
-                            <div className="flex gap-0.5">
+                            <div className="flex gap-1 xs:gap-0.5">
                                 {[1,2,3,4,5].map(i => {
                                     const isActive = i <= Math.floor(post.rating.average);
                                     return (
                                         <img 
                                             key={i} 
                                             src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
-                                            className={`w-3 h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
+                                            className={`w-4 h-4 xs:w-3 xs:h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
                                             alt="" 
                                         />
                                     );
                                 })}
                             </div>
-                            <span className="text-sm font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
+                            <span className="text-base xs:text-sm font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
                         </>
                     )}
                 </div>
