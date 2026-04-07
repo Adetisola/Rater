@@ -26,10 +26,8 @@ const SORT_OPTIONS = [
   'Most Reviewed'
 ];
 
-// Bottom sheet snap points as percentage of viewport height (from top)
-const SNAP_HALF = 0.5;    // 50% from top = 50% height
-const SNAP_FULL = 0.08;   // 8% from top = 92% height
-const DISMISS_THRESHOLD = 0.75; // If dragged past 75% from top, dismiss
+// Bottom sheet config
+const DISMISS_THRESHOLD = 150; // pixels dragged down to dismiss
 
 export function MobileFilterPanel({
   isOpen,
@@ -64,69 +62,34 @@ export function MobileFilterPanel({
     };
   }, [isOpen]);
 
-  // Animate to half snap when opening
+  // Animate open
   useEffect(() => {
     if (isOpen && isMobile) {
-      const vh = window.innerHeight;
       controls.start({
-        y: vh * SNAP_HALF,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
+        y: 0,
+        transition: { type: 'spring', damping: 25, stiffness: 200 }
       });
     }
   }, [isOpen, isMobile, controls]);
 
   // Map y position to backdrop opacity
-  const backdropOpacity = useTransform(
-    y,
-    [window.innerHeight * SNAP_FULL, window.innerHeight, window.innerHeight * 1.1],
-    [0.4, 0, 0]
-  );
+  const backdropOpacity = useTransform(y, [0, 300], [0.4, 0]);
 
   const handleDragEnd = useCallback((_: any, info: PanInfo) => {
-    const vh = window.innerHeight;
     const currentY = y.get();
     const velocity = info.velocity.y;
 
-    // Fast downward swipe → dismiss
-    if (velocity > 500) {
+    // Fast downward swipe or dragged past threshold → dismiss
+    if (velocity > 500 || currentY > DISMISS_THRESHOLD) {
       controls.start({
-        y: vh + 50,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
+        y: window.innerHeight,
+        transition: { type: 'spring', damping: 25, stiffness: 200 }
       }).then(onClose);
-      return;
-    }
-
-    // Fast upward swipe → expand full
-    if (velocity < -500) {
-      controls.start({
-        y: vh * SNAP_FULL,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
-      });
-      return;
-    }
-
-    // Snap to nearest point based on position
-    const snapHalfY = vh * SNAP_HALF;
-    const snapFullY = vh * SNAP_FULL;
-    const dismissY = vh * DISMISS_THRESHOLD;
-
-    if (currentY > dismissY) {
-      // Past dismiss threshold → close
-      controls.start({
-        y: vh + 50,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
-      }).then(onClose);
-    } else if (currentY < (snapFullY + snapHalfY) / 2) {
-      // Closer to full → snap full
-      controls.start({
-        y: snapFullY,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
-      });
     } else {
-      // Closer to half → snap half
+      // Snap back to open
       controls.start({
-        y: snapHalfY,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
+        y: 0,
+        transition: { type: 'spring', damping: 25, stiffness: 200 }
       });
     }
   }, [controls, onClose, y]);
@@ -147,10 +110,9 @@ export function MobileFilterPanel({
 
   const handleApply = () => {
     if (isMobile) {
-      const vh = window.innerHeight;
       controls.start({
-        y: vh + 50,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
+        y: window.innerHeight,
+        transition: { type: 'spring', damping: 25, stiffness: 200 }
       }).then(() => {
         onClose();
         onApply?.();
@@ -163,10 +125,9 @@ export function MobileFilterPanel({
 
   const handleBackdropClose = () => {
     if (isMobile) {
-      const vh = window.innerHeight;
       controls.start({
-        y: vh + 50,
-        transition: { type: 'spring', damping: 30, stiffness: 300 }
+        y: window.innerHeight,
+        transition: { type: 'spring', damping: 25, stiffness: 200 }
       }).then(onClose);
     } else {
       onClose();
@@ -279,21 +240,17 @@ export function MobileFilterPanel({
             {/* Bottom Sheet */}
             <motion.div
               ref={sheetRef}
-              className="absolute left-0 right-0 bg-white rounded-t-[24px] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col"
-              style={{ 
-                y,
-                height: '100vh',
-                top: 0,
-              }}
-              initial={{ y: window.innerHeight + 50 }}
+              className="absolute left-0 right-0 bottom-0 bg-white rounded-t-[24px] shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col max-h-[90vh]"
+              style={{ y }}
+              initial={{ y: window.innerHeight }}
               animate={controls}
               exit={{ 
-                y: window.innerHeight + 50,
-                transition: { type: 'spring', damping: 30, stiffness: 300 }
+                y: window.innerHeight,
+                transition: { type: 'spring', damping: 25, stiffness: 200 }
               }}
               drag="y"
-              dragConstraints={{ top: window.innerHeight * SNAP_FULL }}
-              dragElastic={0.1}
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.05}
               onDragEnd={handleDragEnd}
             >
               {/* Drag Handle */}
@@ -314,7 +271,7 @@ export function MobileFilterPanel({
 
               {/* Scrollable Content */}
               <div 
-                className="flex-1 overflow-y-auto px-5 py-5 overscroll-contain"
+                className="overflow-y-auto px-5 py-5 overscroll-contain"
                 onPointerDownCapture={(e) => {
                   // Prevent sheet drag when scrolling content
                   const el = e.currentTarget;

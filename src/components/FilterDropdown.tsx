@@ -4,6 +4,7 @@ import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { CATEGORIES } from '../logic/mockData';
+import { ListFilter } from 'lucide-react';
 
 export interface FilterState {
   sortBy: string;
@@ -128,7 +129,7 @@ export function FilterDropdown({
                 onClick={onClose}
                 className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-[#FEC312] text-white hover:bg-[#eeb40e] transition-colors"
             >
-               <img src="/icons/filter.svg" alt="Filter" className="h-5 w-5 brightness-0 invert" />
+               <ListFilter className="h-5 w-5" />
             </button>
         </div>
 

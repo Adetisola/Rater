@@ -131,7 +131,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                 <span className="bg-white text-[#111111] text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
                     {post.category}
                 </span>
-                <span className="text-[10px] text-[#999999] font-semibold group-hover:text-white/80 transition-colors shrink-0 ml-2">
+                <span className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2">
                     {formatTimeAgo(post.createdAt)}
                 </span>
             </div>
@@ -161,8 +161,8 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                 
                 {/* LEFT: Review Count Metadata */}
                 <div className="flex items-start gap-1 xs:gap-1.5">
-                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                    <span className="text-xs font-semibold text-[#111111] group-hover:text-white transition-colors flex items-center xs:gap-1">
+                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
+                    <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center xs:gap-1">
                         {reviewCount}
                         {isHot && <span className="text-[12px]">🔥</span>}
                     </span>
@@ -189,7 +189,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                                     );
                                 })}
                             </div>
-                            <span className="text-sm xs:text-sm font-semibold lg:font-bold text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
+                            <span className="text-sm font-medium text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
                         </>
                     )}
                 </div>

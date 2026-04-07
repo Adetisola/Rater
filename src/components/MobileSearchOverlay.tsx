@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X, ListFilter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
@@ -167,7 +167,7 @@ export function MobileSearchOverlay({
           onClick={() => setIsFilterOpen(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
         >
-          <img src="/icons/filter.svg" alt="Filter" className="h-5 w-5 opacity-70" />
+          <ListFilter className="h-5 w-5" />
         </button>
       </div>
 

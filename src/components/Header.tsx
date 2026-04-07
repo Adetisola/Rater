@@ -5,7 +5,7 @@ import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
-import { CloudUpload } from 'lucide-react';
+import { CloudUpload, ListFilter } from 'lucide-react';
 
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -243,7 +243,7 @@ export function Header({
                         onClick={() => setIsFilterOpen(true)}
                         className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
                     >
-                        <img src="/icons/filter.svg" alt="Filter" className="h-5 w-5 opacity-70" />
+                        <ListFilter className="h-5 w-5 opacity-70" />
                     </button>
                 </div>
             </div>
