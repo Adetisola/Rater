@@ -176,11 +176,11 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                         </span>
                     ) : (
                         <>
-                            <div className="flex gap-1 xs:gap-0.5">
+                            <div className="flex gap-0.5">
                                 {[1,2,3,4,5].map(i => {
                                     const isActive = i <= Math.floor(post.rating.average);
                                     return (
-                                        <img 
+                                        <img
                                             key={i} 
                                             src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
                                             className={`w-3 h-3 xs:w-3 xs:h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 

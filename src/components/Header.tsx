@@ -157,7 +157,7 @@ export function Header({
         <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
           <div 
             onClick={onLogoClick}
-            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
+            className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
           >
             <img 
               src="/icons/logo-rater.svg" 
@@ -173,7 +173,7 @@ export function Header({
         </div>
 
         {/* GHOST LOGO SPACER - visible on all screens to reserve space for absolute logo */}
-        {!hideControls && <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 invisible" aria-hidden="true" />}
+        {!hideControls && <div className="w-[44px] h-[44px] sm:w-12 sm:h-12 shrink-0 invisible" aria-hidden="true" />}
 
         {/* DESKTOP SEARCH BAR - visible on screens strictly larger than 768px (>768px) */}
         {showWidgets && (
@@ -281,7 +281,7 @@ export function Header({
             <motion.button 
                 layoutId="tablet-search-pill"
                 onClick={() => onMobileSearchOpen?.('tablet-search-pill')}
-                className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[40px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-[#FEC312] bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
+                className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-[#FEC312] bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
                 style={{ borderRadius: 9999 }}
             >
                 <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
@@ -315,10 +315,10 @@ export function Header({
             <motion.button 
               layoutId="mobile-search-circle"
               onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
-              className="flex xs:hidden w-10 h-10 items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group overflow-hidden"
+              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group overflow-hidden"
               style={{ borderRadius: 9999 }}
             >
-              <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
+              <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
             </motion.button>
 
             {/* Post Button Container - Uses placeholder trick for grid stability */}
@@ -326,11 +326,11 @@ export function Header({
                 {/* Invisible placeholder maintains the baseline layout width */}
                 <Button
                     variant="outline" 
-                    className="h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 opacity-0 pointer-events-none"
+                    className="h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 opacity-0 pointer-events-none"
                     aria-hidden="true"
                     tabIndex={-1}
                 >
-                    <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                    <CloudUpload strokeWidth={2.5} className="h-5 w-5 sm:h-5 sm:w-5 shrink-0" />
                     <span className="hidden sm:inline">Post</span>
                 </Button>
 
@@ -338,9 +338,9 @@ export function Header({
                 <Button
                     variant="outline" 
                     onClick={onPostClick}
-                    className="absolute top-0 right-0 h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
+                    className="absolute top-0 right-0 w-[45px] sm:w-auto h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
                 >
-                    <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
+                    <CloudUpload strokeWidth={2.25} className="h-6 w-6 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
                     <span className="hidden sm:flex items-center">
                         Post
                         <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
