@@ -5,6 +5,7 @@ import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
+import { CloudUpload } from 'lucide-react';
 
 import { X } from 'lucide-react';
 
@@ -284,14 +285,34 @@ export function Header({
               <img src="/icons/search.svg" alt="Search" className="w-5 h-5 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
             </button>
 
-            <Button
-                variant="outline" 
-                onClick={onPostClick}
-                className="h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group"
-            >
-                <img src="/icons/upload.svg" alt="Upload" className="h-4 w-4 sm:h-5 sm:w-5 transition-all duration-300 group-hover:brightness-0 group-hover:invert" />
-                <span className="hidden sm:inline">Post</span>
-            </Button>
+            {/* Post Button Container - Uses placeholder trick for grid stability */}
+            <div className="relative">
+                {/* Invisible placeholder maintains the baseline layout width */}
+                <Button
+                    variant="outline" 
+                    className="h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 opacity-0 pointer-events-none"
+                    aria-hidden="true"
+                    tabIndex={-1}
+                >
+                    <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                    <span className="hidden sm:inline">Post</span>
+                </Button>
+
+                {/* Interactive absolute button that expands smoothly to the left */}
+                <Button
+                    variant="outline" 
+                    onClick={onPostClick}
+                    className="absolute top-0 right-0 h-10 sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
+                >
+                    <CloudUpload strokeWidth={2.5} className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 transition-all duration-[500ms] group-hover:brightness-0 group-hover:invert" />
+                    <span className="hidden sm:flex items-center">
+                        Post
+                        <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-[500ms] ease-[cubic-bezier(0.16,1,0.3,1)]">
+                            <span className="pl-1.5">your work</span>
+                        </span>
+                    </span>
+                </Button>
+            </div>
         </div>
         )}
       </div>
