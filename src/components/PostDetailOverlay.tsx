@@ -292,7 +292,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                     <div 
                         ref={reviewCountTooltipRef}
                         className="relative group/tooltip cursor-help"
-                        onClick={(e) => {
+                        onClick={() => {
                             // On mobile/tablet, toggle tooltip. On desktop, hover handles it but click won't hurt.
                             setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible);
                         }}

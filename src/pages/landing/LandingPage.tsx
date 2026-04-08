@@ -149,7 +149,7 @@ export function LandingPage() {
             animate={{ opacity: isLoading ? 1 : 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="fixed top-0 left-0 w-full h-[100vh] bg-white z-[99999] flex flex-col items-center justify-center gap-6"
+            className="fixed top-0 left-0 w-full h-screen bg-white z-99999 flex flex-col items-center justify-center gap-6"
           >
             {/* Logo Wrapper */}
             <object 
