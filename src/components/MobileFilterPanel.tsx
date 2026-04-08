@@ -17,14 +17,17 @@ interface MobileFilterPanelProps {
   onCategoryChange: (categories: string[]) => void;
 }
 
-const SORT_OPTIONS = [
-  '✨Curated Freshness',
-  'Highest Rated',
-  'Lowest Rated',
-  'Newest',
-  'Oldest',
-  'Most Reviewed'
+// Internal sort key → display label mapping
+const SORT_OPTIONS: { key: string; label: string }[] = [
+  { key: 'highest_rated', label: 'Highest Rated' },
+  { key: 'most_reviewed', label: 'Most Reviewed' },
+  { key: 'newest',        label: 'Newest'        },
 ];
+
+function getSortLabel(sortKey: string): string {
+  if (sortKey === 'balanced') return '✨Balanced';
+  return SORT_OPTIONS.find(o => o.key === sortKey)?.label ?? sortKey;
+}
 
 // Bottom sheet config
 const DISMISS_THRESHOLD = 150; // pixels dragged down to dismiss
@@ -104,7 +107,7 @@ export function MobileFilterPanel({
   };
 
   const handleReset = () => {
-    onSortChange('✨Curated Freshness');
+    onSortChange('balanced');
     onCategoryChange([]);
   };
 
@@ -145,23 +148,23 @@ export function MobileFilterPanel({
             onClick={() => setIsSortOpen(!isSortOpen)}
             className="w-full h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
           >
-            <span className="text-sm font-medium text-[#111111]">{sortBy}</span>
+            <span className="text-sm font-medium text-[#111111]">{getSortLabel(sortBy)}</span>
             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
           </button>
           
           {isSortOpen && (
             <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-20 max-h-[200px] overflow-y-auto">
-              {SORT_OPTIONS.map(option => (
+              {SORT_OPTIONS.map(({ key, label }) => (
                 <button
-                  key={option}
+                  key={key}
                   onClick={() => {
-                    onSortChange(option);
+                    onSortChange(key);
                     setIsSortOpen(false);
                   }}
                   className="w-full text-left px-4 py-3 text-sm font-medium text-[#111111] hover:bg-gray-50 flex items-center justify-between transition-colors"
                 >
-                  {option}
-                  {sortBy === option && <Check className="w-4 h-4 text-[#FEC312]" strokeWidth={2.5} />}
+                  {label}
+                  {sortBy === key && <Check className="w-4 h-4 text-[#FEC312]" strokeWidth={2.5} />}
                 </button>
               ))}
             </div>

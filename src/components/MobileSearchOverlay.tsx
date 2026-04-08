@@ -7,6 +7,16 @@ import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
 
+// Maps internal sort keys → display labels for active filter pills
+const SORT_OPTION_LABELS: Record<string, string> = {
+  balanced: '✨Balanced',
+  highest_rated: 'Highest Rated',
+  most_reviewed: 'Most Reviewed',
+  newest: 'Newest',
+};
+
+
+
 interface MobileSearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
@@ -174,14 +184,14 @@ export function MobileSearchOverlay({
       {/* Search Results - scrollable */}
       <div className="flex-1 overflow-y-auto">
         {/* Active Filters Pills (Sort + Categories) */}
-        {(sortBy !== '✨Curated Freshness' || selectedCategories.length > 0) && (
+        {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
             {/* Sort Pill - matches homepage exactly */}
-            {sortBy !== '✨Curated Freshness' && (
+            {sortBy !== 'balanced' && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
-                <span className="text-xs font-medium text-[#111111]">{sortBy}</span>
+                <span className="text-xs font-medium text-[#111111]">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
                 <button 
-                  onClick={() => onSortChange('✨Curated Freshness')}
+                  onClick={() => onSortChange('balanced')}
                   className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
                 >
                   <X className="w-2.5 h-2.5 text-white" />

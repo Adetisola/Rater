@@ -13,11 +13,21 @@ import { computeHotPosts } from './logic/hotPostUtils';
 import { useDebounce } from './hooks/useDebounce';
 import { X } from 'lucide-react';
 
+// Maps internal sort state keys → display labels shown in UI
+const SORT_LABELS: Record<string, string> = {
+  balanced: '✨Balanced',
+  highest_rated: 'Highest Rated',
+  most_reviewed: 'Most Reviewed',
+  newest: 'Newest',
+};
+
+
+
 function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'submit'>('home');
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('✨Curated Freshness');
+  const [sortBy, setSortBy] = useState('balanced');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isDelayed, setIsDelayed] = useState(false);
   
@@ -101,7 +111,7 @@ function App() {
     }
 
     // 5. Locked Rating Filter
-    if (sortBy === 'Highest Rated' || sortBy === 'Lowest Rated') {
+    if (sortBy === 'highest_rated') {
       posts = posts.filter(post => !post.rating.isLocked);
     }
 
@@ -111,23 +121,17 @@ function App() {
     // Otherwise: apply selected sort
     if (selectedDesigner || debouncedSearchQuery.trim().length < 2) {
       switch (sortBy) {
-        case '✨Curated Freshness':
-          // Handled separately
+        case 'balanced':
+          // Handled separately by curatedFreshnessSort below
           break;
-        case 'Highest Rated':
+        case 'highest_rated':
           posts.sort((a, b) => b.rating.average - a.rating.average);
           break;
-        case 'Lowest Rated':
-          posts.sort((a, b) => a.rating.average - b.rating.average);
-          break;
-        case 'Newest':
-          posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-          break;
-        case 'Oldest':
-          posts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-          break;
-        case 'Most Reviewed':
+        case 'most_reviewed':
           posts.sort((a, b) => b.rating.reviewCount - a.rating.reviewCount);
+          break;
+        case 'newest':
+          posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           break;
       }
     }
@@ -135,9 +139,9 @@ function App() {
     return posts;
   }, [searchIndexes, debouncedSearchQuery, selectedCategories, sortBy, selectedDesigner]);
 
-  // Apply Curated Freshness sort
+  // Apply ✨Balanced (Curated Freshness) sort when in default state
   const sortedPosts = (
-    sortBy === '✨Curated Freshness' && 
+    sortBy === 'balanced' &&
     debouncedSearchQuery.trim().length < 2
   )
     ? curatedFreshnessSort(filteredPosts)
@@ -215,15 +219,15 @@ function App() {
               )}
 
               {/* Active Filters Display - Mobile & Tablet Only (≤768px) */}
-              {(sortBy !== '✨Curated Freshness' || selectedCategories.length > 0) && (
+              {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
                 <div className="min-[769px]:hidden max-w-[1600px] mx-auto px-6 mb-4">
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Sort Filter Pill */}
-                    {sortBy !== '✨Curated Freshness' && (
+                    {sortBy !== 'balanced' && (
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
-                        <span className="text-xs font-medium text-[#111111]">{sortBy}</span>
+                        <span className="text-xs font-medium text-[#111111]">{SORT_LABELS[sortBy] ?? sortBy}</span>
                         <button 
-                          onClick={() => setSortBy('✨Curated Freshness')}
+                          onClick={() => setSortBy('balanced')}
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
                         >
                           <X className="w-2.5 h-2.5 text-white" />
@@ -245,10 +249,10 @@ function App() {
                     ))}
 
                     {/* Clear All Button */}
-                    {(selectedCategories.length > 1 || (sortBy !== '✨Curated Freshness' && selectedCategories.length > 0)) && (
+                    {(selectedCategories.length > 1 || (sortBy !== 'balanced' && selectedCategories.length > 0)) && (
                       <button 
                         onClick={() => {
-                          setSortBy('✨Curated Freshness');
+                          setSortBy('balanced');
                           setSelectedCategories([]);
                         }}
                         className="text-xs font-medium text-gray-500 hover:text-[#111111] underline transition-colors"

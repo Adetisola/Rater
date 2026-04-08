@@ -147,8 +147,8 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
 }
 
 /**
- * Check if current sort is the default "Curated Freshness"
+ * Check if current sort is the default "✨Balanced" mode.
  */
 export function isCuratedFreshness(sortBy: string): boolean {
-  return sortBy === '✨Curated Freshness✨';
+  return sortBy === 'balanced';
 }

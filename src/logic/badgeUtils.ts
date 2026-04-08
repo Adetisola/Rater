@@ -1,131 +1,131 @@
 import type { Post, Review } from './mockData';
+import { MOCK_AVATARS } from './mockData';
 
 type BadgeType = 'top-rated' | null;
 
-// Constants
+// ─── Constants ────────────────────────────────────────────────────────────────
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const MIN_REVIEWS_FOR_BADGE = 5;
+const MAX_TOP_RATED_BADGES = 5;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Get reviews that occurred within the last 7 days.
- * Uses review timestamps, not post creation time.
+ * Returns true if every review in the list has valid structured rating fields.
+ * Fields required: clarity (visual_clarity), purpose (purpose_effectiveness),
+ * aesthetics (aesthetic_quality) — all must be numbers between 1 and 5.
  */
-function getReviewsInWindow(reviews: Review[], windowMs: number = SEVEN_DAYS_MS): Review[] {
-  const now = Date.now();
-  return reviews.filter(review => {
-    const reviewTime = new Date(review.createdAt).getTime();
-    return (now - reviewTime) <= windowMs;
+function hasAllStructuredReviews(reviews: Review[]): boolean {
+  return reviews.every(review => {
+    const { clarity, purpose, aesthetics } = review.ratings;
+    const isValid = (n: number) => typeof n === 'number' && n >= 1 && n <= 5;
+    return isValid(clarity) && isValid(purpose) && isValid(aesthetics);
   });
 }
 
 /**
- * Get the most recent review timestamp from a list of reviews.
- * Returns 0 if no reviews exist.
+ * Returns true if the post was created within the last 7 days.
  */
-function getMostRecentReviewTime(reviews: Review[]): number {
-  if (reviews.length === 0) return 0;
-  return Math.max(...reviews.map(r => new Date(r.createdAt).getTime()));
+function isPostWithinWindow(post: Post): boolean {
+  const now = Date.now();
+  const created = new Date(post.createdAt).getTime();
+  return (now - created) <= SEVEN_DAYS_MS;
 }
 
 /**
- * Check if a post is eligible for a badge.
- * 
- * Eligibility rules:
- * - Post must have ≥5 structured reviews (locked posts cannot win any badge)
- * - Post must have at least one review within the last 7 days
+ * Returns true if the post's designer is NOT blocked.
+ */
+function isDesignerNotBlocked(post: Post): boolean {
+  const avatar = MOCK_AVATARS[post.designerId];
+  // If the avatar doesn't exist in MOCK_AVATARS, treat as safe.
+  if (!avatar) return true;
+  return !avatar.isBlocked;
+}
+
+// ─── Eligibility ──────────────────────────────────────────────────────────────
+
+/**
+ * A post is eligible for Top Rated if ALL of the following are true:
+ *
+ * 1. Rating is unlocked (isLocked === false)
+ * 2. review_count >= 5
+ * 3. Post was created within the last 7 days
+ * 4. All reviews have valid structured rating fields
+ * 5. The post's designer is not blocked
  */
 function isEligibleForBadge(post: Post): boolean {
-  // Must have at least 5 reviews total (use reviewCount from rating object)
-  if (post.rating.reviewCount < MIN_REVIEWS_FOR_BADGE) {
-    return false;
-  }
-  
-  // Rating must be unlocked
-  if (post.rating.isLocked) {
-    return false;
-  }
-  
-  // Must have at least one review within the last 7 days
-  const recentReviews = getReviewsInWindow(post.reviews);
-  if (recentReviews.length === 0) {
-    return false;
-  }
-  
+  if (post.rating.isLocked) return false;
+  if (post.rating.reviewCount < MIN_REVIEWS_FOR_BADGE) return false;
+  if (!isPostWithinWindow(post)) return false;
+  if (!hasAllStructuredReviews(post.reviews)) return false;
+  if (!isDesignerNotBlocked(post)) return false;
   return true;
 }
 
+// ─── Ranking ──────────────────────────────────────────────────────────────────
+
 /**
  * Comparator for Top Rated badge selection.
- * Returns negative if `a` should rank higher, positive if `b` should rank higher.
- * 
- * Selection order:
- * 1. Higher average rating
- * 2. Higher review count (tie-breaker 1)
- * 3. Most recent review activity (tie-breaker 2)
- * 4. Older post (tie-breaker 3)
+ *
+ * Ranking priority:
+ * 1. overall_score (rating.average) DESC
+ * 2. review_count DESC
+ * 3. created_at DESC (most recently created wins ties)
  */
 function compareForTopRated(a: Post, b: Post): number {
   // 1. Higher average rating wins
-  if (a.rating.average !== b.rating.average) {
+  if (b.rating.average !== a.rating.average) {
     return b.rating.average - a.rating.average;
   }
-  
+
   // 2. Higher review count wins
-  if (a.rating.reviewCount !== b.rating.reviewCount) {
+  if (b.rating.reviewCount !== a.rating.reviewCount) {
     return b.rating.reviewCount - a.rating.reviewCount;
   }
-  
-  // 3. Most recent review activity wins
-  const aRecentTime = getMostRecentReviewTime(a.reviews);
-  const bRecentTime = getMostRecentReviewTime(b.reviews);
-  if (aRecentTime !== bRecentTime) {
-    return bRecentTime - aRecentTime; // Higher (more recent) time wins
-  }
-  
-  // 4. Older post wins (earlier createdAt)
+
+  // 3. More recently created wins
   const aCreated = new Date(a.createdAt).getTime();
   const bCreated = new Date(b.createdAt).getTime();
-  return aCreated - bCreated; // Lower (older) time wins
+  return bCreated - aCreated;
 }
 
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 /**
- * Computes which badge (if any) each post should display.
- * 
- * Badge System Rules (Rater v1):
- * - Total badges: 1 (global, not per-category)
- * - Top Rated: 1 post with highest average rating
- * - "Most Discussed" is NOT a badge — it's shown as lightweight review count metadata
- * 
- * Eligibility:
- * - Post must have ≥5 structured reviews
- * - Post must have reviews within the last 7 days
- * - Rating must be unlocked
+ * Computes the Top Rated badge map for a list of posts.
+ *
+ * Rules:
+ * - Only eligible posts (see isEligibleForBadge) are considered.
+ * - Top 5 posts by ranking receive the 'top-rated' badge.
+ * - If fewer than 5 qualify, only those that qualify receive the badge.
+ * - Requirements are NEVER lowered to fill the quota.
+ * - Badge is NOT permanent — recalculate on every render cycle.
  */
 export function computeBadges(posts: Post[]): Record<string, BadgeType> {
   const badges: Record<string, BadgeType> = {};
-  
-  // Filter to only eligible posts
+
+  // 1. Filter to eligible posts only
   const eligiblePosts = posts.filter(isEligibleForBadge);
-  
-  if (eligiblePosts.length === 0) {
-    return badges;
+
+  if (eligiblePosts.length === 0) return badges;
+
+  // 2. Sort by ranking criteria
+  const ranked = [...eligiblePosts].sort(compareForTopRated);
+
+  // 3. Assign badge to top N (strict limit, no padding)
+  const topN = ranked.slice(0, MAX_TOP_RATED_BADGES);
+  for (const post of topN) {
+    badges[post.id] = 'top-rated';
   }
-  
-  // --- TOP RATED ---
-  const sortedForTopRated = [...eligiblePosts].sort(compareForTopRated);
-  const topRatedPost = sortedForTopRated[0];
-  
-  if (topRatedPost) {
-    badges[topRatedPost.id] = 'top-rated';
-  }
-  
+
   return badges;
 }
 
 /**
- * Helper to get a single post's badge.
- * Call computeBadges once and use this to look up individual posts.
+ * Helper to look up a single post's badge from a pre-computed badge map.
+ * Always call computeBadges once per render and reuse the result.
  */
 export function getBadgeForPost(postId: string, badgeMap: Record<string, BadgeType>): BadgeType {
   return badgeMap[postId] || null;
 }
+

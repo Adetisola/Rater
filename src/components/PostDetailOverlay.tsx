@@ -163,7 +163,7 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
       className="fixed inset-0 z-50 bg-white overflow-y-auto custom-scrollbar"
     >
       
-      <div className="max-w-[1200px] mx-auto px-6 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         
         {/* HEADER: Back Button */}
         <div className="mb-8">
@@ -243,41 +243,44 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* 2. Metadata Row */}
                 <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
+                    <div className="flex items-center gap-2 xs:gap-3">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
                             {post.category}
                         </span>
                         {/* Badge - Only Top Rated badge */}
                         {badge === 'top-rated' && (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-black px-3 py-1.5 rounded-full flex items-center gap-1">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#FEC312] text-black px-3 py-1.5 rounded-full flex items-center gap-1">
                                 🏆 Top Rated
                             </span>
                         )}
-                     </div>
-                     <div className="flex items-center gap-3">
-                        {/* Review Count Metadata */}
-                        <span className="text-sm font-semibold text-black flex items-center">
-                            {isHot && (
-                                <div className="w-8 h-8 -ml-2 -mt-3">
-                                    <DotLottieReact
-                                        src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                        loop
-                                        autoplay
-                                    />
-                                </div>
-                            )}
-                            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-                        </span>
-                        <span className="text-xs font-medium text-gray-400">
-                            {formatTimeAgo(post.createdAt)}
-                        </span>
-                     </div>
+                    </div>
+                    <span className="text-xs font-medium text-gray-400">
+                        {formatTimeAgo(post.createdAt)}
+                    </span>
                 </div>
 
                 {/* 3. Title */}
-                <h1 className="text-2xl font-semibold text-[#111111] leading-tight">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-xl xs:text-2xl font-semibold text-[#111111] leading-tight">
+                        {post.title}
+                    </h1>
+                    {/* Review Count Metadata */}
+                    <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
+                        {isHot && (
+                            <div className="w-8 h-8 -ml-2 -mt-3">
+                                <DotLottieReact
+                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                    loop
+                                    autoplay
+                                />
+                            </div>
+                        )}
+                        {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                    </span>
+                </div>
+                {/* <h1 className="text-2xl font-semibold text-[#111111] leading-tight">
                     {post.title}
-                </h1>
+                </h1> */}
 
                 {/* 4. Description */}
                 <div>
