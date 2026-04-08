@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from 'react';
 import type { Post } from '../logic/mockData';
 import { PostCard } from './PostCard';
@@ -9,10 +11,9 @@ interface MasonryGridProps {
   posts: Post[];
   badgeMap: Record<string, BadgeType>;
   hotPostIds: Set<string>;
-  onPostClick?: (post: Post) => void;
 }
 
-export function MasonryGrid({ posts, badgeMap, hotPostIds, onPostClick }: MasonryGridProps) {
+export function MasonryGrid({ posts, badgeMap, hotPostIds }: MasonryGridProps) {
   const columnCount = useMasonryColumns();
 
   // Distribute posts into columns
@@ -30,9 +31,12 @@ export function MasonryGrid({ posts, badgeMap, hotPostIds, onPostClick }: Masonr
         {columns.map((colPosts, colIndex) => (
           <div key={colIndex} className="flex-1 flex flex-col gap-2 xs:gap-4 w-full min-w-0">
             {colPosts.map((post) => (
-              <div key={post.id} onClick={() => onPostClick?.(post)}>
-                <PostCard post={post} badge={badgeMap[post.id]} isHot={hotPostIds.has(post.id)} />
-              </div>
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                badge={badgeMap[post.id]} 
+                isHot={hotPostIds.has(post.id)} 
+              />
             ))}
           </div>
         ))}

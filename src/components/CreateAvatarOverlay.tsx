@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';

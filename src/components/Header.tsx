@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
@@ -9,10 +11,11 @@ import { CloudUpload, ListFilter, Search } from 'lucide-react';
 
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 interface HeaderProps {
     onPostClick: () => void;
-    onLogoClick: () => void;
+    onLogoClick?: () => void;
     searchQuery: string;
     onSearchChange: (query: string) => void;
     sortBy: string;
@@ -23,7 +26,7 @@ interface HeaderProps {
 
     onPostSelect?: (post: Post) => void;
     onDesignerSelect?: (avatar: Avatar) => void;
-    searchIndexes: SearchIndexes;
+    searchIndexes?: SearchIndexes;
     onMobileSearchOpen?: (activeId: string) => void;
 }
 
@@ -54,7 +57,7 @@ export function Header({
 
   // Perform sectioned search with debounced query
   const searchResults = useMemo((): SectionedSearchResults => {
-    if (!debouncedQuery || debouncedQuery.trim().length < 2) {
+    if (!searchIndexes || !debouncedQuery || debouncedQuery.trim().length < 2) {
       return { designers: [], posts: [], categories: [] };
     }
     
@@ -155,7 +158,8 @@ export function Header({
         
         {/* ANIMATED LOGO - Always absolute for smooth animation */}
         <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
-          <div 
+          <Link 
+            href="/app/browse"
             onClick={onLogoClick}
             className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
           >
@@ -169,7 +173,7 @@ export function Header({
               alt="Rater Logo Hover" 
               className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
             />
-          </div>
+          </Link>
         </div>
 
         {/* GHOST LOGO SPACER - visible on all screens to reserve space for absolute logo */}

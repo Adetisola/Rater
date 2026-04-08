@@ -1,3 +1,5 @@
+"use client";
+
 // AnimatedScribble - Calm, looping hand-drawn stroke animation
 // Uses stroke-dasharray/dashoffset for draw/erase cycle
 // Cycle: draw (2s) → hold (3s) → erase (2s) → pause (4s) → repeat

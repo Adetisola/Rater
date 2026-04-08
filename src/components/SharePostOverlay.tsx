@@ -1,8 +1,10 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import whatsappIcon from '../assets/icons/icons8-whatsapp.svg';
-import xIcon from '../assets/icons/icons8-x.svg';
-import linkedinIcon from '../assets/icons/icons8-linkedin.svg';
+const whatsappIcon = '/icons/icons8-whatsapp.svg';
+const xIcon = '/icons/icons8-x.svg';
+const linkedinIcon = '/icons/icons8-linkedin.svg';
 
 
 interface SharePostOverlayProps {

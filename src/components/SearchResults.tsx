@@ -1,7 +1,11 @@
+"use client";
+
 import type { Avatar, Category, Post } from '../logic/mockData';
 import type { SectionedSearchResults, HighlightSegment, PostSearchResult } from '../logic/searchUtils';
 import { highlightMatches } from '../logic/searchUtils';
 import { createPortal } from 'react-dom';
+
+import Link from 'next/link';
 
 interface SearchResultsProps {
   results: SectionedSearchResults;
@@ -127,7 +131,8 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
     .slice(0, 2);
 
   return (
-    <button
+    <Link
+      href={`/app/browse?designer=${avatar.id}`}
       onClick={onClick}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
     >
@@ -148,7 +153,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
         <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
         <p className="text-xs text-gray-400">Designer</p>
       </div>
-    </button>
+    </Link>
   );
 }
 
@@ -168,7 +173,8 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
   const descriptionSegments = highlightMatches(post.description, matches, 'description');
 
   return (
-    <button
+    <Link
+      href={`/app/post/${post.id}`}
       onClick={onClick}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
     >
@@ -190,7 +196,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
           <HighlightedText segments={descriptionSegments} />
         </p>
       </div>
-    </button>
+    </Link>
   );
 }
 
@@ -205,7 +211,8 @@ interface CategoryResultItemProps {
 
 function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
   return (
-    <button
+    <Link
+      href={`/app/browse?cat=${encodeURIComponent(category)}`}
       onClick={onClick}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
     >
@@ -216,7 +223,7 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       
       {/* Category Name */}
       <span className="font-medium text-sm text-[#111111]">{category}</span>
-    </button>
+    </Link>
   );
 }
 

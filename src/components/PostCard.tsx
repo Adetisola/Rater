@@ -1,8 +1,11 @@
+"use client";
+
 import { useState, useEffect } from 'react';
 import type { Post } from '../logic/mockData';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Link from 'next/link';
 // Using skeleton for loading state
 
 interface PostCardProps {
@@ -93,7 +96,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
   const reviewCount = post.rating.reviewCount;
 
   return (
-    <div className="group relative break-inside-avoid">
+    <Link href={`/app/post/${post.id}`} className="group relative break-inside-avoid block">
       {/* CARD CONTAINER */}
       <div className="bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-300">
         
@@ -220,6 +223,6 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

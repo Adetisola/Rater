@@ -1,0 +1,239 @@
+"use client";
+
+// LandingPage - Top-level landing page component
+// Hero mounts immediately; other sections are code-split via React.lazy
+// All sections render in DOM immediately — animations are CSS-driven via useScrollReveal
+// Scroll is forced to top on mount to prevent flicker
+
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Hero } from './sections/Hero';
+import { useScrollToTop } from '../../hooks/useScrollToTop';
+
+const yellowMeshBg = '/assets/landing/Yellow mesh gradient background.jpg';
+const loaderLogoAnim = '/assets/icons/Rater Logo Black Animation.svg';
+
+// Code-split non-critical sections (Hero stays eagerly loaded)
+const WhatIsRater = lazy(() => import('./sections/WhatIsRater').then(m => ({ default: m.WhatIsRater })));
+const WhatChanges = lazy(() => import('./sections/WhatChanges').then(m => ({ default: m.WhatChanges })));
+const HowItWorks = lazy(() => import('./sections/HowItWorks').then(m => ({ default: m.HowItWorks })));
+const StatusFooter = lazy(() => import('./sections/StatusFooter').then(m => ({ default: m.StatusFooter })));
+
+export function LandingPage() {
+  // Loading states
+  const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
+  const [domReady, setDomReady] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(true);
+
+  const [dots, setDots] = useState('');
+
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  // Force scroll to top on mount (prevents scroll restoration flicker)
+  useScrollToTop();
+
+  // Progressively cycle loader dots for subtle motion
+  useEffect(() => {
+    if (!showLoader) return;
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
+    }, 400); // 1.2s cycle
+    return () => clearInterval(interval);
+  }, [showLoader]);
+
+  // 1. Force scroll & track DOM loaded
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setDomReady(true);
+    } else {
+      const handleLoad = () => setDomReady(true);
+      document.addEventListener('DOMContentLoaded', handleLoad);
+      window.addEventListener('load', handleLoad);
+      return () => {
+        document.removeEventListener('DOMContentLoaded', handleLoad);
+        window.removeEventListener('load', handleLoad);
+      };
+    }
+  }, []);
+
+  // 2. Enforce a minimum display time for the loader animation (5 seconds minimum)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 4000); 
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 3. Maximum failsafe — Force loader off after 8s if something gets stuck
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        setHeroImagesLoaded(true);
+        setDomReady(true);
+        setMinTimeElapsed(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  // 4. Trigger loader fadeout when all conditions met + minimum time elapsed
+  useEffect(() => {
+    if (heroImagesLoaded && domReady && minTimeElapsed && isLoading) {
+      setIsLoading(false);
+    }
+  }, [heroImagesLoaded, domReady, minTimeElapsed, isLoading]);
+
+  // 5. Remove loader from DOM entirely after fade out animation
+  useEffect(() => {
+    if (!isLoading && showLoader) {
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, 500); // wait time matches opacity transition duration
+      return () => clearTimeout(timer);
+      
+    }
+  }, [isLoading, showLoader]);
+
+  useEffect(() => {
+  if (showLoader) return; // don't observe while loader is up
+
+  const sectionIds = ['what-is-rater', 'what-changes', 'how-it-works'];
+  const observers: IntersectionObserver[] = [];
+
+  sectionIds.forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setActiveSection(id);
+        }
+      },
+      { threshold: 0.4 } // section must be 40% visible
+    );
+
+    observer.observe(el);
+    observers.push(observer);
+  });
+
+  // Handle hero/footer: clear indicator when no tracked section is visible
+  const allSections = sectionIds.map(id => document.getElementById(id)).filter(Boolean);
+  const clearObserver = new IntersectionObserver(() => {
+    const anyVisible = allSections.some(el => {
+      const rect = el!.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    });
+    if (!anyVisible) setActiveSection(null);
+  }, { threshold: 0 });
+
+  allSections.forEach(el => clearObserver.observe(el!));
+  observers.push(clearObserver);
+
+  return () => observers.forEach(o => o.disconnect());
+}, [showLoader]);
+
+  const handleHeroReady = useCallback(() => {
+    setHeroImagesLoaded(true);
+  }, []);
+
+  return (
+    <>
+      {/* LOADER OVERLAY */}
+      <AnimatePresence>
+        {showLoader && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            animate={{ opacity: isLoading ? 1 : 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="fixed top-0 left-0 w-full h-screen bg-white z-99999 flex flex-col items-center justify-center gap-6"
+          >
+            {/* Logo Wrapper */}
+            <object 
+              data={loaderLogoAnim} 
+              type="image/svg+xml" 
+              className="w-[80px] h-[80px] md:w-[92px] md:h-[92px] mb-2" 
+              aria-label="Loading Rater"
+            />
+
+            {/* Progress/Text Group */}
+            <div className="flex flex-col items-center gap-2">
+              {/* Loading Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1, ease: 'easeOut' }}
+                className="w-[140px] h-[2px] bg-gray-100 rounded-full overflow-hidden"
+              >
+                <motion.div
+                  className="h-full bg-black rounded-full"
+                  initial={{ width: '0%' }}
+                  animate={{ width: isLoading ? '85%' : '100%' }}
+                  transition={{ duration: isLoading ? 4 : 0.4, ease: 'easeOut' }}
+                />
+              </motion.div>
+
+              {/* Emotional Copy */}
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.4, 
+                  delay: 0.2, // ~200ms after logo starts
+                  ease: "easeOut" 
+                }}
+                className="pl-4 text-[14px] md:text-[14px] text-[#888888] font-medium tracking-wide pointer-events-none select-none"
+              >
+                Judgment is built<span className="inline-block w-4 text-left">{dots}</span>
+              </motion.p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-white min-h-screen">
+        {/* Hero automatically triggers handleHeroReady when images download */}
+        <Hero
+        onReady={handleHeroReady} 
+        animationReady={!isLoading} 
+        activeSection={activeSection}
+        onSectionClick={setActiveSection}
+        />
+
+        {/* Unified Background Wrapper for Rater Features */}
+        <div className="relative">
+          {/* Layer 1: Solid Background Filler */}
+          <div className="absolute inset-0 bg-white" />
+          
+          {/* Layer 2: Mesh Gradient Image */}
+          <div 
+            className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+            style={{ backgroundImage: `url("${yellowMeshBg}")` }}
+          />
+          
+          {/* Layer 3: Main Content */}
+          <div className="relative z-10 pt-8 md:pt-16">
+            <Suspense fallback={null}>
+              <WhatIsRater />
+            </Suspense>
+            <Suspense fallback={null}>
+              <WhatChanges />
+            </Suspense>
+          </div>
+        </div>
+
+        <Suspense fallback={null}>
+          <HowItWorks />
+        </Suspense>
+        <Suspense fallback={null}>
+          <StatusFooter />
+        </Suspense>
+      </div>
+    </>
+  );
+}
