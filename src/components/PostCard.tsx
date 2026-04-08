@@ -161,20 +161,33 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             <div className="pt-2 sm:pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
                 
                 {/* LEFT: Review Count Metadata */}
-                <div className="flex items-start gap-1 xs:gap-1.5">
-                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                    <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center xs:gap-1">
-                        {reviewCount}
-                        {isHot && (
-                            <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
-                                <DotLottieReact
-                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                    loop
-                                    autoplay
-                                />
-                            </div>
-                        )}
-                    </span>
+                <div className="relative group/tooltip cursor-help">
+                    <div className="flex items-start gap-1 xs:gap-1.5">
+                        <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
+                        <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
+                            {reviewCount}
+                            {isHot && (
+                                <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
+                                    <DotLottieReact
+                                        src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                        loop
+                                        autoplay
+                                    />
+                                </div>
+                            )}
+                        </span>
+                    </div>
+
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-0 mb-3 w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:translate-y-0 transition-all duration-200 hidden md:block">
+                        <div className="absolute top-full left-4" />
+                        <p className="leading-relaxed text-center">
+                            {isHot 
+                                ? "This design is getting high attention based on recent reviews." 
+                                : "Number of structured reviews this design has received."
+                            }
+                        </p>
+                    </div>
                 </div>
 
                 {/* RIGHT: Ratings */}

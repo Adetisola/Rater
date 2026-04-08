@@ -39,6 +39,8 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
+  const [isReviewCountTooltipVisible, setIsReviewCountTooltipVisible] = useState(false);
+  const reviewCountTooltipRef = useRef<HTMLDivElement>(null);
 
   const ZOOM_IN_SCALE = 2.5;
 
@@ -139,6 +141,28 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
     setUserReviews([newReview, ...userReviews]);
     setHasReviewed(true);
   };
+
+  // Close review count tooltip when clicking outside
+  useEffect(() => {
+    if (!isReviewCountTooltipVisible) return;
+
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (reviewCountTooltipRef.current && !reviewCountTooltipRef.current.contains(e.target as Node)) {
+        setIsReviewCountTooltipVisible(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 10);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isReviewCountTooltipVisible]);
 
   // Total reviews = actual post reviews + user-submitted reviews
   const totalReviews = allReviews.length;
@@ -265,18 +289,43 @@ export function PostDetailOverlay({ post, onClose }: PostDetailOverlayProps) {
                         {post.title}
                     </h1>
                     {/* Review Count Metadata */}
-                    <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
-                        {isHot && (
-                            <div className="w-8 h-8 -ml-2 -mt-3">
-                                <DotLottieReact
-                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                    loop
-                                    autoplay
-                                />
-                            </div>
-                        )}
-                        {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
-                    </span>
+                    <div 
+                        ref={reviewCountTooltipRef}
+                        className="relative group/tooltip cursor-help"
+                        onClick={(e) => {
+                            // On mobile/tablet, toggle tooltip. On desktop, hover handles it but click won't hurt.
+                            setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible);
+                        }}
+                    >
+                        <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
+                            {isHot && (
+                                <div className="w-8 h-8 -ml-2 -mt-3">
+                                    <DotLottieReact
+                                        src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                        loop
+                                        autoplay
+                                    />
+                                </div>
+                            )}
+                            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                        </span>
+
+                        {/* Tooltip */}
+                        <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+                            ${isReviewCountTooltipVisible 
+                                ? 'opacity-100 visible translate-y-0' 
+                                : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'
+                            }`}
+                        >
+                            <div className="absolute top-full right-4" />
+                            <p className="leading-relaxed text-center">
+                                {isHot 
+                                    ? "This design is getting high attention based on recent reviews." 
+                                    : "Number of structured reviews this design has received."
+                                }
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 {/* <h1 className="text-2xl font-semibold text-[#111111] leading-tight">
                     {post.title}
