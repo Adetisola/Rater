@@ -6,7 +6,7 @@ type BadgeType = 'top-rated' | null;
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const MIN_REVIEWS_FOR_BADGE = 5;
-const MAX_TOP_RATED_BADGES = 5;
+const MAX_TOP_RATED_BADGES = 3;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -96,8 +96,8 @@ function compareForTopRated(a: Post, b: Post): number {
  *
  * Rules:
  * - Only eligible posts (see isEligibleForBadge) are considered.
- * - Top 5 posts by ranking receive the 'top-rated' badge.
- * - If fewer than 5 qualify, only those that qualify receive the badge.
+ * - Top 3 posts by ranking receive the 'top-rated' badge.
+ * - If fewer than 3 qualify, only those that qualify receive the badge.
  * - Requirements are NEVER lowered to fill the quota.
  * - Badge is NOT permanent — recalculate on every render cycle.
  */
