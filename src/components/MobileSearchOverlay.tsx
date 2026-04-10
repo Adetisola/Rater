@@ -103,9 +103,9 @@ export function MobileSearchOverlay({
 
   // Handle designer click
   const handleDesignerClick = (avatar: Avatar) => {
-    onSearchChange('');
     onClose();
     onDesignerSelect?.(avatar);
+    setTimeout(() => onSearchChange(''), 0);
   };
 
   // Handle post click
@@ -116,11 +116,11 @@ export function MobileSearchOverlay({
 
   // Handle category click
   const handleCategoryClick = (category: Category) => {
-    onSearchChange('');
     if (!selectedCategories.includes(category)) {
       onCategoryChange([...selectedCategories, category]);
     }
     onClose();
+    setTimeout(() => onSearchChange(''), 0);
   };
 
   // Handle Enter key

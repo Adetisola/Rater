@@ -86,10 +86,10 @@ export function Header({
 
   // Handle designer click - switch to filtered browsing
   const handleDesignerClick = (avatar: Avatar) => {
-    onDesignerSelect?.(avatar);
-    onSearchChange(''); 
     setShowSearchResults(false);
     searchInputRef.current?.blur();
+    onDesignerSelect?.(avatar);
+    setTimeout(() => onSearchChange(''), 0);
   };
 
   // Handle post click - open post detail
@@ -101,12 +101,12 @@ export function Header({
 
   // Handle category click - add to category filter
   const handleCategoryClick = (category: Category) => {
+    setShowSearchResults(false);
+    searchInputRef.current?.blur();
     if (!selectedCategories.includes(category)) {
       onCategoryChange([...selectedCategories, category]);
     }
-    onSearchChange(''); 
-    setShowSearchResults(false);
-    searchInputRef.current?.blur();
+    setTimeout(() => onSearchChange(''), 0);
   };
 
   // Handle closing search dropdown (with blur - for header area clicks)

@@ -140,14 +140,9 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
     .toUpperCase()
     .slice(0, 2);
 
-  const params = new URLSearchParams();
-  params.set('designer', avatar.id);
-  const href = `/app/browse?${params.toString()}`;
-
   return (
-    <Link
-      href={href}
-      onClick={(e) => {
+    <div
+      onMouseDown={(e) => {
         e.preventDefault();
         onClick();
       }}
@@ -170,7 +165,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
         <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
         <p className="text-xs text-gray-400">Designer</p>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -230,14 +225,9 @@ interface CategoryResultItemProps {
 }
 
 function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
-  const params = new URLSearchParams();
-  params.set('cat', category);
-  const href = `/app/browse?${params.toString()}`;
-
   return (
-    <Link
-      href={href}
-      onClick={(e) => {
+    <div
+      onMouseDown={(e) => {
         e.preventDefault();
         onClick();
       }}
@@ -250,7 +240,7 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       
       {/* Category Name */}
       <span className="font-medium text-sm text-[#111111]">{category}</span>
-    </Link>
+    </div>
   );
 }
 
