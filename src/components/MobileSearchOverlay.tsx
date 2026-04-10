@@ -333,9 +333,12 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
     .slice(0, 2);
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
+    <div
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <div 
         className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
@@ -351,7 +354,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
         <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
         <p className="text-xs text-gray-400">Designer</p>
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -388,14 +391,17 @@ interface CategoryResultItemProps {
 
 function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
   return (
-    <button
-      onClick={onClick}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
+    <div
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">
         <span className="text-[#FEC312] text-sm">📁</span>
       </div>
       <span className="font-medium text-sm text-[#111111]">{category}</span>
-    </button>
+    </div>
   );
 }
