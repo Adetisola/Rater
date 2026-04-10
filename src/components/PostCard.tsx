@@ -121,8 +121,18 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             
             {/* 'Top Rated' Badge - Yellow Pill */}
             {isTopRated && (
-                <div className="absolute top-3 left-3 bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
-                    <span>🏆 Top Rated</span>
+                <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
+                    <div className="bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1">
+                        <span>🏆 Top Rated</span>
+                    </div>
+
+                    {/* Tooltip */}
+                    <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
+                        <div className="absolute -top-2 left-4 w-3 h-3" />
+                        <p className="leading-relaxed text-center">
+                            Top 3 highest-rated posts this week
+                        </p>
+                    </div>
                 </div>
             )}
             </div>
@@ -186,8 +196,8 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                         <div className="absolute top-full left-4" />
                         <p className="leading-relaxed text-center">
                             {isHot 
-                                ? "This design is getting high attention based on recent reviews." 
-                                : "Number of structured reviews this design has received."
+                                ? "This design is getting high attention based on recent reviews" 
+                                : "Number of structured reviews this design has received"
                             }
                         </p>
                     </div>

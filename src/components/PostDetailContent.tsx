@@ -43,6 +43,9 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
   const [isReviewCountTooltipVisible, setIsReviewCountTooltipVisible] = useState(false);
   const reviewCountTooltipRef = useRef<HTMLDivElement>(null);
+  
+  const [isTopRatedTooltipVisible, setIsTopRatedTooltipVisible] = useState(false);
+  const topRatedTooltipRef = useRef<HTMLDivElement>(null);
 
   const ZOOM_IN_SCALE = 2.5;
 
@@ -138,13 +141,19 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     setHasReviewed(true);
   };
 
-  // Close review count tooltip when clicking outside
+  // Close tooltips when clicking outside
   useEffect(() => {
-    if (!isReviewCountTooltipVisible) return;
+    if (!isReviewCountTooltipVisible && !isTopRatedTooltipVisible) return;
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (reviewCountTooltipRef.current && !reviewCountTooltipRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      
+      if (isReviewCountTooltipVisible && reviewCountTooltipRef.current && !reviewCountTooltipRef.current.contains(target)) {
         setIsReviewCountTooltipVisible(false);
+      }
+      
+      if (isTopRatedTooltipVisible && topRatedTooltipRef.current && !topRatedTooltipRef.current.contains(target)) {
+        setIsTopRatedTooltipVisible(false);
       }
     };
 
@@ -158,7 +167,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [isReviewCountTooltipVisible]);
+  }, [isReviewCountTooltipVisible, isTopRatedTooltipVisible]);
 
   // Total reviews = actual post reviews + user-submitted reviews
   const totalReviews = allReviews.length;
@@ -269,9 +278,28 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         </span>
                         {/* Badge System: Active or Historical */}
                         {badge === 'top-rated' ? (
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-[#111111] px-3 py-1.5 rounded-full flex items-center gap-1">
-                                🏆 Top Rated
-                            </span>
+                            <div 
+                                ref={topRatedTooltipRef}
+                                className="relative group/toprated cursor-help"
+                                onClick={() => setIsTopRatedTooltipVisible(!isTopRatedTooltipVisible)}
+                            >
+                                <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-[#111111] px-3 py-1.5 rounded-full flex items-center gap-1">
+                                    🏆 Top Rated
+                                </span>
+
+                                {/* Tooltip */}
+                                <div className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+                                    ${isTopRatedTooltipVisible 
+                                        ? 'opacity-100 visible translate-y-0' 
+                                        : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'
+                                    }`}
+                                >
+                                    <div className="absolute top-full left-4 w-3 h-3" />
+                                    <p className="leading-relaxed text-center">
+                                        Top 3 highest-rated posts this week
+                                    </p>
+                                </div>
+                            </div>
                         ) : post.wasTopRated ? (
                             <span className="text-[10px] font-bold uppercase tracking-wider border-2 border-gray-100 text-gray-400 px-3 py-1.5 rounded-full">
                                 Previously <span className='text-[#FEC312]'>Top Rated</span>
@@ -320,8 +348,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             <div className="absolute top-full right-4" />
                             <p className="leading-relaxed text-center">
                                 {isHot 
-                                    ? "This design is getting high attention based on recent reviews." 
-                                    : "Number of structured reviews this design has received."
+                                    ? "This design is getting high attention based on recent reviews" 
+                                    : "Number of structured reviews this design has received"
                                 }
                             </p>
                         </div>
