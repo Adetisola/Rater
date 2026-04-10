@@ -3,6 +3,7 @@
 import type { Avatar, Category, Post } from '../logic/mockData';
 import type { SectionedSearchResults, HighlightSegment, PostSearchResult } from '../logic/searchUtils';
 import { highlightMatches } from '../logic/searchUtils';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import Link from 'next/link';
@@ -28,7 +29,13 @@ export function SearchResults({
 }: SearchResultsProps) {
   const hasResults = results.designers.length > 0 || results.posts.length > 0 || results.categories.length > 0;
   
-  if (!isVisible || !hasResults) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isVisible || !hasResults || !mounted) {
     return null;
   }
 
@@ -53,7 +60,10 @@ export function SearchResults({
       />
       
       {/* Results Dropdown */}
-      <div className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[70vh] overflow-y-auto">
+      <div 
+        className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[70vh] overflow-y-auto"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         
         {/* DESIGNERS SECTION */}
         {results.designers.length > 0 && (
@@ -130,11 +140,18 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
     .toUpperCase()
     .slice(0, 2);
 
+  const params = new URLSearchParams();
+  params.set('designer', avatar.id);
+  const href = `/app/browse?${params.toString()}`;
+
   return (
     <Link
-      href={`/app/browse?designer=${avatar.id}`}
-      onClick={onClick}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Avatar */}
       <div 
@@ -175,8 +192,11 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
   return (
     <Link
       href={`/app/post/${post.id}`}
-      onClick={onClick}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
+      onClick={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start cursor-pointer"
     >
       {/* Thumbnail */}
       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
@@ -210,11 +230,18 @@ interface CategoryResultItemProps {
 }
 
 function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
+  const params = new URLSearchParams();
+  params.set('cat', category);
+  const href = `/app/browse?${params.toString()}`;
+
   return (
     <Link
-      href={`/app/browse?cat=${encodeURIComponent(category)}`}
-      onClick={onClick}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center"
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Icon */}
       <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">

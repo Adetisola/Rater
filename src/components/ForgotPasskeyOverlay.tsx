@@ -15,14 +15,23 @@ interface ForgotPasskeyOverlayProps {
 export function ForgotPasskeyOverlay({ onCancel, onSend }: ForgotPasskeyOverlayProps) {
   const [email, setEmail] = useState('');
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Lock body scroll when overlay is open
   useEffect(() => {
+    if (!mounted) return;
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalStyle;
     };
-  }, []);
+  }, [mounted]);
+
+  if (!mounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">

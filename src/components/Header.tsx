@@ -26,6 +26,7 @@ interface HeaderProps {
 
     onPostSelect?: (post: Post) => void;
     onDesignerSelect?: (avatar: Avatar) => void;
+    onReset?: () => void;
     searchIndexes?: SearchIndexes;
     onMobileSearchOpen?: (activeId: string) => void;
 }
@@ -43,6 +44,7 @@ export function Header({
 
     onPostSelect,
     onDesignerSelect,
+    onReset,
     searchIndexes,
     onMobileSearchOpen
 }: HeaderProps) {
@@ -84,28 +86,27 @@ export function Header({
 
   // Handle designer click - switch to filtered browsing
   const handleDesignerClick = (avatar: Avatar) => {
-    setShowSearchResults(false);
-    onSearchChange(''); // Clear search
-    searchInputRef.current?.blur();
     onDesignerSelect?.(avatar);
+    onSearchChange(''); 
+    setShowSearchResults(false);
+    searchInputRef.current?.blur();
   };
 
   // Handle post click - open post detail
   const handlePostClick = (post: Post) => {
+    onPostSelect?.(post);
     setShowSearchResults(false);
     searchInputRef.current?.blur();
-    onPostSelect?.(post);
   };
 
   // Handle category click - add to category filter
   const handleCategoryClick = (category: Category) => {
-    setShowSearchResults(false);
-    onSearchChange(''); // Clear search
-    searchInputRef.current?.blur();
-    // Add category to filter if not already selected
     if (!selectedCategories.includes(category)) {
       onCategoryChange([...selectedCategories, category]);
     }
+    onSearchChange(''); 
+    setShowSearchResults(false);
+    searchInputRef.current?.blur();
   };
 
   // Handle closing search dropdown (with blur - for header area clicks)
@@ -271,6 +272,7 @@ export function Header({
                  onSortChange={onSortChange}
                  selectedCategories={selectedCategories}
                  onCategoryChange={onCategoryChange}
+                 onReset={onReset}
                  className="top-0 left-0 w-full shadow-2xl"
             />
           </div>

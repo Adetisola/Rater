@@ -17,6 +17,7 @@ interface MobileFilterPanelProps {
   onSortChange: (sort: string) => void;
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
+  onReset?: () => void;
 }
 
 // Internal sort key → display label mapping
@@ -41,7 +42,8 @@ export function MobileFilterPanel({
   sortBy,
   onSortChange,
   selectedCategories,
-  onCategoryChange
+  onCategoryChange,
+  onReset
 }: MobileFilterPanelProps) {
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -99,7 +101,13 @@ export function MobileFilterPanel({
     }
   }, [controls, onClose, y]);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const toggleCategory = (cat: string) => {
     const newCategories = selectedCategories.includes(cat)
@@ -109,8 +117,12 @@ export function MobileFilterPanel({
   };
 
   const handleReset = () => {
-    onSortChange('balanced');
-    onCategoryChange([]);
+    if (onReset) {
+      onReset();
+    } else {
+      onSortChange('balanced');
+      onCategoryChange([]);
+    }
   };
 
   const handleApply = () => {

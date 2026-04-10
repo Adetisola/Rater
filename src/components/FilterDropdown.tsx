@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -22,6 +22,7 @@ interface FilterDropdownProps {
   onSortChange: (sort: string) => void;
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
+  onReset?: () => void;
   className?: string; // Allow positioning customization
 }
 
@@ -49,11 +50,17 @@ export function FilterDropdown({
   onSortChange,
   selectedCategories,
   onCategoryChange,
+  onReset,
   className 
 }: FilterDropdownProps) {
-  if (!isOpen) return null;
-
+  const [mounted, setMounted] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const toggleCategory = (cat: string) => {
     const newCategories = selectedCategories.includes(cat)
@@ -214,8 +221,12 @@ export function FilterDropdown({
             <div className="flex items-center justify-start gap-4 pt-6 border-t border-[#F5F5F5]">
             <button 
                 onClick={() => {
-                onSortChange('balanced');
-                onCategoryChange([]);
+                  if (onReset) {
+                    onReset();
+                  } else {
+                    onSortChange('balanced');
+                    onCategoryChange([]);
+                  }
                 }}
                 className="px-5 py-2 rounded-full text-sm font-semibold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
             >

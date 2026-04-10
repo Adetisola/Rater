@@ -75,10 +75,10 @@ function BrowseContent() {
     const newQuery = params.toString();
     const url = newQuery ? `${pathname}?${newQuery}` : pathname;
     
-    // Replace state for search typing to avoid massive history lists, but push for actual filter clicks
+    // Use router.replace for search typing to avoid massive history lists, but push for actual filter clicks
     const isOnlyQueryUpdate = Object.keys(updates).length === 1 && 'q' in updates;
     if (isOnlyQueryUpdate) {
-        window.history.replaceState(null, '', url);
+        router.replace(url, { scroll: false });
     } else {
         router.push(url, { scroll: false });
     }
@@ -94,6 +94,16 @@ function BrowseContent() {
   
   const clearDesignerFilter = () => {
     updateUrl({ designer: null });
+  };
+
+  const resetFilters = () => {
+    updateUrl({ 
+      sort: null, 
+      cat: [], 
+      designer: null, 
+      q: null 
+    });
+    setSearchQuery('');
   };
 
   const filteredPosts = useMemo(() => {
@@ -156,6 +166,7 @@ function BrowseContent() {
         hideControls={false}
         onPostSelect={(post) => router.push(`/app/post/${post.id}`)}
         onDesignerSelect={handleDesignerSelect}
+        onReset={resetFilters}
         searchIndexes={searchIndexes}
         onMobileSearchOpen={(id) => {
           if (id) setSearchLayoutId(id);
@@ -181,6 +192,7 @@ function BrowseContent() {
           handleDesignerSelect(avatar);
           setIsMobileSearchOpen(false);
         }}
+        onReset={resetFilters}
         searchIndexes={searchIndexes}
       />
       

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 const whatsappIcon = '/icons/icons8-whatsapp.svg';
 const xIcon = '/icons/icons8-x.svg';
 const linkedinIcon = '/icons/icons8-linkedin.svg';
@@ -27,6 +28,14 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
   };
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
@@ -70,9 +79,12 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
             >
                 {copied ? (
                     <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <div className="h-10 w-10 -ml-4 -my-4">
+                          <DotLottieReact
+                              src="https://lottie.host/a867da2a-4cdd-496d-a3e4-22415bd521ad/Amyr2xVNJg.lottie"
+                              autoplay
+                          />
+                        </div>
                         Copied!
                     </>
                 ) : (

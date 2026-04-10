@@ -30,6 +30,7 @@ interface MobileSearchOverlayProps {
   onCategoryChange: (categories: string[]) => void;
   onPostSelect?: (post: Post) => void;
   onDesignerSelect?: (avatar: Avatar) => void;
+  onReset?: () => void;
   searchIndexes: SearchIndexes;
   activeLayoutId?: string;
 }
@@ -45,6 +46,7 @@ export function MobileSearchOverlay({
   onCategoryChange,
   onPostSelect,
   onDesignerSelect,
+  onReset,
   searchIndexes,
   activeLayoutId
 }: MobileSearchOverlayProps) {
@@ -131,6 +133,14 @@ export function MobileSearchOverlay({
       onClose();
     }
   };
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
@@ -296,6 +306,7 @@ export function MobileSearchOverlay({
         onSortChange={onSortChange}
         selectedCategories={selectedCategories}
         onCategoryChange={onCategoryChange}
+        onReset={onReset}
       />
         </motion.div>
       )}
