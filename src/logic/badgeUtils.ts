@@ -129,3 +129,28 @@ export function getBadgeForPost(postId: string, badgeMap: Record<string, BadgeTy
   return badgeMap[postId] || null;
 }
 
+/**
+ * RECALCULATION LOGIC (Simulated Hourly Job)
+ * 
+ * Rules for each cycle:
+ * 1. Fetch posts from last 7 days
+ * 2. Filter: unlocked, review_count >= 5, non-blocked
+ * 3. Rank: score DESC, review_count DESC, created DESC
+ * 4. Select top 3
+ * 5. Update states: active Top Rated to top 3, preserve "Previously Top Rated"
+ */
+export function runHourlyRecalculation(posts: Post[]) {
+    // 1. Get current winners
+    const badgeMap = computeBadges(posts);
+    
+    // 2. Persist the state: If it's Top Rated NOW, it's permanently "wasTopRated" too
+    posts.forEach(post => {
+        if (badgeMap[post.id] === 'top-rated') {
+            post.wasTopRated = true;
+        }
+    });
+
+    console.log('Hourly Top Rated recalculation complete. Top 3 badges assigned.');
+}
+
+

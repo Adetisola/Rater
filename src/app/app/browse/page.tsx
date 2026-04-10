@@ -58,6 +58,12 @@ function BrowseContent() {
   const globalBadgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
   const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
 
+  // Simulate hourly job once on mount (in a real app this runs as a cron)
+  useEffect(() => {
+    import('@/logic/badgeUtils').then(mod => mod.runHourlyRecalculation(MOCK_POSTS));
+  }, []);
+
+
   const updateUrl = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
     

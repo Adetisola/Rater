@@ -267,12 +267,16 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         <span className="text-[10px] font-semibold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
                             {post.category}
                         </span>
-                        {/* Badge - Only Top Rated badge */}
-                        {badge === 'top-rated' && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#FEC312] text-black px-3 py-1.5 rounded-full flex items-center gap-1">
+                        {/* Badge System: Active or Historical */}
+                        {badge === 'top-rated' ? (
+                            <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-[#111111] px-3 py-1.5 rounded-full flex items-center gap-1">
                                 🏆 Top Rated
                             </span>
-                        )}
+                        ) : post.wasTopRated ? (
+                            <span className="text-[10px] font-bold uppercase tracking-wider border-2 border-gray-100 text-gray-400 px-3 py-1.5 rounded-full">
+                                Previously <span className='text-[#FEC312]'>Top Rated</span>
+                            </span>
+                        ) : null}
                     </div>
                     <span className="text-xs font-medium text-gray-400">
                         {formatTimeAgo(post.createdAt)}

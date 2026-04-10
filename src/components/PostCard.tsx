@@ -121,7 +121,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             
             {/* 'Top Rated' Badge - Yellow Pill */}
             {isTopRated && (
-                <div className="absolute bottom-3 left-3 bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
+                <div className="absolute top-3 left-3 bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 z-10">
                     <span>🏆 Top Rated</span>
                 </div>
             )}

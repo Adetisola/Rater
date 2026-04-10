@@ -38,6 +38,7 @@ export interface Post {
     isLocked: boolean;
   };
   reviews: Review[];
+  wasTopRated?: boolean; // Historical state
 }
 
 // --- MOCK DATABASE ---
@@ -139,6 +140,7 @@ export const MOCK_POSTS: Post[] = [
     designerId: 'user_5',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
     rating: { average: 4.7, reviewCount: 19, isLocked: false },
+    wasTopRated: true,
     reviews: [
       {
         id: 'r_8_1',
@@ -374,6 +376,7 @@ export const MOCK_POSTS: Post[] = [
     designerId: 'user_2',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
     rating: { average: 4.2, reviewCount: 42, isLocked: false }, // High review activity
+    wasTopRated: true,
     reviews: [
         {
             id: 'r_2_1',
@@ -627,6 +630,7 @@ export const MOCK_POSTS: Post[] = [
     designerId: 'user_1',
     createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
     rating: { average: 4.9, reviewCount: 28, isLocked: false }, // Top Rated
+    wasTopRated: true,
     reviews: [
         {
             id: 'r_3_1',
