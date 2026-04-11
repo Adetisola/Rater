@@ -6,8 +6,12 @@ import { Textarea } from './ui/Textarea';
 import { StarRating } from './ui/StarRating';
 import { Input } from './ui/Input';
 
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface ReviewFormProps {
   onSubmit: (ratings: { clarity: number; purpose: number; aesthetics: number }, comment: string, reviewerName: string) => void;
+  initialName?: string;
+  isLoggedIn?: boolean;
 }
 
 const CRITERIA_INFO = {
@@ -97,31 +101,42 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
   );
 }
 
-export function ReviewForm({ onSubmit }: ReviewFormProps) {
+export function ReviewForm({ onSubmit, initialName, isLoggedIn }: ReviewFormProps) {
   const [clarity, setClarity] = useState(0);
   const [purpose, setPurpose] = useState(0);
   const [aesthetics, setAesthetics] = useState(0);
   const [comment, setComment] = useState('');
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initialName || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNameError, setShowNameError] = useState(false);
 
-  // Calculate average for display
+  // Calculate completeness
   const isComplete = clarity > 0 && purpose > 0 && aesthetics > 0;
+  
+  // Validation check
+  const canSubmit = isComplete && (isLoggedIn || name.trim().length > 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Final validation
     if (!isComplete) return;
+    if (!isLoggedIn && !name.trim()) {
+        setShowNameError(true);
+        return;
+    }
     
     setIsSubmitting(true);
     // Simulate network delay
     setTimeout(() => {
-        onSubmit({ clarity, purpose, aesthetics }, comment, name || 'Anonymous');
+        const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
+        onSubmit({ clarity, purpose, aesthetics }, comment, finalName);
         setIsSubmitting(false);
     }, 800);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border-2 border-gray-100">
+    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border-2 border-gray-100 overflow-hidden">
       <h3 className="font-semibold text-xl mb-8">Rate this Design</h3>
       
       <div className="space-y-4 mb-8">
@@ -157,16 +172,57 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
       </div>
 
       <div className="space-y-4 mb-8">
-         <Input 
-            placeholder="Your name (or be Anonymous)" 
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-12 rounded-xl focus-visible:border-[#FEC312]"
-         />
+         <AnimatePresence mode="wait" initial={false}>
+            {!isLoggedIn ? (
+                <motion.div 
+                    key="guest-name"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                >
+                    <div className="pb-1">
+                        <Input 
+                            placeholder="Your name" 
+                            value={name}
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                if (e.target.value.trim()) setShowNameError(false);
+                            }}
+                            className={`h-12 rounded-xl transition-all focus-visible:border-[#FEC312] ${
+                                showNameError ? 'border-red-500 bg-red-50/30' : ''
+                            }`}
+                        />
+                        {showNameError && (
+                            <motion.p 
+                                initial={{ opacity: 0, y: -5 }} 
+                                animate={{ opacity: 1, y: 0 }} 
+                                className="text-[10px] text-red-500 font-semibold mt-1 ml-1 uppercase"
+                            >
+                                Name is required to rate
+                            </motion.p>
+                        )}
+                    </div>
+                </motion.div>
+            ) : (
+                <motion.div 
+                    key="logged-in-label"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 py-1 px-1"
+                >
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-xs font-medium text-gray-500">
+                        Reviewing as <span className="text-[#111111] font-semibold">{initialName}</span>
+                    </span>
+                </motion.div>
+            )}
+         </AnimatePresence>
 
          <div className="relative">
              <Textarea 
-                placeholder="Comment..." 
+                placeholder={isLoggedIn ? `${initialName}, Add a comment... (Optional)` : "Optional comment..."} 
                 value={comment}
                 onChange={(e) => {
                     if (e.target.value.length <= 200) {
@@ -186,8 +242,8 @@ export function ReviewForm({ onSubmit }: ReviewFormProps) {
 
       <Button 
         type="submit" 
-        className="w-23 h-12 rounded-full text-lg font-medium" 
-        variant="outline"
+        className="w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all" 
+        variant={canSubmit ? "outline" : "outline"}
         disabled={!isComplete || isSubmitting}
         isLoading={isSubmitting}
       >

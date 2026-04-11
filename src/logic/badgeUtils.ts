@@ -1,5 +1,5 @@
 import type { Post, Review } from './mockData';
-import { MOCK_AVATARS } from './mockData';
+import { MOCK_AVATARS, getReviewsByPostId } from './mockData';
 
 type BadgeType = 'top-rated' | null;
 
@@ -57,7 +57,10 @@ function isEligibleForBadge(post: Post): boolean {
   if (post.rating.isLocked) return false;
   if (post.rating.reviewCount < MIN_REVIEWS_FOR_BADGE) return false;
   if (!isPostWithinWindow(post)) return false;
-  if (!hasAllStructuredReviews(post.reviews)) return false;
+  
+  const reviews = getReviewsByPostId(post.id);
+  if (!hasAllStructuredReviews(reviews)) return false;
+  
   if (!isDesignerNotBlocked(post)) return false;
   return true;
 }

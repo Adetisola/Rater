@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { User, Pencil, Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { validatePasskey, getStrengthColor, getStrengthLabel } from '../logic/passkeyValidation';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { useDebounce } from '../hooks/useDebounce';
+import { useAuth } from '../context/AuthContext';
 
 interface CreateAvatarOverlayProps {
   onClose: () => void;
   onCreate: (name: string, passkey: string, email?: string) => void;
+  isEmbedded?: boolean;
 }
 
 // Validation Helper
@@ -25,7 +28,7 @@ function validateAvatarName(name: string): string | null {
   return null;
 }
 
-export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayProps) {
+export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAvatarOverlayProps) {
   const [name, setName] = useState('');
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
@@ -40,14 +43,15 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
   const [nameError, setNameError] = useState<string | null>(null);
   const debouncedName = useDebounce(name, 500);
 
-  // Lock body scroll when overlay is open
+  // Lock body scroll when overlay is open (stand-alone mode only)
   useEffect(() => {
+    if (isEmbedded) return;
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = originalStyle;
     };
-  }, []);
+  }, [isEmbedded]);
 
   // Check Name Availability
   useEffect(() => {
@@ -89,32 +93,39 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
     });
   }, [passkey, name, email]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { signup } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validation.canSubmit || passkey !== confirmPasskey || nameStatus !== 'available') {
       return;
     }
     
-    onCreate(name, passkey, email || undefined);
+    setIsCheckingName(true);
+    const success = await signup(name, passkey);
+    setIsCheckingName(false);
+
+    if (success) {
+      onCreate(name, passkey, email || undefined);
+    } else {
+      setNameStatus('taken');
+    }
   };
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const strengthColor = getStrengthColor(validation.strength);
   const strengthLabel = getStrengthLabel(validation.strength);
   const passkeyMismatch = confirmPasskey.length > 0 && passkey !== confirmPasskey;
 
-  return (
-    <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
-      {/* Backdrop */}
-       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
-      />
-
-      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        
+  const formContent = (
+    <div className={`${isEmbedded ? 'w-full' : 'bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto scrollbar-hide'}`} style={isEmbedded ? {} : { scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div className="text-center mb-6">
-            <h2 className="text-2xl font-semibold mb-6 text-[#111111]">Create your Avatar</h2>
+            <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-6 text-[#111111]'}`}>Create your Avatar</h2>
             
             <p className="text-[12px] uppercase font-semibold text-[#111111] mb-2 tracking-wide">upload a pic</p>
             <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4 relative cursor-pointer hover:bg-gray-200 transition-colors">
@@ -317,8 +328,25 @@ export function CreateAvatarOverlay({ onClose, onCreate }: CreateAvatarOverlayPr
                 </Button>
             </div>
         </form>
-
-      </div>
     </div>
+  );
+
+  if (!mounted) return null;
+
+  if (isEmbedded) {
+    return formContent;
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
+      {/* Backdrop */}
+       <div 
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+        onClick={onClose}
+      />
+
+      {formContent}
+    </div>,
+    document.body
   );
 }

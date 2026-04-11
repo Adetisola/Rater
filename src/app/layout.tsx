@@ -27,6 +27,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from "../context/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +40,9 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icons/logo-rater-hover.svg" />
       </head>
       <body suppressHydrationWarning>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

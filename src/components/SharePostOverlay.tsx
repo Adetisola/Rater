@@ -14,7 +14,7 @@ interface SharePostOverlayProps {
 }
 
 export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
-  const shareUrl = `http://rater.vercel.app/${postId}`;
+  const shareUrl = `https://rater-web.vercel.app/app/post/${postId}`;
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {

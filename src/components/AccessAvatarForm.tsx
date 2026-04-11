@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { MOCK_AVATARS, type Avatar } from '../logic/mockData';
 import { Eye, EyeOff, AlertCircle, Lock } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ForgotPasskeyOverlay } from './ForgotPasskeyOverlay';
 
+import { useAuth } from '../context/AuthContext';
+
 interface AccessAvatarFormProps {
-  onSuccess: (avatar: Avatar) => void;
+  onSuccess: () => void;
   onCreateNew: () => void;
 }
 
@@ -21,7 +22,6 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
   const [isLoading, setIsLoading] = useState(false);
   
   // Rate limiting state
-  const [attempts, setAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   
@@ -36,7 +36,6 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
         const remaining = Math.ceil((lockoutTime - Date.now()) / 1000);
         if (remaining <= 0) {
           setLockoutTime(null);
-          setAttempts(0);
           setError('');
         } else {
           setTimeLeft(remaining);
@@ -46,42 +45,24 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
     return () => clearInterval(timer);
   }, [lockoutTime]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { login } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (lockoutTime) return;
 
     setError('');
     setIsLoading(true);
 
-    // Mock network delay
-    setTimeout(() => {
-      // 1. Check Rate Limit
-      if (attempts >= 4) {
-        const lockUntil = Date.now() + 30000; // 30s lock
-        setLockoutTime(lockUntil);
-        setTimeLeft(30);
-        setError('Too many failed attempts. Please try again later.');
-        setIsLoading(false);
-        return;
-      }
+    const success = await login(name, passkey);
 
-      // 2. Validate Credentials (MOCK)
-      // Find avatar by name (case insensitive)
-      const avatarEntry = Object.values(MOCK_AVATARS).find(
-        a => a.name.toLowerCase() === name.trim().toLowerCase()
-      );
-
-      if (avatarEntry && avatarEntry.passkey === passkey) {
-        // Success
-        onSuccess(avatarEntry);
-      } else {
-        // Generic Error
-        setError('Avatar name or passkey is incorrect.');
-        setAttempts(prev => prev + 1);
-      }
-      
-      setIsLoading(false);
-    }, 800);
+    if (success) {
+      onSuccess();
+    } else {
+      setError('Avatar name or passkey is incorrect.');
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -105,25 +86,25 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold uppercase text-gray-400 tracking-wider ml-1">Avatar Name</label>
+              <label className="text-xs font-semibold uppercase text-gray-600 tracking-wider ml-1">Avatar Name</label>
               <Input 
                   placeholder="Enter your avatar name" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="h-12 text-sm px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                  className="h-12 text-sm px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal"
                   disabled={isLoading}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold uppercase text-gray-400 tracking-wider ml-1">Passkey</label>
+              <label className="text-xs font-semibold uppercase text-gray-600 tracking-wider ml-1">Passkey</label>
               <div className="relative">
                 <Input 
                     type={showPasskey ? "text" : "password"}
                     placeholder="Enter your passkey" 
                     value={passkey}
                     onChange={(e) => setPasskey(e.target.value)}
-                    className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
+                    className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal"
                     disabled={isLoading}
                 />
                 <button

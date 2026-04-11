@@ -7,11 +7,11 @@ import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
-import { CloudUpload, ListFilter, Search } from 'lucide-react';
-
-import { X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { CloudUpload, ListFilter, Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
+import { useAuth } from '../context/AuthContext';
+import { AuthOverlay } from './AuthOverlay';
 
 interface HeaderProps {
     onPostClick: () => void;
@@ -52,6 +52,10 @@ export function Header({
   const [showWidgets, setShowWidgets] = useState(!hideControls);
   const [opacityTrigger, setOpacityTrigger] = useState(!hideControls);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
+  
+  const { currentUser } = useAuth();
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Debounce search query for performance
@@ -157,28 +161,58 @@ export function Header({
     <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
       <div className={`relative max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center gap-2 sm:gap-3 md:gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
         
-        {/* ANIMATED LOGO - Always absolute for smooth animation */}
+        {/* ANIMATED LOGO/PROFILE SLOT - Always absolute for smooth animation */}
         <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
-          <Link 
-            href="/app/browse"
-            onClick={onLogoClick}
-            className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
-          >
-            <img 
-              src="/icons/logo-rater.svg" 
-              alt="Rater Logo" 
-              className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
-            />
-            <img 
-              src="/icons/logo-rater-hover.svg" 
-              alt="Rater Logo Hover" 
-              className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
-            />
-          </Link>
+          {(!currentUser || hideControls) ? (
+            <Link 
+              href="/app/browse"
+              onClick={onLogoClick}
+              className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
+            >
+              <img 
+                src="/icons/logo-rater.svg" 
+                alt="Rater Logo" 
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
+              />
+              <img 
+                src="/icons/logo-rater-hover.svg" 
+                alt="Rater Logo Hover" 
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
+              />
+            </Link>
+          ) : (
+            <Link 
+                href="/app/profile"
+                className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-white hover:bg-surface transition-all group"
+            >
+                <div 
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+                    style={{ backgroundColor: currentUser.bgColor }}
+                >
+                    {currentUser.avatarUrl ? (
+                        <img src={currentUser.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                        currentUser.name.charAt(0).toUpperCase()
+                    )}
+                </div>
+                <span className="text-sm font-semibold text-[#111111] hidden md:inline">{currentUser.name}</span>
+            </Link>
+          )}
         </div>
 
-        {/* GHOST LOGO SPACER - visible on all screens to reserve space for absolute logo */}
-        {!hideControls && <div className="w-[44px] h-[44px] sm:w-12 sm:h-12 shrink-0 invisible" aria-hidden="true" />}
+        {/* GHOST SPACER - visible on all screens to reserve space for absolute logo/profile */}
+        {!hideControls && (
+          <div className="shrink-0 invisible pointer-events-none" aria-hidden="true">
+            {(!currentUser) ? (
+              <div className="w-[44px] h-[44px] sm:w-12 sm:h-12" />
+            ) : (
+              <div className="flex items-center gap-3 p-1.5 pr-4 rounded-full">
+                <div className="w-10 h-10 rounded-full" />
+                <span className="text-sm font-semibold hidden md:inline">{currentUser.name}</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* DESKTOP SEARCH BAR - visible on screens strictly larger than 768px (>768px) */}
         {showWidgets && (
@@ -325,37 +359,66 @@ export function Header({
               <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
             </motion.button>
 
-            {/* Post Button Container - Uses placeholder trick for grid stability */}
-            <div className="relative">
-                {/* Invisible placeholder maintains the baseline layout width */}
-                <Button
-                    variant="outline" 
-                    className="h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 opacity-0 pointer-events-none"
-                    aria-hidden="true"
-                    tabIndex={-1}
-                >
-                    <CloudUpload strokeWidth={2.5} className="h-5 w-5 sm:h-5 sm:w-5 shrink-0" />
-                    <span className="hidden sm:inline">Post</span>
-                </Button>
+            {/* AUTH / USER SECTION */}
+            <div className="flex items-center gap-2">
+                {currentUser ? (
+                    null
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <Button 
+                            variant='outline'
+                            onClick={() => {
+                                setAuthTab('login');
+                                setShowAuthOverlay(true);
+                            }}
+                            className="hidden sm:flex items-center justify-center h-12 px-6 rounded-full font-medium text-[17px] text-black hover:bg-[#FEC312] hover:text-white transition-all"
+                        >
+                            Login
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                setAuthTab('signup');
+                                setShowAuthOverlay(true);
+                            }}
+                            className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-white font-medium text-[17px]"
+                        >
+                            Sign up
+                        </Button>
+                    </div>
+                )}
 
-                {/* Interactive absolute button that expands smoothly to the left */}
-                <Button
-                    variant="outline" 
-                    onClick={onPostClick}
-                    className="absolute top-0 right-0 w-[45px] sm:w-auto h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
-                >
-                    <CloudUpload strokeWidth={2.25} className="h-6 w-6 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
-                    <span className="hidden text-[18px] sm:flex items-center">
-                        Post
-                        <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                            <span className="pl-1.5">your work</span>
-                        </span>
-                    </span>
-                </Button>
+                {/* Post Button Container - Only visible when logged in */}
+                {currentUser && (
+                    <div className="relative ml-1 sm:ml-2">
+                        <Button
+                            variant="outline" 
+                            onClick={onPostClick}
+                            className="w-[45px] sm:w-auto h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
+                        >
+                            <CloudUpload strokeWidth={2.25} className="h-6 w-6 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
+                            <span className="hidden text-[18px] sm:flex items-center">
+                                Post
+                                <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                                    <span className="pl-1.5">your work</span>
+                                </span>
+                            </span>
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {showAuthOverlay && (
+          <AuthOverlay 
+            initialTab={authTab} 
+            onClose={() => setShowAuthOverlay(false)} 
+          />
+        )}
+      </AnimatePresence>
     </header>
   );
 }

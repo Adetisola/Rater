@@ -3,10 +3,9 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import { ChevronDown, Check, X, Download, Plus, Minus, Share2, ArrowLeft} from 'lucide-react'; // Added icons
-import type { Post, Review } from '../logic/mockData';
-import { MOCK_POSTS } from '../logic/mockData';
-import { MOCK_AVATARS } from '../logic/mockData';
+import { MOCK_POSTS, MOCK_AVATARS, getReviewsByPostId, getReviewerDisplayName, type Review, type Post } from '../logic/mockData';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useAuth } from '../context/AuthContext';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -16,7 +15,10 @@ import { ReportPostOverlay } from './ReportPostOverlay';
 import { computeBadges } from '../logic/badgeUtils';
 import { computeHotPosts } from '../logic/hotPostUtils';
 
+import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
+
 const REVIEWS_PER_PAGE = 5;
+const RATE_LIMIT_KEY = 'rater_review_timestamps';
 
 interface PostDetailOverlayProps {
   post: Post;
@@ -25,8 +27,26 @@ interface PostDetailOverlayProps {
 
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   // Local state to simulate new reviews being added
+  const { currentUser } = useAuth();
   const [userReviews, setUserReviews] = useState<Review[]>([]); 
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [isSelfPost, setIsSelfPost] = useState(false);
+  const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
+
+  // Check if user has already reviewed or if it's their own post
+  useEffect(() => {
+    if (currentUser && post.designerId === currentUser.id) {
+        setIsSelfPost(true);
+    } else {
+        setIsSelfPost(false);
+    }
+
+    // Check device-based review history
+    if (hasReviewedPost(post.id)) {
+        setHasReviewed(true);
+    }
+  }, [post.id, currentUser, post.designerId]);
+
   const [isExpanded, setIsExpanded] = useState(false); // For description
   const [sortBy, setSortBy] = useState('Newest');
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -108,8 +128,10 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
   const isHot = hotPostIds.has(post.id);
 
-  // Use actual reviews from the post data + any user-submitted reviews
-  const allReviews = [...userReviews, ...post.reviews];
+  // Use actual reviews from the standalone collection + any user-submitted reviews
+  const allReviews = useMemo(() => {
+    return [...userReviews, ...getReviewsByPostId(post.id)];
+  }, [post.id, userReviews]);
 
   const sortedReviews = useMemo(() => {
     return [...allReviews].sort((a, b) => {
@@ -128,17 +150,54 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const hasMoreReviews = visibleCount < sortedReviews.length;
   const remainingReviews = sortedReviews.length - visibleCount;
 
-  const handleReviewSubmit = (ratings: any, comment: string, reviewerName: string) => {
+  const handleReviewSubmit = async (ratings: any, comment: string, reviewerName: string) => {
+    // STEP 1: Check self-review (already implemented, but re-enforcing in logic)
+    if (currentUser && post.designerId === currentUser.id) {
+        console.error("Self-review blocked");
+        return;
+    }
+
+    // STEP 2: Check device-based duplicate review
+    if (hasReviewedPost(post.id)) {
+        alert("You've already reviewed this post from this device.");
+        return;
+    }
+
+    // STEP 3: Apply rate limiting
+    const now = Date.now();
+    const timestamps: number[] = JSON.parse(localStorage.getItem(RATE_LIMIT_KEY) || '[]');
+    const validTimestamps = timestamps.filter(t => now - t < 60000); // Filter to last 60 seconds
+    
+    if (validTimestamps.length >= 5) {
+        // Apply soft limit: Show message and add a slight delay
+        setRateLimitMessage("You're reviewing quickly — slow down a bit 🙂");
+        await new Promise(resolve => setTimeout(resolve, 30000)); // 30 second soft delay
+        setRateLimitMessage(null);
+    }
+
+    // STEP 4: Get deviceId
+    const deviceId = getDeviceId();
+
+    // STEP 5: Prepare review payload
     const newReview: Review = {
-        id: Math.random().toString(),
+        id: `r_new_${Date.now()}`,
         postId: post.id,
         ratings,
         comment,
-        reviewerName,
-        createdAt: new Date().toISOString()
+        reviewerId: currentUser?.id,
+        reviewerName: currentUser ? undefined : reviewerName,
+        createdAt: new Date().toISOString(),
+        deviceId: deviceId
     };
+
+    // STEP 6: Submit review (local state update for mock)
     setUserReviews([newReview, ...userReviews]);
     setHasReviewed(true);
+
+    // STEP 7: On success: persist review event and update rate limit timestamps
+    markPostAsReviewed(post.id);
+    const updatedTimestamps = [...validTimestamps, Date.now()];
+    localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
   };
 
   // Close tooltips when clicking outside
@@ -361,15 +420,18 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* 4. Description */}
                 <div>
-                    <p className={`text-base text-gray-600 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                        {post.description} Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim mauris, hendrerit a ante dapibus, sollicitudin lobortis eros. Cras id facilisis nulla. Suspendisse potenti. Fusce quam risus, ultricies quis imperdiet sit.
+                    <p className={`text-base text-gray-600 leading-relaxed transition-all duration-300 ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                        {post.description}
                     </p>
-                    <button 
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="text-sm font-bold text-[#111111] mt-2 underline"
-                    >
-                        {isExpanded ? 'Read less' : 'Read more'}
-                    </button>
+                    {post.description.length > 160 && (
+                        <button 
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="text-xs font-bold text-[#111111] mt-3 flex items-center gap-1.5 hover:text-[#FEC312] transition-colors uppercase tracking-widest group"
+                        >
+                            <span>{isExpanded ? 'Show Less' : 'Read Full Description'}</span>
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} group-hover:translate-y-0.5`} />
+                        </button>
+                    )}
                 </div>
 
                 {/* 5. Author */}
@@ -377,7 +439,11 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
-                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} className="w-full h-full object-cover" alt="Avatar" />
+                            <img 
+                                src={MOCK_AVATARS[post.designerId]?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} 
+                                className="w-full h-full object-cover" 
+                                alt="Avatar" 
+                            />
                         </div>
                         <span className="text-sm font-semibold text-[#111111]">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
                     </div>
@@ -436,10 +502,29 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
             {/* RIGHT COLUMN: Sticky Review Form (Span 5) */}
             <div className="md:col-span-5 relative">
                 <div className="sticky top-8">
+                    {rateLimitMessage && (
+                        <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-[24px] text-amber-700 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                             <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                                ⏳
+                             </div>
+                             <p className="font-medium">{rateLimitMessage}</p>
+                        </div>
+                    )}
 
-
-                    {!hasReviewed ? (
-                        <ReviewForm onSubmit={handleReviewSubmit} />
+                    {isSelfPost ? (
+                         <div className="bg-gray-50 p-12 rounded-[32px] text-center border-2 border-dashed border-gray-200">
+                            <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                                🚫
+                            </div>
+                            <h3 className="font-semibold text-xl mb-2 text-gray-700">Self-Review Locked</h3>
+                            <p className="text-gray-500">You cannot review your own post.</p>
+                         </div>
+                    ) : !hasReviewed ? (
+                        <ReviewForm 
+                            onSubmit={handleReviewSubmit} 
+                            isLoggedIn={!!currentUser}
+                            initialName={currentUser?.name}
+                        />
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">
                             <div className="w-16 h-16 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
@@ -507,7 +592,14 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             {/* Left Content */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <span className="font-semibold text-base text-[#111111]">{review.reviewerName || 'Anonymous'}</span>
+                                    <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0">
+                                        {review.reviewerId && MOCK_AVATARS[review.reviewerId]?.avatarUrl ? (
+                                            <img src={MOCK_AVATARS[review.reviewerId].avatarUrl} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.reviewerId || review.reviewerName || review.id}`} alt="" className="w-full h-full object-cover" />
+                                        )}
+                                    </div>
+                                    <span className="font-semibold text-base text-[#111111]">{getReviewerDisplayName(review)}</span>
                                     <div className="flex gap-0.5">
                                         {[1,2,3,4,5].map(i => (
                                             <img 
@@ -547,7 +639,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     {/* Total Rating - visible on mobile only, desktop has separate column */}
                                     <div className="text-right shrink-0 xs:hidden">
                                         <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                        <div className="text-xl font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
+                                        <div className="text-xl font-semibold md:font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                                     </div>
                                 </div>
                             </div>

@@ -10,7 +10,7 @@
   }
 
   body {
-    @apply font-sans antialiased text-gray-900 bg-surface;
+    @apply font-sans antialiased text-gray-900 bg-white;
   }
 }
 

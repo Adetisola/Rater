@@ -4,7 +4,6 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { MOCK_POSTS } from "@/logic/mockData";
 import { PostDetailContent } from "@/components/PostDetailContent";
-import { Header } from "@/components/Header";
 
 export default function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -26,19 +25,11 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <>
-      <Header 
-        hideControls={true} 
-        onPostClick={() => {}}
-        onLogoClick={() => router.push("/app/browse")}
-        searchQuery={""} onSearchChange={() => {}} sortBy={"balanced"} onSortChange={() => {}} selectedCategories={[]} onCategoryChange={() => {}}
+    <main className="flex-1 w-full relative">
+      <PostDetailContent 
+          post={post} 
+          onClose={() => router.back()} 
       />
-      <main className="flex-1 w-full relative">
-        <PostDetailContent 
-            post={post} 
-            onClose={() => router.back()} 
-        />
-      </main>
-    </>
+    </main>
   );
 }

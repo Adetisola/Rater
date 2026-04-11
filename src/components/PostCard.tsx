@@ -17,26 +17,48 @@ interface PostCardProps {
 
 export function PostCard({ post, badge, isHot = false, isLoading = false }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    setImageLoaded(false);
+    // Reset states when URL changes
+    if (retryCount === 0) {
+        setImageLoaded(false);
+        setHasError(false);
+    }
     
+    // Safety check for empty URLs
+    if (!post.imageUrl || post.imageUrl.trim() === '') {
+        setHasError(true);
+        setImageLoaded(true);
+        return;
+    }
+
     const img = new Image();
     img.src = post.imageUrl;
     img.onload = () => {
       setImageLoaded(true);
+      setHasError(false);
     };
     img.onerror = () => {
-      // Auto-retry after 3 seconds
-      const timer = setTimeout(() => {
-        setRetryCount(prev => prev + 1);
-      }, 3000);
-      return () => clearTimeout(timer);
+      // After 3 failed attempts (0, 1, 2), stop retrying and show error state
+      if (retryCount >= 2) {
+        console.warn(`PostCard: Failed to load image for post ${post.id} after ${retryCount + 1} attempts.`);
+        setHasError(true);
+        setImageLoaded(true); // Stop showing skeleton
+      } else {
+        const timer = setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
     };
-  }, [post.imageUrl, retryCount]);
+  }, [post.imageUrl, retryCount, post.id]);
 
-  const showSkeleton = isLoading || !imageLoaded;
+  const showSkeleton = isLoading || (!imageLoaded && !hasError);
+  const displayImageUrl = hasError 
+    ? 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800' // Stylish fallback gradient
+    : post.imageUrl;
 
   if (showSkeleton) {
       return (
@@ -104,7 +126,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
         <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
             <div 
               className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
-              style={{ backgroundImage: `url(${post.imageUrl})` }}
+              style={{ backgroundImage: `url(${displayImageUrl})` }}
             />
         </div>
 
@@ -114,7 +136,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             <div className={`relative w-full overflow-hidden rounded-[20px] ${isTopRated ? 'border-2 border-[#FEC312]' : ''}`}>
             
             <img 
-                src={post.imageUrl} 
+                src={displayImageUrl} 
                 alt={post.title} 
                 className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
             />
@@ -122,7 +144,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             {/* 'Top Rated' Badge - Yellow Pill */}
             {isTopRated && (
                 <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
-                    <div className="bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1">
+                    <div className="bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
                         <span>🏆 Top Rated</span>
                     </div>
 
@@ -142,7 +164,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             
             {/* ROW 1: TAG & TIME */}
             <div className="flex justify-between items-center mb-3">
-                <span className="bg-white text-[#111111] text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
+                <span className="bg-white text-[#111111] text-[10px] uppercase font-semibold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
                     {post.category}
                 </span>
                 <span className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2">
@@ -157,17 +179,21 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
 
             {/* ROW 3: DESCRIPTION */}
             <div className="hidden md:block mb-4">
-                <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors">
+                <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors truncate">
                     {post.description}
                 </p>
             </div>
 
             {/* ROW 4: AUTHOR */}
             <div className="flex items-center gap-2 mb-2 sm:mb-4">
-                <div className="w-4 h-4 xs:w-5 xs:h-5 rounded-full bg-gray-200 overflow-hidden">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} alt="Avatar" className="w-full h-full object-cover" />
+                <div className="w-4 h-4 xs:w-5 xs:h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden">
+                    <img 
+                        src={MOCK_AVATARS[post.designerId]?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} 
+                        alt="Avatar" 
+                        className="w-full h-full object-cover" 
+                    />
                 </div>
-                <span className="text-xs md:text-sm font-semibold text-[#111111] group-hover:text-white transition-colors">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
+                <span className="text-xs md:text-sm medium text-[#111111] group-hover:text-white transition-colors">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
             </div>
 
             {/* ROW 5: FOOTER (STATS) */}
@@ -218,7 +244,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                                         <img
                                             key={i} 
                                             src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
-                                            className={`w-3 h-3 xs:w-3 xs:h-3 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
+                                            className={`w-3 h-3 sm:w-4 sm:h-4 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
                                             alt="" 
                                         />
                                     );

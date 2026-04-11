@@ -7,10 +7,10 @@ import { Check } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
-import { CATEGORIES, type Avatar } from '../logic/mockData';
-import { AccessAvatarForm } from './AccessAvatarForm';
-import { CreateAvatarOverlay } from './CreateAvatarOverlay';
-import { FileUp } from 'lucide-react'
+import { CATEGORIES } from '../logic/mockData';
+import { FileUp, Lock } from 'lucide-react'
+import { useAuth } from '../context/AuthContext';
+import { AuthOverlay } from './AuthOverlay';
 
 
 export function SubmitPage() {
@@ -22,8 +22,8 @@ export function SubmitPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // IDENTITY STATE
-  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
-  const [showCreateOverlay, setShowCreateOverlay] = useState(false);
+  const { currentUser } = useAuth();
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,27 +37,31 @@ export function SubmitPage() {
 
   const handleSubmit = () => {
     // SUBMIT LOGIC HERE
-    console.log("Submitting:", { title, category, description, image, avatarId: selectedAvatar?.id });
+    console.log("Submitting:", { title, category, description, image, designerId: currentUser?.id });
     setIsSuccess(true);
   };
 
-  const handleAvatarAccess = (avatar: Avatar) => {
-    setSelectedAvatar(avatar);
-  };
-
-  const handleCreateAvatar = (name: string, passkey: string) => {
-      // MOCK CREATION
-      const newAvatar: Avatar = {
-          id: `new-${Date.now()}`,
-          name: name,
-          passkey: passkey,
-          bgColor: '#FEC312', // Default brand color
-          isBlocked: false
-      };
-      
-      setSelectedAvatar(newAvatar);
-      setShowCreateOverlay(false);
-  };
+  if (!currentUser) {
+      return (
+        <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
+            <Lock className="w-16 h-16 text-gray-200 mb-6" />
+            <h1 className="text-3xl font-bold mb-4 text-[#111111]">Login Required</h1>
+            <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+              You must be logged in to post your work and receive feedback from the community.
+            </p>
+            <div className="flex gap-4 mt-10">
+                <Button 
+                    className="h-12 px-8 rounded-full text-lg font-semibold" 
+                    variant="primary" 
+                    onClick={() => setShowAuthOverlay(true)}
+                >
+                    Login / Sign up
+                </Button>
+            </div>
+            {showAuthOverlay && <AuthOverlay onClose={() => setShowAuthOverlay(false)} />}
+        </div>
+      );
+  }
 
   if (isSuccess) {
       return (
@@ -65,9 +69,9 @@ export function SubmitPage() {
               <div className="w-20 h-20 bg-[#009241]/10 rounded-full flex items-center justify-center mb-6 text-[#009241]">
                   <img src="/icons/status-success.svg" className="w-10 h-10" alt="Success" />
               </div>
-              <h1 className="text-3xl font-bold mb-4 text-[#111111]">Post Submitted!</h1>
+              <h1 className="text-2xl font-semibold mb-4 text-[#111111]">Post Submitted!</h1>
               <p className="text-gray-500 max-w-md mx-auto leading-relaxed">Your design has been posted successfully. The community will start reviewing it shortly.</p>
-              <Button className="mt-10 h-12 px-8 rounded-full text-lg font-semibold" variant="outline" onClick={() => window.location.reload()}>Post Another Work</Button>
+              <Button className="mt-10 h-12 px-8 rounded-full text-[18px]" variant="outline" onClick={() => window.location.reload()}>Post Another Work</Button>
           </div>
       );
   }
@@ -185,73 +189,39 @@ export function SubmitPage() {
                </div>
            </div>
 
-           {/* RIGHT COLUMN: Avatar & Actions */}
-           <div className="space-y-6 sticky top-32">
-                {/* AVATAR SECTION */}
-                {!selectedAvatar ? (
-                     <>
-                         <div className="bg-white border-2 border-gray-100 rounded-[24px] p-8 flex flex-col items-center justify-center">
-                              <div className="flex w-full items-baseline justify-center gap-2 mb-6">
-                                 <h3 className="font-semibold text-lg text-[#111111]">Post as</h3>
-                              </div>
-                             <AccessAvatarForm 
-                                onSuccess={handleAvatarAccess}
-                                onCreateNew={() => setShowCreateOverlay(true)}
-                             />
-                         </div>
-                     </>
-                 ) : (
-                     // SELECTED AVATAR STATE
-                     <div className="space-y-4">
-                          <h3 className="font-bold text-lg text-[#111111]">Posting as</h3>
-                          
-                          <div className="border border-[#FEC312] bg-[#FFFBF0] rounded-[24px] p-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
-                              <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-white shadow-sm">
-                                  {selectedAvatar.avatarUrl ? (
-                                     <img src={selectedAvatar.avatarUrl} alt={selectedAvatar.name} className="w-full h-full object-cover" />
-                                  ) : (
-                                      <div 
-                                         className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
-                                         style={{ backgroundColor: selectedAvatar.bgColor }}
-                                      >
-                                          {selectedAvatar.name.substring(0, 2).toUpperCase()}
-                                      </div>
-                                  )}
-                              </div>
-                              <h4 className="font-bold text-lg text-[#111111] mb-2">{selectedAvatar.name}</h4>
-                              
-                              <button 
-                                 onClick={() => setSelectedAvatar(null)}
-                                 className="text-xs font-bold text-gray-500 hover:text-[#111111] underline transition-colors"
-                              >
-                                  Change Avatar
-                              </button>
+            {/* RIGHT COLUMN: Avatar & Actions */}
+            <div className="space-y-6 sticky top-32">
+                 {/* AVATAR SECTION */}
+                 <div className="space-y-4">
+                      <h3 className="font-semibold text-lg text-[#111111]">Posting as</h3>
+                      
+                      <div className="border border-[#FEC312] bg-[#FFFBF0] rounded-[24px] p-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
+                          <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-white shadow-sm">
+                              {currentUser.avatarUrl ? (
+                                 <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                              ) : (
+                                  <div 
+                                     className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
+                                     style={{ backgroundColor: currentUser.bgColor }}
+                                  >
+                                      {currentUser.name.substring(0, 2).toUpperCase()}
+                                  </div>
+                              )}
                           </div>
-                     </div>
-                 )}
+                          <h4 className="font-semibold text-lg text-[#111111] mb-2">{currentUser.name}</h4>
+                      </div>
+                 </div>
 
-                {/* ACTIONS */}
-                <div className="pt-4">
                     <Button 
                         className="w-[100px] h-12 rounded-full text-lg font-semibold" 
                         variant="outline"
-                        disabled={!title || !category || !image || !selectedAvatar}
+                        disabled={!title || !category || !image}
                         onClick={handleSubmit}
                     >
                         Post
                     </Button>
-                </div>
-           </div>
-
-      </div>
-
-      {/* OVERLAYS */}
-      {showCreateOverlay && (
-          <CreateAvatarOverlay 
-            onClose={() => setShowCreateOverlay(false)}
-            onCreate={handleCreateAvatar}
-          />
-      )}
+            </div>
+        </div>
       
     </motion.div>
   );
