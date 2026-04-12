@@ -99,7 +99,11 @@ export function Header({
       onAvatarSelect(avatar);
     } else {
       // Navigate immediately
-      router.push(`/app/avatar/${avatar.id}`);
+      // If it's the current user, go to the primary avatar page
+      const href = currentAvatar && avatar.id === currentAvatar.id 
+        ? '/app/avatar' 
+        : `/app/avatar/${avatar.id}`;
+      router.push(href);
     }
   };
 

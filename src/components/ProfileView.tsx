@@ -132,13 +132,23 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                     <div className="absolute top-13 right-0 w-44 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                         <button 
                             onClick={() => {
+                                startEditing();
+                                setShowMobileMenu(false);
+                            }}
+                            className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
+                        >
+                            <Edit2 className="w-5 h-5" />
+                            <span className="font-semibold text-[15px]">Edit Avatar</span>
+                        </button>
+                        <button 
+                            onClick={() => {
                                 logout();
                                 setShowMobileMenu(false);
                             }}
                             className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
                             <LogOut className="w-5 h-5" />
-                            <span className="font-bold text-[15px]">Logout</span>
+                            <span className="font-semibold text-[15px]">Logout</span>
                         </button>
                     </div>
                 </>
@@ -257,7 +267,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                   {isMe && !isEditing && (
                     <button 
                       onClick={startEditing}
-                      className="p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-[#FEC312]"
+                      className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-[#FEC312]"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>

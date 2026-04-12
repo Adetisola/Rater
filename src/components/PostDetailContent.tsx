@@ -275,13 +275,13 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 
                 {/* 1. Image Preview */}
                 <div 
-                    className="group relative w-full aspect-video rounded-[32px] overflow-hidden bg-gray-50 cursor-zoom-in"
+                    className="group relative w-full aspect-auto xs:aspect-video rounded-[32px] overflow-hidden bg-gray-50 cursor-zoom-in"
                     onClick={() => setIsImageFullscreen(true)}
                 >
                     <img 
                         src={post.imageUrl} 
                         alt={post.title} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500 group-hover:scale-105" 
                     />
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <span className="text-white font-bold text-sm bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
@@ -415,7 +415,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 {/* 5. Avatar & Rating */}
                 <div className="flex items-center justify-between">
                     <Link 
-                        href={`/app/avatar/${post.avatarId}`}
+                        href={currentAvatar && post.avatarId === currentAvatar.id ? "/app/avatar" : `/app/avatar/${post.avatarId}`}
                         className="flex items-center gap-3 group/author"
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">

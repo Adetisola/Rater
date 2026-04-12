@@ -26,7 +26,7 @@ export default function MyAvatarPage() {
           <img src="/icons/logo-rater.svg" alt="" className="w-20 h-20 opacity-50" />
         </div>
         <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Identity required</h2>
-        <p className="text-gray-500 mb-10 max-w-[280px]">Access your personal profile, posts, and saved favorites by signing in.</p>
+        <p className="text-gray-500 mb-10 max-w-[280px]">Access your personal profile, posts, and saved favorites by logging in.</p>
         
         <div className="flex flex-col sm:flex-row gap-4 max-w-[400px]">
             <Button 

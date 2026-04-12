@@ -9,6 +9,7 @@ import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
+import { useAuth } from '../context/AuthContext';
 
 // Maps internal sort keys → display labels for active filter pills
 const SORT_OPTION_LABELS: Record<string, string> = {
@@ -52,6 +53,7 @@ export function MobileSearchOverlay({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { currentAvatar } = useAuth();
 
   // Debounce search query for performance
   const debouncedQuery = useDebounce(searchQuery, 150);
@@ -107,7 +109,11 @@ export function MobileSearchOverlay({
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
     } else {
-      router.push(`/app/avatar/${avatar.id}`);
+      // If it's the current user, go to the primary avatar page
+      const href = currentAvatar && avatar.id === currentAvatar.id 
+        ? '/app/avatar' 
+        : `/app/avatar/${avatar.id}`;
+      router.push(href);
     }
   };
 

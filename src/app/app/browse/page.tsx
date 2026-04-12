@@ -13,6 +13,7 @@ import { computeBadges } from '@/logic/badgeUtils';
 import { computeHotPosts } from '@/logic/hotPostUtils';
 import { useDebounce } from '@/hooks/useDebounce';
 import { X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -25,6 +26,7 @@ function BrowseContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { currentAvatar } = useAuth();
 
   // Read URL params (fallback to empty/default)
   const urlQuery = searchParams.get('q') || '';
@@ -95,7 +97,11 @@ function BrowseContent() {
     // When navigating away, we don't need to clear searchQuery locally here 
     // as it triggers a redundant URL sync during navigation.
     // Instead, just navigate.
-    router.push(`/app/avatar/${avatar.id}`);
+    // If it's the current user, go to the primary avatar page
+    const href = currentAvatar && avatar.id === currentAvatar.id 
+      ? '/app/avatar' 
+      : `/app/avatar/${avatar.id}`;
+    router.push(href);
   };
   
   const clearAvatarFilter = () => {
