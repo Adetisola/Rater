@@ -12,7 +12,7 @@
  * - Bucket C: Recency only.
  */
 
-import type { Post } from './mockData';
+import { type Post, calculatePostMetrics } from './mockData';
 import { computeBadges } from './badgeUtils';
 
 const BUCKET_B_WINDOW_DAYS = 17; // Middle of 14-21 range
@@ -92,6 +92,12 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
 
   // --- Sort Bucket B: Recency with engagement signal ---
   // Engagement bonus: Higher review count gets slight priority within same day
+  // Pre-calculate metrics for engagement tying
+  const metricsMap: Record<string, { reviewCount: number }> = {};
+  bucketB.forEach(post => {
+    metricsMap[post.id] = calculatePostMetrics(post.id);
+  });
+
   bucketB.sort((a, b) => {
     const aTime = new Date(a.createdAt).getTime();
     const bTime = new Date(b.createdAt).getTime();
@@ -105,7 +111,9 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
     
     if (aDay === bDay) {
       // Slight engagement bonus (review count)
-      return b.rating.reviewCount - a.rating.reviewCount;
+      const aCount = metricsMap[a.id]?.reviewCount || 0;
+      const bCount = metricsMap[b.id]?.reviewCount || 0;
+      return bCount - aCount;
     }
     
     return timeDiff;

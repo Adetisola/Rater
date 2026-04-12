@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
-import { MOCK_POSTS, MOCK_AVATARS, CATEGORIES, type Post, type Avatar } from '@/logic/mockData';
+import { MOCK_POSTS, MOCK_AVATARS, CATEGORIES, calculatePostMetrics, type Post, type Avatar } from '@/logic/mockData';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { createSearchIndexes, searchPosts } from '@/logic/searchUtils';
 import { computeBadges } from '@/logic/badgeUtils';
@@ -30,7 +30,7 @@ function BrowseContent() {
   const urlQuery = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'balanced';
   const selectedCategories = searchParams.getAll('cat');
-  const designerId = searchParams.get('designer');
+  const avatarId = searchParams.get('avatar');
 
   // Local state for fast typing in search
   const [searchQuery, setSearchQuery] = useState(urlQuery);
@@ -45,10 +45,10 @@ function BrowseContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchQuery]);
 
-  const selectedDesigner = useMemo(() => {
-    if (!designerId) return null;
-    return Object.values(MOCK_AVATARS).find(a => a.id === designerId) || null;
-  }, [designerId]);
+  const selectedAvatar = useMemo(() => {
+    if (!avatarId) return null;
+    return MOCK_AVATARS[avatarId] || null;
+  }, [avatarId]);
 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
@@ -57,12 +57,6 @@ function BrowseContent() {
   const searchIndexes = useMemo(() => createSearchIndexes(MOCK_POSTS, MOCK_AVATARS, CATEGORIES), []);
   const globalBadgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
   const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
-
-  // Simulate hourly job once on mount (in a real app this runs as a cron)
-  useEffect(() => {
-    import('@/logic/badgeUtils').then(mod => mod.runHourlyRecalculation(MOCK_POSTS));
-  }, []);
-
 
   const updateUrl = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -91,32 +85,38 @@ function BrowseContent() {
   };
 
   const setSortBy = (sort: string) => updateUrl({ sort: sort === 'balanced' ? null : sort });
-  const setSelectedCategories = (cats: string[]) => updateUrl({ cat: cats });
-  
-  const handleDesignerSelect = (avatar: Avatar) => {
-    setSearchQuery(''); // clear local fast state
-    updateUrl({ designer: avatar.id, q: null });
+  const handleCategoryChange = (cats: string[]) => {
+    // Combine state updates to avoid race conditions with debounced sync
+    setSearchQuery(''); 
+    updateUrl({ cat: cats, q: null });
   };
   
-  const clearDesignerFilter = () => {
-    updateUrl({ designer: null });
+  const handleAvatarSelect = (avatar: Avatar) => {
+    // When navigating away, we don't need to clear searchQuery locally here 
+    // as it triggers a redundant URL sync during navigation.
+    // Instead, just navigate.
+    router.push(`/app/avatar/${avatar.id}`);
+  };
+  
+  const clearAvatarFilter = () => {
+    updateUrl({ avatar: null });
   };
 
   const resetFilters = () => {
+    setSearchQuery('');
     updateUrl({ 
       sort: null, 
       cat: [], 
-      designer: null, 
+      avatar: null, 
       q: null 
     });
-    setSearchQuery('');
   };
 
   const filteredPosts = useMemo(() => {
     let posts: Post[];
 
-    if (selectedDesigner) {
-      posts = MOCK_POSTS.filter(post => post.designerId === selectedDesigner.id);
+    if (selectedAvatar) {
+      posts = MOCK_POSTS.filter(post => post.avatarId === selectedAvatar.id);
     }
     else if (debouncedSearchQuery.trim().length >= 2) {
       const searchResults = searchPosts(searchIndexes, debouncedSearchQuery, 100);
@@ -131,16 +131,24 @@ function BrowseContent() {
     }
 
     if (sortBy === 'highest_rated') {
-      posts = posts.filter(post => !post.rating.isLocked);
+      posts = posts.filter(post => calculatePostMetrics(post.id).ratingUnlocked);
     }
 
-    if (selectedDesigner || debouncedSearchQuery.trim().length < 2) {
+    if (selectedAvatar || debouncedSearchQuery.trim().length < 2) {
       switch (sortBy) {
         case 'highest_rated':
-          posts.sort((a, b) => b.rating.average - a.rating.average);
+          posts.sort((a, b) => {
+            const mB = calculatePostMetrics(b.id);
+            const mA = calculatePostMetrics(a.id);
+            return mB.averageScore - mA.averageScore;
+          });
           break;
         case 'most_reviewed':
-          posts.sort((a, b) => b.rating.reviewCount - a.rating.reviewCount);
+          posts.sort((a, b) => {
+            const mB = calculatePostMetrics(b.id);
+            const mA = calculatePostMetrics(a.id);
+            return mB.reviewCount - mA.reviewCount;
+          });
           break;
         case 'newest':
           posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -149,7 +157,7 @@ function BrowseContent() {
     }
 
     return posts;
-  }, [searchIndexes, debouncedSearchQuery, selectedCategories, sortBy, selectedDesigner]);
+  }, [searchIndexes, debouncedSearchQuery, selectedCategories, sortBy, selectedAvatar]);
 
   const sortedPosts = (
     sortBy === 'balanced' &&
@@ -168,10 +176,10 @@ function BrowseContent() {
         sortBy={sortBy}
         onSortChange={setSortBy}
         selectedCategories={selectedCategories}
-        onCategoryChange={setSelectedCategories}
+        onCategoryChange={handleCategoryChange}
         hideControls={false}
         onPostSelect={(post) => router.push(`/app/post/${post.id}`)}
-        onDesignerSelect={handleDesignerSelect}
+        onAvatarSelect={handleAvatarSelect}
         onReset={resetFilters}
         searchIndexes={searchIndexes}
         onMobileSearchOpen={(id) => {
@@ -189,13 +197,13 @@ function BrowseContent() {
         sortBy={sortBy}
         onSortChange={setSortBy}
         selectedCategories={selectedCategories}
-        onCategoryChange={setSelectedCategories}
+        onCategoryChange={handleCategoryChange}
         onPostSelect={(post) => {
           router.push(`/app/post/${post.id}`);
           setIsMobileSearchOpen(false);
         }}
-        onDesignerSelect={(avatar) => {
-          handleDesignerSelect(avatar);
+        onAvatarSelect={(avatar) => {
+          handleAvatarSelect(avatar);
           setIsMobileSearchOpen(false);
         }}
         onReset={resetFilters}
@@ -212,13 +220,13 @@ function BrowseContent() {
               transition={{ duration: 0.25 }}
               className="pt-4 md:pt-0"
             >
-              {selectedDesigner && (
+              {selectedAvatar && (
                 <div className="max-w-[1600px] mx-auto px-6 mb-6">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                    <span className="text-sm font-medium text-gray-600">Designer:</span>
-                    <span className="text-sm font-bold text-[#111111]">{selectedDesigner.name}</span>
+                    <span className="text-sm font-medium text-gray-600">Avatar:</span>
+                    <span className="text-sm font-bold text-[#111111]">{selectedAvatar.name}</span>
                     <button 
-                      onClick={clearDesignerFilter}
+                      onClick={clearAvatarFilter}
                       className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
                     >
                       <X className="w-3 h-3 text-white" />
@@ -246,7 +254,7 @@ function BrowseContent() {
                       <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
                         <span className="text-xs font-medium text-[#111111]">{cat}</span>
                         <button 
-                          onClick={() => setSelectedCategories(selectedCategories.filter(c => c !== cat))}
+                          onClick={() => handleCategoryChange(selectedCategories.filter(c => c !== cat))}
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
                         >
                           <X className="w-2.5 h-2.5 text-white" />
@@ -258,7 +266,7 @@ function BrowseContent() {
                       <button 
                         onClick={() => {
                           setSortBy('balanced');
-                          setSelectedCategories([]);
+                          handleCategoryChange([]);
                         }}
                         className="text-xs font-medium text-gray-500 hover:text-[#111111] underline transition-colors"
                       >
@@ -269,7 +277,7 @@ function BrowseContent() {
                 </div>
               )}
               
-              {debouncedSearchQuery.trim().length >= 2 && !selectedDesigner && (
+              {debouncedSearchQuery.trim().length >= 2 && !selectedAvatar && (
                 <div className="max-w-[1600px] mx-auto px-6 mb-5">
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-sm text-gray-500 font-medium">Results for</span>

@@ -5,7 +5,7 @@ import type { Post } from '../logic/mockData';
 import { PostCard } from './PostCard';
 import { useMasonryColumns } from '../hooks/useMasonryColumns';
 
-type BadgeType = 'top-rated' | null;
+import type { BadgeType } from '../logic/badgeUtils';
 
 interface MasonryGridProps {
   posts: Post[];

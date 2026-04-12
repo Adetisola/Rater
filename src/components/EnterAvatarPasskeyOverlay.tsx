@@ -4,13 +4,13 @@ import { Input } from './ui/Input';
 import { X } from 'lucide-react';
 import type { Avatar } from '../logic/mockData';
 
-interface EnterPasskeyOverlayProps {
+interface EnterAvatarPasskeyOverlayProps {
   avatar: Avatar;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function EnterPasskeyOverlay({ avatar, onClose, onSuccess }: EnterPasskeyOverlayProps) {
+export function EnterAvatarPasskeyOverlay({ avatar, onClose, onSuccess }: EnterAvatarPasskeyOverlayProps) {
   const [passkey, setPasskey] = useState('');
   const [error, setError] = useState(false);
 

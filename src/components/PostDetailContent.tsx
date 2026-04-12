@@ -1,11 +1,8 @@
-"use client";
-
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
-import { ChevronDown, Check, X, Download, Plus, Minus, Share2, ArrowLeft} from 'lucide-react'; // Added icons
-import { MOCK_POSTS, MOCK_AVATARS, getReviewsByPostId, getReviewerDisplayName, type Review, type Post } from '../logic/mockData';
+import { MOCK_POSTS, MOCK_AVATARS, getReviewsByPostId, getReviewerDisplayName, calculatePostMetrics, type Review, type Post } from '../logic/mockData';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -16,6 +13,17 @@ import { computeBadges } from '../logic/badgeUtils';
 import { computeHotPosts } from '../logic/hotPostUtils';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
+import { motion, useMotionValue } from 'framer-motion';
+import { 
+    ArrowLeft, 
+    Download, 
+    Share2, 
+    ChevronDown, 
+    Check, 
+    X, 
+    Plus, 
+    Minus 
+} from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
 const RATE_LIMIT_KEY = 'rater_review_timestamps';
@@ -27,15 +35,19 @@ interface PostDetailOverlayProps {
 
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   // Local state to simulate new reviews being added
-  const { currentUser } = useAuth();
+  const { currentAvatar } = useAuth();
+  const router = useRouter();
   const [userReviews, setUserReviews] = useState<Review[]>([]); 
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isSelfPost, setIsSelfPost] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
 
+  // Compute metrics dynamically from REVIEWS
+  const metrics = useMemo(() => calculatePostMetrics(post.id, userReviews), [post.id, userReviews]);
+
   // Check if user has already reviewed or if it's their own post
   useEffect(() => {
-    if (currentUser && post.designerId === currentUser.id) {
+    if (currentAvatar && post.avatarId === currentAvatar.id) {
         setIsSelfPost(true);
     } else {
         setIsSelfPost(false);
@@ -45,7 +57,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     if (hasReviewedPost(post.id)) {
         setHasReviewed(true);
     }
-  }, [post.id, currentUser, post.designerId]);
+  }, [post.id, currentAvatar, post.avatarId]);
 
   const [isExpanded, setIsExpanded] = useState(false); // For description
   const [sortBy, setSortBy] = useState('Newest');
@@ -112,8 +124,6 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     return () => el.removeEventListener('wheel', onWheel);
   }, [isImageFullscreen, zoomScale, dragConstraints, x, y]);
 
-  // removed body overflow lock for page navigation
-
   // Reset visible count when sort changes
   useEffect(() => {
     setVisibleCount(REVIEWS_PER_PAGE);
@@ -122,7 +132,6 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   // Compute badge for this post using centralized logic
   const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
   const badge = badgeMap[post.id];
-  const reviewCount = post.rating.reviewCount;
 
   // Compute 🔥 hot status using centralized logic
   const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
@@ -135,7 +144,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
   const sortedReviews = useMemo(() => {
     return [...allReviews].sort((a, b) => {
-      const getAvg = (r: Review) => (r.ratings.clarity + r.ratings.purpose + r.ratings.aesthetics) / 3;
+      const getAvg = (r: Review) => (r.clarity + r.purpose + r.aesthetics) / 3;
       const getTime = (r: Review) => new Date(r.createdAt).getTime();
 
       if (sortBy === 'Highest Rated') return getAvg(b) - getAvg(a);
@@ -151,50 +160,46 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const remainingReviews = sortedReviews.length - visibleCount;
 
   const handleReviewSubmit = async (ratings: any, comment: string, reviewerName: string) => {
-    // STEP 1: Check self-review (already implemented, but re-enforcing in logic)
-    if (currentUser && post.designerId === currentUser.id) {
-        console.error("Self-review blocked");
+    if (currentAvatar && post.avatarId === currentAvatar.id) return;
+    
+    // 1. Double check duplicate prevention (logic layer)
+    const deviceId = getDeviceId();
+    const hasDuplicate = allReviews.some(r => 
+        (currentAvatar && r.reviewerId === currentAvatar.id) || 
+        (!currentAvatar && r.deviceId === deviceId)
+    );
+
+    if (hasDuplicate || hasReviewedPost(post.id)) {
+        alert("You've already reviewed this post.");
         return;
     }
 
-    // STEP 2: Check device-based duplicate review
-    if (hasReviewedPost(post.id)) {
-        alert("You've already reviewed this post from this device.");
-        return;
-    }
-
-    // STEP 3: Apply rate limiting
     const now = Date.now();
     const timestamps: number[] = JSON.parse(localStorage.getItem(RATE_LIMIT_KEY) || '[]');
-    const validTimestamps = timestamps.filter(t => now - t < 60000); // Filter to last 60 seconds
+    const validTimestamps = timestamps.filter(t => now - t < 60000);
     
     if (validTimestamps.length >= 5) {
-        // Apply soft limit: Show message and add a slight delay
         setRateLimitMessage("You're reviewing quickly — slow down a bit 🙂");
-        await new Promise(resolve => setTimeout(resolve, 30000)); // 30 second soft delay
+        await new Promise(resolve => setTimeout(resolve, 30000));
         setRateLimitMessage(null);
     }
 
-    // STEP 4: Get deviceId
-    const deviceId = getDeviceId();
-
-    // STEP 5: Prepare review payload
     const newReview: Review = {
         id: `r_new_${Date.now()}`,
         postId: post.id,
-        ratings,
+        clarity: ratings.clarity,
+        purpose: ratings.purpose,
+        aesthetics: ratings.aesthetics,
         comment,
-        reviewerId: currentUser?.id,
-        reviewerName: currentUser ? undefined : reviewerName,
+        reviewerId: currentAvatar?.id,
+        reviewerName: currentAvatar ? undefined : reviewerName,
         createdAt: new Date().toISOString(),
         deviceId: deviceId
     };
 
-    // STEP 6: Submit review (local state update for mock)
     setUserReviews([newReview, ...userReviews]);
     setHasReviewed(true);
 
-    // STEP 7: On success: persist review event and update rate limit timestamps
     markPostAsReviewed(post.id);
     const updatedTimestamps = [...validTimestamps, Date.now()];
     localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
@@ -228,13 +233,11 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     };
   }, [isReviewCountTooltipVisible, isTopRatedTooltipVisible]);
 
-  // Total reviews = actual post reviews + user-submitted reviews
-  const totalReviews = allReviews.length;
-  const isLocked = totalReviews < 3;
-
   const handleLoadMore = () => {
     setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
   };
+
+  const avatar = MOCK_AVATARS[post.avatarId];
 
   return (
     <motion.div 
@@ -287,10 +290,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         </span>
                     </div>
                     
-                    
                     {/* Action Buttons - Top Right */}
                     <div className="absolute top-6 right-6 flex gap-3 z-20">
-                         {/* Download Button */}
                          <button 
                             onClick={async (e) => {
                                 e.stopPropagation();
@@ -315,7 +316,6 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             <Download className="w-5 h-5 text-black" />
                         </button>
 
-                        {/* Share Button */}
                         <button 
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -323,7 +323,6 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             }}
                             className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
                         >
-                            {/* <img src="/icons/share.svg" className="w-5 h-5" alt="Share" /> */}
                             <Share2 className="w-5 h-5 text-black" />
                         </button>
                     </div>
@@ -335,8 +334,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         <span className="text-[10px] font-semibold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
                             {post.category}
                         </span>
-                        {/* Badge System: Active or Historical */}
-                        {badge === 'top-rated' ? (
+                        {badge === 'top_rated_active' && (
                             <div 
                                 ref={topRatedTooltipRef}
                                 className="relative group/toprated cursor-help"
@@ -346,43 +344,29 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     🏆 Top Rated
                                 </span>
 
-                                {/* Tooltip */}
                                 <div className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
                                     ${isTopRatedTooltipVisible 
                                         ? 'opacity-100 visible translate-y-0' 
                                         : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'
                                     }`}
                                 >
-                                    <div className="absolute top-full left-4 w-3 h-3" />
-                                    <p className="leading-relaxed text-center">
-                                        Top 3 highest-rated posts this week
-                                    </p>
+                                    <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
                                 </div>
                             </div>
-                        ) : post.wasTopRated ? (
-                            <span className="text-[10px] font-bold uppercase tracking-wider border-2 border-gray-100 text-gray-400 px-3 py-1.5 rounded-full">
-                                Previously <span className='text-[#FEC312]'>Top Rated</span>
-                            </span>
-                        ) : null}
+                        )}
                     </div>
-                    <span className="text-xs font-medium text-gray-400">
-                        {formatTimeAgo(post.createdAt)}
-                    </span>
+                    <span className="text-xs font-medium text-gray-400">{formatTimeAgo(post.createdAt)}</span>
                 </div>
 
                 {/* 3. Title */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                     <h1 className="text-xl xs:text-2xl font-semibold text-[#111111] leading-tight">
                         {post.title}
                     </h1>
-                    {/* Review Count Metadata */}
                     <div 
                         ref={reviewCountTooltipRef}
                         className="relative group/tooltip cursor-help"
-                        onClick={() => {
-                            // On mobile/tablet, toggle tooltip. On desktop, hover handles it but click won't hurt.
-                            setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible);
-                        }}
+                        onClick={() => setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible)}
                     >
                         <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
                             {isHot && (
@@ -394,17 +378,15 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     />
                                 </div>
                             )}
-                            {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                            {metrics.reviewCount} {metrics.reviewCount === 1 ? 'review' : 'reviews'}
                         </span>
 
-                        {/* Tooltip */}
                         <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
                             ${isReviewCountTooltipVisible 
                                 ? 'opacity-100 visible translate-y-0' 
                                 : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'
                             }`}
                         >
-                            <div className="absolute top-full right-4" />
                             <p className="leading-relaxed text-center">
                                 {isHot 
                                     ? "This design is getting high attention based on recent reviews" 
@@ -414,9 +396,6 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         </div>
                     </div>
                 </div>
-                {/* <h1 className="text-2xl font-semibold text-[#111111] leading-tight">
-                    {post.title}
-                </h1> */}
 
                 {/* 4. Description */}
                 <div>
@@ -434,23 +413,31 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     )}
                 </div>
 
-                {/* 5. Author */}
                 {/* 5. Author & Rating */}
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                    <button 
+                        onClick={() => {
+                            onClose();
+                            router.push(`/app/avatar/${post.avatarId}`);
+                        }}
+                        className="flex items-center gap-3 group/author"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">
                             <img 
-                                src={MOCK_AVATARS[post.designerId]?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} 
-                                className="w-full h-full object-cover" 
+                                src={avatar?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatarId}`} 
+                                className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300" 
                                 alt="Avatar" 
                             />
                         </div>
-                        <span className="text-sm font-semibold text-[#111111]">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
-                    </div>
+                        <div className="text-left">
+                            <span className="block text-sm font-semibold text-[#111111] group-hover/author:text-[#FEC312] transition-colors">{avatar?.name || 'Unknown'}</span>
+                            <span className="block text-[10px] text-gray-400 font-medium uppercase tracking-wider">View Profile</span>
+                        </div>
+                    </button>
 
                     {/* RATING DISPLAY (Moved Here) */}
                     <div className="flex items-center gap-2">
-                         {isLocked ? (
+                         {!metrics.ratingUnlocked ? (
                              <span className="text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
                          ) : (
                              <>
@@ -458,19 +445,17 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     {[1,2,3,4,5].map(i => (
                                         <img 
                                             key={i} 
-                                            src={i <= Math.floor(post.rating.average) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
+                                            src={i <= Math.floor(metrics.averageScore) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
                                             alt="star"
                                             className="w-6 h-6"
                                         />
                                     ))}
                                 </div>
-                                <span className="text-2xl font-semibold text-[#111111]">{post.rating.average}</span>
+                                <span className="text-2xl font-semibold text-[#111111]">{metrics.averageScore}</span>
                              </>
                          )}
                     </div>
                 </div>
-
-
 
                 {isShareOpen && (
                     <SharePostOverlay onClose={() => setIsShareOpen(false)} postId={post.id} />
@@ -522,8 +507,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     ) : !hasReviewed ? (
                         <ReviewForm 
                             onSubmit={handleReviewSubmit} 
-                            isLoggedIn={!!currentUser}
-                            initialName={currentUser?.name}
+                            isLoggedIn={!!currentAvatar}
+                            initialName={currentAvatar?.name}
                         />
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">
@@ -543,7 +528,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
         <div className="border-t border-gray-100 pt-8 xs:pt-12">
             
             <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-2xl font-semibold text-[#111111]">Reviews ({totalReviews})</h2>
+                <h2 className="text-2xl font-semibold text-[#111111]">Reviews ({allReviews.length})</h2>
                 
                 {/* Sort Dropdown */}
                 <div className="relative">
@@ -577,7 +562,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
             <div className="space-y-6">
                 {visibleReviews.map((review) => {
-                    const ratingAvg = (review.ratings.clarity + review.ratings.purpose + review.ratings.aesthetics) / 3;
+                    const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
                     const timeLabel = formatTimeAgo(review.createdAt);
 
                     return (
@@ -624,15 +609,15 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
                                         <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Clarity">
                                             <img src="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" alt="Clarity" className="w-5 h-5 object-contain" />
-                                            {review.ratings.clarity}
+                                            {review.clarity}
                                         </div>
                                         <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Purpose">
                                             <img src="https://img.icons8.com/color/96/goal--v1.png" alt="Purpose" className="w-5 h-5 object-contain" />
-                                            {review.ratings.purpose}
+                                            {review.purpose}
                                         </div>
                                         <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Aesthetics">
                                             <img src="https://img.icons8.com/color/96/color-palette.png" alt="Aesthetics" className="w-5 h-5 object-contain" />
-                                            {review.ratings.aesthetics}
+                                            {review.aesthetics}
                                         </div>
                                     </div>
 

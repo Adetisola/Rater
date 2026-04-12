@@ -40,7 +40,7 @@ export function normalizeText(text: string): string {
 // TYPES FOR SEARCH RESULTS
 // ============================================================================
 
-export interface DesignerSearchResult {
+export interface AvatarSearchResult {
   avatar: Avatar;
   score: number;
 }
@@ -57,7 +57,7 @@ export interface CategorySearchResult {
 }
 
 export interface SectionedSearchResults {
-  designers: DesignerSearchResult[];
+  avatars: AvatarSearchResult[];
   posts: PostSearchResult[];
   categories: CategorySearchResult[];
 }
@@ -74,8 +74,8 @@ interface NormalizedPost extends Post {
   title_normalized: string;
   category_normalized: string;
   description_normalized: string;
-  designer_name: string;
-  designer_name_normalized: string;
+  avatar_name: string;
+  avatar_name_normalized: string;
 }
 
 interface NormalizedCategory {
@@ -88,7 +88,7 @@ interface NormalizedCategory {
 // ============================================================================
 
 export interface SearchIndexes {
-  designers: Fuse<NormalizedAvatar>;
+  avatars: Fuse<NormalizedAvatar>;
   posts: Fuse<NormalizedPost>;
   categories: Fuse<NormalizedCategory>;
 }
@@ -109,17 +109,17 @@ export function createSearchIndexes(
       name_normalized: normalizeText(avatar.name),
     }));
 
-  // Normalize Posts with designer name
+  // Normalize Posts with avatar name
   const normalizedPosts: NormalizedPost[] = posts.map(post => {
-    const designer = avatars[post.designerId];
-    const designerName = designer ? designer.name : '';
+    const avatar = avatars[post.avatarId];
+    const avatarName = avatar ? avatar.name : '';
     return {
       ...post,
       title_normalized: normalizeText(post.title),
       category_normalized: normalizeText(post.category),
       description_normalized: normalizeText(post.description),
-      designer_name: designerName,
-      designer_name_normalized: normalizeText(designerName),
+      avatar_name: avatarName,
+      avatar_name_normalized: normalizeText(avatarName),
     };
   });
 
@@ -142,7 +142,7 @@ export function createSearchIndexes(
       { name: 'title_normalized', weight: 1.0 },
       { name: 'category_normalized', weight: 0.7 },
       { name: 'description_normalized', weight: 0.5 },
-      { name: 'designer_name_normalized', weight: 0.3 },
+      { name: 'avatar_name_normalized', weight: 0.3 },
     ],
     threshold: 0.35,
     includeMatches: true,
@@ -160,7 +160,7 @@ export function createSearchIndexes(
   };
 
   return {
-    designers: new Fuse(normalizedAvatars, avatarOptions),
+    avatars: new Fuse(normalizedAvatars, avatarOptions),
     posts: new Fuse(normalizedPosts, postOptions),
     categories: new Fuse(normalizedCategories, categoryOptions),
   };
@@ -176,20 +176,20 @@ export function createSearchIndexes(
 export function searchAll(
   indexes: SearchIndexes,
   query: string,
-  limits: { designers: number; posts: number; categories: number } = { designers: 3, posts: 5, categories: 3 }
+  limits: { avatars: number; posts: number; categories: number } = { avatars: 3, posts: 5, categories: 3 }
 ): SectionedSearchResults {
   if (!query || query.trim().length < 2) {
-    return { designers: [], posts: [], categories: [] };
+    return { avatars: [], posts: [], categories: [] };
   }
 
   const normalizedQuery = normalizeText(query);
   if (normalizedQuery.length < 2) {
-    return { designers: [], posts: [], categories: [] };
+    return { avatars: [], posts: [], categories: [] };
   }
 
-  // Search designers
-  const designerResults = indexes.designers
-    .search(normalizedQuery, { limit: limits.designers })
+  // Search avatars
+  const avatarResults = indexes.avatars
+    .search(normalizedQuery, { limit: limits.avatars })
     .map(result => ({
       avatar: result.item as Avatar,
       score: result.score ?? 1,
@@ -213,7 +213,7 @@ export function searchAll(
     }));
 
   return {
-    designers: designerResults,
+    avatars: avatarResults,
     posts: postResults,
     categories: categoryResults,
   };

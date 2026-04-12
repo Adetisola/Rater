@@ -22,7 +22,7 @@ export function SubmitPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   // IDENTITY STATE
-  const { currentUser } = useAuth();
+  const { currentAvatar } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -37,21 +37,21 @@ export function SubmitPage() {
 
   const handleSubmit = () => {
     // SUBMIT LOGIC HERE
-    console.log("Submitting:", { title, category, description, image, designerId: currentUser?.id });
+    console.log("Submitting:", { title, category, description, image, avatarId: currentAvatar?.id });
     setIsSuccess(true);
   };
 
-  if (!currentUser) {
+  if (!currentAvatar) {
       return (
         <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
             <Lock className="w-16 h-16 text-gray-200 mb-6" />
-            <h1 className="text-3xl font-bold mb-4 text-[#111111]">Login Required</h1>
+            <h1 className="text-3xl font-semibold mb-4 text-[#111111]">Login Required</h1>
             <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
               You must be logged in to post your work and receive feedback from the community.
             </p>
             <div className="flex gap-4 mt-10">
                 <Button 
-                    className="h-12 px-8 rounded-full text-lg font-semibold" 
+                    className="h-12 px-8 rounded-full text-lg font-medium text-white" 
                     variant="primary" 
                     onClick={() => setShowAuthOverlay(true)}
                 >
@@ -197,18 +197,18 @@ export function SubmitPage() {
                       
                       <div className="border border-[#FEC312] bg-[#FFFBF0] rounded-[24px] p-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
                           <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-white shadow-sm">
-                              {currentUser.avatarUrl ? (
-                                 <img src={currentUser.avatarUrl} alt={currentUser.name} className="w-full h-full object-cover" />
+                              {currentAvatar.avatarUrl ? (
+                                 <img src={currentAvatar.avatarUrl} alt={currentAvatar.name} className="w-full h-full object-cover" />
                               ) : (
                                   <div 
                                      className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
-                                     style={{ backgroundColor: currentUser.bgColor }}
+                                     style={{ backgroundColor: currentAvatar.bgColor }}
                                   >
-                                      {currentUser.name.substring(0, 2).toUpperCase()}
+                                      {currentAvatar.name.substring(0, 2).toUpperCase()}
                                   </div>
                               )}
                           </div>
-                          <h4 className="font-semibold text-lg text-[#111111] mb-2">{currentUser.name}</h4>
+                          <h4 className="font-semibold text-lg text-[#111111] mb-2">{currentAvatar.name}</h4>
                       </div>
                  </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ListFilter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
@@ -17,8 +18,6 @@ const SORT_OPTION_LABELS: Record<string, string> = {
   newest: 'Newest',
 };
 
-
-
 interface MobileSearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,7 +28,7 @@ interface MobileSearchOverlayProps {
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
   onPostSelect?: (post: Post) => void;
-  onDesignerSelect?: (avatar: Avatar) => void;
+  onAvatarSelect?: (avatar: Avatar) => void;
   onReset?: () => void;
   searchIndexes: SearchIndexes;
   activeLayoutId?: string;
@@ -45,13 +44,14 @@ export function MobileSearchOverlay({
   selectedCategories,
   onCategoryChange,
   onPostSelect,
-  onDesignerSelect,
+  onAvatarSelect,
   onReset,
   searchIndexes,
   activeLayoutId
 }: MobileSearchOverlayProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   // Debounce search query for performance
   const debouncedQuery = useDebounce(searchQuery, 150);
@@ -59,16 +59,16 @@ export function MobileSearchOverlay({
   // Perform sectioned search with debounced query
   const searchResults: SectionedSearchResults = (() => {
     if (!debouncedQuery || debouncedQuery.trim().length < 2) {
-      return { designers: [], posts: [], categories: [] };
+      return { avatars: [], posts: [], categories: [] };
     }
     return searchAll(searchIndexes, debouncedQuery, {
-      designers: 5,
+      avatars: 5,
       posts: 10,
       categories: 5
     });
   })();
 
-  const hasResults = searchResults.designers.length > 0 || 
+  const hasResults = searchResults.avatars.length > 0 || 
                      searchResults.posts.length > 0 || 
                      searchResults.categories.length > 0;
 
@@ -101,11 +101,10 @@ export function MobileSearchOverlay({
     }
   }, [isOpen, onClose]);
 
-  // Handle designer click
-  const handleDesignerClick = (avatar: Avatar) => {
+  // Handle avatar click
+  const handleAvatarClick = (avatar: Avatar) => {
     onClose();
-    onDesignerSelect?.(avatar);
-    setTimeout(() => onSearchChange(''), 0);
+    router.push(`/app/avatar/${avatar.id}`);
   };
 
   // Handle post click
@@ -116,11 +115,11 @@ export function MobileSearchOverlay({
 
   // Handle category click
   const handleCategoryClick = (category: Category) => {
+    onClose();
+    
     if (!selectedCategories.includes(category)) {
       onCategoryChange([...selectedCategories, category]);
     }
-    onClose();
-    setTimeout(() => onSearchChange(''), 0);
   };
 
   // Handle Enter key
@@ -232,18 +231,36 @@ export function MobileSearchOverlay({
         {/* Results */}
         {hasResults ? (
           <div className="divide-y divide-gray-100">
-            {/* DESIGNERS SECTION */}
-            {searchResults.designers.length > 0 && (
+            {/* CATEGORIES SECTION */}
+            {searchResults.categories.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Designers</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Categories</span>
                 </div>
                 <div className="p-2">
-                  {searchResults.designers.map(({ avatar }) => (
-                    <DesignerResultItem 
+                  {searchResults.categories.map(({ category }) => (
+                    <CategoryResultItem 
+                      key={category}
+                      category={category}
+                      onClick={() => handleCategoryClick(category)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* AVATARS SECTION */}
+            {searchResults.avatars.length > 0 && (
+              <div>
+                <div className="px-4 py-2 bg-gray-50">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Avatars</span>
+                </div>
+                <div className="p-2">
+                  {searchResults.avatars.map(({ avatar }) => (
+                    <AvatarResultItem 
                       key={avatar.id}
                       avatar={avatar}
-                      onClick={() => handleDesignerClick(avatar)}
+                      onClick={() => handleAvatarClick(avatar)}
                     />
                   ))}
                 </div>
@@ -267,24 +284,6 @@ export function MobileSearchOverlay({
                 </div>
               </div>
             )}
-
-            {/* CATEGORIES SECTION */}
-            {searchResults.categories.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Categories</span>
-                </div>
-                <div className="p-2">
-                  {searchResults.categories.map(({ category }) => (
-                    <CategoryResultItem 
-                      key={category}
-                      category={category}
-                      onClick={() => handleCategoryClick(category)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : debouncedQuery.trim().length >= 2 ? (
           <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
@@ -292,7 +291,7 @@ export function MobileSearchOverlay({
           </div>
         ) : (
           <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
-            Search by title, designer, or category...
+            Search by title, avatar, or category...
           </div>
         )}
       </div>
@@ -319,12 +318,12 @@ export function MobileSearchOverlay({
 // RESULT ITEM COMPONENTS (simplified versions for mobile)
 // ============================================================================
 
-interface DesignerResultItemProps {
+interface AvatarResultItemProps {
   avatar: Avatar;
   onClick: () => void;
 }
 
-function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
+function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
   const initials = avatar.name
     .split(' ')
     .map(n => n[0])
@@ -336,6 +335,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
     <div
       onMouseDown={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClick();
       }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
@@ -352,7 +352,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
       </div>
       <div className="flex-1 min-w-0">
         <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
-        <p className="text-xs text-gray-400">Designer</p>
+        <p className="text-xs text-gray-400">Avatar</p>
       </div>
     </div>
   );
@@ -366,7 +366,10 @@ interface PostResultItemProps {
 function PostResultItem({ post, onClick }: PostResultItemProps) {
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
     >
       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
@@ -394,6 +397,7 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
     <div
       onMouseDown={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClick();
       }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
@@ -405,3 +409,4 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
     </div>
   );
 }
+

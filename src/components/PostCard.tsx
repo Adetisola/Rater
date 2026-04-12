@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Post } from '../logic/mockData';
-import { MOCK_AVATARS } from '../logic/mockData';
+import { MOCK_AVATARS, calculatePostMetrics } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import type { BadgeType } from '../logic/badgeUtils';
 import Link from 'next/link';
-// Using skeleton for loading state
 
 interface PostCardProps {
   post: Post;
-  badge?: 'top-rated' | null;
+  badge?: BadgeType;
   isHot?: boolean;
   isLoading?: boolean;
 }
@@ -20,14 +20,15 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
+  // Compute metrics dynamically from REVIEWS
+  const metrics = useMemo(() => calculatePostMetrics(post.id), [post.id]);
+
   useEffect(() => {
-    // Reset states when URL changes
     if (retryCount === 0) {
         setImageLoaded(false);
         setHasError(false);
     }
     
-    // Safety check for empty URLs
     if (!post.imageUrl || post.imageUrl.trim() === '') {
         setHasError(true);
         setImageLoaded(true);
@@ -41,11 +42,9 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
       setHasError(false);
     };
     img.onerror = () => {
-      // After 3 failed attempts (0, 1, 2), stop retrying and show error state
       if (retryCount >= 2) {
-        console.warn(`PostCard: Failed to load image for post ${post.id} after ${retryCount + 1} attempts.`);
         setHasError(true);
-        setImageLoaded(true); // Stop showing skeleton
+        setImageLoaded(true);
       } else {
         const timer = setTimeout(() => {
           setRetryCount(prev => prev + 1);
@@ -57,46 +56,32 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
 
   const showSkeleton = isLoading || (!imageLoaded && !hasError);
   const displayImageUrl = hasError 
-    ? 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800' // Stylish fallback gradient
+    ? 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800'
     : post.imageUrl;
 
   if (showSkeleton) {
       return (
         <div className="bg-[#ebebeb] p-1.5 rounded-[24px] overflow-hidden h-full">
             <div className="relative z-10 h-full flex flex-col">
-                {/* SKELETON IMAGE */}
                 <div className="w-full aspect-4/3 bg-[#d1d5db] rounded-[20px] animate-pulse mb-4" />
-                
                 <div className="px-2 xs:px-4 pt-0 pb-2 flex-1 flex flex-col">
-                    {/* META ROW */}
                     <div className="flex justify-between items-center mb-4">
-                         <div className="h-5 w-20 bg-[#d1d5db] rounded-full animate-pulse" /> {/* Category */}
-                         <div className="h-3 w-10 bg-[#d1d5db] rounded-full animate-pulse" /> {/* Timestamp */}
+                         <div className="h-5 w-20 bg-[#d1d5db] rounded-full animate-pulse" />
+                         <div className="h-3 w-10 bg-[#d1d5db] rounded-full animate-pulse" />
                     </div>
-                    
-                    {/* TITLE */}
                     <div className="h-5 xs:h-7 w-3/4 bg-[#d1d5db] rounded-lg animate-pulse mb-3" />
-                    
-                    {/* DESCRIPTION */}
                     <div className="hidden min-[769px]:block space-y-2 mb-6">
                         <div className="h-3 w-full bg-[#d1d5db] rounded animate-pulse" />
                         <div className="h-3 w-11/12 bg-[#d1d5db] rounded animate-pulse" />
                         <div className="h-3 w-2/3 bg-[#d1d5db] rounded animate-pulse" />
                     </div>
-                    
                     <div className="flex-1" />
-
-                    {/* AUTHOR */}
                     <div className="flex items-center gap-2 mb-4">
                         <div className="w-5 h-5 rounded-full bg-[#d1d5db] animate-pulse" />
                         <div className="h-3 w-20 bg-[#d1d5db] rounded animate-pulse" />
                     </div>
-                    
-                    {/* FOOTER */}
                     <div className="pt-4 border-t border-black/5 flex items-center justify-between">
-                         <div className="hidden xs:block h-4 w-8 bg-[#d1d5db] rounded animate-pulse" /> {/* Count */}
-                         
-                         {/* SKELETON STARS */}
+                         <div className="hidden xs:block h-4 w-8 bg-[#d1d5db] rounded animate-pulse" />
                          <div className="flex gap-0.5 animate-pulse">
                              {[1, 2, 3, 4, 5].map((i) => (
                                 <img 
@@ -114,15 +99,12 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
       );
   }
 
-  const isTopRated = badge === 'top-rated';
-  const reviewCount = post.rating.reviewCount;
+  const isTopRated = badge === 'top_rated_active';
+  const avatar = MOCK_AVATARS[post.avatarId];
 
   return (
     <Link href={`/app/post/${post.id}`} className="group relative break-inside-avoid block">
-      {/* CARD CONTAINER */}
       <div className="bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-300">
-        
-        {/* HOVER BACKGROUND - Blurred Image */}
         <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
             <div 
               className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
@@ -130,132 +112,111 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
             />
         </div>
 
-        {/* CONTENT WRAPPER */}
         <div className="relative z-10">
-            {/* IMAGE AREA (Inset) */}
             <div className={`relative w-full overflow-hidden rounded-[20px] ${isTopRated ? 'border-2 border-[#FEC312]' : ''}`}>
-            
-            <img 
-                src={displayImageUrl} 
-                alt={post.title} 
-                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
-            />
-            
-            {/* 'Top Rated' Badge - Yellow Pill */}
-            {isTopRated && (
-                <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
-                    <div className="bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                        <span>🏆 Top Rated</span>
-                    </div>
-
-                    {/* Tooltip */}
-                    <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
-                        <div className="absolute -top-2 left-4 w-3 h-3" />
-                        <p className="leading-relaxed text-center">
-                            Top 3 highest-rated posts this week
-                        </p>
-                    </div>
-                </div>
-            )}
-            </div>
-
-            {/* CONTENT AREA */}
-            <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
-            
-            {/* ROW 1: TAG & TIME */}
-            <div className="flex justify-between items-center mb-3">
-                <span className="bg-white text-[#111111] text-[10px] uppercase font-semibold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
-                    {post.category}
-                </span>
-                <span className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2">
-                    {formatTimeAgo(post.createdAt)}
-                </span>
-            </div>
-
-            {/* ROW 2: TITLE */}
-            <h3 className="font-medium lg:font-semibold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate md:whitespace-normal">
-                {post.title}
-            </h3>
-
-            {/* ROW 3: DESCRIPTION */}
-            <div className="hidden md:block mb-4">
-                <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors truncate">
-                    {post.description}
-                </p>
-            </div>
-
-            {/* ROW 4: AUTHOR */}
-            <div className="flex items-center gap-2 mb-2 sm:mb-4">
-                <div className="w-4 h-4 xs:w-5 xs:h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden">
-                    <img 
-                        src={MOCK_AVATARS[post.designerId]?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.designerId}`} 
-                        alt="Avatar" 
-                        className="w-full h-full object-cover" 
-                    />
-                </div>
-                <span className="text-xs md:text-sm medium text-[#111111] group-hover:text-white transition-colors">{MOCK_AVATARS[post.designerId]?.name || 'Unknown'}</span>
-            </div>
-
-            {/* ROW 5: FOOTER (STATS) */}
-            <div className="pt-2 sm:pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
+                <img 
+                    src={displayImageUrl} 
+                    alt={post.title} 
+                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
+                />
                 
-                {/* LEFT: Review Count Metadata */}
-                <div className="relative group/tooltip cursor-help">
-                    <div className="flex items-start gap-1 xs:gap-1.5">
-                        <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                        <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
-                            {reviewCount}
-                            {isHot && (
-                                <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
-                                    <DotLottieReact
-                                        src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                        loop
-                                        autoplay
-                                    />
-                                </div>
-                            )}
-                        </span>
+                {isTopRated && (
+                    <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
+                        <div className="bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
+                            <span>🏆 Top Rated</span>
+                        </div>
+                        <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
+                            <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
+                        </div>
                     </div>
-
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-0 mb-3 w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:translate-y-0 transition-all duration-200 hidden md:block">
-                        <div className="absolute top-full left-4" />
-                        <p className="leading-relaxed text-center">
-                            {isHot 
-                                ? "This design is getting high attention based on recent reviews" 
-                                : "Number of structured reviews this design has received"
-                            }
-                        </p>
-                    </div>
-                </div>
-
-                {/* RIGHT: Ratings */}
-                <div className="flex items-center gap-1.5 w-auto justify-end">
-                    {post.rating.isLocked ? (
-                        <span className="text-[10px] font-bold text-[#009241] group-hover:text-[#4ade80] transition-colors text-right">
-                            Rating Unlocks at 3 Reviews
-                        </span>
-                    ) : (
-                        <>
-                            <div className="flex gap-0.5">
-                                {[1,2,3,4,5].map(i => {
-                                    const isActive = i <= Math.floor(post.rating.average);
-                                    return (
-                                        <img
-                                            key={i} 
-                                            src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
-                                            className={`w-3 h-3 sm:w-4 sm:h-4 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
-                                            alt="" 
-                                        />
-                                    );
-                                })}
-                            </div>
-                            <span className="text-sm font-medium text-[#111111] group-hover:text-white transition-colors">{post.rating.average}</span>
-                        </>
-                    )}
-                </div>
-
+                )}
             </div>
+
+            <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
+                <div className="flex justify-between items-center mb-3">
+                    <span className="bg-white text-[#111111] text-[10px] uppercase font-semibold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
+                        {post.category}
+                    </span>
+                    <span className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2">
+                        {formatTimeAgo(post.createdAt)}
+                    </span>
+                </div>
+
+                <h3 className="font-medium lg:font-semibold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate md:whitespace-normal">
+                    {post.title}
+                </h3>
+
+                <div className="hidden md:block mb-4">
+                    <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors truncate">
+                        {post.description}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 mb-2 sm:mb-4">
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden">
+                        <img 
+                            src={avatar?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatarId}`} 
+                            alt="Avatar" 
+                            className="w-full h-full object-cover" 
+                        />
+                    </div>
+                    <span className="text-xs md:text-sm medium text-[#111111] group-hover:text-white transition-colors">
+                        {avatar?.name || 'Unknown'}
+                    </span>
+                </div>
+
+                <div className="pt-2 sm:pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
+                    <div className="relative group/tooltip cursor-help">
+                        <div className="flex items-start gap-1 xs:gap-1.5">
+                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
+                            <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
+                                {metrics.reviewCount}
+                                {isHot && (
+                                    <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
+                                        <DotLottieReact
+                                            src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                            loop
+                                            autoplay
+                                        />
+                                    </div>
+                                )}
+                            </span>
+                        </div>
+                        <div className="absolute bottom-full left-0 mb-3 w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:translate-y-0 transition-all duration-200 hidden md:block">
+                            <p className="leading-relaxed text-center">
+                                {isHot 
+                                    ? "This design is getting high attention based on recent reviews" 
+                                    : "Number of structured reviews this design has received"
+                                }
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 w-auto justify-end">
+                        {!metrics.ratingUnlocked ? (
+                            <span className="text-[10px] md:text-[12px] font-bold md:font-semibold text-[#009241] group-hover:text-[#4ade80] transition-colors text-right">
+                                Rating Unlocks at 3 Reviews
+                            </span>
+                        ) : (
+                            <>
+                                <div className="flex gap-0.5">
+                                    {[1,2,3,4,5].map(i => {
+                                        const isActive = i <= Math.floor(metrics.averageScore);
+                                        return (
+                                            <img
+                                                key={i} 
+                                                src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
+                                                className={`w-3 h-3 sm:w-4 sm:h-4 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
+                                                alt="" 
+                                            />
+                                        );
+                                    })}
+                                </div>
+                                <span className="text-sm font-medium text-[#111111] group-hover:text-white transition-colors">{metrics.averageScore}</span>
+                            </>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
       </div>

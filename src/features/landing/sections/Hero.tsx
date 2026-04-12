@@ -138,7 +138,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
           <div className="flex-1 flex justify-end">
             <Link 
               href="/app"
-              className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-semibold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
+              className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-medium text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
             >
               Enter Rater
             </Link>
@@ -222,7 +222,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               {/* Primary CTA */}
               <Link 
                 href="/app"
-                className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-[#FEC312] text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-white hover:bg-[#e6b00f] transition-all duration-300"
+                className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-[#FEC312] text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-white hover:bg-[#e6b00f] transition-all duration-300"
               >
                 Enter Rater
               </Link>
@@ -230,7 +230,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               {/* Secondary CTA */}
               <a 
                 href="#how-it-works"
-                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-semibold text-[#111111] hover:text-[#FEC312] transition-colors"
+                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-[#111111] hover:text-[#FEC312] transition-colors"
               >
                 How it works
               </a>

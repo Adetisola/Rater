@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { MOCK_AVATARS, type Avatar } from '../logic/mockData';
 
 interface AuthContextType {
-  currentUser: Avatar | null;
+  currentAvatar: Avatar | null;
   allAvatars: Record<string, Avatar>;
   login: (name: string, passkey: string) => Promise<boolean>;
   signup: (name: string, passkey: string, avatarUrl?: string) => Promise<boolean>;
@@ -15,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<Avatar | null>(null);
+  const [currentAvatar, setCurrentAvatar] = useState<Avatar | null>(null);
   const [sessionAvatars, setSessionAvatars] = useState<Record<string, Avatar>>({});
   const [isLoading, setIsLoading] = useState(true);
 
@@ -29,12 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSessionAvatars(JSON.parse(savedSessionAvatars));
     }
 
-    const savedUserId = localStorage.getItem('rater_user_id');
-    if (savedUserId) {
+    const savedAvatarId = localStorage.getItem('rater_avatar_id');
+    if (savedAvatarId) {
       // Re-fetch from the merged list
       const merged = { ...MOCK_AVATARS, ...(savedSessionAvatars ? JSON.parse(savedSessionAvatars) : {}) };
-      if (merged[savedUserId]) {
-        setCurrentUser(merged[savedUserId]);
+      if (merged[savedAvatarId]) {
+        setCurrentAvatar(merged[savedAvatarId]);
       }
     }
     setIsLoading(false);
@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (avatar) {
-      setCurrentUser(avatar);
-      localStorage.setItem('rater_user_id', avatar.id);
+      setCurrentAvatar(avatar);
+      localStorage.setItem('rater_avatar_id', avatar.id);
       return true;
     }
     return false;
@@ -73,29 +73,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (exists) return false;
 
-    const newId = `user_session_${Date.now()}`;
+    const newId = `avatar_session_${Date.now()}`;
     const newAvatar: Avatar = {
       id: newId,
       name: name.trim(),
       passkey,
       avatarUrl,
       bgColor: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
-      isBlocked: false
+      isBlocked: false,
+      createdAt: new Date().toISOString()
     };
 
     setSessionAvatars(prev => ({ ...prev, [newId]: newAvatar }));
-    setCurrentUser(newAvatar);
-    localStorage.setItem('rater_user_id', newId);
+    setCurrentAvatar(newAvatar);
+    localStorage.setItem('rater_avatar_id', newId);
     return true;
   }, [allAvatars]);
 
   const logout = useCallback(() => {
-    setCurrentUser(null);
-    localStorage.removeItem('rater_user_id');
+    setCurrentAvatar(null);
+    localStorage.removeItem('rater_avatar_id');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentUser, allAvatars, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentAvatar, allAvatars, login, signup, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

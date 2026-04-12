@@ -22,7 +22,7 @@ export function AvatarPicker({ avatars, selectedAvatarId, onSelect, onCreateNew 
                 key={avatar.id}
                 onClick={() => !avatar.isBlocked && onSelect(avatar)}
                 className={cn(
-                  "flex flex-col items-center justify-center cursor-pointer transition-opacity hover:opacity-80",
+                   "flex flex-col items-center justify-center cursor-pointer transition-opacity hover:opacity-80",
                   avatar.isBlocked && "opacity-50 cursor-not-allowed grayscale"
                 )}
              >

@@ -11,7 +11,7 @@ import Link from 'next/link';
 interface SearchResultsProps {
   results: SectionedSearchResults;
   isVisible: boolean;
-  onDesignerClick: (avatar: Avatar) => void;
+  onAvatarClick: (avatar: Avatar) => void;
   onPostClick: (post: Post) => void;
   onCategoryClick: (category: Category) => void;
   onClose: () => void;
@@ -21,13 +21,13 @@ interface SearchResultsProps {
 export function SearchResults({ 
   results, 
   isVisible, 
-  onDesignerClick,
+  onAvatarClick,
   onPostClick,
   onCategoryClick,
   onClose,
   onSoftClose
 }: SearchResultsProps) {
-  const hasResults = results.designers.length > 0 || results.posts.length > 0 || results.categories.length > 0;
+  const hasResults = results.avatars.length > 0 || results.posts.length > 0 || results.categories.length > 0;
   
   const [mounted, setMounted] = useState(false);
 
@@ -45,9 +45,8 @@ export function SearchResults({
       {createPortal(
         <div 
             className="fixed inset-0 z-40 bg-transparent" 
-            onMouseDown={(e) => {
-            e.preventDefault();
-            (onSoftClose || onClose)();
+            onClick={() => {
+              (onSoftClose || onClose)();
             }}
         />,
         document.body
@@ -65,45 +64,9 @@ export function SearchResults({
         onMouseDown={(e) => e.stopPropagation()}
       >
         
-        {/* DESIGNERS SECTION */}
-        {results.designers.length > 0 && (
-          <div className="border-b border-gray-100">
-            <div className="px-4 py-2 bg-gray-50">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Designers</span>
-            </div>
-            <div className="p-2">
-              {results.designers.map(({ avatar }) => (
-                <DesignerResultItem 
-                  key={avatar.id}
-                  avatar={avatar}
-                  onClick={() => onDesignerClick(avatar)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* POSTS SECTION */}
-        {results.posts.length > 0 && (
-          <div className="border-b border-gray-100">
-            <div className="px-4 py-2 bg-gray-50">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Posts</span>
-            </div>
-            <div className="p-2">
-              {results.posts.map((result) => (
-                <PostResultItem 
-                  key={result.post.id}
-                  result={result}
-                  onClick={() => onPostClick(result.post)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* CATEGORIES SECTION */}
         {results.categories.length > 0 && (
-          <div>
+          <div className="border-b border-gray-100">
             <div className="px-4 py-2 bg-gray-50">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Categories</span>
             </div>
@@ -118,21 +81,57 @@ export function SearchResults({
             </div>
           </div>
         )}
+
+        {/* AVATARS SECTION */}
+        {results.avatars.length > 0 && (
+          <div className="border-b border-gray-100">
+            <div className="px-4 py-2 bg-gray-50">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Avatars</span>
+            </div>
+            <div className="p-2">
+              {results.avatars.map(({ avatar }) => (
+                <AvatarResultItem 
+                  key={avatar.id}
+                  avatar={avatar}
+                  onClick={() => onAvatarClick(avatar)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* POSTS SECTION */}
+        {results.posts.length > 0 && (
+          <div>
+            <div className="px-4 py-2 bg-gray-50">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Posts</span>
+            </div>
+            <div className="p-2">
+              {results.posts.map((result) => (
+                <PostResultItem 
+                  key={result.post.id}
+                  result={result}
+                  onClick={() => onPostClick(result.post)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
 }
 
 // ============================================================================
-// DESIGNER RESULT ITEM
+// AVATAR RESULT ITEM
 // ============================================================================
 
-interface DesignerResultItemProps {
+interface AvatarResultItemProps {
   avatar: Avatar;
   onClick: () => void;
 }
 
-function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
+function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
   const initials = avatar.name
     .split(' ')
     .map(n => n[0])
@@ -144,6 +143,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
     <div
       onMouseDown={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClick();
       }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
@@ -163,7 +163,7 @@ function DesignerResultItem({ avatar, onClick }: DesignerResultItemProps) {
       {/* Name */}
       <div className="flex-1 min-w-0">
         <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
-        <p className="text-xs text-gray-400">Designer</p>
+        <p className="text-xs text-gray-400">Avatar</p>
       </div>
     </div>
   );
@@ -187,10 +187,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
   return (
     <Link
       href={`/app/post/${post.id}`}
-      onClick={(e) => {
-        e.preventDefault();
-        onClick();
-      }}
+      onClick={onClick}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start cursor-pointer"
     >
       {/* Thumbnail */}
@@ -229,6 +226,7 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
     <div
       onMouseDown={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClick();
       }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"

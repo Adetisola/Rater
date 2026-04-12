@@ -85,7 +85,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="p-8 pb-10 flex-1 overflow-y-auto scrollbar-hide flex flex-col">
+        <div className="p-8 pb-10 pt-6 flex-1 overflow-y-auto scrollbar-hide flex flex-col">
           <AnimatePresence mode="wait">
             {activeTab === 'login' ? (
               <motion.div
@@ -97,7 +97,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
               >
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-semibold text-[#111111] mb-2">Welcome Back</h2>
-                  <p className="text-gray-500 text-sm">Login to your designer avatar</p>
+                  <p className="text-gray-500 text-sm">Login to your avatar</p>
                 </div>
                 <AccessAvatarForm 
                   onSuccess={handleLoginSuccess} 
@@ -113,8 +113,8 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                 className="w-full flex flex-col items-center"
               >
                 <div className="text-center mb-2">
-                  <h2 className="text-2xl font-semibold text-[#111111] mb-2">Create Avatar</h2>
-                  <p className="text-gray-500 text-sm">Join the community of Judges</p>
+                  <h2 className="text-2xl font-semibold text-[#111111]">Create Avatar</h2>
+                  <p className="text-gray-500 text-sm mb-2">Join the community of Judges</p>
                 </div>
                 
                 {/* Embedded Signup Form without the extra fixed overlay wrapper */}

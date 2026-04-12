@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { User, Pencil, Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { UserRound, Pencil, Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { validatePasskey, getStrengthColor, getStrengthLabel } from '../logic/passkeyValidation';
 import { MOCK_AVATARS } from '../logic/mockData';
 import { useDebounce } from '../hooks/useDebounce';
@@ -36,6 +36,8 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   const [showStrengthMeter, setShowStrengthMeter] = useState(false);
   const [showPasskey, setShowPasskey] = useState(false);
   const [showConfirmPasskey, setShowConfirmPasskey] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Name Availability State
   const [isCheckingName, setIsCheckingName] = useState(false);
@@ -52,6 +54,21 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
       document.body.style.overflow = originalStyle;
     };
   }, [isEmbedded]);
+  
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image is too large. Max size is 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Check Name Availability
   useEffect(() => {
@@ -103,7 +120,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
     }
     
     setIsCheckingName(true);
-    const success = await signup(name, passkey);
+    const success = await signup(name, passkey, avatarPreview || undefined);
     setIsCheckingName(false);
 
     if (success) {
@@ -127,13 +144,33 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
         <div className="text-center mb-6">
             <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-6 text-[#111111]'}`}>Create your Avatar</h2>
             
-            <p className="text-[12px] uppercase font-semibold text-[#111111] mb-2 tracking-wide">upload a pic</p>
-            <div className="w-16 h-16 bg-surface rounded-full flex items-center justify-center mx-auto mb-4 relative cursor-pointer hover:bg-gray-200 transition-colors">
-                 <User className="w-8 h-8 text-[#111111]" />
-                 <div className="absolute bottom-0 right-0 bg-surface rounded-full p-1 border border-white">
-                    <Pencil className="w-3 h-3 text-[#111111]" />
+            <div 
+                className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative cursor-pointer hover:bg-gray-200 transition-all border-2 border-dashed border-gray-100 group overflow-hidden"
+                onClick={() => fileInputRef.current?.click()}
+            >
+                 {avatarPreview ? (
+                     <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                 ) : (
+                     <UserRound className="w-10 h-10 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                 )}
+                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Pencil className="w-5 h-5 text-white" />
                  </div>
             </div>
+            <input 
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+            />
+            <button 
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-[14px] font-semibold text-[#111111] mt-3 tracking-wide hover:text-[#FEC312] transition-colors"
+            >
+                {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
+            </button>
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">

@@ -66,7 +66,7 @@ export function ForgotPasskeyOverlay({ onCancel, onSend }: ForgotPasskeyOverlayP
             <div className="flex items-center justify-center gap-6 w-full">
                  <button 
                     onClick={onCancel}
-                    className="py-3 px-8 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
+                    className="py-3 px-8 rounded-full text-sm font-semibold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
                  >
                     Cancel
                  </button>
@@ -75,7 +75,7 @@ export function ForgotPasskeyOverlay({ onCancel, onSend }: ForgotPasskeyOverlayP
                     onClick={() => onSend(email)}
                     variant="outline"
                     disabled={!email}
-                    className="px-8 h-12 rounded-full text-sm font-bold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all text-[#111111]"
+                    className="px-8 h-12 rounded-full text-sm font-semibold border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all text-[#111111]"
                 >
                     Send Recovery Link
                 </Button>
