@@ -6,11 +6,12 @@ import { Button } from './ui/Button';
 import { MasonryGrid } from './MasonryGrid';
 import { computeBadges } from '../logic/badgeUtils';
 import { computeHotPosts } from '../logic/hotPostUtils';
-import { LogOut, Settings, Grid, Heart, MessageSquare, ArrowLeft } from 'lucide-react';
+import { LogOut, Grid, Heart, MessageSquare, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { useRouter } from 'next/navigation';
+import { Check, Edit2 } from 'lucide-react';
 
 interface ProfileViewProps {
   avatarId: string;
@@ -18,12 +19,21 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps) {
-  const { currentAvatar: me, logout } = useAuth();
+  // Merge static mock avatars with newly created session avatars
+  const { currentAvatar: me, allAvatars, logout, updateProfile } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
 
-  // Find the avatar to display
-  const targetAvatar = useMemo(() => MOCK_AVATARS[avatarId], [avatarId]);
+  // Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editRole, setEditRole] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editAvatarUrl, setEditAvatarUrl] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Find the avatar to display (using the centralized allAvatars map)
+  const targetAvatar = allAvatars[avatarId];
 
   // Compute badges and hot status for the grid
   const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
@@ -57,20 +67,84 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const signUpDate = targetAvatar ? new Date(targetAvatar.createdAt).getFullYear() : null;
   const isMe = me?.id === avatarId;
 
+  // Initialize edit fields
+  const startEditing = () => {
+    if (!targetAvatar) return;
+    setEditRole(targetAvatar.role || 'Designer');
+    setEditBio(targetAvatar.bio || '');
+    setEditAvatarUrl(targetAvatar.avatarUrl || '');
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const handleSave = async () => {
+    if (!targetAvatar) return;
+    setIsSaving(true);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 600));
+
+    // Update global state via AuthContext
+    await updateProfile({
+      role: editRole.trim() || 'Designer',
+      bio: editBio.trim(),
+      avatarUrl: editAvatarUrl.trim() || undefined
+    });
+
+    setIsSaving(false);
+    setIsEditing(false);
+  };
+
   if (!targetAvatar) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
         <h2 className="text-2xl font-semibold mb-4">Avatar not found</h2>
         <p className="text-gray-500 mb-8">The avatar you're looking for doesn't exist.</p>
         <Link href="/app/browse">
-          <Button variant="outline" className="h-11 rounded-full px-8">Back to Browse</Button>
+          <Button variant="outline" className="h-12 rounded-full px-8 text-lg">Back to Browse</Button>
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-2 xs:px-6 py-8 md:py-12 w-full min-h-[60vh]">
+    <div className="max-w-6xl mx-auto px-2 xs:px-6 py-8 md:py-12 w-full min-h-[60vh] relative">
+      {/* Mobile Floating Action Button - Only for own profile */}
+      {isMe && (
+        <div className="md:hidden absolute top-8 right-4 z-40">
+            <button 
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="w-11 h-11 flex items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+            >
+                <MoreHorizontal className="w-6 h-6 text-black" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMobileMenu && (
+                <>
+                    <div 
+                        className="fixed inset-0 z-40" 
+                        onClick={() => setShowMobileMenu(false)}
+                    />
+                    <div className="absolute top-13 right-0 w-44 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                        <button 
+                            onClick={() => {
+                                logout();
+                                setShowMobileMenu(false);
+                            }}
+                            className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            <span className="font-bold text-[15px]">Logout</span>
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+      )}
       {/* Back Button for non-own profile */}
       {!isOwnProfile && (
         <div className="mb-8">
@@ -86,43 +160,122 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
       )}
 
       {/* Avatar Header */}
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-6 lg:gap-8 mb-16 px-4">
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
         {/* Avatar */}
-        <div className="relative group">
+        <div className="relative group shrink-0">
           <div 
-            className="w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center text-white text-5xl font-bold shadow-xl border-4 border-white overflow-hidden"
+            className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all"
             style={{ backgroundColor: targetAvatar.bgColor }}
           >
-            {targetAvatar.avatarUrl ? (
-              <img src={targetAvatar.avatarUrl} alt="" className="w-full h-full object-cover" />
+            {/* Live Preview during edit */}
+            {(isEditing ? editAvatarUrl : targetAvatar.avatarUrl) ? (
+              <img 
+                src={isEditing ? editAvatarUrl : targetAvatar.avatarUrl} 
+                alt="" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback if URL is invalid during edit
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
             ) : (
-              targetAvatar.name.charAt(0).toUpperCase()
+                <span className="animate-in fade-in duration-300">
+                    {targetAvatar.name.charAt(0).toUpperCase()}
+                </span>
             )}
           </div>
-          {isMe && (
-            <button className="absolute bottom-2 right-2 bg-white p-2 rounded-full shadow-lg border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Settings className="w-5 h-5 text-gray-400" />
-            </button>
-          )}
+          
         </div>
 
         {/* Info */}
-        <div className="flex-1 text-center md:text-left pt-4 min-w-0">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-            <h1 className="text-3xl font-semibold text-[#111111]">{targetAvatar.name}</h1>
-            <div className="flex gap-2 justify-center md:justify-start">
-              <span className="px-3 py-1 rounded-full bg-[#FEC312]/10 text-[#FEC312] text-xs font-semibold uppercase tracking-widest">
-                Avatar
-              </span>
-              <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-xs font-semibold uppercase tracking-widest">
-                Member since {signUpDate}
-              </span>
-            </div>
-          </div>
+        <div className="flex-1 text-center md:text-left pt-2 min-w-0">
+          {isEditing ? (
+            <div className="space-y-4 max-w-md animate-in fade-in slide-in-from-left-4 duration-300">
+              <div>
+                <label className="block text-[12px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Role</label>
+                <input 
+                  type="text"
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value.slice(0, 40))}
+                  placeholder="e.g. Designer, Developer"
+                  className="w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-100 focus:border-[#FEC312] focus:ring-4 focus:ring-[#FEC312]/10 outline-none transition-all font-medium"
+                />
+              </div>
 
-          <p className="text-gray-500 max-w-lg mb-8 leading-relaxed">
-            {targetAvatar.bio || "Passionately critiquing and creating design work. Looking for honest feedback to level up."}
-          </p>
+              <div>
+                <label className="block text-[12px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Avatar Image URL</label>
+                <input 
+                  type="text"
+                  value={editAvatarUrl}
+                  onChange={(e) => setEditAvatarUrl(e.target.value)}
+                  placeholder="Paste image URL..."
+                  className="w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-100 focus:border-[#FEC312] focus:ring-4 focus:ring-[#FEC312]/10 outline-none transition-all text-sm font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 flex justify-between">
+                  Bio
+                  <span className={editBio.length > 200 ? 'text-red-500' : ''}>{editBio.length}/200</span>
+                </label>
+                <textarea 
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value.slice(0, 201))}
+                  placeholder="Tell us about yourself..."
+                  className="w-full h-24 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 focus:border-[#FEC312] focus:ring-4 focus:ring-[#FEC312]/10 outline-none transition-all resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="flex gap-2 pb-8">
+                <Button 
+                    variant="primary" 
+                    className="h-11 rounded-full gap-2 font-medium text-white text-[15px]"
+                    onClick={handleSave}
+                    disabled={isSaving || editBio.length > 200}
+                >
+                  {isSaving ? 'Saving...' : <><Check className="stroke-4 w-4 h-4" /> Save Changes</>}
+                </Button>
+                <Button 
+                    variant="outline"
+                    className="h-11 rounded-full px-6 font-medium text-[15px]"
+                    onClick={handleCancel}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col items-center md:flex-row md:items-center gap-2 md:gap-4 mb-3">
+                <h1 className="text-2xl font-medium text-[#111111] tracking-tight truncate">
+                  @{targetAvatar.name}
+                </h1>
+                <div className="flex items-center justify-center md:justify-start gap-2">
+                  <span className="text-[16px] font-medium text-gray-400">
+                    {targetAvatar.role || 'Designer'}
+                  </span>
+                  {isMe && !isEditing && (
+                    <button 
+                      onClick={startEditing}
+                      className="p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-[#FEC312]"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-center md:justify-start mb-6">
+                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                  Member since {signUpDate}
+                </span>
+              </div>
+
+              <p className="text-gray-500 max-w-lg mb-8 leading-relaxed text-[15px]">
+                {targetAvatar.bio || "Passionately critiquing and creating design work. Looking for honest feedback to level up."}
+              </p>
+            </>
+          )}
 
           <div className="flex items-center justify-center md:justify-start gap-4">
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
@@ -173,7 +326,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
       {/* Posts Grid */}
       {avatarPosts.length > 0 ? (
-        <div className="-mx-2 xs:mx-0">
+        <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
             <MasonryGrid 
                 posts={avatarPosts} 
                 badgeMap={badgeMap} 
@@ -194,14 +347,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
       )}
 
       {/* Mobile Logout (visible on small screens) - Only for self */}
-      {isMe && (
-        <div className="md:hidden mt-12 pt-12 border-t border-gray-100">
-          <Button variant="outline" className="w-full h-12 rounded-full font-bold flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 hover:border-red-100 transition-all font-sans" onClick={logout}>
-            <LogOut className="w-5 h-5" />
-            Logout
-          </Button>
-        </div>
-      )}
+
 
       {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}
     </div>

@@ -142,7 +142,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                     </span>
                 </div>
 
-                <h3 className="font-medium lg:font-semibold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate md:whitespace-normal">
+                <h3 className="font-medium lg:font-semibold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate">
                     {post.title}
                 </h3>
 
@@ -160,7 +160,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                             className="w-full h-full object-cover" 
                         />
                     </div>
-                    <span className="text-xs md:text-sm medium text-[#111111] group-hover:text-white transition-colors">
+                    <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors">
                         {avatar?.name || 'Unknown'}
                     </span>
                 </div>

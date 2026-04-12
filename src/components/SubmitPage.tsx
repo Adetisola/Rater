@@ -11,6 +11,7 @@ import { CATEGORIES } from '../logic/mockData';
 import { FileUp, Lock } from 'lucide-react'
 import { useAuth } from '../context/AuthContext';
 import { AuthOverlay } from './AuthOverlay';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 
 export function SubmitPage() {
@@ -66,12 +67,16 @@ export function SubmitPage() {
   if (isSuccess) {
       return (
           <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
-              <div className="w-20 h-20 bg-[#009241]/10 rounded-full flex items-center justify-center mb-6 text-[#009241]">
-                  <img src="/icons/status-success.svg" className="w-10 h-10" alt="Success" />
+              <div className="w-48 h-48">
+                  <DotLottieReact
+                    src="https://lottie.host/a059d513-00d2-44a4-82a1-3d15c5bad2fc/OWXtqqeGsX.lottie"
+                    loop
+                    autoplay
+                  />
               </div>
               <h1 className="text-2xl font-semibold mb-4 text-[#111111]">Post Submitted!</h1>
               <p className="text-gray-500 max-w-md mx-auto leading-relaxed">Your design has been posted successfully. The community will start reviewing it shortly.</p>
-              <Button className="mt-10 h-12 px-8 rounded-full text-[18px]" variant="outline" onClick={() => window.location.reload()}>Post Another Work</Button>
+              <Button className="mt-6 h-12 px-8 rounded-full text-[18px]" variant="outline" onClick={() => window.location.reload()}>Post Another Work</Button>
           </div>
       );
   }

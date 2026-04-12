@@ -2,7 +2,8 @@ export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Bra
 
 export interface Avatar {
   id: string;
-  name: string;
+  name: string;        // UNIQUE username (DO NOT treat as role)
+  role: string;        // NEW: public-facing identity label
   avatarUrl?: string; // If undefined, use initials + bgColor
   bgColor: string;
   bio?: string;
@@ -64,6 +65,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_1': {
     id: 'user_1',
     name: 'Timi',
+    role: 'Product Designer',
     avatarUrl: 'https://i.ibb.co/4nPVJ9kP/8f726ed71fc83469a1c54aa4cf114282.jpg',
     bgColor: '#FEC312',
     bio: 'Product designer obsessed with minimalist interfaces and intuitive user flows.',
@@ -74,6 +76,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_2': {
     id: 'user_2',
     name: 'Sarah Chen',
+    role: 'UI/UX Designer',
     avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
     bgColor: '#7C3BED',
     bio: 'Mobile-first designer specializing in visual systems and interaction design.',
@@ -84,6 +87,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_3': {
     id: 'user_3',
     name: 'Marcus Johnson',
+    role: 'Creative Director',
     avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
     bgColor: '#3B82F6',
     bio: 'Multidisciplinary creative director focused on branding and digital experiences.',
@@ -94,6 +98,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_4': {
     id: 'user_4',
     name: 'Elena Rodriguez',
+    role: 'Visual Designer',
     avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150',
     bgColor: '#10B981',
     bio: 'Exploring the intersection of artificial intelligence and human-centered design.',
@@ -104,16 +109,18 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_5': {
     id: 'user_5',
     name: 'James Park',
+    role: 'Branding Specialist',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
     bgColor: '#F59E0B',
     bio: 'Branding specialist with a passion for typography and bold visual identities.',
     isBlocked: false,
     passkey: '4444',
-    createdAt: '2024-01-20T00:00:00Z'
+    createdAt: '2029-01-20T00:00:00Z'
   },
   'user_blocked': {
     id: 'user_blocked',
     name: 'Spammer',
+    role: 'Designer',
     bgColor: '#999999',
     bio: 'Blocked for violating community standards.',
     isBlocked: true,

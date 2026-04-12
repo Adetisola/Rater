@@ -189,7 +189,7 @@ export function Header({
           ) : (
             <Link 
                 href="/app/avatar"
-                className="flex items-center gap-3 p-1.5 pr-4 rounded-full bg-white hover:bg-surface transition-all group"
+                className="flex items-center gap-3 md:p-1.5 md:pr-4 rounded-full bg-white hover:bg-surface transition-all group"
             >
                 <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
@@ -352,9 +352,9 @@ export function Header({
                     </div>
                 )}
 
-                {/* Post Button Container - Only visible when logged in */}
+                {/* Post Button Container - Hidden on Tablet (XS to 768px), Visible on Desktop (769+) and Mobile (<425px) */}
                 {currentAvatar && (
-                    <div className="relative ml-1 sm:ml-2">
+                    <div className="relative ml-1 sm:ml-2 flex xs:hidden min-[769px]:flex">
                         <Button
                             variant="outline" 
                             onClick={onPostClick}
@@ -386,7 +386,17 @@ export function Header({
 
         {/* TABLET CONDENSED SEARCH PILL - strictly for tablet/small laptops (426px to 768px) */}
         {showWidgets && (
-        <div className={`hidden xs:flex min-[769px]:hidden flex-1 justify-end relative z-40 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`hidden xs:flex min-[769px]:hidden flex-1 justify-end items-center gap-3 relative z-40 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+            {currentAvatar && (
+                <Button
+                    variant="outline" 
+                    onClick={onPostClick}
+                    className="h-11 sm:h-12 rounded-full px-4 sm:px-5 text-base sm:text-lg font-medium gap-2 group transition-all duration-300"
+                >
+                    <CloudUpload strokeWidth={2.25} className="h-5 w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
+                    <span className="flex items-center">Post</span>
+                </Button>
+            )}
             <motion.button 
                 layoutId="tablet-search-pill"
                 onClick={() => onMobileSearchOpen?.('tablet-search-pill')}

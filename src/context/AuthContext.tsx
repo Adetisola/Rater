@@ -8,6 +8,7 @@ interface AuthContextType {
   allAvatars: Record<string, Avatar>;
   login: (name: string, passkey: string) => Promise<boolean>;
   signup: (name: string, passkey: string, avatarUrl?: string) => Promise<boolean>;
+  updateProfile: (data: Partial<Avatar>) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const newAvatar: Avatar = {
       id: newId,
       name: name.trim(),
+      role: 'Designer',
       passkey,
       avatarUrl,
       bgColor: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
@@ -90,13 +92,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [allAvatars]);
 
+  const updateProfile = useCallback(async (data: Partial<Avatar>) => {
+    if (!currentAvatar) return;
+
+    const updatedAvatar = { ...currentAvatar, ...data };
+    
+    // Update local state
+    setCurrentAvatar(updatedAvatar);
+
+    // Persist if it's a session avatar
+    if (updatedAvatar.id.startsWith('avatar_session_')) {
+      setSessionAvatars(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
+    } else {
+      // For mock avatars, we also update the global store for visibility in this session
+      MOCK_AVATARS[updatedAvatar.id] = updatedAvatar;
+    }
+  }, [currentAvatar]);
+
   const logout = useCallback(() => {
     setCurrentAvatar(null);
     localStorage.removeItem('rater_avatar_id');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentAvatar, allAvatars, login, signup, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentAvatar, allAvatars, login, signup, updateProfile, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

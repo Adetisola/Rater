@@ -26,7 +26,7 @@ export function MasonryGrid({ posts, badgeMap, hotPostIds }: MasonryGridProps) {
   }, [posts, columnCount]);
 
   return (
-    <div className="w-full max-w-[2600px] mx-auto px-2 xs:px-4 md:px-6 pb-20">
+    <div className="w-full max-w-[2600px] mx-auto px-2 xs:px-2 md:px-4 pb-20">
       <div className="flex gap-2 xs:gap-4 items-start justify-center text-left">
         {columns.map((colPosts, colIndex) => (
           <div key={colIndex} className="flex-1 flex flex-col gap-2 xs:gap-4 w-full min-w-0">

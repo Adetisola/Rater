@@ -22,22 +22,22 @@ export default function MyAvatarPage() {
   if (!currentAvatar) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
-        <div className="w-20 h-20 bg-gray-100 rounded-3xl flex items-center justify-center mb-6">
-          <img src="/icons/logo-rater.svg" alt="" className="w-10 h-10 opacity-20" />
+        <div className="flex items-center justify-center mb-6">
+          <img src="/icons/logo-rater.svg" alt="" className="w-20 h-20 opacity-50" />
         </div>
         <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Identity required</h2>
         <p className="text-gray-500 mb-10 max-w-[280px]">Access your personal profile, posts, and saved favorites by signing in.</p>
         
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-[400px]">
+        <div className="flex flex-col sm:flex-row gap-4 max-w-[400px]">
             <Button 
                 onClick={() => setShowAuthOverlay(true)} 
-                className='h-12 flex-1 rounded-full text-lg font-bold text-white' 
+                className='h-12 px-6 flex-1 rounded-full text-lg font-medium text-white' 
                 variant="primary"
             >
                 Login/Sign up
             </Button>
             <Link href="/app/browse" className="flex-1">
-              <Button className='h-12 w-full rounded-full text-lg font-bold' variant="outline">Browse Gallery</Button>
+              <Button className='h-12 px-8 rounded-full text-lg font-medium' variant="outline">Browse</Button>
             </Link>
         </div>
         {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}

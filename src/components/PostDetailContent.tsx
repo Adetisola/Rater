@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { MOCK_POSTS, MOCK_AVATARS, getReviewsByPostId, getReviewerDisplayName, calculatePostMetrics, type Review, type Post } from '../logic/mockData';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -36,7 +36,6 @@ interface PostDetailOverlayProps {
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   // Local state to simulate new reviews being added
   const { currentAvatar } = useAuth();
-  const router = useRouter();
   const [userReviews, setUserReviews] = useState<Review[]>([]); 
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isSelfPost, setIsSelfPost] = useState(false);
@@ -413,13 +412,10 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     )}
                 </div>
 
-                {/* 5. Author & Rating */}
+                {/* 5. Avatar & Rating */}
                 <div className="flex items-center justify-between">
-                    <button 
-                        onClick={() => {
-                            onClose();
-                            router.push(`/app/avatar/${post.avatarId}`);
-                        }}
+                    <Link 
+                        href={`/app/avatar/${post.avatarId}`}
                         className="flex items-center gap-3 group/author"
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">
@@ -431,14 +427,14 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         </div>
                         <div className="text-left">
                             <span className="block text-sm font-semibold text-[#111111] group-hover/author:text-[#FEC312] transition-colors">{avatar?.name || 'Unknown'}</span>
-                            <span className="block text-[10px] text-gray-400 font-medium uppercase tracking-wider">View Profile</span>
+                            <span className="block text-[10px] text-gray-400 font-medium tracking-wider">View Profile</span>
                         </div>
-                    </button>
+                    </Link>
 
                     {/* RATING DISPLAY (Moved Here) */}
                     <div className="flex items-center gap-2">
                          {!metrics.ratingUnlocked ? (
-                             <span className="text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
+                             <span className="text-xs xs:text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
                          ) : (
                              <>
                                 <div className="flex gap-1">

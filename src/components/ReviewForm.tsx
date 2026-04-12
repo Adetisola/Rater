@@ -71,7 +71,7 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
     >
       <div className="flex items-center gap-2 border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black select-none">
         {iconUrl && <img src={iconUrl} alt={`${label} icon`} className="w-5 h-5 object-contain" />}
-        <span className="text-base font-medium text-[#111111] group-hover:text-black">
+        <span className="text-[14px] xs:text-base font-medium text-[#111111] group-hover:text-black">
           {label}
         </span>
       </div>
@@ -136,38 +136,44 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn }: ReviewFormProp
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-8 rounded-[32px] border-2 border-gray-100">
+    <form onSubmit={handleSubmit} className="bg-white p-5 xs:p-8 rounded-[32px] border-2 border-gray-100">
       <h3 className="font-semibold text-xl mb-8">Rate this Design</h3>
       
       <div className="space-y-4 mb-8">
         {/* CLARITY */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-1">
             <CriteriaLabel 
                 label="Clarity" 
                 info={CRITERIA_INFO.Clarity} 
                 iconUrl="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" 
             />
-            <StarRating rating={clarity} onChange={setClarity} interactive size="lg" />
+            <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
+                <StarRating rating={clarity} onChange={setClarity} interactive size="lg" />
+            </div>
         </div>
 
         {/* PURPOSE */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-1">
             <CriteriaLabel 
                 label="Purpose" 
                 info={CRITERIA_INFO.Purpose} 
                 iconUrl="https://img.icons8.com/color/96/goal--v1.png" 
             />
-            <StarRating rating={purpose} onChange={setPurpose} interactive size="lg" />
+            <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
+                <StarRating rating={purpose} onChange={setPurpose} interactive size="lg" />
+            </div>
         </div>
 
         {/* AESTHETICS */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-1">
             <CriteriaLabel 
                 label="Aesthetics" 
                 info={CRITERIA_INFO.Aesthetics} 
                 iconUrl="https://img.icons8.com/color/96/color-palette.png" 
             />
-            <StarRating rating={aesthetics} onChange={setAesthetics} interactive size="lg" />
+            <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
+                <StarRating rating={aesthetics} onChange={setAesthetics} interactive size="lg" />
+            </div>
         </div>
       </div>
 

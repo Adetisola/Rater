@@ -352,7 +352,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       </div>
       <div className="flex-1 min-w-0">
         <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
-        <p className="text-xs text-gray-400">Avatar</p>
+        <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
       </div>
     </div>
   );
