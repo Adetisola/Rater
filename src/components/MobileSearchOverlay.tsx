@@ -104,7 +104,11 @@ export function MobileSearchOverlay({
   // Handle avatar click
   const handleAvatarClick = (avatar: Avatar) => {
     onClose();
-    router.push(`/app/avatar/${avatar.id}`);
+    if (onAvatarSelect) {
+      onAvatarSelect(avatar);
+    } else {
+      router.push(`/app/avatar/${avatar.id}`);
+    }
   };
 
   // Handle post click

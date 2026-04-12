@@ -95,8 +95,12 @@ export function Header({
     // Close dropdown FIRST
     setShowSearchResults(false);
     
-    // Navigate immediately
-    router.push(`/app/avatar/${avatar.id}`);
+    if (onAvatarSelect) {
+      onAvatarSelect(avatar);
+    } else {
+      // Navigate immediately
+      router.push(`/app/avatar/${avatar.id}`);
+    }
   };
 
   // Handle post click - open post detail

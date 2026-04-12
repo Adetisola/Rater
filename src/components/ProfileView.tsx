@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from '../context/AuthContext';
-import { MOCK_POSTS, MOCK_AVATARS, calculatePostMetrics } from '../logic/mockData';
+import { MOCK_POSTS, calculatePostMetrics } from '../logic/mockData';
 import { Button } from './ui/Button';
 import { MasonryGrid } from './MasonryGrid';
 import { computeBadges } from '../logic/badgeUtils';
