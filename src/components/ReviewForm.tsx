@@ -137,7 +137,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn }: ReviewFormProp
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-5 xs:p-8 rounded-[32px] border-2 border-gray-100">
-      <h3 className="font-semibold text-xl mb-8 md:text-center">Rate this Design</h3>
+      <h3 className="font-semibold text-xl mb-8 text-center">Rate this Design</h3>
       
       <div className="space-y-4 mb-8">
         {/* CLARITY */}
