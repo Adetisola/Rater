@@ -329,23 +329,25 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
           <Grid className="w-4 h-4" />
           {isMe ? "My Posts" : "Posts"}
         </button>
-        <button 
-          onClick={() => setActiveTab('saved')}
-          className={cn(
-            "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
-            activeTab === 'saved' 
-              ? "border-[#111111] text-[#111111]" 
-              : "border-transparent text-gray-400 hover:text-gray-600"
-          )}
-        >
-          <Heart className="w-4 h-4" />
-          Saved
-        </button>
+        {isMe && (
+          <button 
+            onClick={() => setActiveTab('saved')}
+            className={cn(
+              "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
+              activeTab === 'saved' 
+                ? "border-[#111111] text-[#111111]" 
+                : "border-transparent text-gray-400 hover:text-gray-600"
+            )}
+          >
+            <Heart className="w-4 h-4" />
+            Saved
+          </button>
+        )}
       </div>
 
       {/* Tab Content */}
       <AnimatePresence mode="wait">
-        {activeTab === 'posts' ? (
+        {(activeTab === 'posts' || !isMe) ? (
           <motion.div 
             key="posts"
             initial={{ opacity: 0, y: 10 }}
