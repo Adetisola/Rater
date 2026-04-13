@@ -78,14 +78,14 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
       
       {/* Tooltip - visible on hover (desktop) or tap (mobile) */}
       {/* On mobile: left-aligned to prevent overflow. On desktop: centered */}
-      <div className={`absolute bottom-full left-0 xs:left-1/2 xs:-translate-x-1/2 mb-3 w-[calc(100vw-3rem)] xs:w-64 max-w-64 p-4 bg-[#111111] text-white text-xs rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+      <div className={`absolute bottom-full left-0 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-[#111111] text-white text-xs rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
         ${isTooltipVisible 
           ? 'opacity-100 visible translate-y-0' 
           : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
         }`}
       >
         {/* Arrow - positioned at label on mobile, centered on desktop */}
-        <div className="absolute top-full left-4 xs:left-1/2 xs:-translate-x-1/2 border-8 border-transparent border-t-[#111111]" />
+        <div className="absolute top-full left-4 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2 border-8 border-transparent border-t-[#111111]" />
         
         <p className="font-semibold mb-2.5 leading-relaxed text-white">{info.question}</p>
         <ul className="space-y-1.5 text-gray-300">

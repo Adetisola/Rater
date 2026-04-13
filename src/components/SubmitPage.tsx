@@ -243,8 +243,8 @@ export function SubmitPage() {
                     </ul>
 
                     <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
-                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
-                            More fields coming soon
+                        <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                            More fields <span className="text-[#FEC312] font-light">coming soon</span>
                         </p>
                     </div>
                  </div>

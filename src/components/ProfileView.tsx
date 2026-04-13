@@ -4,12 +4,15 @@ import { Button } from './ui/Button';
 import { MasonryGrid } from './MasonryGrid';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
-import { LogOut, Grid, Heart, MessageSquare, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { LogOut, Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { useRouter } from 'next/navigation';
 import { Check, Edit2 } from 'lucide-react';
+import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
+import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '../lib/utils';
 
 interface ProfileViewProps {
   avatarId: string;
@@ -28,6 +31,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const [editAvatarUrl, setEditAvatarUrl] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Stats State
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
@@ -39,9 +43,12 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const { badgeMap } = useBadges(MOCK_POSTS);
   const { hotPostIds } = useHotPosts(MOCK_POSTS);
   
-  const avatarPosts = useMemo(() => (
-    targetAvatar ? MOCK_POSTS.filter(p => p.author_id === targetAvatar.id) : []
-  ), [targetAvatar]);
+  const avatarPosts = useMemo(() => {
+    if (!targetAvatar) return [];
+    return MOCK_POSTS
+      .filter(p => p.author_id === targetAvatar.id)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [targetAvatar]);
 
   // Async stats calculation
   useEffect(() => {
@@ -104,6 +111,8 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     setIsEditing(false);
   };
 
+  const [activeTab, setActiveTab] = useState<'posts' | 'saved'>('posts');
+
   if (!targetAvatar) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
@@ -122,7 +131,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
         <div className="md:hidden absolute top-8 right-4 z-40">
             <button 
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="w-11 h-11 flex items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+                className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-50 transition-all shadow-sm active:scale-95"
             >
                 <MoreHorizontal className="w-6 h-6 text-black" />
             </button>
@@ -139,7 +148,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                             <span className="font-semibold text-[15px]">Edit Avatar</span>
                         </button>
                         <button 
-                            onClick={() => { logout(); setShowMobileMenu(false); }}
+                            onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
                             className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
                             <LogOut className="w-5 h-5" />
@@ -298,7 +307,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
         {isMe && (
           <div className="hidden md:flex gap-3">
-            <Button variant="outline" className="h-11 rounded-full px-6 flex items-center gap-2 hover:bg-[#ff4848] hover:border-[#ff4848] hover:text-white transition-all" onClick={logout}>
+            <Button variant="ghost" className="h-12 rounded-full px-6 flex items-center gap-2 hover:bg-[#ff4848] hover:text-white transition-all" onClick={() => setShowLogoutConfirm(true)}>
               <LogOut className="w-4 h-4" />
               Logout
             </Button>
@@ -308,43 +317,97 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
       {/* Tabs */}
       <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
-        <button className="flex items-center gap-2 py-4 border-b-2 border-[#111111] text-sm font-semibold uppercase tracking-wider text-[#111111]">
+        <button 
+          onClick={() => setActiveTab('posts')}
+          className={cn(
+            "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
+            activeTab === 'posts' 
+              ? "border-[#111111] text-[#111111]" 
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          )}
+        >
           <Grid className="w-4 h-4" />
           {isMe ? "My Posts" : "Posts"}
         </button>
-        <button className="flex items-center gap-2 py-4 text-sm font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600">
-          <MessageSquare className="w-4 h-4" />
-          {isMe ? "My Reviews" : "Reviews"}
-        </button>
-        <button className="flex items-center gap-2 py-4 text-sm font-semibold uppercase tracking-wider text-gray-400 hover:text-gray-600">
+        <button 
+          onClick={() => setActiveTab('saved')}
+          className={cn(
+            "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
+            activeTab === 'saved' 
+              ? "border-[#111111] text-[#111111]" 
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          )}
+        >
           <Heart className="w-4 h-4" />
           Saved
         </button>
       </div>
 
-      {/* Grid */}
-      {avatarPosts.length > 0 ? (
-        <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
-            <MasonryGrid 
-                posts={avatarPosts} 
-                badgeMap={badgeMap} 
-                hotPostIds={hotPostIds} 
-            />
-        </div>
-      ) : (
-        <div className="py-20 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
-          <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
-          <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
-          {isMe && (
-            <Link href="/app/submit">
-              <Button variant="primary" className="h-12 px-8 rounded-full">Post your work</Button>
-            </Link>
-          )}
-        </div>
-      )}
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'posts' ? (
+          <motion.div 
+            key="posts"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {avatarPosts.length > 0 ? (
+              <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
+                  <MasonryGrid 
+                      posts={avatarPosts} 
+                      badgeMap={badgeMap} 
+                      hotPostIds={hotPostIds} 
+                  />
+              </div>
+            ) : (
+              <div className="py-20 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
+                <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
+                <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
+                {isMe && (
+                  <Link href="/app/submit">
+                    <Button variant="primary" className="h-12 px-8 rounded-full">Post your work</Button>
+                  </Link>
+                )}
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="saved"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="py-24 text-center bg-white rounded-[40px] border-2 border-[#FEC312] border-dashed shadow-xl shadow-[#FEC312]/5 max-w-2xl mx-auto px-8"
+          >
+            <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
+                <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />
+            </div>
+            <h3 className="text-3xl font-semibold mb-4 text-[#111111]">Coming Soon!</h3>
+            <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
+                You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
+            </p>
+            <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-gray-100 rounded-full">
+                <span className="w-2 h-2 rounded-full bg-[#FEC312] animate-pulse" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Development in Progress</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}
+      {showLogoutConfirm && (
+        <LogoutConfirmOverlay 
+            onClose={() => setShowLogoutConfirm(false)} 
+            onConfirm={() => {
+                logout();
+                setShowLogoutConfirm(false);
+            }} 
+        />
+      )}
     </div>
   );
 }

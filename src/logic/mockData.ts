@@ -586,7 +586,8 @@ export async function getReviewsByPostId(postId: string): Promise<Review[]> {
 export async function calculatePostMetrics(postId: string, additionalReviews?: Review[]): Promise<PostMetrics> {
   const reviews = [...(await getReviewsByPostId(postId)), ...(additionalReviews || [])];
   
-  if (reviews.length === 0) {
+  const reviewCount = reviews.length;
+  if (reviewCount === 0) {
     return {
       post_id: postId,
       average_score: 0,
@@ -602,9 +603,9 @@ export async function calculatePostMetrics(postId: string, additionalReviews?: R
 
   return {
     post_id: postId,
-    average_score: Number((totalSum / reviews.length).toFixed(1)),
-    review_count: reviews.length,
-    rating_unlocked: reviews.length >= 3
+    average_score: Number((totalSum / reviewCount).toFixed(1)),
+    review_count: reviewCount,
+    rating_unlocked: reviewCount >= 3
   };
 }
 

@@ -550,6 +550,20 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
             <div className="space-y-6">
                 {isFetchingReviews ? (
                     <div className="py-20 text-center text-gray-400 font-medium">Loading reviews...</div>
+                ) : allReviews.length === 0 ? (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="py-20 px-8 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200"
+                    >
+                        <div className="w-16 h-16 bg-[#FEC312]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Plus className="w-8 h-8 text-[#FEC312]" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-[#111111] mb-2">Be the first to rate this design</h3>
+                        <p className="text-gray-500 max-w-xs mx-auto text-[15px] leading-relaxed">
+                            Your feedback helps the designer improve and helps the community find the best work.
+                        </p>
+                    </motion.div>
                 ) : visibleReviews.map((review) => {
                     const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
                     const timeLabel = formatTimeAgo(review.created_at);
