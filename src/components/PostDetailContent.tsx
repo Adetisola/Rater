@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { 
     MOCK_POSTS, 
@@ -11,6 +13,7 @@ import {
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -38,11 +41,14 @@ const RATE_LIMIT_KEY = 'rater_review_timestamps';
 
 interface PostDetailOverlayProps {
   post: Post;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const { currentAvatar, allAvatars } = useAuth();
+  const router = useRouter();
+
+  const handleClose = onClose || (() => router.back());
   
   // Data State
   const [dbReviews, setDbReviews] = useState<Review[]>([]);
@@ -280,7 +286,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
         <div className="mb-8">
             <Button 
                 variant="secondary" 
-                onClick={onClose}
+                onClick={handleClose}
                 className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
             >
                 <ArrowLeft className="w-5 h-5 text-black" />

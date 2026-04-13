@@ -1,3 +1,5 @@
+"use client";
+
 import { useAuth } from '../context/AuthContext';
 import { MOCK_POSTS, calculatePostMetrics } from '../logic/mockData';
 import { Button } from './ui/Button';

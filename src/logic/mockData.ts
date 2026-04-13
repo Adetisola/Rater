@@ -612,7 +612,7 @@ export async function calculatePostMetrics(postId: string, additionalReviews?: R
 /**
  * Simulation for logged-in user context.
  */
-export async function getReviewerDisplayName(review: Review): Promise<string> {
+export function getReviewerDisplayName(review: Review): string {
   if (review.reviewer_id) {
     const avatar = MOCK_AVATARS[review.reviewer_id];
     return avatar?.name || 'Unknown Avatar';
