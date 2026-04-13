@@ -10,11 +10,11 @@ const linkedinIcon = '/icons/icons8-linkedin.svg';
 
 interface SharePostOverlayProps {
   onClose: () => void;
-  postId: string;
+  post_id: string;
 }
 
-export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
-  const shareUrl = `https://rater-web.vercel.app/app/post/${postId}`;
+export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
+  const shareUrl = `https://rater-web.vercel.app/app/post/${post_id}`;
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {

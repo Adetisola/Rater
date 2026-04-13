@@ -29,21 +29,21 @@ export const getDeviceId = (): string => {
 /**
  * Checks if this device has already reviewed a specific post.
  */
-export const hasReviewedPost = (postId: string): boolean => {
+export const hasReviewedPost = (post_id: string): boolean => {
   if (typeof window === 'undefined') return false;
   
   const reviewed = JSON.parse(localStorage.getItem(STORAGE_KEY_REVIEWED_POSTS) || '[]');
-  return reviewed.includes(postId);
+  return reviewed.includes(post_id);
 };
 
 /**
  * Persists a review event for this device locally.
  */
-export const markPostAsReviewed = (postId: string): void => {
+export const markPostAsReviewed = (post_id: string): void => {
   if (typeof window === 'undefined') return;
   
   const reviewed = JSON.parse(localStorage.getItem(STORAGE_KEY_REVIEWED_POSTS) || '[]');
-  if (!reviewed.includes(postId)) {
-    localStorage.setItem(STORAGE_KEY_REVIEWED_POSTS, JSON.stringify([...reviewed, postId]));
+  if (!reviewed.includes(post_id)) {
+    localStorage.setItem(STORAGE_KEY_REVIEWED_POSTS, JSON.stringify([...reviewed, post_id]));
   }
 };

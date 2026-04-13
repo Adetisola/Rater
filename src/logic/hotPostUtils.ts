@@ -15,19 +15,19 @@ const MIN_REVIEW_COUNT = 3;
  *
  * @returns A Set of post IDs that should display the 🔥 indicator
  */
-export function computeHotPosts(posts: Post[]): Set<string> {
+export async function computeHotPosts(posts: Post[]): Promise<Set<string>> {
   const now = Date.now();
 
-  // Map posts to their metrics
-  const postsWithMetrics = posts.map(post => ({
+  // Map posts to their metrics (parallel fetching)
+  const postsWithMetrics = await Promise.all(posts.map(async post => ({
     post,
-    metrics: calculatePostMetrics(post.id)
-  }));
+    metrics: await calculatePostMetrics(post.id)
+  })));
 
   // 1. Filter to posts from the last 7 days with ≥3 reviews
   const recentEligible = postsWithMetrics.filter(({ post, metrics }) => {
-    const postAge = now - new Date(post.createdAt).getTime();
-    return postAge <= SEVEN_DAYS_MS && metrics.reviewCount >= MIN_REVIEW_COUNT;
+    const postAge = now - new Date(post.created_at).getTime();
+    return postAge <= SEVEN_DAYS_MS && metrics.review_count >= MIN_REVIEW_COUNT;
   });
 
   if (recentEligible.length === 0) {
@@ -36,7 +36,7 @@ export function computeHotPosts(posts: Post[]): Set<string> {
 
   // 2. Sort by review_count DESC
   const sorted = [...recentEligible].sort(
-    (a, b) => b.metrics.reviewCount - a.metrics.reviewCount
+    (a, b) => b.metrics.review_count - a.metrics.review_count
   );
 
   // 3. Top 10% threshold (at least 1 post)

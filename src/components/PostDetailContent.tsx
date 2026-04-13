@@ -1,5 +1,13 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { MOCK_POSTS, MOCK_AVATARS, getReviewsByPostId, getReviewerDisplayName, calculatePostMetrics, type Review, type Post } from '../logic/mockData';
+import { 
+    MOCK_POSTS, 
+    getReviewsByPostId, 
+    getReviewerDisplayName, 
+    calculatePostMetrics, 
+    type Review, 
+    type Post, 
+    type PostMetrics 
+} from '../logic/mockData';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
@@ -9,8 +17,8 @@ import { Button } from './ui/Button';
 import { formatTimeAgo } from '../lib/utils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
-import { computeBadges } from '../logic/badgeUtils';
-import { computeHotPosts } from '../logic/hotPostUtils';
+import { useBadges } from '../hooks/useBadges';
+import { useHotPosts } from '../hooks/useHotPosts';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
 import { motion, useMotionValue } from 'framer-motion';
@@ -34,19 +42,47 @@ interface PostDetailOverlayProps {
 }
 
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
-  // Local state to simulate new reviews being added
-  const { currentAvatar } = useAuth();
+  const { currentAvatar, allAvatars } = useAuth();
+  
+  // Data State
+  const [dbReviews, setDbReviews] = useState<Review[]>([]);
   const [userReviews, setUserReviews] = useState<Review[]>([]); 
+  const [metrics, setMetrics] = useState<PostMetrics | null>(null);
+  
+  // UI State
   const [hasReviewed, setHasReviewed] = useState(false);
   const [isSelfPost, setIsSelfPost] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
+  const [isFetchingReviews, setIsFetchingReviews] = useState(true);
 
-  // Compute metrics dynamically from REVIEWS
-  const metrics = useMemo(() => calculatePostMetrics(post.id, userReviews), [post.id, userReviews]);
+  // External Metadata (Badges, Hot Status)
+  const { badgeMap } = useBadges(MOCK_POSTS);
+  const { hotPostIds } = useHotPosts(MOCK_POSTS);
+  const badge = badgeMap[post.id];
+  const isHot = hotPostIds.has(post.id);
 
-  // Check if user has already reviewed or if it's their own post
+  // 1. Initial Data Load
   useEffect(() => {
-    if (currentAvatar && post.avatarId === currentAvatar.id) {
+    let isMounted = true;
+    setIsFetchingReviews(true);
+
+    const loadData = async () => {
+        const [reviews, initialMetrics] = await Promise.all([
+            getReviewsByPostId(post.id),
+            calculatePostMetrics(post.id)
+        ]);
+
+        if (isMounted) {
+            setDbReviews(reviews);
+            setMetrics(initialMetrics);
+            setIsFetchingReviews(false);
+        }
+    };
+
+    loadData();
+
+    // Check self-post
+    if (currentAvatar && post.author_id === currentAvatar.id) {
         setIsSelfPost(true);
     } else {
         setIsSelfPost(false);
@@ -56,9 +92,18 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     if (hasReviewedPost(post.id)) {
         setHasReviewed(true);
     }
-  }, [post.id, currentAvatar, post.avatarId]);
 
-  const [isExpanded, setIsExpanded] = useState(false); // For description
+    return () => { isMounted = false; };
+  }, [post.id, currentAvatar, post.author_id]);
+
+  // 2. Derive metrics locally when userReviews change (Optimistic UI)
+  useEffect(() => {
+    if (userReviews.length > 0) {
+        calculatePostMetrics(post.id, userReviews).then(setMetrics);
+    }
+  }, [userReviews, post.id]);
+
+  const [isExpanded, setIsExpanded] = useState(false);
   const [sortBy, setSortBy] = useState('Newest');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -66,6 +111,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
+  
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastTapRef = useRef(0);
@@ -74,13 +120,11 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
   const [isReviewCountTooltipVisible, setIsReviewCountTooltipVisible] = useState(false);
   const reviewCountTooltipRef = useRef<HTMLDivElement>(null);
-  
   const [isTopRatedTooltipVisible, setIsTopRatedTooltipVisible] = useState(false);
   const topRatedTooltipRef = useRef<HTMLDivElement>(null);
 
   const ZOOM_IN_SCALE = 2.5;
 
-  // Recompute pan boundaries whenever zoom changes
   const updateConstraints = useCallback((scale: number) => {
     if (!imgRef.current) return;
     const { offsetWidth: w, offsetHeight: h } = imgRef.current;
@@ -92,18 +136,15 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
   useEffect(() => {
     const bounds = updateConstraints(zoomScale);
-    // When zooming back out, snap position to center
     if (zoomScale === 1) {
       x.set(0);
       y.set(0);
     } else if (bounds) {
-      // Clamp current position within new bounds
       x.set(Math.max(-bounds.maxX, Math.min(bounds.maxX, x.get())));
       y.set(Math.max(-bounds.maxY, Math.min(bounds.maxY, y.get())));
     }
   }, [zoomScale, updateConstraints, x, y]);
 
-  // Scroll-to-pan: translate wheel events into image position when zoomed
   useEffect(() => {
     if (!isImageFullscreen) return;
     const el = containerRef.current;
@@ -123,28 +164,19 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     return () => el.removeEventListener('wheel', onWheel);
   }, [isImageFullscreen, zoomScale, dragConstraints, x, y]);
 
-  // Reset visible count when sort changes
   useEffect(() => {
     setVisibleCount(REVIEWS_PER_PAGE);
   }, [sortBy]);
 
-  // Compute badge for this post using centralized logic
-  const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
-  const badge = badgeMap[post.id];
-
-  // Compute 🔥 hot status using centralized logic
-  const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
-  const isHot = hotPostIds.has(post.id);
-
-  // Use actual reviews from the standalone collection + any user-submitted reviews
+  // Merged Collection
   const allReviews = useMemo(() => {
-    return [...userReviews, ...getReviewsByPostId(post.id)];
-  }, [post.id, userReviews]);
+    return [...userReviews, ...dbReviews];
+  }, [userReviews, dbReviews]);
 
   const sortedReviews = useMemo(() => {
     return [...allReviews].sort((a, b) => {
       const getAvg = (r: Review) => (r.clarity + r.purpose + r.aesthetics) / 3;
-      const getTime = (r: Review) => new Date(r.createdAt).getTime();
+      const getTime = (r: Review) => new Date(r.created_at).getTime();
 
       if (sortBy === 'Highest Rated') return getAvg(b) - getAvg(a);
       if (sortBy === 'Lowest Rated') return getAvg(a) - getAvg(b);
@@ -158,14 +190,13 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const hasMoreReviews = visibleCount < sortedReviews.length;
   const remainingReviews = sortedReviews.length - visibleCount;
 
-  const handleReviewSubmit = async (ratings: any, comment: string, reviewerName: string) => {
-    if (currentAvatar && post.avatarId === currentAvatar.id) return;
+  const handleReviewSubmit = async (ratings: any, comment: string, reviewer_name: string) => {
+    if (currentAvatar && post.author_id === currentAvatar.id) return;
     
-    // 1. Double check duplicate prevention (logic layer)
-    const deviceId = getDeviceId();
+    const device_id = getDeviceId();
     const hasDuplicate = allReviews.some(r => 
-        (currentAvatar && r.reviewerId === currentAvatar.id) || 
-        (!currentAvatar && r.deviceId === deviceId)
+        (currentAvatar && r.reviewer_id === currentAvatar.id) || 
+        (!currentAvatar && r.device_id === device_id)
     );
 
     if (hasDuplicate || hasReviewedPost(post.id)) {
@@ -185,36 +216,33 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
     const newReview: Review = {
         id: `r_new_${Date.now()}`,
-        postId: post.id,
+        post_id: post.id,
         clarity: ratings.clarity,
         purpose: ratings.purpose,
         aesthetics: ratings.aesthetics,
         comment,
-        reviewerId: currentAvatar?.id,
-        reviewerName: currentAvatar ? undefined : reviewerName,
-        createdAt: new Date().toISOString(),
-        deviceId: deviceId
+        reviewer_id: currentAvatar?.id,
+        reviewer_name: currentAvatar ? undefined : reviewer_name,
+        created_at: new Date().toISOString(),
+        device_id: device_id
     };
 
     setUserReviews([newReview, ...userReviews]);
     setHasReviewed(true);
-
     markPostAsReviewed(post.id);
+
     const updatedTimestamps = [...validTimestamps, Date.now()];
     localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
   };
 
-  // Close tooltips when clicking outside
   useEffect(() => {
     if (!isReviewCountTooltipVisible && !isTopRatedTooltipVisible) return;
 
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       const target = e.target as Node;
-      
       if (isReviewCountTooltipVisible && reviewCountTooltipRef.current && !reviewCountTooltipRef.current.contains(target)) {
         setIsReviewCountTooltipVisible(false);
       }
-      
       if (isTopRatedTooltipVisible && topRatedTooltipRef.current && !topRatedTooltipRef.current.contains(target)) {
         setIsTopRatedTooltipVisible(false);
       }
@@ -236,23 +264,16 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
   };
 
-  const avatar = MOCK_AVATARS[post.avatarId];
+  const avatar = allAvatars[post.author_id];
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ 
-        opacity: 0,
-        transition: { duration: 0.15, ease: "easeIn" }
-      }}
-      transition={{ 
-        duration: 0.25, 
-        ease: "easeOut"
-      }}
+      exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
       className="w-full bg-white relative"
     >
-      
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         
         {/* HEADER: Back Button */}
@@ -270,7 +291,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
         {/* MAIN GRID */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20 relative">
             
-            {/* LEFT COLUMN: Content (Span 7) */}
+            {/* LEFT COLUMN: Content */}
             <div className="md:col-span-7 space-y-6">
                 
                 {/* 1. Image Preview */}
@@ -279,7 +300,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     onClick={() => setIsImageFullscreen(true)}
                 >
                     <img 
-                        src={post.imageUrl} 
+                        src={post.image_url} 
                         alt={post.title} 
                         className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500 group-hover:scale-105" 
                     />
@@ -289,13 +310,13 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         </span>
                     </div>
                     
-                    {/* Action Buttons - Top Right */}
+                    {/* Action Buttons */}
                     <div className="absolute top-6 right-6 flex gap-3 z-20">
                          <button 
                             onClick={async (e) => {
                                 e.stopPropagation();
                                 try {
-                                    const response = await fetch(post.imageUrl);
+                                    const response = await fetch(post.image_url);
                                     const blob = await response.blob();
                                     const url = window.URL.createObjectURL(blob);
                                     const link = document.createElement('a');
@@ -307,7 +328,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     window.URL.revokeObjectURL(url);
                                 } catch (err) {
                                     console.error('Download failed', err);
-                                    window.open(post.imageUrl, '_blank');
+                                    window.open(post.image_url, '_blank');
                                 }
                             }}
                             className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
@@ -344,17 +365,14 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                 </span>
 
                                 <div className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-                                    ${isTopRatedTooltipVisible 
-                                        ? 'opacity-100 visible translate-y-0' 
-                                        : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'
-                                    }`}
+                                    ${isTopRatedTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'}`}
                                 >
                                     <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
                                 </div>
                             </div>
                         )}
                     </div>
-                    <span className="text-xs font-medium text-gray-400">{formatTimeAgo(post.createdAt)}</span>
+                    <span className="text-xs font-medium text-gray-400">{formatTimeAgo(post.created_at)}</span>
                 </div>
 
                 {/* 3. Title */}
@@ -377,20 +395,14 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     />
                                 </div>
                             )}
-                            {metrics.reviewCount} {metrics.reviewCount === 1 ? 'review' : 'reviews'}
+                            {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
                         </span>
 
                         <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-                            ${isReviewCountTooltipVisible 
-                                ? 'opacity-100 visible translate-y-0' 
-                                : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'
-                            }`}
+                            ${isReviewCountTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'}`}
                         >
                             <p className="leading-relaxed text-center">
-                                {isHot 
-                                    ? "This design is getting high attention based on recent reviews" 
-                                    : "Number of structured reviews this design has received"
-                                }
+                                {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
                             </p>
                         </div>
                     </div>
@@ -415,12 +427,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 {/* 5. Avatar & Rating */}
                 <div className="flex items-center justify-between">
                     <Link 
-                        href={currentAvatar && post.avatarId === currentAvatar.id ? "/app/avatar" : `/app/avatar/${post.avatarId}`}
+                        href={currentAvatar && post.author_id === currentAvatar.id ? "/app/avatar" : `/app/avatar/${post.author_id}`}
                         className="flex items-center gap-3 group/author"
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">
                             <img 
-                                src={avatar?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatarId}`} 
+                                src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author_id}`} 
                                 className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300" 
                                 alt="Avatar" 
                             />
@@ -431,9 +443,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         </div>
                     </Link>
 
-                    {/* RATING DISPLAY (Moved Here) */}
                     <div className="flex items-center gap-2">
-                         {!metrics.ratingUnlocked ? (
+                         {!metrics?.rating_unlocked ? (
                              <span className="text-xs xs:text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
                          ) : (
                              <>
@@ -441,30 +452,23 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     {[1,2,3,4,5].map(i => (
                                         <img 
                                             key={i} 
-                                            src={i <= Math.floor(metrics.averageScore) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
+                                            src={i <= Math.floor(metrics.average_score) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
                                             alt="star"
                                             className="w-6 h-6"
                                         />
                                     ))}
                                 </div>
-                                <span className="text-2xl font-semibold text-[#111111]">{metrics.averageScore}</span>
+                                <span className="text-2xl font-semibold text-[#111111]">{metrics.average_score}</span>
                              </>
                          )}
                     </div>
                 </div>
 
-                {isShareOpen && (
-                    <SharePostOverlay onClose={() => setIsShareOpen(false)} postId={post.id} />
-                )}
+                {isShareOpen && <SharePostOverlay onClose={() => setIsShareOpen(false)} post_id={post.id} />}
 
                 <div className="text-xs text-[#EB5757] font-medium pt-2">
                      *Attribution is claimed by the submitter and not independently verified. 
-                     <button 
-                        onClick={() => setIsReportOpen(true)}
-                        className="underline text-sm font-semibold ml-1 hover:text-[#c0392b]"
-                     >
-                        Report
-                     </button> if you believe attribution is incorrect.
+                     <button onClick={() => setIsReportOpen(true)} className="underline text-sm font-semibold ml-1 hover:text-[#c0392b]">Report</button> if you believe attribution is incorrect.
                 </div>
                 
                 {isReportOpen && (
@@ -473,30 +477,24 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         onSubmit={(reason, details) => {
                             console.log('Report submitted:', reason, details);
                             setIsReportOpen(false);
-                            // Add toast or notification here later
                         }} 
                     />
                 )}
-
             </div>
 
-            {/* RIGHT COLUMN: Sticky Review Form (Span 5) */}
+            {/* RIGHT COLUMN: Review Form */}
             <div className="md:col-span-5 relative">
                 <div className="sticky top-8">
                     {rateLimitMessage && (
                         <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-[24px] text-amber-700 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                             <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                ⏳
-                             </div>
+                             <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">⏳</div>
                              <p className="font-medium">{rateLimitMessage}</p>
                         </div>
                     )}
 
                     {isSelfPost ? (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center border-2 border-dashed border-gray-200">
-                            <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                🚫
-                            </div>
+                            <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
                             <h3 className="font-semibold text-xl mb-2 text-gray-700">Self-Review Locked</h3>
                             <p className="text-gray-500">You cannot review your own post.</p>
                          </div>
@@ -508,9 +506,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         />
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">
-                            <div className="w-16 h-16 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
-                                🙌
-                            </div>
+                            <div className="w-16 h-16 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🙌</div>
                             <h3 className="font-bold text-xl mb-2">Thanks for your feedback</h3>
                             <p className="text-gray-500">Your review has been recorded.</p>
                          </div>
@@ -522,11 +518,9 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
         {/* BOTTOM SECTION: Reviews List */}
         <div className="border-t border-gray-100 pt-8 xs:pt-12">
-            
             <div className="flex items-center gap-4 mb-8">
                 <h2 className="text-2xl font-semibold text-[#111111]">Reviews ({allReviews.length})</h2>
                 
-                {/* Sort Dropdown */}
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
@@ -541,10 +535,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             {['Highest Rated', 'Lowest Rated', 'Newest', 'Oldest'].map((option) => (
                                 <button
                                     key={option}
-                                    onClick={() => {
-                                        setSortBy(option);
-                                        setIsSortOpen(false);
-                                    }}
+                                    onClick={() => { setSortBy(option); setIsSortOpen(false); }}
                                     className={`w-full text-left px-4 py-3 text-sm font-semibold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-[#111111]'}`}
                                 >
                                     {option}
@@ -557,9 +548,11 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
             </div>
 
             <div className="space-y-6">
-                {visibleReviews.map((review) => {
+                {isFetchingReviews ? (
+                    <div className="py-20 text-center text-gray-400 font-medium">Loading reviews...</div>
+                ) : visibleReviews.map((review) => {
                     const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
-                    const timeLabel = formatTimeAgo(review.createdAt);
+                    const timeLabel = formatTimeAgo(review.created_at);
 
                     return (
                         <motion.div 
@@ -569,38 +562,26 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             transition={{ duration: 0.35, ease: "easeOut" }}
                             className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-8 flex flex-col xs:flex-row xs:items-center justify-between gap-4 xs:gap-8"
                         >
-                            
-                            {/* Left Content */}
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
                                     <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0">
-                                        {review.reviewerId && MOCK_AVATARS[review.reviewerId]?.avatarUrl ? (
-                                            <img src={MOCK_AVATARS[review.reviewerId].avatarUrl} alt="" className="w-full h-full object-cover" />
+                                        {review.reviewer_id && allAvatars[review.reviewer_id]?.avatar_url ? (
+                                            <img src={allAvatars[review.reviewer_id].avatar_url} alt="" className="w-full h-full object-cover" />
                                         ) : (
-                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.reviewerId || review.reviewerName || review.id}`} alt="" className="w-full h-full object-cover" />
+                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.reviewer_id || review.reviewer_name || review.id}`} alt="" className="w-full h-full object-cover" />
                                         )}
                                     </div>
                                     <span className="font-semibold text-base text-[#111111]">{getReviewerDisplayName(review)}</span>
                                     <div className="flex gap-0.5">
                                         {[1,2,3,4,5].map(i => (
-                                            <img 
-                                                key={i} 
-                                                src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
-                                                className="w-3.5 h-3.5" 
-                                                alt="" 
-                                            />
+                                            <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
                                         ))}
                                     </div>
                                     <span className="text-xs text-gray-400 font-medium">{timeLabel}</span>
                                 </div>
 
-                                {review.comment && (
-                                    <p className="text-sm text-[#111111] leading-relaxed mb-6">
-                                        {review.comment}
-                                    </p>
-                                )}
+                                {review.comment && <p className="text-sm text-[#111111] leading-relaxed mb-6">{review.comment}</p>}
 
-                                {/* Footer row: Criteria + Total Rating on same line */}
                                 <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
                                         <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Clarity">
@@ -616,50 +597,33 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                             {review.aesthetics}
                                         </div>
                                     </div>
-
-                                    {/* Total Rating - visible on mobile only, desktop has separate column */}
                                     <div className="text-right shrink-0 xs:hidden">
                                         <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
                                         <div className="text-xl font-semibold md:font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Right Content - Total Rating (desktop only) */}
                             <div className="hidden xs:block text-right shrink-0">
                                 <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
                                 <div className="text-xl font-semibold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
-
                         </motion.div>
                     );
                 })}
             </div>
 
-            {/* Load More Button */}
             {hasMoreReviews && (
                 <div className="flex justify-center mt-10">
-                    <button
-                        onClick={handleLoadMore}
-                        className="group relative px-8 py-3.5 bg-[#111111] text-white text-sm font-medium rounded-full hover:bg-[#222222] active:scale-[0.97] transition-all duration-200 flex items-center gap-2"
-                    >
+                    <button onClick={handleLoadMore} className="group relative px-8 py-3.5 bg-[#111111] text-white text-sm font-medium rounded-full hover:bg-[#222222] active:scale-[0.97] transition-all duration-200 flex items-center gap-2">
                         Load More Reviews
-                        <span className="text-white/60 text-xs font-medium">
-                            ({Math.min(REVIEWS_PER_PAGE, remainingReviews)} of {remainingReviews} remaining)
-                        </span>
+                        <span className="text-white/60 text-xs font-medium">({Math.min(REVIEWS_PER_PAGE, remainingReviews)} of {remainingReviews} remaining)</span>
                     </button>
                 </div>
             )}
-
-            {/* All reviews shown indicator */}
             {!hasMoreReviews && sortedReviews.length > REVIEWS_PER_PAGE && (
-                <div className="flex justify-center mt-10">
-                    <span className="text-sm text-gray-400 font-medium">All reviews shown</span>
-                </div>
+                <div className="flex justify-center mt-10"><span className="text-sm text-gray-400 font-medium">All reviews shown</span></div>
             )}
-
         </div>
-
       </div>
 
       {/* Fullscreen Image Overlay */}
@@ -668,101 +632,39 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
               ref={containerRef}
               className="fixed inset-0 z-60 flex items-center justify-center p-4 overflow-hidden"
               onPointerDown={(e) => {
-                  // Only close if clicking directly on the empty wrapper space
-                  // By using PointerDown instead of Click, we avoid false-positives after dragging the image.
                   if (e.target === e.currentTarget) {
                       setIsImageFullscreen(false);
                       setZoomScale(1);
                   }
               }}
           >
-               {/* Visual Backdrop */}
                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-none" />
-
-               {/* Navigation Actions - Top Right (Desktop) / Bottom Left (Mobile) */}
                <div className="absolute bottom-6 left-6 md:top-4 md:right-4 md:bottom-auto md:left-auto flex md:flex-col flex-row gap-4 z-50 pointer-events-auto">
-                    <button 
-                        className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsImageFullscreen(false);
-                            setZoomScale(1);
-                        }}
-                        title="Close Overlay"
-                    >
+                    <button className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex" onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); setZoomScale(1); }}>
                         <X className="w-6 h-6" />
                     </button>
-
-                    {/* Fullscreen Download Button */}
-                    <button 
-                        onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                                const response = await fetch(post.imageUrl);
-                                const blob = await response.blob();
-                                const url = window.URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                window.URL.revokeObjectURL(url);
-                            } catch (err) {
-                                console.error('Download failed', err);
-                                window.open(post.imageUrl, '_blank');
-                            }
-                        }}
-                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
-                        title="Download Image"
-                    >
-                        <Download className="w-5 h-5 text-black" />
-                    </button>
-
-                    {/* Fullscreen Share Button */}
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setIsShareOpen(true);
-                        }}
-                        className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
-                        title="Share Post"
-                    >
-                        {/* <img src="/icons/share.svg" className="w-5 h-5" alt="Share" /> */}
-                        <Share2 className="w-5 h-5 text-black" />
-                    </button>
+                    <button onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                            const response = await fetch(post.image_url);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
+                            document.body.appendChild(link); link.click();
+                            document.body.removeChild(link); window.URL.revokeObjectURL(url);
+                        } catch (err) { window.open(post.image_url, '_blank'); }
+                    }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Download className="w-5 h-5 text-black" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); setIsShareOpen(true); }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Share2 className="w-5 h-5 text-black" /></button>
                </div>
-
-               {/* Zoom Controls - Responsive Orientation */}
                <div className="absolute bottom-6 right-6 flex md:flex-col flex-row gap-3 z-50 pointer-events-auto">
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setZoomScale(ZOOM_IN_SCALE);
-                        }}
-                        className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={zoomScale >= ZOOM_IN_SCALE}
-                        title="Zoom In"
-                    >
-                        <Plus className="w-6 h-6 text-black" />
-                    </button>
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setZoomScale(1);
-                        }}
-                        className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        disabled={zoomScale <= 1}
-                        title="Zoom Out"
-                    >
-                        <Minus className="w-6 h-6 text-black" />
-                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale >= ZOOM_IN_SCALE}><Plus className="w-6 h-6 text-black" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); setZoomScale(1); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale <= 1}><Minus className="w-6 h-6 text-black" /></button>
                </div>
-
                <motion.img 
                    ref={imgRef}
-                   src={post.imageUrl} 
-                   alt={post.title} 
+                   src={post.image_url} 
                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
                    style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
                    whileDrag={{ cursor: 'grabbing' }}
@@ -775,22 +677,14 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                    dragElastic={0}
                    onLoad={() => updateConstraints(zoomScale)}
                    onPointerDown={() => {
-                        // CRITICAL: DO NOT use e.stopPropagation() here!
-                        // Framer Motion REQUIRES the PointerDown event to trigger its drag gesture system.
-                        
-                        // Manual double tap detection that bypasses Framer/React interference natively
                         const now = Date.now();
-                        if (now - lastTapRef.current < 300) {
-                            setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE);
-                            lastTapRef.current = 0;
-                        } else {
-                            lastTapRef.current = now;
-                        }
+                        if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
+                        else { lastTapRef.current = now; }
                    }}
                />
           </div>
       )}
-
     </motion.div>
   );
 }
+

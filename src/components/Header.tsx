@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
 import { SearchResults } from './SearchResults';
@@ -60,28 +60,45 @@ export function Header({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // Debounce search query for performance
-  const debouncedQuery = useDebounce(searchQuery, 150);
+  // Data state
+  const [searchResults, setSearchResults] = useState<SectionedSearchResults>({ avatars: [], posts: [], categories: [] });
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Perform sectioned search with debounced query
-  const searchResults = useMemo((): SectionedSearchResults => {
-    if (!searchIndexes || !debouncedQuery || debouncedQuery.trim().length < 2) {
-      return { avatars: [], posts: [], categories: [] };
-    }
+  // Debounce search query
+  const debouncedQuery = useDebounce(searchQuery, 200);
+
+  // Perform async sectioned search
+  useEffect(() => {
+    let isMounted = true;
     
-    return searchAll(searchIndexes, debouncedQuery, {
-      avatars: 3,
-      posts: 5,
-      categories: 3
-    });
+    const doSearch = async () => {
+      if (!searchIndexes || !debouncedQuery || debouncedQuery.trim().length < 2) {
+        setSearchResults({ avatars: [], posts: [], categories: [] });
+        return;
+      }
+
+      setIsSearching(true);
+      const results = await searchAll(searchIndexes, debouncedQuery, {
+        avatars: 3,
+        posts: 5,
+        categories: 3
+      });
+
+      if (isMounted) {
+        setSearchResults(results);
+        setIsSearching(false);
+      }
+    };
+
+    doSearch();
+    return () => { isMounted = false; };
   }, [searchIndexes, debouncedQuery]);
 
-  // Check if there are any results
+  // Check results
   const hasResults = searchResults.avatars.length > 0 || 
                      searchResults.posts.length > 0 || 
                      searchResults.categories.length > 0;
 
-  // Show results when typing
   useEffect(() => {
     if (debouncedQuery.trim().length >= 2 && hasResults) {
       setShowSearchResults(true);
@@ -90,16 +107,12 @@ export function Header({
     }
   }, [debouncedQuery, hasResults]);
 
-  // Handle avatar click - switch to filtered browsing
+  // Handle avatar click
   const handleAvatarClick = (avatar: Avatar) => {
-    // Close dropdown FIRST
     setShowSearchResults(false);
-    
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
     } else {
-      // Navigate immediately
-      // If it's the current user, go to the primary avatar page
       const href = currentAvatar && avatar.id === currentAvatar.id 
         ? '/app/avatar' 
         : `/app/avatar/${avatar.id}`;
@@ -107,43 +120,35 @@ export function Header({
     }
   };
 
-  // Handle post click - open post detail
+  // Handle post click
   const handlePostClick = (post: Post) => {
     onPostSelect?.(post);
     setShowSearchResults(false);
     searchInputRef.current?.blur();
   };
 
-  // Handle category click - add to category filter
+  // Handle category click
   const handleCategoryClick = (category: Category) => {
-    // Close dropdown
     setShowSearchResults(false);
-
-    // Apply filter ONLY
     const newCats = !selectedCategories.includes(category) 
       ? [...selectedCategories, category] 
       : selectedCategories;
-      
     onCategoryChange(newCats);
   };
 
-  // Handle closing search dropdown (with blur - for header area clicks)
   const handleCloseSearch = () => {
     setShowSearchResults(false);
     searchInputRef.current?.blur();
   };
 
-  // Handle soft close (without blur - for outside clicks like post grid)
   const handleSoftCloseSearch = () => {
     setShowSearchResults(false);
   };
 
-  // Handle Enter key press - run mixed search (handled by App.tsx)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       setShowSearchResults(false);
       searchInputRef.current?.blur();
-      // Search query stays - App.tsx will use it a for grid filtering
     } else if (e.key === 'Escape') {
       setShowSearchResults(false);
       searchInputRef.current?.blur();
@@ -154,7 +159,6 @@ export function Header({
   useEffect(() => {
     let t1: ReturnType<typeof setTimeout>;
     let t2: ReturnType<typeof setTimeout>;
-
     if (hideControls) {
       setOpacityTrigger(false);
       setShowWidgets(false);
@@ -164,18 +168,13 @@ export function Header({
         t2 = setTimeout(() => setOpacityTrigger(true), 50);
       }, 700);
     }
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [hideControls]);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
       <div className={`relative max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center gap-2 sm:gap-3 md:gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
         
-        {/* ANIMATED LOGO/AVATAR SLOT - Always absolute for smooth animation */}
         <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
           {(!currentAvatar || hideControls) ? (
             <Link 
@@ -183,16 +182,8 @@ export function Header({
               onClick={onLogoClick}
               className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
             >
-              <img 
-                src="/icons/logo-rater.svg" 
-                alt="Rater Logo" 
-                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
-              />
-              <img 
-                src="/icons/logo-rater-hover.svg" 
-                alt="Rater Logo Hover" 
-                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" 
-              />
+              <img src="/icons/logo-rater.svg" alt="Rater Logo" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" />
+              <img src="/icons/logo-rater-hover.svg" alt="Rater Logo Hover" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
             </Link>
           ) : (
             <Link 
@@ -201,10 +192,10 @@ export function Header({
             >
                 <div 
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
-                    style={{ backgroundColor: currentAvatar.bgColor }}
+                    style={{ backgroundColor: currentAvatar.bg_color }}
                 >
-                    {currentAvatar.avatarUrl ? (
-                        <img src={currentAvatar.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+                    {currentAvatar.avatar_url ? (
+                        <img src={currentAvatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                     ) : (
                         currentAvatar.name.charAt(0).toUpperCase()
                     )}
@@ -214,7 +205,6 @@ export function Header({
           )}
         </div>
 
-        {/* GHOST SPACER - visible on all screens to reserve space for absolute logo/avatar */}
         {!hideControls && (
           <div className="shrink-0 invisible pointer-events-none" aria-hidden="true">
             {(!currentAvatar) ? (
@@ -228,25 +218,16 @@ export function Header({
           </div>
         )}
 
-        {/* DESKTOP SEARCH BAR - visible on screens strictly larger than 768px (>768px) */}
         {showWidgets && (
         <div className={`hidden min-[769px]:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
           <div className="relative w-full group">
-            
-            {/* Search Input Container */}
             <div className={`relative w-full transition-opacity duration-200 ${isFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                
-                {/* Search Icon */}
-                <Search 
-                  className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 opacity-40 group-focus-within:opacity-100 transition-opacity z-10" 
-                />
+                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 z-10 transition-opacity ${isSearching ? 'opacity-20' : 'opacity-40 group-focus-within:opacity-100'}`} />
 
-                {/* Input Wrapper - Styles applied here instead of input to contain pills */}
                 <div 
                   className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-[#FEC312] bg-white flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-[#FEC312]/10"
                   onClick={() => searchInputRef.current?.focus()}
                 >
-                  {/* Category Pills */}
                   {selectedCategories.map(cat => (
                     <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap animate-in fade-in zoom-in duration-200">
                       {cat}
@@ -263,20 +244,14 @@ export function Header({
                     </span>
                   ))}
 
-                  {/* Actual Input */}
                   <input 
                     ref={searchInputRef}
                     type="text" 
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    onFocus={() => {
-                      if (hasResults) {
-                        setShowSearchResults(true);
-                      }
-                    }}
+                    onFocus={() => { if (hasResults) setShowSearchResults(true); }}
                     onKeyDown={(e) => {
                       handleKeyDown(e);
-                      // Backspace to remove last tag if input is empty
                       if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
                         const newCats = [...selectedCategories];
                         newCats.pop();
@@ -288,7 +263,6 @@ export function Header({
                   />
                 </div>
                 
-                {/* Filter Trigger Button */}
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
                     <button 
                         onClick={() => setIsFilterOpen(true)}
@@ -299,7 +273,6 @@ export function Header({
                 </div>
             </div>
 
-            {/* Search Results Dropdown - Sectioned */}
             <SearchResults 
               results={searchResults}
               isVisible={showSearchResults && !isFilterOpen}
@@ -310,7 +283,6 @@ export function Header({
               onSoftClose={handleSoftCloseSearch}
             />
 
-            {/* Filter Panel */}
             <FilterDropdown 
                  isOpen={isFilterOpen}
                  onClose={() => setIsFilterOpen(false)}
@@ -327,32 +299,21 @@ export function Header({
         </div>
         )}
 
-        {/* ACTIONS */}
         {showWidgets && (
         <div className={`flex items-center gap-2 shrink-0 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
-            
-            {/* AUTH / USER SECTION */}
             <div className="flex items-center gap-2">
-                {currentAvatar ? (
-                    null
-                ) : (
+                {currentAvatar ? null : (
                     <div className="flex items-center gap-2">
                         <Button 
                             variant='outline'
-                            onClick={() => {
-                                setAuthTab('login');
-                                setShowAuthOverlay(true);
-                            }}
+                            onClick={() => { setAuthTab('login'); setShowAuthOverlay(true); }}
                             className="hidden sm:flex items-center justify-center h-12 px-6 rounded-full font-medium text-[17px] text-black hover:bg-[#FEC312] hover:text-white transition-all"
                         >
                             Login
                         </Button>
                         <Button
                             variant="primary"
-                            onClick={() => {
-                                setAuthTab('signup');
-                                setShowAuthOverlay(true);
-                            }}
+                            onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
                             className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-white font-medium text-[17px]"
                         >
                             Sign up
@@ -360,7 +321,6 @@ export function Header({
                     </div>
                 )}
 
-                {/* Post Button Container - Hidden on Tablet (XS to 768px), Visible on Desktop (769+) and Mobile (<425px) */}
                 {currentAvatar && (
                     <div className="relative ml-1 sm:ml-2 flex xs:hidden min-[769px]:flex">
                         <Button
@@ -380,7 +340,6 @@ export function Header({
                 )}
             </div>
 
-            {/* PURE MOBILE SEARCH ICON - visible only on ≤425px, styled with yellow border */}
             <motion.button 
               layoutId="mobile-search-circle"
               onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
@@ -392,7 +351,6 @@ export function Header({
         </div>
         )}
 
-        {/* TABLET CONDENSED SEARCH PILL - strictly for tablet/small laptops (426px to 768px) */}
         {showWidgets && (
         <div className={`hidden xs:flex min-[769px]:hidden flex-1 justify-end items-center gap-3 relative z-40 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
             {currentAvatar && (
@@ -412,13 +370,8 @@ export function Header({
                 style={{ borderRadius: 9999 }}
             >
                 <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
-                    <img 
-                      src="/icons/search.svg" 
-                      alt="Search" 
-                      className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" 
-                    />
+                    <img src="/icons/search.svg" alt="Search" className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" />
                     <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
-                        {/* Show category pill if active, otherwise show query/placeholder */}
                         {selectedCategories.length > 0 ? (
                             <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-[#111111] whitespace-nowrap overflow-hidden">
                                 <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedCategories[0]}</span>
@@ -437,12 +390,7 @@ export function Header({
       </div>
 
       <AnimatePresence>
-        {showAuthOverlay && (
-          <AuthOverlay 
-            initialTab={authTab} 
-            onClose={() => setShowAuthOverlay(false)} 
-          />
-        )}
+        {showAuthOverlay && <AuthOverlay initialTab={authTab} onClose={() => setShowAuthOverlay(false)} />}
       </AnimatePresence>
     </header>
   );

@@ -38,7 +38,7 @@ export function SubmitPage() {
 
   const handleSubmit = () => {
     // SUBMIT LOGIC HERE
-    console.log("Submitting:", { title, category, description, image, avatarId: currentAvatar?.id });
+    console.log("Submitting:", { title, category, description, image, author_id: currentAvatar?.id });
     setIsSuccess(true);
   };
 
@@ -91,11 +91,31 @@ export function SubmitPage() {
     >
       
       {/* HEADER */}
-      <div className="text-center xs:text-left mb-12">
-        <h1 className="text-2xl font-semibold mb-3 text-[#111111]">Post your Work</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
+        <div>
+          <h1 className="text-3xl font-semibold mb-1.5 text-[#111111]">Post your Work</h1>
+          <p className="text-sm text-gray-400">Finalize your design and prepare it for review.</p>
+        </div>
+
+        {/* IDENTITY INDICATOR (Minimal) */}
+        <div className="flex items-center gap-2.5 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100 self-start sm:self-center">
+            <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 shadow-sm border border-white">
+                {currentAvatar.avatar_url ? (
+                    <img src={currentAvatar.avatar_url} alt={currentAvatar.name} className="w-full h-full object-cover" />
+                ) : (
+                    <div 
+                        className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold"
+                        style={{ backgroundColor: currentAvatar.bg_color }}
+                    >
+                        {currentAvatar.name.substring(0, 1).toUpperCase()}
+                    </div>
+                )}
+            </div>
+            <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">@{currentAvatar.name}</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-12 lg:gap-20 items-start">
            
            {/* LEFT COLUMN: Inputs */}
            <div className="space-y-10">
@@ -173,7 +193,7 @@ export function SubmitPage() {
                                 className={cn(
                                     "group pl-1.5 pr-4 py-2 rounded-full border-2 text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                                     isSelected 
-                                        ? "bg-[#ebebeb] border-[#727272] text-[#111111]" 
+                                        ? "bg-gray-100 border-gray-400 text-[#111111]" 
                                         : "bg-white border-[#E0E0E0] text-[#111111] hover:bg-[#fafafa]"
                                 )}
                             >
@@ -194,37 +214,49 @@ export function SubmitPage() {
                </div>
            </div>
 
-            {/* RIGHT COLUMN: Avatar & Actions */}
-            <div className="space-y-6 sticky top-32">
-                 {/* AVATAR SECTION */}
-                 <div className="space-y-4">
-                      <h3 className="font-semibold text-lg text-[#111111]">Posting as</h3>
-                      
-                      <div className="border border-[#FEC312] bg-[#FFFBF0] rounded-[24px] p-6 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-300">
-                          <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-white shadow-sm">
-                              {currentAvatar.avatarUrl ? (
-                                 <img src={currentAvatar.avatarUrl} alt={currentAvatar.name} className="w-full h-full object-cover" />
-                              ) : (
-                                  <div 
-                                     className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
-                                     style={{ backgroundColor: currentAvatar.bgColor }}
-                                  >
-                                      {currentAvatar.name.substring(0, 2).toUpperCase()}
-                                  </div>
-                              )}
-                          </div>
-                          <h4 className="font-semibold text-lg text-[#111111] mb-2">{currentAvatar.name}</h4>
-                      </div>
+            {/* RIGHT COLUMN: Onboarding & Actions */}
+            <div className="space-y-8 sticky top-32 lg:max-w-sm">
+                 {/* ONBOARDING BLOCK */}
+                 <div className="bg-gray-50/50 border border-gray-200/60 rounded-[28px] p-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-full bg-[#FEC312]/10 flex items-center justify-center shrink-0">
+                            <FileUp className="w-4 h-4 text-[#FEC312]" />
+                        </div>
+                        <h3 className="font-semibold text-lg text-[#111111]">Upload Your Work</h3>
+                    </div>
+                    
+                    <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+                        Share your design and get rated by the community.
+                    </p>
+
+                    <ul className="space-y-3 mb-8">
+                        {[
+                            "Upload one image per post (for now)",
+                            "Focus on visual work (UI, branding, etc.)",
+                            "Add a clear title for better feedback"
+                        ].map((point, i) => (
+                            <li key={i} className="flex items-start gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 shrink-0" />
+                                <span className="text-xs font-medium text-gray-500 leading-normal tracking-wide">{point}</span>
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                        <p className="text-[10px] font-medium text-gray-500 uppercase tracking-widest">
+                            More fields coming soon
+                        </p>
+                    </div>
                  </div>
 
-                    <Button 
-                        className="w-[100px] h-12 rounded-full text-lg font-semibold" 
-                        variant="outline"
-                        disabled={!title || !category || !image}
-                        onClick={handleSubmit}
-                    >
-                        Post
-                    </Button>
+                <Button 
+                    className="px-8 h-12 rounded-full text-lg font-medium ransition-transform active:scale-[0.98]" 
+                    variant="outline"
+                    disabled={!title || !category || !image}
+                    onClick={handleSubmit}
+                >
+                    Post Design
+                </Button>
             </div>
         </div>
       

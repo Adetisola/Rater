@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { Post } from '../logic/mockData';
-import { MOCK_AVATARS, calculatePostMetrics } from '../logic/mockData';
 import { formatTimeAgo } from '../lib/utils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import type { BadgeType } from '../logic/badgeUtils';
+import type { BadgeType } from '../logic/mockData';
 import Link from 'next/link';
+import { usePostMetrics } from '../hooks/usePostMetrics';
+import { useAuth } from '../context/AuthContext';
 
 interface PostCardProps {
   post: Post;
@@ -15,13 +16,13 @@ interface PostCardProps {
   isLoading?: boolean;
 }
 
-export function PostCard({ post, badge, isHot = false, isLoading = false }: PostCardProps) {
+export function PostCard({ post, badge, isHot = false, isLoading: parentLoading = false }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
-  // Compute metrics dynamically from REVIEWS
-  const metrics = useMemo(() => calculatePostMetrics(post.id), [post.id]);
+  const { allAvatars } = useAuth();
+  const { metrics, loading: metricsLoading } = usePostMetrics(post.id);
 
   useEffect(() => {
     if (retryCount === 0) {
@@ -29,14 +30,14 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
         setHasError(false);
     }
     
-    if (!post.imageUrl || post.imageUrl.trim() === '') {
+    if (!post.image_url || post.image_url.trim() === '') {
         setHasError(true);
         setImageLoaded(true);
         return;
     }
 
     const img = new Image();
-    img.src = post.imageUrl;
+    img.src = post.image_url;
     img.onload = () => {
       setImageLoaded(true);
       setHasError(false);
@@ -52,12 +53,12 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
         return () => clearTimeout(timer);
       }
     };
-  }, [post.imageUrl, retryCount, post.id]);
+  }, [post.image_url, retryCount, post.id]);
 
-  const showSkeleton = isLoading || (!imageLoaded && !hasError);
+  const showSkeleton = parentLoading || metricsLoading || (!imageLoaded && !hasError);
   const displayImageUrl = hasError 
     ? 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800'
-    : post.imageUrl;
+    : post.image_url;
 
   if (showSkeleton) {
       return (
@@ -100,7 +101,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
   }
 
   const isTopRated = badge === 'top_rated_active';
-  const avatar = MOCK_AVATARS[post.avatarId];
+  const avatar = allAvatars[post.author_id];
 
   return (
     <Link href={`/app/post/${post.id}`} className="group relative break-inside-avoid block">
@@ -138,7 +139,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                         {post.category}
                     </span>
                     <span className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2">
-                        {formatTimeAgo(post.createdAt)}
+                        {formatTimeAgo(post.created_at)}
                     </span>
                 </div>
 
@@ -155,7 +156,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                 <div className="flex items-center gap-2 mb-2 sm:mb-4">
                     <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden">
                         <img 
-                            src={avatar?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatarId}`} 
+                            src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author_id}`} 
                             alt="Avatar" 
                             className="w-full h-full object-cover" 
                         />
@@ -170,7 +171,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                         <div className="flex items-start gap-1 xs:gap-1.5">
                             <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
                             <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
-                                {metrics.reviewCount}
+                                {metrics?.review_count || 0}
                                 {isHot && (
                                     <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
                                         <DotLottieReact
@@ -193,7 +194,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                     </div>
 
                     <div className="flex items-center gap-1.5 w-auto justify-end">
-                        {!metrics.ratingUnlocked ? (
+                        {!metrics?.rating_unlocked ? (
                             <span className="text-[10px] md:text-[12px] font-bold md:font-semibold text-[#009241] group-hover:text-[#4ade80] transition-colors text-right">
                                 Rating Unlocks at 3 Reviews
                             </span>
@@ -201,7 +202,7 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                             <>
                                 <div className="flex gap-0.5">
                                     {[1,2,3,4,5].map(i => {
-                                        const isActive = i <= Math.floor(metrics.averageScore);
+                                        const isActive = i <= Math.floor(metrics.average_score);
                                         return (
                                             <img
                                                 key={i} 
@@ -212,7 +213,9 @@ export function PostCard({ post, badge, isHot = false, isLoading = false }: Post
                                         );
                                     })}
                                 </div>
-                                <span className="text-sm font-medium text-[#111111] group-hover:text-white transition-colors">{metrics.averageScore}</span>
+                                <span className="text-sm font-medium text-[#111111] group-hover:text-white transition-colors">
+                                    {metrics.average_score}
+                                </span>
                             </>
                         )}
                     </div>

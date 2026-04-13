@@ -1,13 +1,11 @@
-"use client";
-
 import { useAuth } from '../context/AuthContext';
 import { MOCK_POSTS, calculatePostMetrics } from '../logic/mockData';
 import { Button } from './ui/Button';
 import { MasonryGrid } from './MasonryGrid';
-import { computeBadges } from '../logic/badgeUtils';
-import { computeHotPosts } from '../logic/hotPostUtils';
+import { useBadges } from '../hooks/useBadges';
+import { useHotPosts } from '../hooks/useHotPosts';
 import { LogOut, Grid, Heart, MessageSquare, ArrowLeft, MoreHorizontal } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { useRouter } from 'next/navigation';
@@ -19,7 +17,6 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps) {
-  // Merge static mock avatars with newly created session avatars
   const { currentAvatar: me, allAvatars, logout, updateProfile } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
@@ -32,47 +29,59 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const [isSaving, setIsSaving] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  // Find the avatar to display (using the centralized allAvatars map)
+  // Stats State
+  const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
+
+  // Find the avatar to display
   const targetAvatar = allAvatars[avatarId];
 
-  // Compute badges and hot status for the grid
-  const badgeMap = useMemo(() => computeBadges(MOCK_POSTS), []);
-  const hotPostIds = useMemo(() => computeHotPosts(MOCK_POSTS), []);
+  // External Metadata (Badges, Hot Status)
+  const { badgeMap } = useBadges(MOCK_POSTS);
+  const { hotPostIds } = useHotPosts(MOCK_POSTS);
   
   const avatarPosts = useMemo(() => (
-    targetAvatar ? MOCK_POSTS.filter(p => p.avatarId === targetAvatar.id) : []
+    targetAvatar ? MOCK_POSTS.filter(p => p.author_id === targetAvatar.id) : []
   ), [targetAvatar]);
 
-  // Compute stats dynamically
-  const stats = useMemo(() => {
-    let totalReviews = 0;
-    let totalScore = 0;
-    let ratedPosts = 0;
+  // Async stats calculation
+  useEffect(() => {
+    let isMounted = true;
+    
+    const computeStats = async () => {
+        let totalReviews = 0;
+        let totalScore = 0;
+        let ratedPosts = 0;
 
-    avatarPosts.forEach(post => {
-      const metrics = calculatePostMetrics(post.id);
-      totalReviews += metrics.reviewCount;
-      if (metrics.ratingUnlocked) {
-        totalScore += metrics.averageScore;
-        ratedPosts++;
-      }
-    });
+        const metricsList = await Promise.all(avatarPosts.map(p => calculatePostMetrics(p.id)));
+        
+        metricsList.forEach(metrics => {
+            totalReviews += metrics.review_count;
+            if (metrics.rating_unlocked) {
+                totalScore += metrics.average_score;
+                ratedPosts++;
+            }
+        });
 
-    return {
-      totalReviews,
-      avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
+        if (isMounted) {
+            setStats({
+                totalReviews,
+                avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
+            });
+        }
     };
+
+    computeStats();
+    return () => { isMounted = false; };
   }, [avatarPosts]);
 
-  const signUpDate = targetAvatar ? new Date(targetAvatar.createdAt).getFullYear() : null;
+  const signUpDate = targetAvatar ? new Date(targetAvatar.created_at).getFullYear() : null;
   const isMe = me?.id === avatarId;
 
-  // Initialize edit fields
   const startEditing = () => {
     if (!targetAvatar) return;
     setEditRole(targetAvatar.role || 'Designer');
     setEditBio(targetAvatar.bio || '');
-    setEditAvatarUrl(targetAvatar.avatarUrl || '');
+    setEditAvatarUrl(targetAvatar.avatar_url || '');
     setIsEditing(true);
   };
 
@@ -84,14 +93,11 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     if (!targetAvatar) return;
     setIsSaving(true);
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 600));
-
     // Update global state via AuthContext
     await updateProfile({
       role: editRole.trim() || 'Designer',
       bio: editBio.trim(),
-      avatarUrl: editAvatarUrl.trim() || undefined
+      avatar_url: editAvatarUrl.trim() || undefined
     });
 
     setIsSaving(false);
@@ -112,7 +118,6 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
   return (
     <div className="max-w-6xl mx-auto px-2 xs:px-6 py-8 md:py-12 w-full min-h-[60vh] relative">
-      {/* Mobile Floating Action Button - Only for own profile */}
       {isMe && (
         <div className="md:hidden absolute top-8 right-4 z-40">
             <button 
@@ -122,29 +127,19 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                 <MoreHorizontal className="w-6 h-6 text-black" />
             </button>
 
-            {/* Dropdown Menu */}
             {showMobileMenu && (
                 <>
-                    <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setShowMobileMenu(false)}
-                    />
+                    <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
                     <div className="absolute top-13 right-0 w-44 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                         <button 
-                            onClick={() => {
-                                startEditing();
-                                setShowMobileMenu(false);
-                            }}
+                            onClick={() => { startEditing(); setShowMobileMenu(false); }}
                             className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
                         >
                             <Edit2 className="w-5 h-5" />
                             <span className="font-semibold text-[15px]">Edit Avatar</span>
                         </button>
                         <button 
-                            onClick={() => {
-                                logout();
-                                setShowMobileMenu(false);
-                            }}
+                            onClick={() => { logout(); setShowMobileMenu(false); }}
                             className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
                             <LogOut className="w-5 h-5" />
@@ -155,7 +150,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             )}
         </div>
       )}
-      {/* Back Button for non-own profile */}
+
       {!isOwnProfile && (
         <div className="mb-8">
             <Button 
@@ -171,22 +166,17 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
       {/* Avatar Header */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
-        {/* Avatar */}
         <div className="relative group shrink-0">
           <div 
             className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all"
-            style={{ backgroundColor: targetAvatar.bgColor }}
+            style={{ backgroundColor: targetAvatar.bg_color }}
           >
-            {/* Live Preview during edit */}
-            {(isEditing ? editAvatarUrl : targetAvatar.avatarUrl) ? (
+            {(isEditing ? editAvatarUrl : targetAvatar.avatar_url) ? (
               <img 
-                src={isEditing ? editAvatarUrl : targetAvatar.avatarUrl} 
-                alt="" 
+                src={isEditing ? editAvatarUrl : targetAvatar.avatar_url} 
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback if URL is invalid during edit
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
+                alt=""
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
                 <span className="animate-in fade-in duration-300">
@@ -194,7 +184,6 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                 </span>
             )}
           </div>
-          
         </div>
 
         {/* Info */}
@@ -307,7 +296,6 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
           </div>
         </div>
 
-        {/* Desktop Actions - Only for self */}
         {isMe && (
           <div className="hidden md:flex gap-3">
             <Button variant="outline" className="h-11 rounded-full px-6 flex items-center gap-2 hover:bg-[#ff4848] hover:border-[#ff4848] hover:text-white transition-all" onClick={logout}>
@@ -318,7 +306,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
         )}
       </div>
 
-      {/* Avatar Content Tabs */}
+      {/* Tabs */}
       <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
         <button className="flex items-center gap-2 py-4 border-b-2 border-[#111111] text-sm font-semibold uppercase tracking-wider text-[#111111]">
           <Grid className="w-4 h-4" />
@@ -334,7 +322,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
         </button>
       </div>
 
-      {/* Posts Grid */}
+      {/* Grid */}
       {avatarPosts.length > 0 ? (
         <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
             <MasonryGrid 
@@ -355,9 +343,6 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
           )}
         </div>
       )}
-
-      {/* Mobile Logout (visible on small screens) - Only for self */}
-
 
       {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}
     </div>

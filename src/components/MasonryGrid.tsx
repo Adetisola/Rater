@@ -11,9 +11,10 @@ interface MasonryGridProps {
   posts: Post[];
   badgeMap: Record<string, BadgeType>;
   hotPostIds: Set<string>;
+  isLoading?: boolean;
 }
 
-export function MasonryGrid({ posts, badgeMap, hotPostIds }: MasonryGridProps) {
+export function MasonryGrid({ posts, badgeMap, hotPostIds, isLoading }: MasonryGridProps) {
   const columnCount = useMasonryColumns();
 
   // Distribute posts into columns
@@ -24,6 +25,14 @@ export function MasonryGrid({ posts, badgeMap, hotPostIds }: MasonryGridProps) {
     });
     return cols;
   }, [posts, columnCount]);
+
+  if (isLoading) {
+    return (
+      <div className="w-full py-20 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#FEC312] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[2600px] mx-auto px-2 xs:px-2 md:px-4 pb-20">

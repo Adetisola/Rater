@@ -55,20 +55,39 @@ export function MobileSearchOverlay({
   const router = useRouter();
   const { currentAvatar } = useAuth();
 
-  // Debounce search query for performance
-  const debouncedQuery = useDebounce(searchQuery, 150);
+  // Data state
+  const [searchResults, setSearchResults] = useState<SectionedSearchResults>({ avatars: [], posts: [], categories: [] });
+  const [isSearching, setIsSearching] = useState(false);
 
-  // Perform sectioned search with debounced query
-  const searchResults: SectionedSearchResults = (() => {
-    if (!debouncedQuery || debouncedQuery.trim().length < 2) {
-      return { avatars: [], posts: [], categories: [] };
-    }
-    return searchAll(searchIndexes, debouncedQuery, {
-      avatars: 5,
-      posts: 10,
-      categories: 5
-    });
-  })();
+  // Debounce search query
+  const debouncedQuery = useDebounce(searchQuery, 200);
+
+  // Perform async search
+  useEffect(() => {
+    let isMounted = true;
+    
+    const doSearch = async () => {
+      if (!debouncedQuery || debouncedQuery.trim().length < 2) {
+        setSearchResults({ avatars: [], posts: [], categories: [] });
+        return;
+      }
+
+      setIsSearching(true);
+      const results = await searchAll(searchIndexes, debouncedQuery, {
+        avatars: 5,
+        posts: 10,
+        categories: 5
+      });
+
+      if (isMounted) {
+        setSearchResults(results);
+        setIsSearching(false);
+      }
+    };
+
+    doSearch();
+    return () => { isMounted = false; };
+  }, [debouncedQuery, searchIndexes]);
 
   const hasResults = searchResults.avatars.length > 0 || 
                      searchResults.posts.length > 0 || 
@@ -79,20 +98,16 @@ export function MobileSearchOverlay({
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       
-      // Focus input perfectly after animation finishes
       setTimeout(() => {
         searchInputRef.current?.focus();
       }, 400);
 
-      // Handle Android back button (popstate event)
       const handlePopState = (e: PopStateEvent) => {
         e.preventDefault();
         onClose();
-        // Push state back to prevent actual navigation
         window.history.pushState(null, '', window.location.href);
       };
 
-      // Push a state so back button triggers popstate instead of leaving page
       window.history.pushState(null, '', window.location.href);
       window.addEventListener('popstate', handlePopState);
 
@@ -109,7 +124,6 @@ export function MobileSearchOverlay({
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
     } else {
-      // If it's the current user, go to the primary avatar page
       const href = currentAvatar && avatar.id === currentAvatar.id 
         ? '/app/avatar' 
         : `/app/avatar/${avatar.id}`;
@@ -126,7 +140,6 @@ export function MobileSearchOverlay({
   // Handle category click
   const handleCategoryClick = (category: Category) => {
     onClose();
-    
     if (!selectedCategories.includes(category)) {
       onCategoryChange([...selectedCategories, category]);
     }
@@ -144,7 +157,6 @@ export function MobileSearchOverlay({
   };
 
   const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -163,7 +175,6 @@ export function MobileSearchOverlay({
         >
           {/* Header */}
           <div className="sticky top-0 px-3 py-3 border-b border-gray-100 flex items-center gap-3 bg-white z-10 shrink-0">
-            {/* Close Button */}
             <button 
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
@@ -171,7 +182,6 @@ export function MobileSearchOverlay({
               <X size={20} className="text-gray-600" />
             </button>
 
-            {/* Search Input */}
             <motion.div 
               layoutId={activeLayoutId}
               className="flex-1 relative flex items-center bg-white rounded-full border-2 border-[#FEC312] overflow-hidden focus-within:ring-4 focus-within:ring-[#FEC312]/10"
@@ -180,7 +190,7 @@ export function MobileSearchOverlay({
               <img 
                 src="/icons/search.svg" 
                 alt="Search" 
-                className="absolute left-4 h-5 w-5 opacity-40 z-10 shrink-0 pointer-events-none" 
+                className={`absolute left-4 h-5 w-5 z-10 shrink-0 pointer-events-none transition-opacity ${isSearching ? 'opacity-20' : 'opacity-40'}`} 
               />
               <input 
                 ref={searchInputRef}
@@ -193,7 +203,6 @@ export function MobileSearchOverlay({
               />
             </motion.div>
 
-        {/* Filter Button */}
         <button 
           onClick={() => setIsFilterOpen(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
@@ -202,12 +211,9 @@ export function MobileSearchOverlay({
         </button>
       </div>
 
-      {/* Search Results - scrollable */}
       <div className="flex-1 overflow-y-auto">
-        {/* Active Filters Pills (Sort + Categories) */}
         {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
-            {/* Sort Pill - matches homepage exactly */}
             {sortBy !== 'balanced' && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
                 <span className="text-xs font-medium text-[#111111]">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
@@ -220,7 +226,6 @@ export function MobileSearchOverlay({
               </div>
             )}
             
-            {/* Category Pills - matches homepage exactly */}
             {selectedCategories.map(cat => (
               <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
                 <span className="text-xs font-medium text-[#111111]">{cat}</span>
@@ -238,10 +243,10 @@ export function MobileSearchOverlay({
           </div>
         )}
 
-        {/* Results */}
-        {hasResults ? (
+        {isSearching ? (
+          <div className="flex items-center justify-center h-40 text-gray-400 text-sm">Searching...</div>
+        ) : hasResults ? (
           <div className="divide-y divide-gray-100">
-            {/* CATEGORIES SECTION */}
             {searchResults.categories.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
@@ -259,7 +264,6 @@ export function MobileSearchOverlay({
               </div>
             )}
 
-            {/* AVATARS SECTION */}
             {searchResults.avatars.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
@@ -277,7 +281,6 @@ export function MobileSearchOverlay({
               </div>
             )}
 
-            {/* POSTS SECTION */}
             {searchResults.posts.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
@@ -306,11 +309,10 @@ export function MobileSearchOverlay({
         )}
       </div>
 
-      {/* Mobile Filter Panel */}
       <MobileFilterPanel
         isOpen={isFilterOpen}
         onClose={() => setIsFilterOpen(false)}
-        onApply={onClose} // Close entire search overlay when Apply is clicked
+        onApply={onClose} 
         sortBy={sortBy}
         onSortChange={onSortChange}
         selectedCategories={selectedCategories}
@@ -325,7 +327,7 @@ export function MobileSearchOverlay({
 }
 
 // ============================================================================
-// RESULT ITEM COMPONENTS (simplified versions for mobile)
+// RESULT ITEM COMPONENTS
 // ============================================================================
 
 interface AvatarResultItemProps {
@@ -334,28 +336,19 @@ interface AvatarResultItemProps {
 }
 
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
-  const initials = avatar.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = avatar.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
     <div
-      onMouseDown={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick();
-      }}
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <div 
         className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-        style={{ backgroundColor: avatar.bgColor }}
+        style={{ backgroundColor: avatar.bg_color }}
       >
-        {avatar.avatarUrl ? (
-          <img src={avatar.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+        {avatar.avatar_url ? (
+          <img src={avatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
         ) : (
           initials
         )}
@@ -376,15 +369,12 @@ interface PostResultItemProps {
 function PostResultItem({ post, onClick }: PostResultItemProps) {
   return (
     <button
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
     >
       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
         <img 
-          src={post.imageUrl} 
+          src={post.image_url} 
           alt="" 
           className="w-full h-full object-cover"
         />
@@ -405,11 +395,7 @@ interface CategoryResultItemProps {
 function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
   return (
     <div
-      onMouseDown={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onClick();
-      }}
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">

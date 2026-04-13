@@ -103,7 +103,7 @@ export function createSearchIndexes(
 ): SearchIndexes {
   // Normalize Avatars
   const normalizedAvatars: NormalizedAvatar[] = Object.values(avatars)
-    .filter(a => !a.isBlocked)
+    .filter(a => !a.is_blocked)
     .map(avatar => ({
       ...avatar,
       name_normalized: normalizeText(avatar.name),
@@ -111,7 +111,7 @@ export function createSearchIndexes(
 
   // Normalize Posts with avatar name
   const normalizedPosts: NormalizedPost[] = posts.map(post => {
-    const avatar = avatars[post.avatarId];
+    const avatar = avatars[post.author_id];
     const avatarName = avatar ? avatar.name : '';
     return {
       ...post,
@@ -173,11 +173,14 @@ export function createSearchIndexes(
 /**
  * Search all indexes and return sectioned results for the dropdown.
  */
-export function searchAll(
+export async function searchAll(
   indexes: SearchIndexes,
   query: string,
   limits: { avatars: number; posts: number; categories: number } = { avatars: 3, posts: 5, categories: 3 }
-): SectionedSearchResults {
+): Promise<SectionedSearchResults> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 50));
+
   if (!query || query.trim().length < 2) {
     return { avatars: [], posts: [], categories: [] };
   }
@@ -223,11 +226,14 @@ export function searchAll(
  * Search posts only (for Enter key behavior and grid filtering).
  * Designer name matches rank higher.
  */
-export function searchPosts(
+export async function searchPosts(
   indexes: SearchIndexes,
   query: string,
   limit: number = 100
-): PostSearchResult[] {
+): Promise<PostSearchResult[]> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 50));
+
   if (!query || query.trim().length < 2) {
     return [];
   }

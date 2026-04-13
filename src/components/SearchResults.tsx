@@ -151,10 +151,10 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       {/* Avatar */}
       <div 
         className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-        style={{ backgroundColor: avatar.bgColor }}
+        style={{ backgroundColor: avatar.bg_color }}
       >
-        {avatar.avatarUrl ? (
-          <img src={avatar.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
+        {avatar.avatar_url ? (
+          <img src={avatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
         ) : (
           initials
         )}
@@ -193,7 +193,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       {/* Thumbnail */}
       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
         <img 
-          src={post.imageUrl} 
+          src={post.image_url} 
           alt="" 
           className="w-full h-full object-cover"
         />

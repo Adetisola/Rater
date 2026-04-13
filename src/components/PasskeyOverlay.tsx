@@ -53,12 +53,12 @@ export function PasskeyOverlay({ avatar, onClose, onSuccess }: PasskeyOverlayPro
             {/* Avatar Display */}
             <div className="flex flex-col items-center gap-3 mb-8">
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-sm">
-                    {avatar.avatarUrl ? (
-                        <img src={avatar.avatarUrl} alt={avatar.name} className="w-full h-full object-cover" />
+                    {avatar.avatar_url ? (
+                        <img src={avatar.avatar_url} alt={avatar.name} className="w-full h-full object-cover" />
                     ) : (
                         <div 
                             className="w-full h-full flex items-center justify-center text-white font-bold text-xl"
-                            style={{ backgroundColor: avatar.bgColor }}
+                            style={{ backgroundColor: avatar.bg_color }}
                         >
                             {avatar.name.substring(0, 2).toUpperCase()}
                         </div>

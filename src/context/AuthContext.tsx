@@ -1,13 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { MOCK_AVATARS, type Avatar } from '../logic/mockData';
 
 interface AuthContextType {
   currentAvatar: Avatar | null;
   allAvatars: Record<string, Avatar>;
   login: (name: string, passkey: string) => Promise<boolean>;
-  signup: (name: string, passkey: string, avatarUrl?: string) => Promise<boolean>;
+  signup: (name: string, passkey: string, avatar_url?: string) => Promise<boolean>;
   updateProfile: (data: Partial<Avatar>) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -18,45 +18,60 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentAvatar, setCurrentAvatar] = useState<Avatar | null>(null);
   const [sessionAvatars, setSessionAvatars] = useState<Record<string, Avatar>>({});
+  const [mockOverrides, setMockOverrides] = useState<Record<string, Avatar>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Merge static mock avatars with newly created session avatars
-  const allAvatars = { ...MOCK_AVATARS, ...sessionAvatars };
+  // Source of truth for designers in the app
+  const allAvatars = useMemo(() => ({
+    ...MOCK_AVATARS,
+    ...mockOverrides,
+    ...sessionAvatars
+  }), [mockOverrides, sessionAvatars]);
 
-  // Load session and dynamic avatars from localStorage on mount
+  // Sync with LocalStorage
   useEffect(() => {
-    const savedSessionAvatars = localStorage.getItem('rater_session_avatars');
-    if (savedSessionAvatars) {
-      setSessionAvatars(JSON.parse(savedSessionAvatars));
-    }
-
+    const savedSession = localStorage.getItem('rater_session_avatars');
+    const savedOverrides = localStorage.getItem('rater_mock_overrides');
     const savedAvatarId = localStorage.getItem('rater_avatar_id');
+
+    if (savedSession) setSessionAvatars(JSON.parse(savedSession));
+    if (savedOverrides) setMockOverrides(JSON.parse(savedOverrides));
+
     if (savedAvatarId) {
-      // Re-fetch from the merged list
-      const merged = { ...MOCK_AVATARS, ...(savedSessionAvatars ? JSON.parse(savedSessionAvatars) : {}) };
-      if (merged[savedAvatarId]) {
-        setCurrentAvatar(merged[savedAvatarId]);
-      }
+       // We'll let the user effect handle the actual resolution after states are set
     }
     setIsLoading(false);
   }, []);
 
-  // Save session avatars to localStorage whenever they change
+  // Resolve current avatar after storage loads
+  useEffect(() => {
+    if (isLoading) return;
+    const savedAvatarId = localStorage.getItem('rater_avatar_id');
+    if (savedAvatarId && allAvatars[savedAvatarId]) {
+      setCurrentAvatar(allAvatars[savedAvatarId]);
+    }
+  }, [allAvatars, isLoading]);
+
+  // Persist edits
   useEffect(() => {
     if (Object.keys(sessionAvatars).length > 0) {
       localStorage.setItem('rater_session_avatars', JSON.stringify(sessionAvatars));
     }
-  }, [sessionAvatars]);
+    if (Object.keys(mockOverrides).length > 0) {
+      localStorage.setItem('rater_mock_overrides', JSON.stringify(mockOverrides));
+    }
+  }, [sessionAvatars, mockOverrides]);
 
-  const login = useCallback(async (name: string, passkey: string): Promise<boolean> => {
-    // Artificial delay
+  const login = useCallback(async (nameOrUsername: string, passkey: string): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
+    const query = nameOrUsername.toLowerCase().trim();
     const avatar = Object.values(allAvatars).find(
-      a => a.name.toLowerCase() === name.toLowerCase().trim() && a.passkey === passkey
+      a => (a.name.toLowerCase() === query || a.username.toLowerCase() === query) && a.passkey === passkey
     );
 
     if (avatar) {
+      if (avatar.is_blocked) return false;
       setCurrentAvatar(avatar);
       localStorage.setItem('rater_avatar_id', avatar.id);
       return true;
@@ -64,12 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   }, [allAvatars]);
 
-  const signup = useCallback(async (name: string, passkey: string, avatarUrl?: string): Promise<boolean> => {
+  const signup = useCallback(async (name: string, passkey: string, avatar_url?: string): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Check if name taken
+    const username = name.trim().toLowerCase().replace(/\s+/g, '_');
     const exists = Object.values(allAvatars).some(
-      a => a.name.toLowerCase() === name.toLowerCase().trim()
+      a => a.username === username || a.name.toLowerCase() === name.toLowerCase().trim()
     );
 
     if (exists) return false;
@@ -77,13 +92,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const newId = `avatar_session_${Date.now()}`;
     const newAvatar: Avatar = {
       id: newId,
+      username,
       name: name.trim(),
       role: 'Designer',
       passkey,
-      avatarUrl,
-      bgColor: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
-      isBlocked: false,
-      createdAt: new Date().toISOString()
+      avatar_url,
+      bg_color: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
+      is_blocked: false,
+      created_at: new Date().toISOString()
     };
 
     setSessionAvatars(prev => ({ ...prev, [newId]: newAvatar }));
@@ -94,18 +110,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = useCallback(async (data: Partial<Avatar>) => {
     if (!currentAvatar) return;
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     const updatedAvatar = { ...currentAvatar, ...data };
     
-    // Update local state
+    // Update local context state
     setCurrentAvatar(updatedAvatar);
 
-    // Persist if it's a session avatar
+    // Persist changes based on origin
     if (updatedAvatar.id.startsWith('avatar_session_')) {
       setSessionAvatars(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
     } else {
-      // For mock avatars, we also update the global store for visibility in this session
-      MOCK_AVATARS[updatedAvatar.id] = updatedAvatar;
+      // Immutable update for mock data (DB emulation)
+      setMockOverrides(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
     }
   }, [currentAvatar]);
 
@@ -128,3 +145,4 @@ export function useAuth() {
   }
   return context;
 }
+

@@ -20,10 +20,10 @@ export function AvatarPicker({ avatars, selectedAvatarId, onSelect, onCreateNew 
            return (
              <div 
                 key={avatar.id}
-                onClick={() => !avatar.isBlocked && onSelect(avatar)}
+                onClick={() => !avatar.is_blocked && onSelect(avatar)}
                 className={cn(
                    "flex flex-col items-center justify-center cursor-pointer transition-opacity hover:opacity-80",
-                  avatar.isBlocked && "opacity-50 cursor-not-allowed grayscale"
+                  avatar.is_blocked && "opacity-50 cursor-not-allowed grayscale"
                 )}
              >
                 {/* AVATAR CIRCLE */}
@@ -32,16 +32,16 @@ export function AvatarPicker({ avatars, selectedAvatarId, onSelect, onCreateNew 
                     "w-12 h-12 rounded-full flex items-center justify-center text-white font-bold mb-2 shadow-sm relative overflow-hidden transition-all duration-200",
                      isSelected ? "ring-2 ring-black ring-offset-2 scale-110" : ""
                    )}
-                   style={{ backgroundColor: avatar.avatarUrl ? 'transparent' : avatar.bgColor }}
+                   style={{ backgroundColor: avatar.avatar_url ? 'transparent' : avatar.bg_color }}
                 >
-                   {avatar.avatarUrl ? (
-                      <img src={avatar.avatarUrl} alt={avatar.name} className="w-full h-full object-cover" />
+                   {avatar.avatar_url ? (
+                      <img src={avatar.avatar_url} alt={avatar.name} className="w-full h-full object-cover" />
                    ) : (
                       initials
                    )}
                    
                    {/* BLOCKED ICON OVERLAY */}
-                   {avatar.isBlocked && (
+                   {avatar.is_blocked && (
                      <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                         <img src="/icons/status-blocked.svg" className="w-6 h-6" alt="Blocked" />
                      </div>

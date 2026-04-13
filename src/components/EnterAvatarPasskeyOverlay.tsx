@@ -34,10 +34,10 @@ export function EnterAvatarPasskeyOverlay({ avatar, onClose, onSuccess }: EnterA
         <div className="text-center mb-8">
             <div 
                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-white shadow-sm"
-               style={{ backgroundColor: avatar.avatarUrl ? 'transparent' : avatar.bgColor }}
+               style={{ backgroundColor: avatar.avatar_url ? 'transparent' : avatar.bg_color }}
             >
-               {avatar.avatarUrl ? (
-                  <img src={avatar.avatarUrl} alt={avatar.name} className="w-full h-full rounded-full object-cover" />
+               {avatar.avatar_url ? (
+                  <img src={avatar.avatar_url} alt={avatar.name} className="w-full h-full rounded-full object-cover" />
                ) : (
                   avatar.name.substring(0, 2).toUpperCase()
                )}
