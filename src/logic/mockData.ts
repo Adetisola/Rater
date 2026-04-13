@@ -75,7 +75,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
     bio: 'Product designer obsessed with minimalist interfaces and intuitive user flows.',
     is_blocked: false,
     passkey: '1234',
-    created_at: '2024-01-01T00:00:00Z'
+    created_at: '2026-01-01T00:00:00Z'
   },
   'user_2': {
     id: 'user_2',
@@ -87,7 +87,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
     bio: 'Mobile-first designer specializing in visual systems and interaction design.',
     is_blocked: false,
     passkey: '1111',
-    created_at: '2024-01-05T00:00:00Z'
+    created_at: '2026-01-05T00:00:00Z'
   },
   'user_3': {
     id: 'user_3',
@@ -99,7 +99,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
     bio: 'Multidisciplinary creative director focused on branding and digital experiences.',
     is_blocked: false,
     passkey: '2222',
-    created_at: '2024-01-10T00:00:00Z'
+    created_at: '2026-01-10T00:00:00Z'
   },
   'user_4': {
     id: 'user_4',
@@ -111,7 +111,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
     bio: 'Exploring the intersection of artificial intelligence and human-centered design.',
     is_blocked: false,
     passkey: '3333',
-    created_at: '2024-01-15T00:00:00Z'
+    created_at: '2026-01-15T00:00:00Z'
   },
   'user_5': {
     id: 'user_5',
@@ -123,7 +123,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
     bio: 'Branding specialist with a passion for typography and bold visual identities.',
     is_blocked: false,
     passkey: '4444',
-    created_at: '2024-01-20T00:00:00Z' // FIXED: Was 2029
+    created_at: '2026-01-20T00:00:00Z'
   },
   'user_blocked': {
     id: 'user_blocked',
