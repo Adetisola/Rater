@@ -18,7 +18,7 @@ export interface Review {
   post_id: string;
   reviewer_id?: string; 
   reviewer_name?: string; 
-  device_id?: string; 
+  device_id?: string;
   clarity: number;
   purpose: number;
   aesthetics: number;
