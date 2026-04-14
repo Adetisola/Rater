@@ -25,6 +25,11 @@
   100% { transform: translateX(250%)  rotate(-25deg); }
 }
 
+@keyframes flowing-gradient {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 .shimmer-band {
   position: absolute;
   top: -40%;

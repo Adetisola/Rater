@@ -94,6 +94,7 @@ function BrowseContent() {
     const href = currentAvatar && avatar.id === currentAvatar.id 
       ? '/app/avatar' 
       : `/app/avatar/${avatar.id}`;
+    window.dispatchEvent(new Event('app-navigation-start'));
     router.push(href);
   };
   
@@ -183,7 +184,10 @@ function BrowseContent() {
   return (
     <>
       <Header 
-        onPostClick={() => router.push('/app/submit')} 
+        onPostClick={() => {
+          window.dispatchEvent(new Event('app-navigation-start'));
+          router.push('/app/submit');
+        }} 
         onLogoClick={() => window.scrollTo(0,0)} 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -192,7 +196,10 @@ function BrowseContent() {
         selectedCategories={selectedCategories}
         onCategoryChange={handleCategoryChange}
         hideControls={false}
-        onPostSelect={(post) => router.push(`/app/post/${post.id}`)}
+        onPostSelect={(post) => {
+          window.dispatchEvent(new Event('app-navigation-start'));
+          router.push(`/app/post/${post.id}`);
+        }}
         onAvatarSelect={handleAvatarSelect}
         onReset={resetFilters}
         searchIndexes={searchIndexes}
@@ -213,6 +220,7 @@ function BrowseContent() {
         selectedCategories={selectedCategories}
         onCategoryChange={handleCategoryChange}
         onPostSelect={(post) => {
+          window.dispatchEvent(new Event('app-navigation-start'));
           router.push(`/app/post/${post.id}`);
           setIsMobileSearchOpen(false);
         }}

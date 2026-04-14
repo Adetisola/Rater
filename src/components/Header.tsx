@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
+import { useRecentSearches } from '../hooks/useRecentSearches';
 import { AuthOverlay } from './AuthOverlay';
 
 interface HeaderProps {
@@ -60,6 +61,9 @@ export function Header({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
+  const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   // Data state
   const [searchResults, setSearchResults] = useState<SectionedSearchResults>({ avatars: [], posts: [], categories: [] });
   const [isSearching, setIsSearching] = useState(false);
@@ -99,16 +103,21 @@ export function Header({
                      searchResults.posts.length > 0 || 
                      searchResults.categories.length > 0;
 
+  const isRecentMode = isSearchFocused && debouncedQuery.trim() === '';
+
   useEffect(() => {
-    if (debouncedQuery.trim().length >= 2 && hasResults) {
+    if (isRecentMode && recentItems.length > 0) {
+      setShowSearchResults(true);
+    } else if (debouncedQuery.trim().length >= 2 && hasResults) {
       setShowSearchResults(true);
     } else {
       setShowSearchResults(false);
     }
-  }, [debouncedQuery, hasResults]);
+  }, [debouncedQuery, hasResults, isRecentMode, recentItems.length]);
 
   // Handle avatar click
   const handleAvatarClick = (avatar: Avatar) => {
+    addAvatar(avatar.id);
     setShowSearchResults(false);
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
@@ -116,12 +125,14 @@ export function Header({
       const href = currentAvatar && avatar.id === currentAvatar.id 
         ? '/app/avatar' 
         : `/app/avatar/${avatar.id}`;
+      window.dispatchEvent(new Event('app-navigation-start'));
       router.push(href);
     }
   };
 
   // Handle post click
   const handlePostClick = (post: Post) => {
+    addPost(post.id);
     onPostSelect?.(post);
     setShowSearchResults(false);
     searchInputRef.current?.blur();
@@ -129,6 +140,7 @@ export function Header({
 
   // Handle category click
   const handleCategoryClick = (category: Category) => {
+    addCategory(category);
     setShowSearchResults(false);
     const newCats = !selectedCategories.includes(category) 
       ? [...selectedCategories, category] 
@@ -137,16 +149,18 @@ export function Header({
   };
 
   const handleCloseSearch = () => {
+    setIsSearchFocused(false);
     setShowSearchResults(false);
     searchInputRef.current?.blur();
   };
 
   const handleSoftCloseSearch = () => {
-    setShowSearchResults(false);
+    setShowSearchResults(false); // soft close preserves DOM focus but drops results
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      if (searchQuery.trim().length > 0) addSearch(searchQuery.trim());
       setShowSearchResults(false);
       searchInputRef.current?.blur();
     } else if (e.key === 'Escape') {
@@ -249,7 +263,11 @@ export function Header({
                     type="text" 
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
-                    onFocus={() => { if (hasResults) setShowSearchResults(true); }}
+                    onFocus={() => { 
+                      setIsSearchFocused(true); 
+                      if (hasResults || recentItems.length > 0) setShowSearchResults(true); 
+                    }}
+                    onBlur={() => setIsSearchFocused(false)}
                     onKeyDown={(e) => {
                       handleKeyDown(e);
                       if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
@@ -281,6 +299,14 @@ export function Header({
               onCategoryClick={handleCategoryClick}
               onClose={handleCloseSearch}
               onSoftClose={handleSoftCloseSearch}
+              recentMode={isRecentMode}
+              recentItems={recentItems}
+              onRecentSearchClick={(q) => {
+                 addSearch(q);
+                 onSearchChange(q);
+              }}
+              onRemoveRecentItem={removeItem}
+              onClearRecent={clearAll}
             />
 
             <FilterDropdown 

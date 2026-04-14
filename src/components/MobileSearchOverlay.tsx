@@ -9,7 +9,10 @@ import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '../logic/mockData';
+import { MOCK_POSTS } from '../logic/mockData';
 import { useAuth } from '../context/AuthContext';
+import { useRecentSearches } from '../hooks/useRecentSearches';
+import { Search } from 'lucide-react';
 
 // Maps internal sort keys → display labels for active filter pills
 const SORT_OPTION_LABELS: Record<string, string> = {
@@ -53,7 +56,9 @@ export function MobileSearchOverlay({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const { currentAvatar } = useAuth();
+  const { currentAvatar, allAvatars } = useAuth();
+  
+  const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
 
   // Data state
   const [searchResults, setSearchResults] = useState<SectionedSearchResults>({ avatars: [], posts: [], categories: [] });
@@ -61,6 +66,7 @@ export function MobileSearchOverlay({
 
   // Debounce search query
   const debouncedQuery = useDebounce(searchQuery, 200);
+  const isRecentMode = debouncedQuery.trim() === '';
 
   // Perform async search
   useEffect(() => {
@@ -120,6 +126,7 @@ export function MobileSearchOverlay({
 
   // Handle avatar click
   const handleAvatarClick = (avatar: Avatar) => {
+    addAvatar(avatar.id);
     onClose();
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
@@ -127,18 +134,21 @@ export function MobileSearchOverlay({
       const href = currentAvatar && avatar.id === currentAvatar.id 
         ? '/app/avatar' 
         : `/app/avatar/${avatar.id}`;
+      window.dispatchEvent(new Event('app-navigation-start'));
       router.push(href);
     }
   };
 
   // Handle post click
   const handlePostClick = (post: Post) => {
+    addPost(post.id);
     onClose();
     onPostSelect?.(post);
   };
 
   // Handle category click
   const handleCategoryClick = (category: Category) => {
+    addCategory(category);
     onClose();
     if (!selectedCategories.includes(category)) {
       onCategoryChange([...selectedCategories, category]);
@@ -148,6 +158,7 @@ export function MobileSearchOverlay({
   // Handle Enter key
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      if (searchQuery.trim().length > 0) addSearch(searchQuery.trim());
       searchInputRef.current?.blur();
       onClose();
     } else if (e.key === 'Escape') {
@@ -245,6 +256,94 @@ export function MobileSearchOverlay({
 
         {isSearching ? (
           <div className="flex items-center justify-center h-40 text-gray-400 text-sm">Searching...</div>
+        ) : isRecentMode && recentItems.length > 0 ? (
+          <div className="divide-y divide-gray-100">
+            <div>
+              <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recent</span>
+                <button 
+                  onClick={clearAll}
+                  className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors px-2 py-0.5 rounded-full hover:bg-red-50"
+                >
+                  Clear all
+                </button>
+              </div>
+              <div className="p-2">
+                {recentItems.map((item, index) => {
+                  const removeBtn = (
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeItem(index); }}
+                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0 ml-2"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  );
+
+                  if (item.type === 'search') {
+                    return (
+                      <div key={`rec-search-${item.query}`} className="flex items-center group">
+                        <div
+                          onMouseDown={(e) => { 
+                            e.preventDefault(); e.stopPropagation(); 
+                            addSearch(item.query);
+                            onSearchChange(item.query); 
+                          }}
+                          className="flex-1 w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                            <Search className="w-4 h-4 text-gray-400" />
+                          </div>
+                          <div className="flex-1 min-w-0 flex items-center justify-between">
+                            <span className="font-medium text-sm text-[#111111] truncate">{item.query}</span>
+                            <span className="text-xs font-semibold text-gray-400">Search</span>
+                          </div>
+                        </div>
+                        {removeBtn}
+                      </div>
+                    );
+                  }
+
+                  if (item.type === 'avatar') {
+                    const avatar = allAvatars[item.avatarId];
+                    if (!avatar) return null;
+                    return (
+                      <div key={`rec-av-${item.avatarId}`} className="flex items-center group flex-nowrap">
+                         <div className="flex-1 min-w-0">
+                           <AvatarResultItem avatar={avatar} onClick={() => handleAvatarClick(avatar)} />
+                         </div>
+                         {removeBtn}
+                      </div>
+                    );
+                  }
+
+                  if (item.type === 'post') {
+                    const postObj = MOCK_POSTS.find(p => p.id === item.postId);
+                    if (!postObj) return null;
+                    return (
+                      <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">
+                         <div className="flex-1 min-w-0">
+                           <PostResultItem post={postObj} onClick={() => handlePostClick(postObj)} />
+                         </div>
+                         {removeBtn}
+                      </div>
+                    );
+                  }
+
+                  if (item.type === 'category') {
+                    return (
+                       <div key={`rec-cat-${item.category}`} className="flex items-center group flex-nowrap">
+                         <div className="flex-1 min-w-0">
+                           <CategoryResultItem category={item.category} onClick={() => handleCategoryClick(item.category)} />
+                         </div>
+                         {removeBtn}
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          </div>
         ) : hasResults ? (
           <div className="divide-y divide-gray-100">
             {searchResults.categories.length > 0 && (

@@ -7,14 +7,72 @@ import { MasonryGrid } from './MasonryGrid';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { LogOut, Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { useRouter } from 'next/navigation';
-import { Check, Edit2 } from 'lucide-react';
+import { Check, Edit2, Camera, Trash2, X } from 'lucide-react';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+
+const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const hasAnimated = useRef(false);
+  const prevValue = useRef(value);
+
+  useEffect(() => {
+    // If it has already fully animated, apply any future value updates immediately
+    if (hasAnimated.current && prevValue.current !== value) {
+      if (ref.current) ref.current.textContent = value.toString();
+      prevValue.current = value;
+      return;
+    }
+
+    const endNum = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(endNum) || endNum <= 0) {
+      if (ref.current) ref.current.textContent = value.toString();
+      prevValue.current = value;
+      return;
+    }
+
+    const element = ref.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && !hasAnimated.current) {
+        hasAnimated.current = true;
+        observer.unobserve(element);
+
+        const duration = endNum < 5 ? 600 : 1000;
+        const startTime = performance.now();
+        const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+        
+        const update = (currentTime: number) => {
+          const elapsed = Math.max(0, currentTime - startTime);
+          const progress = Math.min(elapsed / duration, 1);
+          const currentVal = endNum * easeOut(progress);
+          
+          if (element) {
+            element.textContent = isFloat ? currentVal.toFixed(1) : Math.round(currentVal).toString();
+          }
+          
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          } else {
+             if (element) element.textContent = value.toString();
+          }
+        };
+        requestAnimationFrame(update);
+      }
+    }, { threshold: 0.1 });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [value, isFloat]);
+
+  return <span ref={ref}>{value === '—' ? '—' : '0'}</span>;
+};
 
 interface ProfileViewProps {
   avatarId: string;
@@ -27,16 +85,19 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const router = useRouter();
 
   // Edit State
-  const [isEditing, setIsEditing] = useState(false);
+  type EditState = 'idle' | 'editing' | 'saving' | 'error';
+  const [editState, setEditState] = useState<EditState>('idle');
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+
   const [editRole, setEditRole] = useState('');
   const [editBio, setEditBio] = useState('');
-  const [editAvatarUrl, setEditAvatarUrl] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  // Stats State
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
+
+  const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Find the avatar to display
   const targetAvatar = allAvatars[avatarId];
@@ -90,27 +151,54 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     if (!targetAvatar) return;
     setEditRole(targetAvatar.role || 'Designer');
     setEditBio(targetAvatar.bio || '');
-    setEditAvatarUrl(targetAvatar.avatar_url || '');
-    setIsEditing(true);
+    setEditState('editing');
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
+    setEditState('idle');
   };
 
   const handleSave = async () => {
     if (!targetAvatar) return;
-    setIsSaving(true);
     
-    // Update global state via AuthContext
-    await updateProfile({
-      role: editRole.trim() || 'Designer',
-      bio: editBio.trim(),
-      avatar_url: editAvatarUrl.trim() || undefined
-    });
+    const isRoleInvalid = editRole.length > 50;
+    const isBioInvalid = editBio.length > 200;
+    if (isRoleInvalid || isBioInvalid) return;
 
-    setIsSaving(false);
-    setIsEditing(false);
+    setEditState('saving');
+    
+    try {
+      await updateProfile({
+        role: editRole.trim() || 'Designer',
+        bio: editBio.trim()
+      });
+      
+      setEditState('idle');
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 2000);
+    } catch (error) {
+      setEditState('error');
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) return alert("Image too large (Max 5MB)");
+      const reader = new FileReader();
+      reader.onloadend = () => updateProfile({ avatar_url: reader.result as string });
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAvatarRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isConfirmingRemove) {
+      updateProfile({ avatar_url: undefined });
+      setIsConfirmingRemove(false);
+    } else {
+      setIsConfirmingRemove(true);
+    }
   };
 
   const [activeTab, setActiveTab] = useState<'posts' | 'saved'>('posts');
@@ -129,6 +217,21 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
   return (
     <div className="max-w-6xl mx-auto px-2 xs:px-6 py-8 md:py-12 w-full min-h-[60vh] relative">
+      {/* SUCCESS TOAST */}
+      <AnimatePresence>
+        {showSuccessToast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#111111] text-white px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 pointer-events-none"
+          >
+            <Check className="w-4 h-4 text-green-400" />
+            <span className="text-sm font-medium tracking-wide">Profile saved</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {isMe && (
         <div className="md:hidden absolute top-8 right-4 z-40">
             <button 
@@ -179,12 +282,12 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
         <div className="relative group shrink-0">
           <div 
-            className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all"
+            className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all shadow-sm relative"
             style={{ backgroundColor: targetAvatar.bg_color }}
           >
-            {(isEditing ? editAvatarUrl : targetAvatar.avatar_url) ? (
+            {targetAvatar.avatar_url ? (
               <img 
-                src={isEditing ? editAvatarUrl : targetAvatar.avatar_url} 
+                src={targetAvatar.avatar_url} 
                 className="w-full h-full object-cover"
                 alt=""
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -194,113 +297,188 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                     {targetAvatar.name.charAt(0).toUpperCase()}
                 </span>
             )}
+            
+            {isMe && (
+              <motion.div 
+                onMouseLeave={() => setIsConfirmingRemove(false)}
+                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-full z-10"
+              >
+                {!isConfirmingRemove ? (
+                  <>
+                    <button 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 rounded-full bg-white/20 hover:bg-[#FEC312] text-white transition-all transform hover:scale-110"
+                      title="Change Avatar"
+                    >
+                      <Camera className="w-5 h-5" />
+                    </button>
+                    {targetAvatar.avatar_url && (
+                      <button 
+                        onClick={handleAvatarRemove}
+                        className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
+                        title="Remove Avatar"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="flex items-center gap-3 bg-white/10 p-1.5 px-3 rounded-full backdrop-blur-sm"
+                  >
+                    <span className="text-[10px] text-white font-bold uppercase tracking-tighter">Are you sure?</span>
+                    <div className="flex gap-2">
+                       <button 
+                        onClick={handleAvatarRemove}
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
+                        title="Yes, remove"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
+                        className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
+                        title="Cancel"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
           </div>
+          {isMe && (
+            <input 
+              type="file"
+              ref={fileInputRef}
+              onChange={handleAvatarChange}
+              accept="image/*"
+              className="hidden"
+            />
+          )}
         </div>
 
         {/* Info */}
         <div className="flex-1 text-center md:text-left pt-2 min-w-0">
-          {isEditing ? (
-            <div className="space-y-4 max-w-md animate-in fade-in slide-in-from-left-4 duration-300">
-              <div>
-                <label className="block text-[12px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Role</label>
-                <input 
+          <div className="flex flex-col items-center md:flex-row md:items-center gap-2 md:gap-4 mb-3">
+            <h1 className="text-3xl font-medium text-[#111111] tracking-tight truncate">
+              @{targetAvatar.name}
+            </h1>
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              {editState !== 'idle' ? (
+                <input
+                  autoFocus
                   type="text"
                   value={editRole}
-                  onChange={(e) => setEditRole(e.target.value.slice(0, 40))}
-                  placeholder="e.g. Designer, Developer"
-                  className="w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-100 focus:border-[#FEC312] focus:ring-4 focus:ring-[#FEC312]/10 outline-none transition-all font-medium"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Avatar Image URL</label>
-                <input 
-                  type="text"
-                  value={editAvatarUrl}
-                  onChange={(e) => setEditAvatarUrl(e.target.value)}
-                  placeholder="Paste image URL..."
-                  className="w-full h-11 px-4 rounded-xl bg-gray-50 border border-gray-100 focus:border-[#FEC312] focus:ring-4 focus:ring-[#FEC312]/10 outline-none transition-all text-sm font-mono"
-                />
-              </div>
-
-              <div>
-                <label className="text-[12px] font-semibold text-gray-400 uppercase tracking-widest mb-1.5 ml-1 flex justify-between">
-                  Bio
-                  <span className={editBio.length > 200 ? 'text-red-500' : ''}>{editBio.length}/200</span>
-                </label>
-                <textarea 
-                  value={editBio}
-                  onChange={(e) => setEditBio(e.target.value.slice(0, 201))}
-                  placeholder="Tell us about yourself..."
-                  className="w-full h-24 px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 focus:border-[#FEC312] focus:ring-4 focus:ring-[#FEC312]/10 outline-none transition-all resize-none leading-relaxed"
-                />
-              </div>
-
-              <div className="flex gap-2 pb-8">
-                <Button 
-                    variant="primary" 
-                    className="h-11 rounded-full gap-2 font-medium text-white text-[15px]"
-                    onClick={handleSave}
-                    disabled={isSaving || editBio.length > 200}
-                >
-                  {isSaving ? 'Saving...' : <><Check className="stroke-4 w-4 h-4" /> Save Changes</>}
-                </Button>
-                <Button 
-                    variant="outline"
-                    className="h-11 rounded-full px-6 font-medium text-[15px]"
-                    onClick={handleCancel}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center md:flex-row md:items-center gap-2 md:gap-4 mb-3">
-                <h1 className="text-2xl font-medium text-[#111111] tracking-tight truncate">
-                  @{targetAvatar.name}
-                </h1>
-                <div className="flex items-center justify-center md:justify-start gap-2">
-                  <span className="text-[16px] font-medium text-gray-400">
-                    {targetAvatar.role || 'Designer'}
-                  </span>
-                  {isMe && !isEditing && (
-                    <button 
-                      onClick={startEditing}
-                      className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-[#FEC312]"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                  onChange={(e) => setEditRole(e.target.value)}
+                  disabled={editState === 'saving'}
+                  placeholder="Role"
+                  className={cn(
+                    "text-[16px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-900 max-w-[140px] placeholder:text-gray-300",
+                    editRole.length > 50 && "text-red-500 border-red-300 focus:border-red-400"
                   )}
-                </div>
-              </div>
-
-              <div className="flex gap-2 justify-center md:justify-start mb-6">
-                <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                  Member since {signUpDate}
+                />
+              ) : (
+                <span className="text-[16px] font-medium text-gray-400">
+                  {targetAvatar.role || 'Designer'}
                 </span>
-              </div>
+              )}
+              {isMe && editState === 'idle' && (
+                <button 
+                  onClick={startEditing}
+                  className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
 
-              <p className="text-gray-500 max-w-lg mb-8 leading-relaxed text-[15px]">
-                {targetAvatar.bio || "Passionately critiquing and creating design work. Looking for honest feedback to level up."}
-              </p>
-            </>
-          )}
+          <div className="flex gap-2 justify-center md:justify-start mb-6">
+            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest">
+              Member since {signUpDate}
+            </span>
+          </div>
+
+          <div className="max-w-lg mb-8 text-left md:text-left text-[15px]">
+            {editState !== 'idle' ? (
+              <textarea
+                value={editBio}
+                onChange={(e) => {
+                  setEditBio(e.target.value);
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                disabled={editState === 'saving'}
+                placeholder="Tell us about yourself..."
+                className={cn(
+                  "w-full bg-transparent leading-relaxed resize-none outline-none border border-transparent rounded-lg p-3 -ml-3 -mt-3 transition-all text-gray-900 overflow-hidden",
+                  "focus:bg-gray-50",
+                  editBio.length > 200 && "text-red-500 focus:border-red-300 focus:bg-red-50",
+                  editState === 'saving' && "opacity-70 pointer-events-none"
+                )}
+                rows={Math.max(3, editBio.split('\n').length)}
+              />
+            ) : (
+               <p className="text-gray-500 leading-relaxed whitespace-pre-wrap">
+                 {targetAvatar.bio || "Passionately critiquing and creating design work. Looking for honest feedback to level up."}
+               </p>
+            )}
+
+            <AnimatePresence>
+              {editState !== 'idle' && (
+                <motion.div 
+                   initial={{ opacity: 0, height: 0 }}
+                   animate={{ opacity: 1, height: 'auto' }}
+                   exit={{ opacity: 0, height: 0 }}
+                   className="flex items-center justify-start md:justify-start gap-3 mt-4"
+                >
+                  <Button 
+                      variant="primary" 
+                      className="h-9 px-5 rounded-full text-sm font-medium"
+                      onClick={handleSave}
+                      disabled={editState === 'saving' || editBio.length > 200 || editRole.length > 50}
+                  >
+                    {editState === 'saving' ? (
+                       <><div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-white/30 animate-spin mr-1" /> Saving...</>
+                    ) : 'Save'}
+                  </Button>
+                  <Button 
+                      variant="ghost"
+                      className="h-9 px-5 rounded-full text-sm font-medium text-gray-500"
+                      onClick={handleCancel}
+                      disabled={editState === 'saving'}
+                  >
+                    Cancel
+                  </Button>
+                  
+                  {editState === 'error' && (
+                    <span className="text-red-500 text-sm font-medium pl-2">Failed to save.</span>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <div className="flex items-center justify-center md:justify-start gap-4">
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
-               <span className="block text-2xl text-[#111111]">{avatarPosts.length}</span>
+               <span className="block text-2xl text-[#111111]">
+                 <AnimatedMetric value={avatarPosts.length} />
+               </span>
                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Posts</span>
             </div>
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
                <span className="block text-2xl text-[#111111]">
-                 {stats.totalReviews}
+                 <AnimatedMetric value={stats.totalReviews} />
                </span>
                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Reviews</span>
             </div>
             <div className="text-center md:text-left">
                <span className="block text-2xl text-[#111111]">
-                 {stats.avgRating}
+                 <AnimatedMetric value={stats.avgRating} isFloat />
                </span>
                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Avg Rating</span>
             </div>
