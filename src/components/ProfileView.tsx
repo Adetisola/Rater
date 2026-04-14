@@ -424,7 +424,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
               />
             ) : (
                <p className="text-gray-500 leading-relaxed whitespace-pre-wrap">
-                 {targetAvatar.bio || "Passionately critiquing and creating design work. Looking for honest feedback to level up."}
+                 {targetAvatar.bio || "Enter your Bio"}
                </p>
             )}
 

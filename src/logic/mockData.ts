@@ -5,12 +5,12 @@ export interface Avatar {
   username: string;     // UNIQUE username
   name: string;         // Display name
   role: string;         // public-facing identity label
-  avatar_url?: string;  // snake_case
-  bg_color: string;     // snake_case
+  avatar_url?: string;
+  bg_color: string;
   bio?: string;
-  is_blocked: boolean;  // snake_case
-  passkey: string; 
-  created_at: string;   // snake_case
+  is_blocked: boolean;
+  passkey: string;
+  created_at: string;
 }
 
 export interface Review {

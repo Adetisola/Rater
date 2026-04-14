@@ -185,7 +185,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                    avatarPreview ? (
                        <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
                    ) : (
-                       <UserRound className="w-10 h-10 text-gray-300 group-hover:text-gray-500 transition-colors" />
+                       <UserRound className="w-10 h-10 text-gray-400 group-hover:text-gray-500 transition-colors" />
                    )
                  ) : avatarPreview && avatarUploadState === 'uploading' ? (
                    <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
@@ -215,7 +215,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={avatarUploadState === 'uploading'}
-                  className="text-[14px] font-semibold text-[#111111] tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
+                  className="text-[14px] font-medium text-[#111111] tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
               >
                   {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
               </button>

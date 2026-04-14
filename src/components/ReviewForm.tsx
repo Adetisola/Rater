@@ -87,7 +87,7 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
         {/* Arrow - positioned at label on mobile, centered on desktop */}
         <div className="absolute top-full left-4 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2 border-8 border-transparent border-t-[#111111]" />
         
-        <p className="font-semibold mb-2.5 leading-relaxed text-white">{info.question}</p>
+        <p className="font-medium mb-2.5 leading-relaxed text-white">{info.question}</p>
         <ul className="space-y-1.5 text-gray-300">
           {info.points.map(point => (
             <li key={point} className="flex items-start gap-2">
