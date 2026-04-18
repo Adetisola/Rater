@@ -7,7 +7,7 @@ import { MasonryGrid } from './MasonryGrid';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { LogOut, Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { useRouter } from 'next/navigation';
@@ -109,6 +109,11 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const targetAvatar = allAvatars[avatarId];
 
   // Username validation hook (wired to checkUsernameAvailable from AuthContext)
+  const memoizedCheckAvailability = useCallback(
+    (username: string) => checkUsernameAvailable(username, avatarId),
+    [checkUsernameAvailable, avatarId]
+  );
+
   const { 
     input: editUsername, 
     handleChange: handleUsernameChange, 
@@ -116,7 +121,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   } = useUsernameValidation({
     currentUsername: targetAvatar?.username ?? '',
     usernameLastChangedAt: targetAvatar?.usernameLastChangedAt,
-    checkAvailability: (username) => checkUsernameAvailable(username, avatarId),
+    checkAvailability: memoizedCheckAvailability,
   });
 
   // External Metadata (Badges, Hot Status)
@@ -697,11 +702,11 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
               Logout
             </Button>
           )}
+          </div>
         </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
+        {/* Tabs */}
+        <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
         <button 
           onClick={() => setActiveTab('posts')}
           className={cn(

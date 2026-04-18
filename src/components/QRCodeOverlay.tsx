@@ -117,7 +117,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
 
             <div className="text-center mb-8">
               <p className="text-[17px] font-bold text-[#111111] mb-1">@{username}</p>
-              <p className="text-sm text-gray-500 font-medium">rater.com/@{username}</p>
+              <p className="text-sm text-gray-500 font-medium">rater-web.vercel.app/@{username}</p>
             </div>
 
             {/* Actions */}

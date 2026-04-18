@@ -21,15 +21,19 @@ const COOLDOWN_DAYS = 14;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
 function generateSuggestions(base: string): string[] {
-  // Clamp base to 17 chars to allow 3-char suffixes within the 20-char limit
-  const safeBase = base.slice(0, 17);
-  const digit1 = Math.floor(Math.random() * 90 + 10);
-  const digit2 = Math.floor(Math.random() * 90 + 10);
+  // Clamp base to 15 chars to allow suffixes within the 20-char limit
+  const safeBase = base.slice(0, 15);
+  const digit = Math.floor(Math.random() * 899 + 100);
+  const randomWords = ['design', 'codes', 'art', 'ux', 'vault', 'labs'];
+  const randomSuffix = randomWords[Math.floor(Math.random() * randomWords.length)];
+
   return [
-    `${safeBase}${digit1}`,
-    `${safeBase}_${digit2}`,
-    `${safeBase}_x`,
-  ];
+    `${safeBase}${digit}`,                  // timmy123
+    `${safeBase}_${randomSuffix}`,          // timmy_codes
+    `${safeBase}_`,                        // timmy_
+    `the_${safeBase}`,                      // the_timmy
+    `${safeBase}_vibe`                      // timmy_vibe
+  ].filter(s => /^[a-z0-9_]{3,20}$/.test(s));
 }
 
 interface UseUsernameValidationOptions {
@@ -124,11 +128,23 @@ export function useUsernameValidation({
     [validate, debounceMs]
   );
 
+  const lastValidatedProp = useRef<string | null>(null);
+
   // Re-validate when currentUsername changes (e.g., after a successful save)
   useEffect(() => {
-    setInput(currentUsername);
-    setResult({ status: 'idle', message: '', suggestions: [] });
-  }, [currentUsername]);
+    if (currentUsername !== lastValidatedProp.current) {
+      lastValidatedProp.current = currentUsername;
+      
+      // Sync internal state if it came from outside
+      if (currentUsername !== latestInput.current) {
+        setInput(currentUsername);
+        latestInput.current = currentUsername;
+      }
+      
+      // Always trigger validation for the new base value
+      validate(currentUsername);
+    }
+  }, [currentUsername, validate]);
 
-  return { input, handleChange, result };
+  return { input, handleChange, result, validate };
 }

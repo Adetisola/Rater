@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { LogIn, UserPlus } from 'lucide-react';
 import { AccessAvatarForm } from './AccessAvatarForm';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
@@ -15,6 +16,7 @@ interface AuthOverlayProps {
 export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +99,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
               >
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-semibold text-[#111111] mb-2">Welcome Back</h2>
-                  <p className="text-gray-500 text-sm">Login to your avatar</p>
+                  <p className="text-gray-500 text-sm">Enter your @username to continue</p>
                 </div>
                 <AccessAvatarForm 
                   onSuccess={handleLoginSuccess} 
@@ -124,6 +126,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                         onClose={onClose} 
                         onCreate={async () => {
                             onClose();
+                            router.push('/app/browse');
                         }} 
                     />
                 </div>

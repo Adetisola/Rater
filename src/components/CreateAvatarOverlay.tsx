@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { UserRound, Pencil, Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { validatePasskey, getStrengthColor, getStrengthLabel } from '../logic/passkeyValidation';
-import { MOCK_AVATARS } from '../logic/mockData';
-import { useDebounce } from '../hooks/useDebounce';
 import { useAuth } from '../context/AuthContext';
+import { generateUsernameFromName } from '../logic/usernameUtils';
+import { useUsernameValidation } from '../hooks/useUsernameValidation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AtSign, ChevronLeft, Loader2, CheckCircle2, UserRound, Pencil, Eye, EyeOff } from 'lucide-react';
+import { cn } from '../lib/utils';
 
 interface CreateAvatarOverlayProps {
   onClose: () => void;
@@ -29,29 +31,26 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
   const [email, setEmail] = useState('');
-  const [showStrengthMeter, setShowStrengthMeter] = useState(false);
   const [showPasskey, setShowPasskey] = useState(false);
-  const [showConfirmPasskey, setShowConfirmPasskey] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // UI Steps
+  const [step, setStep] = useState<'create' | 'username'>('create');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Name State
   const [nameError, setNameError] = useState<string | null>(null);
   
+  const { signup, allAvatars, checkUsernameAvailable } = useAuth();
+
   const generatedUsernamePreview = useMemo(() => {
-    let base = name
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^\x00-\x7F]/g, "")
-      .replace(/[^\w\s]/g, '')
-      .trim()
-      .replace(/\s+/g, '_')
-      .toLowerCase();
-    return base || 'username';
-  }, [name]);
+    if (!name.trim()) return 'username';
+    return generateUsernameFromName(name, Object.values(allAvatars).map(a => a.username));
+  }, [name, allAvatars]);
 
   // Avatar Image Upload State
   const [avatarUploadState, setAvatarUploadState] = useState<'idle' | 'uploading' | 'error' | 'success'>('idle');
-  const [avatarErrorMsg, setAvatarErrorMsg] = useState<string | null>(null);
 
   // Lock body scroll when overlay is open (stand-alone mode only)
   useEffect(() => {
@@ -68,7 +67,6 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         setAvatarUploadState('error');
-        setAvatarErrorMsg("Image is too large (max 5MB)");
         setTimeout(() => setAvatarUploadState('idle'), 3000);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
@@ -87,7 +85,6 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
         reader.readAsDataURL(file);
       } catch (err) {
         setAvatarUploadState('error');
-        setAvatarErrorMsg("Upload failed. Try again.");
         setTimeout(() => setAvatarUploadState('idle'), 3000);
       }
     }
@@ -109,304 +106,359 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
     });
   }, [passkey, name, email]);
 
-  const { signup } = useAuth();
+  const memoizedCheckAvailability = useCallback(
+    (username: string) => checkUsernameAvailable(username, ''),
+    [checkUsernameAvailable]
+  );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { 
+    input: usernameInput, 
+    handleChange: handleUsernameChange, 
+    result: validationResult 
+  } = useUsernameValidation({
+    currentUsername: generatedUsernamePreview,
+    checkAvailability: memoizedCheckAvailability,
+  });
+
+  const passkeyMismatch = confirmPasskey.length > 0 && passkey !== confirmPasskey;
+
+  const handleCreateStepSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     const err = validateDisplayName(name);
     if (err) {
       setNameError(err);
       return;
     }
+    if (!validation.canSubmit || passkeyMismatch) return;
     
-    if (!validation.canSubmit || passkey !== confirmPasskey) {
-      return;
-    }
-    
-    const success = await signup(name, passkey, avatarPreview || undefined);
+    // Jump to username step
+    setDirection(1);
+    setStep('username');
+  };
 
+  const handleFinalSubmit = async () => {
+    if (validationResult.status !== 'valid' && validationResult.status !== 'unchanged') return;
+    
+    setIsSubmitting(true);
+    const success = await signup(name, passkey, avatarPreview || undefined, usernameInput);
+    
     if (success) {
       onCreate(name, passkey, email || undefined);
+    } else {
+      setIsSubmitting(false);
     }
   };
+
+  const stepVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? '100%' : '-100%',
+      opacity: 0,
+    }),
+  };
+
+  const [direction, setDirection] = useState(0);
+
+
+  const stepContent = (
+    <div className="relative overflow-hidden w-full h-full min-h-[520px]">
+      <AnimatePresence initial={false} custom={direction}>
+        {step === 'create' ? (
+          <motion.div
+            key="create"
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full h-full absolute inset-0 flex flex-col items-center"
+          >
+             <div className="text-center mb-6 pt-2">
+                <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-[#111111]'}`}>Create your Avatar</h2>
+                
+                <div 
+                    className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
+                    onClick={() => avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
+                >
+                     {avatarUploadState === 'uploading' ? (
+                         <Loader2 className="w-8 h-8 text-[#FEC312] animate-spin" />
+                     ) : avatarUploadState === 'success' ? (
+                         <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 z-20 animate-in fade-in">
+                           <CheckCircle2 className="w-8 h-8 text-white" />
+                         </div>
+                     ) : null}
+
+                     {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
+                       avatarPreview ? (
+                           <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                       ) : (
+                           <UserRound className="w-10 h-10 text-gray-400 group-hover:text-gray-500 transition-colors" />
+                       )
+                     ) : avatarPreview && avatarUploadState === 'uploading' ? (
+                       <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
+                     ) : null}
+                     
+                     {avatarUploadState === 'idle' && (
+                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                          <Pencil className="w-5 h-5 text-white" />
+                       </div>
+                     )}
+                </div>
+
+                <input 
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    className="hidden"
+                />
+                
+                <div className="flex gap-4 justify-center items-center mt-3">
+                  <button 
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={avatarUploadState === 'uploading'}
+                      className="text-[14px] font-medium text-[#111111] tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
+                  >
+                      {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
+                  </button>
+                  {avatarPreview && (
+                    <button 
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        disabled={avatarUploadState === 'uploading'}
+                        className="text-[14px] font-semibold text-red-500 tracking-wide hover:text-red-600 transition-colors disabled:opacity-50"
+                    >
+                        Remove
+                    </button>
+                  )}
+                </div>
+            </div>
+
+            <form onSubmit={handleCreateStepSubmit} className="w-full space-y-4">
+                 <div className="relative space-y-1">
+                     <Input 
+                         placeholder="Your name" 
+                         value={name} 
+                         onChange={(e) => {
+                             setName(e.target.value);
+                             setNameError(null);
+                         }}
+                         className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${
+                            nameError 
+                                ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
+                                : 'border-gray-300 focus-visible:border-[#FEC312]'
+                         }`}
+                     />
+                     {nameError ? (
+                         <p className="text-xs text-red-500 font-medium ml-1">
+                             {nameError}
+                         </p>
+                     ) : (
+                         <div className="flex justify-between items-start px-2 mt-1">
+                             <p className="text-[11px] text-gray-500 leading-tight pr-2">
+                                 This is your display name — emojis allowed.
+                             </p>
+                             {name.trim() && (
+                                 <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none">
+                                     @{generatedUsernamePreview}
+                                 </p>
+                             )}
+                         </div>
+                     )}
+                 </div>
+
+                 <div className="space-y-2">
+                    <div className="relative">
+                        <Input 
+                            type={showPasskey ? "text" : "password"}
+                            placeholder="Enter Passkey (min. 8 characters)" 
+                            value={passkey}
+                            onChange={(e) => setPasskey(e.target.value)}
+                            onFocus={() => {}}
+                            maxLength={64}
+                            className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${
+                                passkey.length > 0 && !validation.canSubmit 
+                                    ? 'border-amber-400 focus-visible:border-amber-400' 
+                                    : validation.canSubmit 
+                                        ? 'border-green-400 focus-visible:border-green-400'
+                                        : 'border-gray-300 focus-visible:border-[#FEC312]'
+                            }`}
+                        />
+                         <button type="button" onClick={() => setShowPasskey(!showPasskey)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                             {showPasskey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                         </button>
+                     </div>
+
+                     {passkey.length > 0 && (
+                      <div className="px-1 space-y-3 pt-1">
+                          {/* Progress Bar */}
+                          <div className="flex items-center gap-3">
+                              <div className="flex-1 h-1.5 bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
+                                  <motion.div 
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${validation.score}%` }}
+                                      className="h-full rounded-full transition-all duration-300 ease-out"
+                                      style={{ backgroundColor: getStrengthColor(validation.strength) }}
+                                  />
+                              </div>
+                              <span 
+                                  className="text-[10px] font-bold min-w-[65px] text-right uppercase tracking-widest"
+                                  style={{ color: getStrengthColor(validation.strength) }}
+                              >
+                                  {getStrengthLabel(validation.strength)}
+                              </span>
+                          </div>
+                          
+                          {/* Hints */}
+                          {validation.hints.length > 0 && (
+                              <div className="space-y-1.5 px-0.5">
+                                  {validation.hints.slice(0, 2).map((hint, index) => (
+                                      <div key={index} className="flex items-start gap-1.5 animate-in fade-in slide-in-from-left-1">
+                                          <div className="w-1 h-1 rounded-full bg-gray-300 mt-1.5 shrink-0" />
+                                          <p className="text-[11px] text-gray-500 font-medium leading-tight">
+                                              {hint}
+                                          </p>
+                                      </div>
+                                  ))}
+                              </div>
+                          )}
+                      </div>
+                    )}
+                  </div>
+
+                 <div className="space-y-1">
+                    <Input 
+                        type={showPasskey ? "text" : "password"}
+                        placeholder="Confirm Passkey" 
+                        value={confirmPasskey}
+                        onChange={(e) => setConfirmPasskey(e.target.value)}
+                        className={`h-12 rounded-xl text-base px-4 transition-all outline-none border ${
+                            passkeyMismatch ? 'border-red-400 focus-visible:border-red-400' : 'border-gray-300 focus-visible:border-[#FEC312]'
+                        }`}
+                    />
+                    {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
+                 </div>
+
+                 <Input 
+                     type="email" 
+                     placeholder="Recovery Email (optional)" 
+                     value={email}
+                     onChange={(e) => setEmail(e.target.value)}
+                     className="h-12 rounded-xl text-base px-4 border transition-all outline-none focus-visible:border-[#FEC312]"
+                 />
+
+                 <div className="pt-4 flex items-center justify-center gap-6 w-full">
+                     <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-sm text-black font-medium">Cancel</Button>
+                     <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0} className="px-12 h-12 rounded-full text-base font-semibold min-w-[140px]">
+                        Continue
+                     </Button>
+                 </div>
+            </form>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="username"
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full h-full absolute inset-0 flex flex-col items-center"
+          >
+            <div className="text-center mb-10 mt-8">
+              <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <AtSign className="w-8 h-8 text-[#FEC312]" />
+              </div>
+              <h2 className="text-2xl font-medium text-[#111111] mb-2">Claim your username</h2>
+              <p className="text-gray-400 text-sm">This is your unique identity on Rater</p>
+            </div>
+
+            <div className="w-full space-y-6 px-1">
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400 pointer-events-none group-focus-within:text-[#111111]">
+                  <span className="text-[13px] font-medium tracking-tight">rater-web.vercel.app/@</span>
+                </div>
+                <Input 
+                  autoFocus
+                  value={usernameInput}
+                  onChange={(e) => handleUsernameChange(e.target.value)}
+                  className={cn(
+                    "h-14 pl-[170px] pr-12 text-[17px] font-medium rounded-2xl border-2 transition-all outline-none",
+                    validationResult.status === 'valid' && "border-green-200 focus-visible:border-green-400 bg-green-50/10",
+                    validationResult.status === 'taken' && "border-red-200 focus-visible:border-red-400 bg-red-50/10",
+                    (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-100"
+                  )}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              {validationResult.message && (
+                <p className={cn("text-xs font-medium px-4", validationResult.status === 'valid' || validationResult.status === 'unchanged' ? "text-green-600" : "text-amber-600")}>
+                  {validationResult.message}
+                </p>
+              )}
+
+              <AnimatePresence>
+                {validationResult.status === 'taken' && validationResult.suggestions.length > 0 && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-wrap gap-2 px-2">
+                    {validationResult.suggestions.map(s => (
+                      <button key={s} onClick={() => handleUsernameChange(s)} className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
+                        @{s}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="flex flex-col gap-3 pt-6">
+                <Button variant='primary' onClick={handleFinalSubmit} disabled={!['valid', 'unchanged'].includes(validationResult.status) || isSubmitting} className="h-12 text-lg font-medium rounded-full">
+                  {isSubmitting || validationResult.status === 'checking' ? <Loader2 className="w-5 h-5 animate-spin" /> : "Claim & Continue"}
+                </Button>
+                <Button 
+                  variant='secondary'
+                  onClick={() => {
+                    setDirection(-1);
+                    setStep('create');
+                  }} 
+                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Go back
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const strengthColor = getStrengthColor(validation.strength);
-  const strengthLabel = getStrengthLabel(validation.strength);
-  const passkeyMismatch = confirmPasskey.length > 0 && passkey !== confirmPasskey;
-
-  const formContent = (
-    <div className={`${isEmbedded ? 'w-full' : 'bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto scrollbar-hide'}`} style={isEmbedded ? {} : { scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-        <div className="text-center mb-6">
-            <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-6 text-[#111111]'}`}>Create your Avatar</h2>
-            
-            <div 
-                className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
-                onClick={() => avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
-            >
-                 {avatarUploadState === 'uploading' ? (
-                     <Loader2 className="w-8 h-8 text-[#FEC312] animate-spin" />
-                 ) : avatarUploadState === 'success' ? (
-                     <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 z-20 animate-in fade-in">
-                       <CheckCircle2 className="w-8 h-8 text-white" />
-                     </div>
-                 ) : null}
-
-                 {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
-                   avatarPreview ? (
-                       <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
-                   ) : (
-                       <UserRound className="w-10 h-10 text-gray-400 group-hover:text-gray-500 transition-colors" />
-                   )
-                 ) : avatarPreview && avatarUploadState === 'uploading' ? (
-                   <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
-                 ) : null}
-                 
-                 {avatarUploadState === 'idle' && (
-                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                      <Pencil className="w-5 h-5 text-white" />
-                   </div>
-                 )}
-            </div>
-
-            {avatarUploadState === 'error' && (
-              <p className="text-red-500 text-xs font-medium mt-2 animate-in slide-in-from-top-1">{avatarErrorMsg}</p>
-            )}
-
-            <input 
-                type="file"
-                ref={fileInputRef}
-                onChange={handleImageUpload}
-                accept="image/*"
-                className="hidden"
-            />
-            
-            <div className="flex gap-4 justify-center items-center mt-3">
-              <button 
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={avatarUploadState === 'uploading'}
-                  className="text-[14px] font-medium text-[#111111] tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
-              >
-                  {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
-              </button>
-              {avatarPreview && (
-                <button 
-                    type="button"
-                    onClick={handleRemoveAvatar}
-                    disabled={avatarUploadState === 'uploading'}
-                    className="text-[14px] font-semibold text-red-500 tracking-wide hover:text-red-600 transition-colors disabled:opacity-50"
-                >
-                    Remove
-                </button>
-              )}
-            </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="w-full space-y-4">
-             {/* Name Input with Helper Preview */}
-             <div className="relative space-y-1">
-                 <Input 
-                     placeholder="Your name" 
-                     value={name} 
-                     onChange={(e) => {
-                         setName(e.target.value);
-                         setNameError(null);
-                     }}
-                     className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${
-                        nameError 
-                            ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
-                            : 'border-gray-300 focus-visible:border-[#FEC312]'
-                     }`}
-                 />
-
-                 {nameError ? (
-                     <p className="text-xs text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">
-                         {nameError}
-                     </p>
-                 ) : (
-                     <div className="flex justify-between items-start px-2 mt-1">
-                         <p className="text-[11px] text-gray-500 leading-tight pr-2">
-                             This is your display name — you can use emojis and change it anytime.
-                         </p>
-                         {name.trim() && (
-                             <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none">
-                                 @{generatedUsernamePreview}
-                             </p>
-                         )}
-                     </div>
-                 )}
-             </div>
-
-             {/* Passkey Input with Strength Meter */}
-             <div className="space-y-2">
-                <div className="relative">
-                    <Input 
-                        type={showPasskey ? "text" : "password"}
-                        placeholder="Enter Passkey (min. 8 characters)" 
-                        value={passkey}
-                        onChange={(e) => setPasskey(e.target.value)}
-                        onFocus={() => setShowStrengthMeter(true)}
-                        maxLength={64}
-                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${
-                            passkey.length > 0 && !validation.canSubmit 
-                                ? 'border-amber-400 focus-visible:border-amber-400' 
-                                : validation.canSubmit 
-                                    ? 'border-green-400 focus-visible:border-green-400'
-                                    : 'border-gray-300 focus-visible:border-[#FEC312]'
-                        }`}
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowPasskey(!showPasskey)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        tabIndex={-1}
-                    >
-                        {showPasskey ? (
-                            <EyeOff className="w-5 h-5" />
-                        ) : (
-                            <Eye className="w-5 h-5" />
-                        )}
-                    </button>
-                </div>
-                
-                {/* Strength Meter */}
-                {showStrengthMeter && passkey.length > 0 && (
-                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        {/* Progress Bar */}
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                <div 
-                                    className="h-full rounded-full transition-all duration-300 ease-out"
-                                    style={{ 
-                                        width: `${validation.score}%`,
-                                        backgroundColor: strengthColor
-                                    }}
-                                />
-                            </div>
-                            <span 
-                                className="text-xs font-bold min-w-[70px] text-right"
-                                style={{ color: strengthColor }}
-                            >
-                                {strengthLabel}
-                            </span>
-                        </div>
-                        
-                        {/* Hints */}
-                        {validation.hints.length > 0 && (
-                            <div className="space-y-1">
-                                {validation.hints.slice(0, 2).map((hint, index) => (
-                                    <p 
-                                        key={index} 
-                                        className={`text-xs ${
-                                            hint.includes('Great') || hint.includes('💪')
-                                                ? 'text-green-600'
-                                                : 'text-gray-500'
-                                        }`}
-                                    >
-                                        {hint}
-                                    </p>
-                                ))}
-                            </div>
-                        )}
-                        
-                        {/* Character Count */}
-                        <p className="text-[12px] font-medium text-gray-400 text-right">
-                            {passkey.length} / 64 chars
-                        </p>
-                    </div>
-                )}
-             </div>
-
-             {/* Confirm Passkey */}
-             <div className="space-y-1">
-                <div className="relative">
-                    <Input 
-                        type={showConfirmPasskey ? "text" : "password"}
-                        placeholder="Confirm Passkey" 
-                        value={confirmPasskey}
-                        onChange={(e) => setConfirmPasskey(e.target.value)}
-                        className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${
-                            passkeyMismatch
-                                ? 'border-red-400 focus-visible:border-red-400'
-                                : confirmPasskey.length > 0 && passkey === confirmPasskey
-                                    ? 'border-green-400 focus-visible:border-green-400'
-                                    : 'border-gray-300 focus-visible:border-[#FEC312]'
-                        }`}
-                    />
-                    <button
-                        type="button"
-                        onClick={() => setShowConfirmPasskey(!showConfirmPasskey)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                        tabIndex={-1}
-                    >
-                        {showConfirmPasskey ? (
-                            <EyeOff className="w-5 h-5" />
-                        ) : (
-                            <Eye className="w-5 h-5" />
-                        )}
-                    </button>
-                </div>
-                {passkeyMismatch && (
-                    <p className="text-xs text-red-500 ml-1 animate-in fade-in">
-                        Passkeys don't match
-                    </p>
-                )}
-             </div>
-
-            <Input 
-                 type="email" 
-                 placeholder="Recovery Email (optional)" 
-                 value={email}
-                 onChange={(e) => setEmail(e.target.value)}
-                 className="h-12 rounded-xl text-base px-4 border transition-all outline-none focus-visible:border-[#FEC312]"
-            />
-
-            <div className="pt-4 flex items-center justify-center gap-6 w-full">
-                 <button 
-                    onClick={onClose}
-                    type="button"
-                    className="py-3 px-10 rounded-full text-sm font-medium text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
-                 >
-                    Cancel
-                 </button>
-                 <Button 
-                    type="submit" 
-                    variant="outline"
-                    disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0}
-                    className={`px-12 h-12 rounded-full text-base font-semibold border-[#FEC312] transition-all text-[#111111] min-w-[140px] ${
-                        !validation.canSubmit || passkeyMismatch || name.trim().length === 0
-                            ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
-                            : 'hover:bg-[#FEC312] hover:text-white'
-                    }`}
-                >
-                    Create
-                </Button>
-            </div>
-        </form>
-    </div>
-  );
-
   if (!mounted) return null;
 
   if (isEmbedded) {
-    return formContent;
+    return stepContent;
   }
 
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
-      {/* Backdrop */}
-       <div 
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
-      />
-
-      {formContent}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} />
+      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-hidden scrollbar-hide">
+        {stepContent}
+      </div>
     </div>,
     document.body
   );

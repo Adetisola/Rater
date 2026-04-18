@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Eye, EyeOff, AlertCircle, Lock } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Lock, AtSign } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ForgotPasskeyOverlay } from './ForgotPasskeyOverlay';
 
@@ -15,7 +15,7 @@ interface AccessAvatarFormProps {
 }
 
 export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormProps) {
-  const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [passkey, setPasskey] = useState('');
   const [showPasskey, setShowPasskey] = useState(false);
   const [error, setError] = useState('');
@@ -47,19 +47,46 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
 
   const { login } = useAuth();
 
+  // Normalize username input: strip @, extract from URLs, trim
+  const normalizeUsername = (raw: string): string => {
+    let val = raw.trim().toLowerCase();
+    const urlMatch = val.match(/\/@([a-z0-9_]+)/);
+    if (urlMatch) return urlMatch[1];
+    return val.replace(/^@/, '');
+  };
+
+  const usernameFormatValid = (val: string): boolean => {
+    if (!val) return true; // empty is not an error, just disabled
+    return /^[a-z0-9_]{3,20}$/.test(val);
+  };
+
+  const handleUsernameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    // Allow typing freely but strip @ for stored value
+    setUsername(raw.startsWith('@') ? raw.slice(1) : raw);
+    setError('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (lockoutTime) return;
 
+    const normalized = normalizeUsername(username);
+
+    if (!usernameFormatValid(normalized)) {
+      setError('Enter a valid username');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
 
-    const success = await login(name, passkey);
+    const success = await login(normalized, passkey);
 
     if (success) {
       onSuccess();
     } else {
-      setError('Avatar name or passkey is incorrect.');
+      setError('Invalid username or passkey');
     }
     
     setIsLoading(false);
@@ -86,14 +113,28 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold uppercase text-gray-600 tracking-wider ml-1">Avatar Name</label>
-              <Input 
-                  placeholder="Enter your avatar name" 
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-12 text-sm px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal"
-                  disabled={isLoading}
-              />
+              <label className="text-xs font-semibold uppercase text-gray-600 tracking-wider ml-1">Username</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <AtSign className="w-4 h-4" />
+                </div>
+                <Input 
+                    placeholder="username" 
+                    value={username}
+                    onChange={handleUsernameInput}
+                    className={cn(
+                      "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal",
+                      username && !usernameFormatValid(normalizeUsername(username)) && "border-red-300 focus-visible:border-red-400"
+                    )}
+                    disabled={isLoading}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                />
+              </div>
+              {username && !usernameFormatValid(normalizeUsername(username)) && (
+                <p className="text-[11px] text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">Enter a valid username (3-20 chars, letters, numbers, underscores)</p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -137,7 +178,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                     "w-[140px] h-12 rounded-full text-lg font-semibold transition-all",
                     isLoading && "opacity-80 cursor-wait"
                   )}
-                  disabled={isLoading || !name || !passkey}
+                  disabled={isLoading || !username || !passkey || !usernameFormatValid(normalizeUsername(username))}
               >
                   {isLoading ? (
                     <div className="flex items-center gap-2">

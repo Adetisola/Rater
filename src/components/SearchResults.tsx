@@ -88,7 +88,11 @@ export function SearchResults({
             <div className="px-4 py-3 bg-gray-50 flex items-center justify-between border-b border-gray-100">
               <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recent</span>
               <button 
-                onClick={onClearRecent}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClearRecent?.();
+                }}
                 className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors px-2 py-0.5 rounded-full hover:bg-red-50"
               >
                 Clear all
@@ -98,7 +102,11 @@ export function SearchResults({
               {recentItems.map((item, index) => {
                 const removeBtn = (
                   <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemoveRecentItem?.(index); }}
+                    onMouseDown={(e) => { 
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      onRemoveRecentItem?.(index); 
+                    }}
                     className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0 ml-2"
                   >
                     <X className="w-3.5 h-3.5" />
