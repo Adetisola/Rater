@@ -17,14 +17,10 @@ interface CreateAvatarOverlayProps {
 }
 
 // Validation Helper
-function validateAvatarName(name: string): string | null {
-  if (name.length < 3) return "Too short (min. 3 chars)";
-  if (name.length > 24) return "Too long (max. 24 chars)";
-  if (/^ /.test(name)) return "Cannot start with a space";
-  if (/ $/.test(name)) return "Cannot end with a space";
-  if (/  /.test(name)) return "Cannot have consecutive spaces";
-  if (!/^[a-zA-Z0-9 ]+$/.test(name)) return "Only letters, numbers & single spaces allowed";
-  if (!/^[a-zA-Z0-9]+(?: [a-zA-Z0-9]+)*$/.test(name)) return "Invalid format";
+function validateDisplayName(name: string): string | null {
+  const trimmed = name.trim();
+  if (trimmed.length === 0) return "Name cannot be empty";
+  if (trimmed.length > 50) return "Too long (max. 50 chars)";
   return null;
 }
 
@@ -39,11 +35,19 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Name Availability State
-  const [isCheckingName, setIsCheckingName] = useState(false);
-  const [nameStatus, setNameStatus] = useState<'idle' | 'available' | 'taken'>('idle');
+  // Name State
   const [nameError, setNameError] = useState<string | null>(null);
-  const debouncedName = useDebounce(name, 500);
+  
+  const generatedUsernamePreview = useMemo(() => {
+    let base = name
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\x00-\x7F]/g, "")
+      .replace(/[^\w\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '_')
+      .toLowerCase();
+    return base || 'username';
+  }, [name]);
 
   // Avatar Image Upload State
   const [avatarUploadState, setAvatarUploadState] = useState<'idle' | 'uploading' | 'error' | 'success'>('idle');
@@ -95,37 +99,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // Check Name Availability
-  useEffect(() => {
-    if (!debouncedName) {
-        setNameStatus('idle');
-        setNameError(null);
-        return;
-    }
-
-    // 1. Validate Format Locally
-    const validationError = validateAvatarName(debouncedName);
-    if (validationError) {
-        setNameError(validationError);
-        setNameStatus('idle');
-        return;
-    }
-
-    setNameError(null);
-    setIsCheckingName(true);
-    setNameStatus('idle');
-
-    // 2. Mock API Check
-    const timer = setTimeout(() => {
-        const nameExists = Object.values(MOCK_AVATARS).some(
-            avatar => avatar.name.toLowerCase() === debouncedName.trim().toLowerCase()
-        );
-        setNameStatus(nameExists ? 'taken' : 'available');
-        setIsCheckingName(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [debouncedName]);
+  // (Removed legacy Name Availability Check here)
 
   // Real-time passkey validation
   const validation = useMemo(() => {
@@ -140,18 +114,20 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validation.canSubmit || passkey !== confirmPasskey || nameStatus !== 'available') {
+    const err = validateDisplayName(name);
+    if (err) {
+      setNameError(err);
       return;
     }
     
-    setIsCheckingName(true);
+    if (!validation.canSubmit || passkey !== confirmPasskey) {
+      return;
+    }
+    
     const success = await signup(name, passkey, avatarPreview || undefined);
-    setIsCheckingName(false);
 
     if (success) {
       onCreate(name, passkey, email || undefined);
-    } else {
-      setNameStatus('taken');
     }
   };
 
@@ -233,48 +209,37 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
         </div>
 
         <form onSubmit={handleSubmit} className="w-full space-y-4">
-             {/* Name Input with Availability Check */}
+             {/* Name Input with Helper Preview */}
              <div className="relative space-y-1">
                  <Input 
                      placeholder="Your name" 
                      value={name} 
                      onChange={(e) => {
                          setName(e.target.value);
-                         if (e.target.value !== debouncedName) {
-                             setNameStatus('idle'); // Reset checking visual immediately on type
-                             setNameError(null);
-                         }
+                         setNameError(null);
                      }}
-                     className={`h-12 rounded-xl text-base px-4 pr-10 border transition-all outline-none ${
-                        nameError || nameStatus === 'taken' 
+                     className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${
+                        nameError 
                             ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
-                            : nameStatus === 'available' 
-                                ? 'border-green-400 text-green-700 focus-visible:border-green-400' 
-                                : 'border-gray-300 focus-visible:border-[#FEC312]'
+                            : 'border-gray-300 focus-visible:border-[#FEC312]'
                      }`}
                  />
-                 
-                 {/* Status Indicator */}
-                 <div className="absolute right-4 top-3.5">
-                     {isCheckingName ? (
-                         <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
-                     ) : nameStatus === 'available' ? (
-                         <CheckCircle2 className="w-5 h-5 text-green-500 animate-in zoom-in" />
-                     ) : (nameStatus === 'taken' || nameError) ? (
-                         <XCircle className="w-5 h-5 text-red-500 animate-in zoom-in" />
-                     ) : null}
-                 </div>
 
-                 {/* Status Message */}
-                 {(nameStatus === 'taken' || nameError) && !isCheckingName && (
+                 {nameError ? (
                      <p className="text-xs text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">
-                         {nameError || "Name already taken"}
+                         {nameError}
                      </p>
-                 )}
-                 {nameStatus === 'available' && !isCheckingName && !nameError && (
-                     <p className="text-xs text-green-600 font-medium ml-1 animate-in slide-in-from-top-1">
-                         Name available
-                     </p>
+                 ) : (
+                     <div className="flex justify-between items-start px-2 mt-1">
+                         <p className="text-[11px] text-gray-500 leading-tight pr-2">
+                             This is your display name — you can use emojis and change it anytime.
+                         </p>
+                         {name.trim() && (
+                             <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none">
+                                 @{generatedUsernamePreview}
+                             </p>
+                         )}
+                     </div>
                  )}
              </div>
 
@@ -413,9 +378,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                  <Button 
                     type="submit" 
                     variant="outline"
-                    disabled={!validation.canSubmit || passkeyMismatch || nameStatus !== 'available' || isCheckingName}
+                    disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0}
                     className={`px-12 h-12 rounded-full text-base font-semibold border-[#FEC312] transition-all text-[#111111] min-w-[140px] ${
-                        !validation.canSubmit || passkeyMismatch || nameStatus !== 'available' || isCheckingName
+                        !validation.canSubmit || passkeyMismatch || name.trim().length === 0
                             ? 'opacity-50 cursor-not-allowed hover:bg-transparent'
                             : 'hover:bg-[#FEC312] hover:text-white'
                     }`}

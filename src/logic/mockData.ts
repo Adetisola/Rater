@@ -2,15 +2,18 @@ export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Bra
 
 export interface Avatar {
   id: string;
-  username: string;     // UNIQUE username
-  name: string;         // Display name
-  role: string;         // public-facing identity label
+  username: string;                  // UNIQUE public handle (URL slug)
+  name: string;                      // Display name (flexible)
+  role: string;                      // public-facing identity label
   avatar_url?: string;
   bg_color: string;
   bio?: string;
   is_blocked: boolean;
   passkey: string;
   created_at: string;
+  // Username history — for old-URL redirects and Supabase migration
+  usernameLastChangedAt?: number;    // Unix ms timestamp of last username change
+  previousUsernames?: string[];      // Ordered list of past usernames (oldest first)
 }
 
 export interface Review {

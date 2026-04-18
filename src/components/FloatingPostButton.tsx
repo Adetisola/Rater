@@ -3,20 +3,42 @@
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { CloudUpload } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useParams } from 'next/navigation';
 import { cn } from '../lib/utils';
 
 export function FloatingPostButton() {
   const { currentAvatar } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const params = useParams();
 
-  // Only show on Avatar pages (/app/avatar or /app/avatar/[id]) for logged in users
-  const isAvatarPage = pathname.startsWith('/app/avatar');
+  // Only show on Avatar pages (/app/avatar, or /@username) for logged in users
+  const isAvatarPage = pathname.startsWith('/app/avatar') || pathname.startsWith('/@');
   if (!currentAvatar || !isAvatarPage) return null;
 
+  // If we are on an avatar page, we should only show the post button if it's OUR OWN profile
+  // For /@username
+  if (params.alias) {
+      const routeAlias = decodeURIComponent(params.alias as string);
+      if (routeAlias.startsWith('@')) {
+          const routeUsername = routeAlias.slice(1).toLowerCase();
+          if (routeUsername !== currentAvatar.username.toLowerCase()) return null;
+      }
+  }
+  
+  // For /app/avatar/[username] (legacy or secondary)
+  if (params.username) {
+      const routeUsername = (params.username as string).toLowerCase();
+      if (routeUsername !== currentAvatar.username.toLowerCase()) return null;
+  }
+  
+  // Also handle the base /app/avatar (which currently redirects but let's be safe)
+  if (pathname === '/app/avatar' && !params.username && !params.alias) {
+      // Just showing for the owner is implied here since it's the base route
+  }
+
   return (
-    <div className="fixed bottom-6 right-6 md:right-12 lg:right-18 xl:right-30 z-60 group pointer-events-none">
+    <div className="fixed bottom-6 right-6 md:right-12 lg:right-18 xl:right-30 z-45 group pointer-events-none">
         <div className="pointer-events-auto">
             <Button
                 variant="outline" 

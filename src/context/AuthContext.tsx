@@ -8,7 +8,8 @@ interface AuthContextType {
   allAvatars: Record<string, Avatar>;
   login: (name: string, passkey: string) => Promise<boolean>;
   signup: (name: string, passkey: string, avatar_url?: string) => Promise<boolean>;
-  updateProfile: (data: Partial<Avatar>) => Promise<void>;
+  updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
+  checkUsernameAvailable: (username: string, excludeId: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -82,14 +83,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = useCallback(async (name: string, passkey: string, avatar_url?: string): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const username = name.trim().toLowerCase().replace(/\s+/g, '_');
-    const exists = Object.values(allAvatars).some(
-      a => a.username === username || a.name.toLowerCase() === name.toLowerCase().trim()
-    );
+    let baseUsername = name
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+      .replace(/[^\x00-\x7F]/g, "") // strip non-ascii (like emojis)
+      .replace(/[^\w\s]/g, '') // strip special characters except _ and alphanumeric
+      .trim()
+      .replace(/\s+/g, '_')
+      .toLowerCase();
 
-    if (exists) return false;
+    if (!baseUsername) baseUsername = 'user';
 
-    const newId = `avatar_session_${Date.now()}`;
+    let username = baseUsername;
+    let counter = 1;
+    let usernameTaken = true;
+    
+    const existing = Object.values(allAvatars).map(a => a.username.toLowerCase());
+    
+    while (usernameTaken) {
+        if (existing.includes(username)) {
+            username = `${baseUsername}_${counter}`;
+            counter++;
+        } else {
+            usernameTaken = false;
+        }
+    }
+
+    const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    
     const newAvatar: Avatar = {
       id: newId,
       username,
@@ -108,12 +128,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, [allAvatars]);
 
-  const updateProfile = useCallback(async (data: Partial<Avatar>) => {
-    if (!currentAvatar) return;
+  const checkUsernameAvailable = useCallback(async (username: string, excludeId: string): Promise<boolean> => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    const normalized = username.toLowerCase().trim();
+    return !Object.values(allAvatars).some(
+      a => a.id !== excludeId && a.username.toLowerCase() === normalized
+    );
+  }, [allAvatars]);
+
+  const updateProfile = useCallback(async (data: Partial<Avatar>): Promise<{ ok: true } | { ok: false; error: string }> => {
+    if (!currentAvatar) return { ok: false, error: 'Not authenticated.' };
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const updatedAvatar = { ...currentAvatar, ...data };
-    
+    let updatedAvatar = { ...currentAvatar, ...data };
+
+    // --- Username change enforcement ---
+    if (data.username !== undefined) {
+      const newUsername = data.username.toLowerCase().trim();
+      const oldUsername = currentAvatar.username.toLowerCase();
+
+      if (newUsername !== oldUsername) {
+        // 1. Uniqueness check (case-insensitive, server-side)
+        const isTaken = Object.values(allAvatars).some(
+          a => a.id !== currentAvatar.id && a.username.toLowerCase() === newUsername
+        );
+        if (isTaken) return { ok: false, error: 'Username already taken.' };
+
+        // 2. Cooldown enforcement
+        const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
+        if (currentAvatar.usernameLastChangedAt) {
+          const elapsed = Date.now() - currentAvatar.usernameLastChangedAt;
+          if (elapsed < COOLDOWN_MS) {
+            const daysRemaining = Math.ceil((COOLDOWN_MS - elapsed) / (24 * 60 * 60 * 1000));
+            return { ok: false, error: `Username can be changed again in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}.` };
+          }
+        }
+
+        // 3. Push old username to history
+        updatedAvatar.previousUsernames = [
+          ...(currentAvatar.previousUsernames ?? []),
+          currentAvatar.username,
+        ];
+        updatedAvatar.username = newUsername;
+        updatedAvatar.usernameLastChangedAt = Date.now();
+      }
+    }
+
+    // Trim display name
+    if (data.name !== undefined) {
+      updatedAvatar.name = data.name.trim().slice(0, 50);
+    }
+
     // Update local context state
     setCurrentAvatar(updatedAvatar);
 
@@ -121,10 +186,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (updatedAvatar.id.startsWith('avatar_session_')) {
       setSessionAvatars(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
     } else {
-      // Immutable update for mock data (DB emulation)
       setMockOverrides(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
     }
-  }, [currentAvatar]);
+
+    return { ok: true };
+  }, [currentAvatar, allAvatars]);
 
   const logout = useCallback(() => {
     setCurrentAvatar(null);
@@ -132,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ currentAvatar, allAvatars, login, signup, updateProfile, logout, isLoading }}>
+    <AuthContext.Provider value={{ currentAvatar, allAvatars, login, signup, updateProfile, checkUsernameAvailable, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

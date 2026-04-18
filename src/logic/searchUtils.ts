@@ -131,7 +131,10 @@ export function createSearchIndexes(
 
   // Avatar Index - search by designer name only
   const avatarOptions: IFuseOptions<NormalizedAvatar> = {
-    keys: [{ name: 'name_normalized', weight: 1.0 }],
+    keys: [
+      { name: 'username', weight: 1.5 },
+      { name: 'name_normalized', weight: 1.0 }
+    ],
     threshold: 0.3,
     includeScore: true,
   };

@@ -1,0 +1,71 @@
+"use client";
+
+import { use, Suspense } from 'react';
+import { notFound, useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
+import { useEffect } from 'react';
+import { ProfileView } from '../../components/ProfileView';
+import { FloatingPostButton } from '../../components/FloatingPostButton';
+import { TopLoadingBar } from '../../components/TopLoadingBar';
+
+export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
+  const resolvedParams = use(params);
+  const { allAvatars, currentAvatar } = useAuth();
+  const router = useRouter();
+
+  // Decode just in case
+  const decodedAlias = decodeURIComponent(resolvedParams.alias);
+
+  // We only handle paths starting with '@'
+  if (!decodedAlias.startsWith('@')) {
+    notFound();
+  }
+
+  const slug = decodedAlias.slice(1).toLowerCase();
+
+  // 1. Find by current username
+  const targetAvatar = Object.values(allAvatars).find(
+    a => a.username.toLowerCase() === slug
+  );
+
+  // 2. If not found, search previousUsernames for a redirect
+  const redirectAvatar = !targetAvatar
+    ? Object.values(allAvatars).find(
+        a => a.previousUsernames?.some(prev => prev.toLowerCase() === slug)
+      )
+    : null;
+
+  useEffect(() => {
+    if (!targetAvatar && redirectAvatar) {
+      // Redirect old username slugs to current premium URL
+      router.replace(`/@${redirectAvatar.username}`);
+    }
+  }, [targetAvatar, redirectAvatar, router]);
+
+  if (!targetAvatar && !redirectAvatar) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-white">
+        <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Profile not found</h2>
+        <p className="text-gray-500">No avatar exists with this username.</p>
+      </div>
+    );
+  }
+
+  if (!targetAvatar) {
+    return null; // Redirecting
+  }
+
+  return (
+    <div className="min-h-screen w-full bg-white flex flex-col font-sans text-[#111111]">
+      <Suspense fallback={null}>
+        <TopLoadingBar />
+      </Suspense>
+
+      <div className="flex-1 w-full pt-4">
+        <ProfileView avatarId={targetAvatar.id} isOwnProfile={currentAvatar?.id === targetAvatar.id} />
+      </div>
+
+      <FloatingPostButton />
+    </div>
+  );
+}

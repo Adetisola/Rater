@@ -123,8 +123,8 @@ export function Header({
       onAvatarSelect(avatar);
     } else {
       const href = currentAvatar && avatar.id === currentAvatar.id 
-        ? '/app/avatar' 
-        : `/app/avatar/${avatar.id}`;
+        ? `/@${currentAvatar.username}` 
+        : `/@${avatar.username}`;
       window.dispatchEvent(new Event('app-navigation-start'));
       router.push(href);
     }
@@ -201,7 +201,7 @@ export function Header({
             </Link>
           ) : (
             <Link 
-                href="/app/avatar"
+                href={`/@${currentAvatar.username}`}
                 className="flex items-center gap-3 md:p-1.5 md:pr-4 rounded-full bg-white hover:bg-surface transition-all group"
             >
                 <div 

@@ -433,7 +433,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 {/* 5. Avatar & Rating */}
                 <div className="flex items-center justify-between">
                     <Link 
-                        href={currentAvatar && post.author_id === currentAvatar.id ? "/app/avatar" : `/app/avatar/${post.author_id}`}
+                        href={`/@${currentAvatar && post.author_id === currentAvatar.id ? currentAvatar.username : (avatar?.username ?? post.author_id)}`}
                         className="flex items-center gap-3 group/author"
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">

@@ -11,10 +11,12 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { useRouter } from 'next/navigation';
-import { Check, Edit2, Camera, Trash2, X } from 'lucide-react';
+import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode } from 'lucide-react';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
+import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
+import { useUsernameValidation } from '../hooks/useUsernameValidation';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -80,27 +82,42 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps) {
-  const { currentAvatar: me, allAvatars, logout, updateProfile } = useAuth();
+  const { currentAvatar: me, allAvatars, logout, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
 
   // Edit State
   type EditState = 'idle' | 'editing' | 'saving' | 'error';
   const [editState, setEditState] = useState<EditState>('idle');
+  const [saveError, setSaveError] = useState<string>('');
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const [editRole, setEditRole] = useState('');
   const [editBio, setEditBio] = useState('');
+  const [editName, setEditName] = useState('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
 
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
 
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const usernameInputRef = useRef<HTMLInputElement>(null);
 
   // Find the avatar to display
   const targetAvatar = allAvatars[avatarId];
+
+  // Username validation hook (wired to checkUsernameAvailable from AuthContext)
+  const { 
+    input: editUsername, 
+    handleChange: handleUsernameChange, 
+    result: usernameValidation 
+  } = useUsernameValidation({
+    currentUsername: targetAvatar?.username ?? '',
+    usernameLastChangedAt: targetAvatar?.usernameLastChangedAt,
+    checkAvailability: (username) => checkUsernameAvailable(username, avatarId),
+  });
 
   // External Metadata (Badges, Hot Status)
   const { badgeMap } = useBadges(MOCK_POSTS);
@@ -151,11 +168,24 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     if (!targetAvatar) return;
     setEditRole(targetAvatar.role || 'Designer');
     setEditBio(targetAvatar.bio || '');
+    setEditName(targetAvatar.name);
+    handleUsernameChange(targetAvatar.username); // reset to current
+    setSaveError('');
     setEditState('editing');
+    setTimeout(() => usernameInputRef.current?.focus(), 50);
   };
 
   const handleCancel = () => {
+    setSaveError('');
     setEditState('idle');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') handleCancel();
+    if (e.key === 'Enter' && !e.shiftKey && editState === 'editing') {
+      e.preventDefault();
+      handleSave();
+    }
   };
 
   const handleSave = async () => {
@@ -163,20 +193,33 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     
     const isRoleInvalid = editRole.length > 50;
     const isBioInvalid = editBio.length > 200;
-    if (isRoleInvalid || isBioInvalid) return;
+    const isNameInvalid = editName.trim().length === 0 || editName.length > 50;
+    // Block save if username is currently being checked or is invalid
+    const isUsernameBlocking = ['checking', 'taken', 'invalid_format', 'cooldown'].includes(usernameValidation.status);
+    if (isRoleInvalid || isBioInvalid || isNameInvalid || isUsernameBlocking) return;
 
+    setSaveError('');
     setEditState('saving');
     
-    try {
-      await updateProfile({
-        role: editRole.trim() || 'Designer',
-        bio: editBio.trim()
-      });
+    const usernameChanged = editUsername.toLowerCase().trim() !== targetAvatar.username.toLowerCase();
+
+    const result = await updateProfile({
+      role: editRole.trim() || 'Designer',
+      bio: editBio.trim(),
+      name: editName,
+      ...(usernameChanged ? { username: editUsername } : {}),
+    });
       
+    if (result.ok) {
       setEditState('idle');
       setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 2000);
-    } catch (error) {
+      setTimeout(() => setShowSuccessToast(false), 2500);
+      // Reroute to new username slug if it changed
+      if (usernameChanged) {
+        router.replace(`/app/avatar/${editUsername.toLowerCase().trim()}`);
+      }
+    } else {
+      setSaveError(result.error);
       setEditState('error');
     }
   };
@@ -216,7 +259,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-2 xs:px-6 py-8 md:py-12 w-full min-h-[60vh] relative">
+    <div className="max-w-6xl mx-auto px-2 xs:px-6 pt-1 pb-16 md:pt-4 md:pb-24 w-full min-h-[60vh] relative">
       {/* SUCCESS TOAST */}
       <AnimatePresence>
         {showSuccessToast && (
@@ -253,6 +296,13 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                             <span className="font-semibold text-[15px]">Edit Avatar</span>
                         </button>
                         <button 
+                            onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}
+                            className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
+                        >
+                            <QrCode className="w-5 h-5" />
+                            <span className="font-semibold text-[15px]">Share Profile</span>
+                        </button>
+                        <button 
                             onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
                             className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                         >
@@ -262,6 +312,18 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                     </div>
                 </>
             )}
+        </div>
+      )}
+
+      {/* Share Button for Mobile (Non-Owners) */}
+      {!isMe && (
+        <div className="md:hidden absolute top-8 right-4 z-40">
+            <button 
+                onClick={() => setShowQrCode(true)}
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-all active:scale-95 text-gray-700"
+            >
+                <QrCode className="w-5 h-5" />
+            </button>
         </div>
       )}
 
@@ -280,7 +342,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
       {/* Avatar Header */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
-        <div className="relative group shrink-0">
+        <div className="relative group shrink-0 flex flex-col items-center">
           <div 
             className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all shadow-sm relative"
             style={{ backgroundColor: targetAvatar.bg_color }}
@@ -301,7 +363,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             {isMe && (
               <motion.div 
                 onMouseLeave={() => setIsConfirmingRemove(false)}
-                className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 rounded-full z-10"
+                className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 rounded-full z-10"
               >
                 {!isConfirmingRemove ? (
                   <>
@@ -350,6 +412,52 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
               </motion.div>
             )}
           </div>
+          {isMe && editState === 'idle' && (
+            <button
+               onClick={() => fileInputRef.current?.click()}
+               className="md:hidden absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow border border-gray-100 text-gray-700 z-10 active:scale-95 transition-transform"
+            >
+               <Camera className="w-4 h-4" />
+            </button>
+          )}
+          {isMe && editState !== 'idle' && (
+            <div className="flex md:hidden items-center justify-center gap-2 mt-5 mb-1 z-10">
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full transition-colors"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Change
+              </button>
+              {targetAvatar.avatar_url && (
+                <button 
+                  onClick={(e) => {
+                      e.preventDefault();
+                      if (isConfirmingRemove) {
+                          updateProfile({ avatar_url: undefined });
+                          setIsConfirmingRemove(false);
+                      } else {
+                          setIsConfirmingRemove(true);
+                      }
+                  }}
+                  className={cn(
+                      "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors",
+                      isConfirmingRemove ? "bg-red-500 text-white" : "text-red-500 bg-red-50 hover:bg-red-100"
+                  )}
+                >
+                  {isConfirmingRemove ? (
+                    <>
+                        <Check className="w-3.5 h-3.5" /> Confirm
+                    </>
+                  ) : (
+                    <>
+                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
           {isMe && (
             <input 
               type="file"
@@ -363,17 +471,106 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
         {/* Info */}
         <div className="flex-1 text-center md:text-left pt-2 min-w-0">
-          <div className="flex flex-col items-center md:flex-row md:items-center gap-2 md:gap-4 mb-3">
-            <h1 className="text-3xl font-medium text-[#111111] tracking-tight truncate">
-              @{targetAvatar.name}
-            </h1>
-            <div className="flex items-center justify-center md:justify-start gap-2">
+          <div className="flex flex-col items-center md:flex-row md:items-start gap-2 md:gap-3.5 mb-3 min-w-0">
+            {/* USERNAME + DISPLAY NAME */}
+            <div className="min-w-0">
+              {editState !== 'idle' ? (
+                <div className="flex flex-col gap-1.5 mb-2">
+                  {/* Display Name */}
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={editState === 'saving'}
+                    placeholder="Display Name"
+                    maxLength={50}
+                    className={cn(
+                      "text-3xl font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-[#111111] w-full placeholder:text-gray-300",
+                      editName.length > 50 && "text-red-500 border-red-300"
+                    )}
+                  />
+                  {/* Username */}
+                  <div className="relative flex items-center gap-1.5 mt-1">
+                    <AtSign className="w-4 h-4 text-gray-400 shrink-0" />
+                    <input
+                      ref={usernameInputRef}
+                      type="text"
+                      value={editUsername}
+                      onChange={(e) => handleUsernameChange(e.target.value)}
+                      onFocus={(e) => e.target.select()}
+                      onKeyDown={handleKeyDown}
+                      disabled={editState === 'saving'}
+                      placeholder="username"
+                      maxLength={20}
+                      className={cn(
+                        "text-[15px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-600 placeholder:text-gray-300 flex-1",
+                        usernameValidation.status === 'taken' && "text-red-500 border-red-300 focus:border-red-400",
+                        usernameValidation.status === 'valid' && "border-green-300 focus:border-green-400",
+                        usernameValidation.status === 'cooldown' && "text-amber-600 border-amber-300"
+                      )}
+                    />
+                    {/* Validation indicator */}
+                    {usernameValidation.status === 'checking' && (
+                      <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin shrink-0" />
+                    )}
+                    {usernameValidation.status === 'valid' && (
+                      <Check className="w-4 h-4 text-green-500 shrink-0" />
+                    )}
+                    {(usernameValidation.status === 'taken' || usernameValidation.status === 'invalid_format') && (
+                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                    )}
+                  </div>
+                  {/* Validation message */}
+                  {usernameValidation.message && usernameValidation.status !== 'unchanged' && (
+                    <p className={cn(
+                      "text-xs mt-0.5 ml-6",
+                      usernameValidation.status === 'valid' && "text-green-600",
+                      usernameValidation.status === 'taken' && "text-red-500",
+                      usernameValidation.status === 'invalid_format' && "text-red-500",
+                      usernameValidation.status === 'cooldown' && "text-amber-600",
+                      usernameValidation.status === 'checking' && "text-gray-400"
+                    )}>
+                      {usernameValidation.message}
+                    </p>
+                  )}
+                  {/* Smart suggestions when taken */}
+                  {usernameValidation.status === 'taken' && usernameValidation.suggestions.length > 0 && (
+                    <div className="flex gap-2 mt-1 ml-6 flex-wrap">
+                      {usernameValidation.suggestions.map(s => (
+                        <button
+                          key={s}
+                          onClick={() => handleUsernameChange(s)}
+                          className="text-xs px-2.5 py-1 rounded-full bg-gray-100 hover:bg-[#FEC312]/20 hover:text-[#b38a00] border border-gray-200 transition-all font-medium text-gray-600"
+                        >
+                          @{s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Helper text */}
+                  {(!usernameValidation.message || usernameValidation.status === 'unchanged' || usernameValidation.status === 'idle') && (
+                    <p className="text-[11px] text-gray-400 ml-6 mt-0.5">
+                      Usernames are unique and used in your profile link. You can change this every 14 days.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-medium text-[#111111] tracking-tight truncate">
+                    {targetAvatar.name}
+                  </h1>
+                  <p className="text-[15px] text-gray-400 font-medium mt-0.5">@{targetAvatar.username}</p>
+                </>
+              )}
+            </div>
+            <div className="flex items-center justify-center md:justify-start gap-2 md:mt-[6px]">
               {editState !== 'idle' ? (
                 <input
-                  autoFocus
                   type="text"
                   value={editRole}
                   onChange={(e) => setEditRole(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   disabled={editState === 'saving'}
                   placeholder="Role"
                   className={cn(
@@ -403,7 +600,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             </span>
           </div>
 
-          <div className="max-w-lg mb-8 text-left md:text-left text-[15px]">
+          <div className="max-w-lg mb-8 text-center md:text-left text-[15px]">
             {editState !== 'idle' ? (
               <textarea
                 value={editBio}
@@ -440,7 +637,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                       variant="primary" 
                       className="h-9 px-5 rounded-full text-sm font-medium"
                       onClick={handleSave}
-                      disabled={editState === 'saving' || editBio.length > 200 || editRole.length > 50}
+                      disabled={editState === 'saving' || editBio.length > 200 || editRole.length > 50 || ['checking', 'taken', 'invalid_format', 'cooldown'].includes(usernameValidation.status)}
                   >
                     {editState === 'saving' ? (
                        <><div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-white/30 animate-spin mr-1" /> Saving...</>
@@ -455,8 +652,8 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                     Cancel
                   </Button>
                   
-                  {editState === 'error' && (
-                    <span className="text-red-500 text-sm font-medium pl-2">Failed to save.</span>
+                  {editState === 'error' && saveError && (
+                    <span className="text-red-500 text-sm font-medium pl-2">{saveError}</span>
                   )}
                 </motion.div>
               )}
@@ -485,14 +682,22 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
           </div>
         </div>
 
-        {isMe && (
-          <div className="hidden md:flex gap-3">
-            <Button variant="ghost" className="h-12 rounded-full px-6 flex items-center gap-2 hover:bg-[#ff4848] hover:text-white transition-all" onClick={() => setShowLogoutConfirm(true)}>
+        <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
+          <Button 
+            variant="ghost" 
+            className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black" 
+            onClick={() => setShowQrCode(true)}
+          >
+            <QrCode className="w-4 h-4" />
+            Share Profile
+          </Button>
+          {isMe && (
+            <Button variant="ghost" className="h-11 rounded-full px-5 flex items-center gap-2 hover:bg-[#ff4848] hover:text-white transition-all text-gray-500 font-semibold" onClick={() => setShowLogoutConfirm(true)}>
               <LogOut className="w-4 h-4" />
               Logout
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -590,6 +795,12 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             }} 
         />
       )}
+      <QRCodeOverlay 
+        isOpen={showQrCode} 
+        onClose={() => setShowQrCode(false)} 
+        username={targetAvatar.username} 
+        avatarUrl={targetAvatar.avatar_url}
+      />
     </div>
   );
 }

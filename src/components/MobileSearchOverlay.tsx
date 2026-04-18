@@ -132,8 +132,8 @@ export function MobileSearchOverlay({
       onAvatarSelect(avatar);
     } else {
       const href = currentAvatar && avatar.id === currentAvatar.id 
-        ? '/app/avatar' 
-        : `/app/avatar/${avatar.id}`;
+        ? `/@${currentAvatar.username}` 
+        : `/@${avatar.username}`;
       window.dispatchEvent(new Event('app-navigation-start'));
       router.push(href);
     }
