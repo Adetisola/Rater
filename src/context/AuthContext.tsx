@@ -2,12 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { MOCK_AVATARS, type Avatar } from '../logic/mockData';
+import { generateUsernameFromName } from '../logic/usernameUtils';
 
 interface AuthContextType {
   currentAvatar: Avatar | null;
   allAvatars: Record<string, Avatar>;
   login: (name: string, passkey: string) => Promise<boolean>;
-  signup: (name: string, passkey: string, avatar_url?: string) => Promise<boolean>;
+  signup: (name: string, passkey: string, avatar_url?: string, username?: string) => Promise<boolean>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
   checkUsernameAvailable: (username: string, excludeId: string) => Promise<boolean>;
   logout: () => void;
@@ -63,12 +64,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [sessionAvatars, mockOverrides]);
 
-  const login = useCallback(async (nameOrUsername: string, passkey: string): Promise<boolean> => {
+  const login = useCallback(async (usernameInput: string, passkey: string): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const query = nameOrUsername.toLowerCase().trim();
+    // Normalize: strip @, extract from profile URLs, trim, lowercase
+    let normalized = usernameInput.trim().toLowerCase();
+    
+    // Handle pasted profile URLs (e.g. "rater.app/@timmycodes")
+    const urlMatch = normalized.match(/\/@([a-z0-9_]+)/);
+    if (urlMatch) {
+      normalized = urlMatch[1];
+    } else {
+      // Strip leading @
+      normalized = normalized.replace(/^@/, '');
+    }
+
+    // Lookup by username ONLY
     const avatar = Object.values(allAvatars).find(
-      a => (a.name.toLowerCase() === query || a.username.toLowerCase() === query) && a.passkey === passkey
+      a => a.username.toLowerCase() === normalized && a.passkey === passkey
     );
 
     if (avatar) {
@@ -80,46 +93,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   }, [allAvatars]);
 
-  const signup = useCallback(async (name: string, passkey: string, avatar_url?: string): Promise<boolean> => {
+  const signup = useCallback(async (name: string, passkey: string, avatar_url?: string, username?: string): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    let baseUsername = name
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
-      .replace(/[^\x00-\x7F]/g, "") // strip non-ascii (like emojis)
-      .replace(/[^\w\s]/g, '') // strip special characters except _ and alphanumeric
-      .trim()
-      .replace(/\s+/g, '_')
-      .toLowerCase();
-
-    if (!baseUsername) baseUsername = 'user';
-
-    let username = baseUsername;
-    let counter = 1;
-    let usernameTaken = true;
+    const existing = Object.values(allAvatars).map(a => a.username);
     
-    const existing = Object.values(allAvatars).map(a => a.username.toLowerCase());
-    
-    while (usernameTaken) {
-        if (existing.includes(username)) {
-            username = `${baseUsername}_${counter}`;
-            counter++;
-        } else {
-            usernameTaken = false;
-        }
+    // Use provided username or generate one based on name.
+    // If a provided username is already taken (race condition), use the utility to generate a unique variant.
+    let finalUsername = username?.trim() || generateUsernameFromName(name, existing);
+    if (username && existing.includes(finalUsername.toLowerCase())) {
+        finalUsername = generateUsernameFromName(finalUsername, existing);
     }
 
     const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     
     const newAvatar: Avatar = {
       id: newId,
-      username,
+      username: finalUsername,
       name: name.trim(),
       role: 'Designer',
       passkey,
       avatar_url,
       bg_color: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
       is_blocked: false,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      usernameLastChangedAt: undefined // Explicitly undefined until claimed
     };
 
     setSessionAvatars(prev => ({ ...prev, [newId]: newAvatar }));
@@ -154,9 +152,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
         if (isTaken) return { ok: false, error: 'Username already taken.' };
 
-        // 2. Cooldown enforcement
+        // 2. Cooldown enforcement (only if not a claim/skip from onboarding)
         const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
-        if (currentAvatar.usernameLastChangedAt) {
+        if (currentAvatar.usernameLastChangedAt && currentAvatar.usernameLastChangedAt > 1) {
           const elapsed = Date.now() - currentAvatar.usernameLastChangedAt;
           if (elapsed < COOLDOWN_MS) {
             const daysRemaining = Math.ceil((COOLDOWN_MS - elapsed) / (24 * 60 * 60 * 1000));
@@ -170,8 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           currentAvatar.username,
         ];
         updatedAvatar.username = newUsername;
-        updatedAvatar.usernameLastChangedAt = Date.now();
+        // set to Date.now() unless we are explicitly setting a "claim" flag value (like 1)
+        updatedAvatar.usernameLastChangedAt = data.usernameLastChangedAt || Date.now();
       }
+    } else if (data.usernameLastChangedAt !== undefined) {
+      updatedAvatar.usernameLastChangedAt = data.usernameLastChangedAt;
     }
 
     // Trim display name
@@ -183,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCurrentAvatar(updatedAvatar);
 
     // Persist changes based on origin
-    if (updatedAvatar.id.startsWith('avatar_session_')) {
+    if (updatedAvatar.id.startsWith('user_')) {
       setSessionAvatars(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
     } else {
       setMockOverrides(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
