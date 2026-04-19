@@ -215,7 +215,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     const validTimestamps = timestamps.filter(t => now - t < 60000);
     
     if (validTimestamps.length >= 5) {
-        setRateLimitMessage("You're reviewing quickly — slow down a bit 🙂");
+        setRateLimitMessage("You're reviewing too fast, slow down a bit.");
         await new Promise(resolve => setTimeout(resolve, 30000));
         setRateLimitMessage(null);
     }

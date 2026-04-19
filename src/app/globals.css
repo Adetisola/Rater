@@ -19,6 +19,21 @@
   display: none;
 }
 
+/* Custom Minimal Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #d1d5db;
+}
+
 /* ── Shimmer sweep effect ─────────────────────────────────────── */
 @keyframes shimmer-sweep {
   0%   { transform: translateX(-100%) rotate(-25deg); }

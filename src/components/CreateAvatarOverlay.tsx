@@ -168,8 +168,8 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
 
 
   const stepContent = (
-    <div className="relative overflow-hidden w-full h-full min-h-[520px]">
-      <AnimatePresence initial={false} custom={direction}>
+    <div className="relative w-full">
+      <AnimatePresence mode="wait" initial={false} custom={direction}>
         {step === 'create' ? (
           <motion.div
             key="create"
@@ -179,7 +179,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
             animate="center"
             exit="exit"
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full h-full absolute inset-0 flex flex-col items-center"
+            className="w-full flex flex-col items-center"
           >
              <div className="text-center mb-6 pt-2">
                 <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-[#111111]'}`}>Create your Avatar</h2>
@@ -373,7 +373,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
             animate="center"
             exit="exit"
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="w-full h-full absolute inset-0 flex flex-col items-center"
+            className="w-full flex flex-col items-center"
           >
             <div className="text-center mb-10 mt-8">
               <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -393,7 +393,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                   value={usernameInput}
                   onChange={(e) => handleUsernameChange(e.target.value)}
                   className={cn(
-                    "h-14 pl-[170px] pr-12 text-[17px] font-medium rounded-2xl border-2 transition-all outline-none",
+                    "h-14 pl-[170px] pr-4 text-[17px] font-medium rounded-2xl border-2 transition-all outline-none",
                     validationResult.status === 'valid' && "border-green-200 focus-visible:border-green-400 bg-green-50/10",
                     validationResult.status === 'taken' && "border-red-200 focus-visible:border-red-400 bg-red-50/10",
                     (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-100"
@@ -456,7 +456,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} />
-      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-hidden scrollbar-hide">
+      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto custom-scrollbar">
         {stepContent}
       </div>
     </div>,

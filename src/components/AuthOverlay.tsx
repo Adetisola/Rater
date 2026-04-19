@@ -46,7 +46,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
       />
 
       {/* Modal Container */}
-      <div className="bg-white w-full max-w-md rounded-[32px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh] md:max-h-[550px]">
+      <div className="bg-white w-full max-w-md rounded-[32px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh] md:max-h-[660px]">
 
         {/* Tab Header */}
         <div className="flex border-b border-gray-100 shrink-0">
@@ -87,7 +87,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
         </div>
 
         {/* Content Area - Scrollable */}
-        <div className="p-8 pb-10 pt-6 flex-1 overflow-y-auto scrollbar-hide flex flex-col">
+        <div className="p-8 pb-10 pt-6 flex-1 overflow-y-auto custom-scrollbar flex flex-col">
           <AnimatePresence mode="wait">
             {activeTab === 'login' ? (
               <motion.div
@@ -112,15 +112,15 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className="w-full flex flex-col items-center"
+                className="w-full flex-1 flex flex-col items-center"
               >
-                <div className="text-center mb-2">
+                <div className="text-center mb-2 shrink-0">
                   <h2 className="text-2xl font-semibold text-[#111111]">Create Avatar</h2>
                   <p className="text-gray-500 text-sm mb-2">Join the community of Judges</p>
                 </div>
                 
                 {/* Embedded Signup Form without the extra fixed overlay wrapper */}
-                <div className="w-full">
+                <div className="w-full flex-1 min-h-0">
                     <CreateAvatarOverlay 
                         isEmbedded
                         onClose={onClose} 

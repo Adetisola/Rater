@@ -28,6 +28,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "../context/AuthContext";
+import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
 
 export default function RootLayout({
   children,
@@ -41,6 +42,7 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
+          <GlobalRouteLoader />
           {children}
         </AuthProvider>
       </body>
