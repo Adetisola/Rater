@@ -4,9 +4,13 @@ import { useEffect, useState, useRef, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
+const MIN_DURATION = 400; // ms (minimum time the bar stays visible)
+const FAIL_SAFE_TIMEOUT = 5000; // ms (absolute maximum time if navigation hangs)
+
 /**
- * GlobalRouteLoader Content
- * Watches for route changes within /app and manages the loading state machine.
+ * GlobalRouteLoader
+ * An advanced, split-trigger loading bar that prioritizes absolute responsiveness.
+ * It uses both Intent Detection (clicks/history) and Settlement Detection (pathname/search).
  */
 function GlobalLoaderContent() {
   const pathname = usePathname();
@@ -15,52 +19,68 @@ function GlobalLoaderContent() {
   const [status, setStatus] = useState<"idle" | "loading" | "completing">("idle");
   const [progress, setProgress] = useState(0);
   
-  // Track route to detect changes across pathname and search queries
+  // Refs to track state and avoid effect loops
+  const startTime = useRef<number>(0);
+  const isRouteCompleted = useRef(false);
   const lastPathname = useRef(pathname);
   const lastSearch = useRef(searchParams.toString());
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const failSafeRef = useRef<NodeJS.Timeout | null>(null);
 
   const cleanup = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (failSafeRef.current) clearTimeout(failSafeRef.current);
   };
 
-  const startLoading = () => {
+  /**
+   * Intent Start: Triggered by user interaction or history change
+   */
+  const startLoader = () => {
+    // If navigation restarts while completing, reset cleanly
     cleanup();
+    
+    startTime.current = Date.now();
+    isRouteCompleted.current = false;
     setStatus("loading");
     setProgress(0);
 
-    // 1. Simulated Progress (10% -> 90%)
-    // Creates a "fake" progress feel while navigation resolves
+    // Initial smooth growth to 70%
     timerRef.current = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) return 90;
-        // Random incremental steps for a more organic feel
-        const jump = Math.random() * 8 + 2; 
-        return Math.min(prev + jump, 90);
+        if (prev >= 70) {
+          // Slow nudge from 70% -> 95% while waiting for route settlement
+          if (prev >= 95) return 95;
+          return prev + 0.3;
+        }
+        // Snap fast to start
+        const jump = Math.random() * 15 + 8; 
+        return Math.min(prev + jump, 70);
       });
-    }, 250);
+    }, 150);
 
-    // 2. Fail-safe: Force complete after 5s to prevent getting stuck
-    timeoutRef.current = setTimeout(() => {
-      completeLoading();
-    }, 5000);
+    // Strict fail-safe
+    failSafeRef.current = setTimeout(() => {
+      finishLoader();
+    }, FAIL_SAFE_TIMEOUT);
   };
 
-  const completeLoading = () => {
+  /**
+   * Final Completion: Resolves the bar to 100% and wipes state
+   */
+  const finishLoader = () => {
     setStatus("completing");
     setProgress(100);
     cleanup();
 
-    // Return to idle state after animation completes
+    // Reset to idle after exit animation
     setTimeout(() => {
       setStatus("idle");
       setProgress(0);
-    }, 600); // Slightly longer than fade transition
+    }, 600);
   };
 
+  // 1. SETTLEMENT DETECTION (Trigger on actual URL change)
   useEffect(() => {
     const currentSearch = searchParams.toString();
     const hasChanged = pathname !== lastPathname.current || currentSearch !== lastSearch.current;
@@ -69,27 +89,91 @@ function GlobalLoaderContent() {
       lastPathname.current = pathname;
       lastSearch.current = currentSearch;
 
-      // EXCLUSION: Only trigger for navigations within/into /app
+      // Only act if we are within the app scope
       if (pathname.startsWith("/app")) {
-        startLoading();
-
-        // SETTLEMENT: Simulate "settling" delay to ensure progress is visible 
-        // and feels premium even on fast loads (min 400ms feel)
-        const settlementTimer = setTimeout(() => {
-          completeLoading();
-        }, 400);
-
-        return () => clearTimeout(settlementTimer);
+        // Fallback: If intent wasn't caught (e.g. browser back button), start it now
+        if (status === "idle") {
+          startLoader();
+        }
+        
+        isRouteCompleted.current = true;
+        
+        // Calculate remaining time for the minimum visible duration
+        const elapsed = Date.now() - startTime.current;
+        const remaining = Math.max(0, MIN_DURATION - elapsed);
+        
+        // Delay completion until both: 1. Route changed AND 2. Min duration met
+        setTimeout(() => {
+          finishLoader();
+        }, remaining);
       } else {
-        // Instant reset if navigating away from the app scope
-        setStatus("idle");
-        setProgress(0);
-        cleanup();
+        // Instantly clear if navigating out of app scope
+        finishLoader();
       }
     }
   }, [pathname, searchParams]);
 
-  // Final cleanup on unmount
+  // 2. INTENT DETECTION (Hooking into clicks and history API)
+  useEffect(() => {
+    const handleNavigationIntent = (url: URL | string) => {
+      const href = typeof url === "string" ? url : url.pathname;
+      if (href.startsWith("/app") || href.includes("/app/")) {
+        // Defer start to the next tick to avoid scheduling updates during 
+        // sensitive phases like useInsertionEffect (common in Next.js 15 router)
+        setTimeout(() => {
+          startLoader();
+        }, 0);
+      }
+    };
+
+    // A. Intercept Link clicks
+    const handleAnchorClick = (e: MouseEvent) => {
+      const anchor = (e.target as Element).closest("a");
+      if (!anchor) return;
+
+      const href = anchor.href;
+      if (!href || anchor.target === "_blank") return;
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
+      if (anchor.hasAttribute("download")) return;
+
+      try {
+        const url = new URL(href);
+        if (url.origin !== window.location.origin) return;
+        
+        // Ignore same-route interactions
+        if (url.pathname === window.location.pathname && url.search === window.location.search) {
+          return;
+        }
+
+        handleNavigationIntent(url);
+      } catch (err) {}
+    };
+
+    // B. Intercept history.pushState (for router.push)
+    const originalPush = window.history.pushState;
+    window.history.pushState = function(...args) {
+      const url = args[2];
+      if (url) handleNavigationIntent(url.toString());
+      return originalPush.apply(this, args);
+    };
+
+    // C. Intercept history.replaceState (for router.replace)
+    const originalReplace = window.history.replaceState;
+    window.history.replaceState = function(...args) {
+      const url = args[2];
+      if (url) handleNavigationIntent(url.toString());
+      return originalReplace.apply(this, args);
+    };
+
+    document.addEventListener("click", handleAnchorClick, true);
+
+    return () => {
+      document.removeEventListener("click", handleAnchorClick, true);
+      window.history.pushState = originalPush;
+      window.history.replaceState = originalReplace;
+    };
+  }, []);
+
   useEffect(() => cleanup, []);
 
   return (
@@ -108,16 +192,14 @@ function GlobalLoaderContent() {
               animate={{ width: `${progress}%` }}
               transition={{ 
                 type: "spring", 
-                stiffness: status === "completing" ? 100 : 25, 
-                damping: 20,
-                mass: 1
+                stiffness: status === "completing" ? 120 : 20, 
+                damping: 25,
+                mass: 0.5
               }}
               className="h-full w-full rounded-full"
               style={{
-                // Premium Gradient Bar
                 background: "linear-gradient(to right, #fec312, #ff4f6d, #c400d2, #7c3bed)",
                 backgroundSize: "200% 100%",
-                // Flowing shimmer effect from index.css
                 animation: "flowing-gradient 2s linear infinite"
               }}
             />
@@ -128,10 +210,6 @@ function GlobalLoaderContent() {
   );
 }
 
-/**
- * GlobalRouteLoader
- * Main component with Suspense boundary for Next.js searchParams safety.
- */
 export function GlobalRouteLoader() {
   return (
     <Suspense fallback={null}>
