@@ -88,7 +88,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     loadData();
 
     // Check self-post
-    if (currentAvatar && post.author_id === currentAvatar.id) {
+    if (currentAvatar && post.avatar_id === currentAvatar.id) {
         setIsSelfPost(true);
     } else {
         setIsSelfPost(false);
@@ -100,7 +100,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     }
 
     return () => { isMounted = false; };
-  }, [post.id, currentAvatar, post.author_id]);
+  }, [post.id, currentAvatar, post.avatar_id]);
 
   // 2. Derive metrics locally when userReviews change (Optimistic UI)
   useEffect(() => {
@@ -197,7 +197,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const remainingReviews = sortedReviews.length - visibleCount;
 
   const handleReviewSubmit = async (ratings: any, comment: string, reviewer_name: string) => {
-    if (currentAvatar && post.author_id === currentAvatar.id) return;
+    if (currentAvatar && post.avatar_id === currentAvatar.id) return;
     
     const device_id = getDeviceId();
     const hasDuplicate = allReviews.some(r => 
@@ -270,7 +270,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
   };
 
-  const avatar = allAvatars[post.author_id];
+  const avatar = allAvatars[post.avatar_id];
 
   return (
     <motion.div 
@@ -366,14 +366,34 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                 className="relative group/toprated cursor-help"
                                 onClick={() => setIsTopRatedTooltipVisible(!isTopRatedTooltipVisible)}
                             >
-                                <span className="text-[10px] font-bold uppercase tracking-wider bg-[#FEC312] text-[#111111] px-3 py-1.5 rounded-full flex items-center gap-1">
-                                    🏆 Top Rated
+                                <span className="text-[10px] font-bold uppercase tracking-wider bg-white border-2 border-[#FEC312] text-[#111111] px-2.5 py-1 rounded-full flex items-center gap-1">
+                                    <div className="w-6 h-6 -my-1 -ml-0.5">
+                                        <DotLottieReact
+                                            src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
+                                            loop
+                                            autoplay
+                                        />
+                                    </div>
+                                    Top Rated
                                 </span>
 
                                 <div className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
                                     ${isTopRatedTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'}`}
                                 >
                                     <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
+                                </div>
+                            </div>
+                        )}
+                        {badge === 'top_rated_previous' && (
+                            <div 
+                                className="relative group/prevrated cursor-help"
+                            >
+                                <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#666666] border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
+                                    <span className="opacity-70">🏆</span> Previously Top Rated
+                                </span>
+                                <div className="absolute bottom-full left-0 mb-3 w-64 p-4 bg-white border-2 border-gray-100 text-black text-[12px] rounded-2xl shadow-2xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/prevrated:opacity-100 group-hover/prevrated:visible group-hover/prevrated:translate-y-0 transition-all duration-200 hidden md:block z-50">
+                                    <p className="leading-relaxed text-center font-medium">This design was among the top rated in a previous period</p>
+                                    <div className="absolute top-full left-6 border-8 border-transparent border-t-white" />
                                 </div>
                             </div>
                         )}
@@ -433,12 +453,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 {/* 5. Avatar & Rating */}
                 <div className="flex items-center justify-between">
                     <Link 
-                        href={`/@${currentAvatar && post.author_id === currentAvatar.id ? currentAvatar.username : (avatar?.username ?? post.author_id)}`}
+                        href={`/@${currentAvatar && post.avatar_id === currentAvatar.id ? currentAvatar.username : (avatar?.username ?? post.avatar_id)}`}
                         className="flex items-center gap-3 group/author"
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">
                             <img 
-                                src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author_id}`} 
+                                src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatar_id}`} 
                                 className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300" 
                                 alt="Avatar" 
                             />

@@ -111,7 +111,7 @@ export function createSearchIndexes(
 
   // Normalize Posts with avatar name
   const normalizedPosts: NormalizedPost[] = posts.map(post => {
-    const avatar = avatars[post.author_id];
+    const avatar = avatars[post.avatar_id];
     const avatarName = avatar ? avatar.name : '';
     return {
       ...post,

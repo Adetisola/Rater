@@ -101,11 +101,11 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
   }
 
   const isTopRated = badge === 'top_rated_active';
-  const avatar = allAvatars[post.author_id];
+  const avatar = allAvatars[post.avatar_id];
 
   return (
     <Link href={`/app/post/${post.id}`} className="group relative break-inside-avoid block">
-      <div className="bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-300">
+      <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
         <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
             <div 
               className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
@@ -114,23 +114,37 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
         </div>
 
         <div className="relative z-10">
-            <div className={`relative w-full overflow-hidden rounded-[20px] ${isTopRated ? 'border-2 border-[#FEC312]' : ''}`}>
-                <img 
-                    src={displayImageUrl} 
-                    alt={post.title} 
-                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
-                />
-                
+            <div className={`relative w-full rounded-[20px] ${isTopRated ? 'p-[2px]' : 'overflow-hidden'}`}>
                 {isTopRated && (
-                    <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
-                        <div className="bg-[#FEC312] text-[#111111] text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full flex items-center gap-1">
-                            <span>🏆 Top Rated</span>
-                        </div>
-                        <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
-                            <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
-                        </div>
+                    <div className="absolute inset-0 z-0 rounded-[20px] overflow-hidden pointer-events-none">
+                        <div className="mesh-gradient-layer" />
                     </div>
                 )}
+                <div className={`relative z-10 w-full h-full overflow-hidden ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}>
+                    <img 
+                        src={displayImageUrl} 
+                        alt={post.title} 
+                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
+                    />
+                    
+                    {isTopRated && (
+                        <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
+                            <div className="bg-white text-[#111111] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                <div className="w-6 h-6 -my-1 -ml-0.5">
+                                    <DotLottieReact
+                                        src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
+                                        loop
+                                        autoplay
+                                    />
+                                </div>
+                                <span>Top Rated</span>
+                            </div>
+                            <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-gray-100 text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
+                                <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
@@ -156,7 +170,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                 <div className="flex items-center gap-2 mb-2 sm:mb-4">
                     <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden">
                         <img 
-                            src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author_id}`} 
+                            src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatar_id}`} 
                             alt="Avatar" 
                             className="w-full h-full object-cover" 
                         />

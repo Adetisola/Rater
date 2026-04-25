@@ -116,7 +116,7 @@ function BrowseContent() {
 
             // 1. Initial filter (Avatar or Search)
             if (selectedAvatar) {
-                posts = MOCK_POSTS.filter(post => post.author_id === selectedAvatar.id);
+                posts = MOCK_POSTS.filter(post => post.avatar_id === selectedAvatar.id);
             } else if (debouncedSearchQuery.trim().length >= 2) {
                 const results = await searchPosts(searchIndexes, debouncedSearchQuery, 100);
                 posts = results.map(r => r.post);

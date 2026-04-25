@@ -45,6 +45,34 @@
   100% { background-position: -200% 0; }
 }
 
+@keyframes mesh-flow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.mesh-gradient-layer {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 30% 30%, #fec312 0%, transparent 50%),
+    radial-gradient(circle at 70% 30%, #ff4f6d 0%, transparent 50%),
+    radial-gradient(circle at 30% 70%, #c400d2 0%, transparent 50%),
+    radial-gradient(circle at 70% 70%, #7c3bed 0%, transparent 50%);
+  filter: blur(12px);
+  opacity: 0.7;
+  transform: rotate(0deg);
+  transition: opacity 0.4s ease;
+  will-change: transform;
+}
+
+.group:hover .mesh-gradient-layer {
+  opacity: 1;
+  animation: mesh-flow 3s linear infinite;
+}
+
 .shimmer-band {
   position: absolute;
   top: -40%;

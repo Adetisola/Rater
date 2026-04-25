@@ -38,7 +38,7 @@ export function SubmitPage() {
 
   const handleSubmit = () => {
     // SUBMIT LOGIC HERE
-    console.log("Submitting:", { title, category, description, image, author_id: currentAvatar?.id });
+    console.log("Submitting:", { title, category, description, image, avatar_id: currentAvatar?.id });
     setIsSuccess(true);
   };
 

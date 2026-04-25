@@ -33,7 +33,7 @@ function isPostWithinWindow(post: Post): boolean {
  * Returns true if the post's avatar is NOT blocked.
  */
 function isAvatarNotBlocked(post: Post): boolean {
-  const avatar = MOCK_AVATARS[post.author_id];
+  const avatar = MOCK_AVATARS[post.avatar_id];
   if (!avatar) return true;
   return !avatar.is_blocked;
 }

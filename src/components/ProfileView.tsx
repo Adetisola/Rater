@@ -131,7 +131,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const avatarPosts = useMemo(() => {
     if (!targetAvatar) return [];
     return MOCK_POSTS
-      .filter(p => p.author_id === targetAvatar.id)
+      .filter(p => p.avatar_id === targetAvatar.id)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [targetAvatar]);
 
