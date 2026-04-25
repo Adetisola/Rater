@@ -366,7 +366,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                 className="relative group/toprated cursor-help"
                                 onClick={() => setIsTopRatedTooltipVisible(!isTopRatedTooltipVisible)}
                             >
-                                <span className="text-[10px] font-bold uppercase tracking-wider bg-white border-2 border-[#FEC312] text-[#111111] px-2.5 py-1 rounded-full flex items-center gap-1">
+                                <span 
+                                    className="text-[10px] font-bold uppercase tracking-wider text-[#111111] px-2.5 py-1 rounded-full flex items-center gap-1 border-2 border-transparent"
+                                    style={{
+                                        background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
+                                    }}
+                                >
                                     <div className="w-6 h-6 -my-1 -ml-0.5">
                                         <DotLottieReact
                                             src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
@@ -377,8 +382,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     Top Rated
                                 </span>
 
-                                <div className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+                                <div 
+                                    className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-transparent text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
                                     ${isTopRatedTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'}`}
+                                    style={{
+                                        background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
+                                    }}
                                 >
                                     <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
                                 </div>

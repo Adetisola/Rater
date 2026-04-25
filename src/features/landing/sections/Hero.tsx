@@ -84,44 +84,38 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
 
           {/* Center Side: Navigation Links */}
           <div className="nav-links-container hidden md:flex flex-1 justify-center items-center gap-10 relative">
-            <div className="flex flex-col items-center gap-1">
-              <a 
-                ref={el => { navRefs.current['what-is-rater'] = el; }}
-                href="#what-is-rater"
-                onClick={() => onSectionClick?.('what-is-rater')}
-                className={`text-[15px] font-medium transition-colors ${
-                  activeSection === 'what-is-rater' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
-                }`}
-              >
-                What is Rater
-              </a>
-            </div>
+            <a 
+              ref={el => { navRefs.current['what-is-rater'] = el; }}
+              href="#what-is-rater"
+              onClick={() => onSectionClick?.('what-is-rater')}
+              className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
+                activeSection === 'what-is-rater' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+              }`}
+            >
+              What is Rater
+            </a>
 
-            <div className="flex flex-col items-center gap-1">
-              <a 
-                ref={el => { navRefs.current['what-changes'] = el; }}
-                href="#what-changes"
-                onClick={() => onSectionClick?.('what-changes')}
-                className={`text-[15px] font-medium transition-colors ${
-                  activeSection === 'what-changes' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
-                }`}
-              >
-                What Changes
-              </a>
-            </div>
+            <a 
+              ref={el => { navRefs.current['what-changes'] = el; }}
+              href="#what-changes"
+              onClick={() => onSectionClick?.('what-changes')}
+              className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
+                activeSection === 'what-changes' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+              }`}
+            >
+              What Changes
+            </a>
 
-            <div className="flex flex-col items-center gap-1">
-              <a 
-                ref={el => { navRefs.current['how-it-works'] = el; }}
-                href="#how-it-works"
-                onClick={() => onSectionClick?.('how-it-works')}
-                className={`text-[15px] font-medium transition-colors ${
-                  activeSection === 'how-it-works' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
-                }`}
-              >
-                How it works
-              </a>
-            </div>
+            <a 
+              ref={el => { navRefs.current['how-it-works'] = el; }}
+              href="#how-it-works"
+              onClick={() => onSectionClick?.('how-it-works')}
+              className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
+                activeSection === 'how-it-works' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+              }`}
+            >
+              How it works
+            </a>
 
             {/* Single moving dot */}
             <span
