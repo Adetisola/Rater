@@ -66,6 +66,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const { hotPostIds } = useHotPosts(MOCK_POSTS);
   const badge = badgeMap[post.id];
   const isHot = hotPostIds.has(post.id);
+  const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
+  const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
 
   // 1. Initial Data Load
   useEffect(() => {
@@ -372,11 +374,18 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                         background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
                                     }}
                                 >
-                                    <div className="w-6 h-6 -my-1 -ml-0.5">
+                                    <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
+                                        {!topRatedLottieLoaded && <span className="absolute text-[12px] opacity-70">🏆</span>}
                                         <DotLottieReact
                                             src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
                                             loop
                                             autoplay
+                                            dotLottieRefCallback={(dotLottie) => {
+                                                if (dotLottie) {
+                                                    dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
+                                                }
+                                            }}
+                                            className="relative z-10 w-full h-full"
                                         />
                                     </div>
                                     Top Rated
@@ -397,8 +406,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             <div 
                                 className="relative group/prevrated cursor-help"
                             >
-                                <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#666666] border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
-                                    <span className="opacity-70">🏆</span> Previously Top Rated
+                                <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#FEC312] border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
+                                    <span className="opacity-70">🏆</span> Prev Top Rated
                                 </span>
                                 <div className="absolute bottom-full left-0 mb-3 w-64 p-4 bg-white border-2 border-gray-100 text-black text-[12px] rounded-2xl shadow-2xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/prevrated:opacity-100 group-hover/prevrated:visible group-hover/prevrated:translate-y-0 transition-all duration-200 hidden md:block z-50">
                                     <p className="leading-relaxed text-center font-medium">This design was among the top rated in a previous period</p>
@@ -422,11 +431,18 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     >
                         <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
                             {isHot && (
-                                <div className="w-8 h-8 -ml-2 -mt-3">
+                                <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
+                                    {!hotLottieLoaded && <span className="absolute text-[16px] opacity-70">🔥</span>}
                                     <DotLottieReact
                                         src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
                                         loop
                                         autoplay
+                                        dotLottieRefCallback={(dotLottie) => {
+                                            if (dotLottie) {
+                                                dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
+                                            }
+                                        }}
+                                        className="relative z-10 w-full h-full"
                                     />
                                 </div>
                             )}

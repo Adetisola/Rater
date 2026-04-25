@@ -79,9 +79,10 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
             >
                 {copied ? (
                     <>
-                        <div className="h-10 w-10 -ml-4 -my-4">
+                        <div className="h-10 w-10 -ml-6 -my-4">
                           <DotLottieReact
-                              src="https://lottie.host/a867da2a-4cdd-496d-a3e4-22415bd521ad/Amyr2xVNJg.lottie"
+                              src="https://lottie.host/a059d513-00d2-44a4-82a1-3d15c5bad2fc/OWXtqqeGsX.lottie"
+                              loop
                               autoplay
                           />
                         </div>

@@ -20,6 +20,8 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
+  const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
 
   const { allAvatars } = useAuth();
   const { metrics, loading: metricsLoading } = usePostMetrics(post.id);
@@ -130,11 +132,18 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                     {isTopRated && (
                         <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
                             <div className="bg-white text-[#111111] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                                <div className="w-6 h-6 -my-1 -ml-0.5">
+                                <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
+                                    {!topRatedLottieLoaded && <span className="absolute text-[12px] opacity-70">🏆</span>}
                                     <DotLottieReact
                                         src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
                                         loop
                                         autoplay
+                                        dotLottieRefCallback={(dotLottie) => {
+                                            if (dotLottie) {
+                                                dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
+                                            }
+                                        }}
+                                        className="relative z-10 w-full h-full"
                                     />
                                 </div>
                                 <span>Top Rated</span>
@@ -187,11 +196,18 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                             <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
                                 {metrics?.review_count || 0}
                                 {isHot && (
-                                    <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2">
+                                    <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
+                                        {!hotLottieLoaded && <span className="absolute text-[11px] md:text-[13px] opacity-70">🔥</span>}
                                         <DotLottieReact
                                             src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
                                             loop
                                             autoplay
+                                            dotLottieRefCallback={(dotLottie) => {
+                                                if (dotLottie) {
+                                                    dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
+                                                }
+                                            }}
+                                            className="relative z-10 w-full h-full"
                                         />
                                     </div>
                                 )}
