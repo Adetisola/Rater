@@ -397,13 +397,13 @@ export function SocialLinksRow({
   if (links.length === 0 && !suggestion) return null;
 
   return (
-    <div className="mt-2">
+    <div className="mt-2 flex flex-col items-center md:items-start">
       {/* Icon Row */}
       {links.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex flex-wrap items-center gap-0.5"
+          className="flex flex-wrap items-center justify-center md:justify-start gap-0.5"
         >
           {links.map((link, i) =>
             isEditing ? (

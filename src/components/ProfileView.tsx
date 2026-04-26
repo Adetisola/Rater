@@ -301,13 +301,13 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             {showMobileMenu && (
                 <>
                     <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
-                    <div className="absolute top-13 right-0 w-44 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="absolute top-13 right-0 w-53 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
                         <button 
                             onClick={() => { startEditing(); setShowMobileMenu(false); }}
                             className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
                         >
                             <Edit2 className="w-5 h-5" />
-                            <span className="font-semibold text-[15px]">Edit Avatar</span>
+                            <span className="font-semibold text-[15px]">Edit Avatar Profile</span>
                         </button>
                         <button 
                             onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}

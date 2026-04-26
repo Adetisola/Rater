@@ -31,6 +31,7 @@ const PLATFORM_DOMAINS: { pattern: RegExp; type: SocialPlatform }[] = [
   { pattern: /(?:^|\.)linktr\.ee/i, type: 'linktree' },
   { pattern: /(?:^|\.)github\.com/i, type: 'github' },
   { pattern: /(?:^|\.)pinterest\.com/i, type: 'pinterest' },
+  { pattern: /(?:^|\.)pin\.it/i, type: 'pinterest' },
   { pattern: /(?:^|\.)facebook\.com/i, type: 'facebook' },
 ];
 
