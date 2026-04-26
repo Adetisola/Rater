@@ -17,6 +17,7 @@ import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
+import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -98,6 +99,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [showFullscreenAvatar, setShowFullscreenAvatar] = useState(false);
 
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
 
@@ -353,12 +355,17 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             style={{ backgroundColor: targetAvatar.bg_color }}
           >
             {targetAvatar.avatar_url ? (
-              <img 
-                src={targetAvatar.avatar_url} 
-                className="w-full h-full object-cover"
-                alt=""
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
+              <button 
+                onClick={() => setShowFullscreenAvatar(true)}
+                className="w-full h-full cursor-zoom-in group/avatar"
+              >
+                <img 
+                  src={targetAvatar.avatar_url} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110"
+                  alt=""
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                />
+              </button>
             ) : (
                 <span className="animate-in fade-in duration-300">
                     {targetAvatar.name.charAt(0).toUpperCase()}
@@ -800,12 +807,23 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             }} 
         />
       )}
-      <QRCodeOverlay 
-        isOpen={showQrCode} 
-        onClose={() => setShowQrCode(false)} 
-        username={targetAvatar.username} 
-        avatarUrl={targetAvatar.avatar_url}
-      />
+      {showQrCode && targetAvatar && (
+        <QRCodeOverlay
+          isOpen={showQrCode}
+          onClose={() => setShowQrCode(false)}
+          username={targetAvatar.username}
+          avatarUrl={targetAvatar.avatar_url}
+        />
+      )}
+
+      {showFullscreenAvatar && targetAvatar.avatar_url && (
+        <FullscreenAvatarOverlay
+          isOpen={showFullscreenAvatar}
+          onClose={() => setShowFullscreenAvatar(false)}
+          avatarUrl={targetAvatar.avatar_url}
+          name={targetAvatar.name}
+        />
+      )}
     </div>
   );
 }

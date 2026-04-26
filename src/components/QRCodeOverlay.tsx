@@ -17,8 +17,59 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [processedAvatar, setProcessedAvatar] = useState<string | undefined>(undefined);
   
   const profileUrl = typeof window !== 'undefined' ? `${window.location.origin}/@${username}` : '';
+
+  useEffect(() => {
+    if (avatarUrl) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = avatarUrl;
+      img.onload = () => {
+        const size = 200; // Resolution of the logo
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Draw white background/border
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+
+        // Create circular clip for the image (slightly smaller for the border effect)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Draw image with "cover" logic to avoid squashing
+        const imgAspect = img.width / img.height;
+        let drawWidth = size;
+        let drawHeight = size;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (imgAspect > 1) {
+          drawWidth = size * imgAspect;
+          offsetX = -(drawWidth - size) / 2;
+        } else {
+          drawHeight = size / imgAspect;
+          offsetY = -(drawHeight - size) / 2;
+        }
+
+        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+        ctx.restore();
+        
+        setProcessedAvatar(canvas.toDataURL());
+      };
+    } else {
+      setProcessedAvatar(undefined);
+    }
+  }, [avatarUrl]);
 
   useEffect(() => {
     setMounted(true);
@@ -104,12 +155,12 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
                 fgColor={"#111111"}
                 level={"Q"}
                 includeMargin={false}
-                imageSettings={avatarUrl ? {
-                    src: avatarUrl,
+                imageSettings={processedAvatar ? {
+                    src: processedAvatar,
                     x: undefined,
                     y: undefined,
-                    height: 48,
-                    width: 48,
+                    height: 52,
+                    width: 52,
                     excavate: true,
                 } : undefined}
               />
