@@ -84,7 +84,14 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
     bio: 'Product designer obsessed with minimalist interfaces and intuitive user flows.',
     is_blocked: false,
     passkey: '1234',
-    created_at: '2026-01-01T00:00:00Z'
+    created_at: '2026-01-01T00:00:00Z',
+    social_links: [
+      {
+        type: 'instagram',
+        url: 'https://www.instagram.com/timi.adetisola',
+        username: 'timi.adetisola'
+      }
+    ]
   },
   'user_2': {
     id: 'user_2',
