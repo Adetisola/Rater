@@ -52,7 +52,7 @@ export function FullscreenAvatarOverlay({ isOpen, onClose, avatarUrl, name }: Fu
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-6">
           {/* Backdrop - Matching SharePostOverlay style */}
           <motion.div 
             initial={{ opacity: 0 }}
@@ -89,7 +89,7 @@ export function FullscreenAvatarOverlay({ isOpen, onClose, avatarUrl, name }: Fu
             </div>
             
             {/* Subtle Overlay gradient to make the button pop if image is light */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-black/10 to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-linear-to-bl from-black/10 to-transparent pointer-events-none" />
           </motion.div>
         </div>
       )}
