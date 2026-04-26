@@ -14,6 +14,12 @@ export interface Avatar {
   // Username history — for old-URL redirects and Supabase migration
   usernameLastChangedAt?: number;    // Unix ms timestamp of last username change
   previousUsernames?: string[];      // Ordered list of past usernames (oldest first)
+  // Smart Bio Links — structured social platform links
+  social_links?: {
+    type: 'instagram' | 'twitter' | 'youtube' | 'behance' | 'dribbble' | 'linktree' | 'github' | 'pinterest' | 'facebook';
+    url: string;
+    username?: string;
+  }[];
 }
 
 export interface Review {

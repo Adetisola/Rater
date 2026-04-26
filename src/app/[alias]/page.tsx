@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { ProfileView } from '../../components/ProfileView';
 import { FloatingPostButton } from '../../components/FloatingPostButton';
 import { TopLoadingBar } from '../../components/TopLoadingBar';
+import { Footer } from '../../components/Footer';
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
@@ -65,6 +66,7 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
         <ProfileView avatarId={targetAvatar.id} isOwnProfile={currentAvatar?.id === targetAvatar.id} />
       </div>
 
+      <Footer />
       <FloatingPostButton />
     </div>
   );

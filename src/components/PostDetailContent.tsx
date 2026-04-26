@@ -375,7 +375,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     }}
                                 >
                                     <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
-                                        {!topRatedLottieLoaded && <span className="absolute text-[12px] opacity-70">🏆</span>}
+                                        {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
                                         <DotLottieReact
                                             src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
                                             loop
@@ -432,7 +432,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
                             {isHot && (
                                 <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
-                                    {!hotLottieLoaded && <span className="absolute text-[16px] opacity-70">🔥</span>}
+                                    {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
                                     <DotLottieReact
                                         src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
                                         loop

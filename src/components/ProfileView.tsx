@@ -18,6 +18,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
+import { SocialLinksRow } from './SocialLinksRow';
+import { type SocialLink, getBioParts, formatDisplayUrl } from '../logic/socialLinksUtils';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -101,6 +103,9 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const [showQrCode, setShowQrCode] = useState(false);
   const [showFullscreenAvatar, setShowFullscreenAvatar] = useState(false);
 
+  // Smart Bio Links state
+  const [editSocialLinks, setEditSocialLinks] = useState<SocialLink[]>([]);
+
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
 
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
@@ -176,6 +181,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     setEditRole(targetAvatar.role || 'Designer');
     setEditBio(targetAvatar.bio || '');
     setEditName(targetAvatar.name);
+    setEditSocialLinks(targetAvatar.social_links ? [...targetAvatar.social_links] : []);
     handleUsernameChange(targetAvatar.username); // reset to current
     setSaveError('');
     setEditState('editing');
@@ -214,6 +220,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
       role: editRole.trim() || 'Designer',
       bio: editBio.trim(),
       name: editName,
+      social_links: editSocialLinks,
       ...(usernameChanged ? { username: editUsername } : {}),
     });
       
@@ -631,11 +638,42 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                 )}
                 rows={Math.max(3, editBio.split('\n').length)}
               />
-            ) : (
-               <p className="text-gray-500 leading-relaxed whitespace-pre-wrap">
-                 {targetAvatar.bio || "Enter your Bio"}
-               </p>
-            )}
+             ) : (
+                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                  {targetAvatar.bio ? (
+                    getBioParts(targetAvatar.bio).map((part, i) => {
+                      if (typeof part === 'string') return part;
+                      const originalUrl = part.url;
+                      const displayUrl = formatDisplayUrl(originalUrl);
+                      const href = originalUrl.startsWith('http') ? originalUrl : `https://${originalUrl}`;
+                      return (
+                        <a
+                          key={i}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={originalUrl}
+                          className="bio-link"
+                        >
+                          {displayUrl}
+                          <span className="external-icon">↗</span>
+                        </a>
+                      );
+                    })
+                  ) : (
+                    "Enter your Bio"
+                  )}
+                </p>
+             )}
+
+            {/* Smart Bio Links — Social Icon Row + Suggestion */}
+            <SocialLinksRow
+              links={editState !== 'idle' ? editSocialLinks : (targetAvatar.social_links || [])}
+              isEditing={editState !== 'idle'}
+              bioText={editBio}
+              onLinksChange={setEditSocialLinks}
+              onBioChange={setEditBio}
+            />
 
             <AnimatePresence>
               {editState !== 'idle' && (

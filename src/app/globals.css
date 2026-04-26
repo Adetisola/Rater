@@ -235,3 +235,34 @@
     margin-bottom: 16px;
   }
 }
+
+/* ── Bio Links (Smart Bio Links Enhancement) ───────────────────────── */
+.bio-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #ab8100;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 150ms ease;
+  vertical-align: middle;
+}
+
+.bio-link:hover {
+  color: #FEC312;
+}
+
+.external-icon {
+  display: inline-block;
+  font-size: 1.1em;
+  opacity: 0;
+  transform: translateY(1px);
+  transition: opacity 150ms ease, transform 150ms ease;
+  color: #000000;
+  line-height: 1;
+}
+
+.bio-link:hover .external-icon {
+  opacity: 1;
+}
+

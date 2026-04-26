@@ -8,6 +8,7 @@ import type { BadgeType } from '../logic/mockData';
 import Link from 'next/link';
 import { usePostMetrics } from '../hooks/usePostMetrics';
 import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface PostCardProps {
   post: Post;
@@ -25,6 +26,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
 
   const { allAvatars } = useAuth();
   const { metrics, loading: metricsLoading } = usePostMetrics(post.id);
+  const router = useRouter();
 
   useEffect(() => {
     if (retryCount === 0) {
@@ -133,7 +135,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
                             <div className="bg-white text-[#111111] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
                                 <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
-                                    {!topRatedLottieLoaded && <span className="absolute text-[12px] opacity-70">🏆</span>}
+                                    {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
                                     <DotLottieReact
                                         src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
                                         loop
@@ -148,7 +150,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                 </div>
                                 <span>Top Rated</span>
                             </div>
-                            <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-gray-100 text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
+                            <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
                                 <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
                             </div>
                         </div>
@@ -176,15 +178,24 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2 mb-2 sm:mb-4">
-                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden">
+                <div 
+                    className="flex items-center gap-2 mb-2 sm:mb-4 group/avatar pointer-events-auto cursor-pointer relative z-20 w-fit"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (avatar?.username) {
+                            router.push(`/@${avatar.username}`);
+                        }
+                    }}
+                >
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden ring-0 group-hover/avatar:ring-2 ring-[#FEC312] transition-all">
                         <img 
                             src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatar_id}`} 
                             alt="Avatar" 
                             className="w-full h-full object-cover" 
                         />
                     </div>
-                    <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors">
+                    <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white group-hover/avatar:text-[#FEC312] transition-colors">
                         {avatar?.name || 'Unknown'}
                     </span>
                 </div>
@@ -197,7 +208,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                 {metrics?.review_count || 0}
                                 {isHot && (
                                     <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
-                                        {!hotLottieLoaded && <span className="absolute text-[11px] md:text-[13px] opacity-70">🔥</span>}
+                                        {!hotLottieLoaded && <span className="absolute text-[11px] md:text-[13px]">🔥</span>}
                                         <DotLottieReact
                                             src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
                                             loop
