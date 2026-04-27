@@ -681,7 +681,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                    initial={{ opacity: 0, height: 0 }}
                    animate={{ opacity: 1, height: 'auto' }}
                    exit={{ opacity: 0, height: 0 }}
-                   className="flex items-center justify-start md:justify-start gap-3 mt-4"
+                   className="flex items-center justify-center md:justify-start gap-3 mt-4"
                 >
                   <Button 
                       variant="primary" 
