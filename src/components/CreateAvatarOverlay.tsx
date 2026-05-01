@@ -456,8 +456,10 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} />
-      <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center max-h-[90vh] overflow-y-auto custom-scrollbar">
-        {stepContent}
+      <div className="bg-white w-full max-w-md rounded-[32px] relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex flex-col items-center">
+          {stepContent}
+        </div>
       </div>
     </div>,
     document.body

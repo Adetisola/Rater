@@ -39,15 +39,17 @@ export function EditPostOverlay() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden max-h-full overflow-y-auto custom-scrollbar"
+            className="relative w-full max-w-3xl bg-white rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden max-h-[90vh] flex flex-col"
           >
-            <div className="p-8 md:p-12">
-              <PostForm 
-                initialPost={editingPost} 
-                isOverlay 
-                onSuccess={() => setEditingPost(null)} 
-                onCancel={() => setEditingPost(null)} 
-              />
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-8 md:p-12">
+                <PostForm 
+                  initialPost={editingPost} 
+                  isOverlay 
+                  onSuccess={() => setEditingPost(null)} 
+                  onCancel={() => setEditingPost(null)} 
+                />
+              </div>
             </div>
           </motion.div>
         </div>
