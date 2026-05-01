@@ -6,7 +6,7 @@ import { notFound, useParams } from "next/navigation";
 
 export default function PostDetailPage() {
   const { id } = useParams() as { id: string };
-  const { posts, allPosts } = usePosts();
+  const { allPosts } = usePosts();
   
   const post = allPosts.find((p) => p.id === id);
 
