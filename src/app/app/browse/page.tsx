@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
-import { MOCK_POSTS, MOCK_AVATARS, CATEGORIES, calculatePostMetrics, type Post, type Avatar } from '@/logic/mockData';
+import { MOCK_AVATARS, CATEGORIES, calculatePostMetrics, type Post, type Avatar } from '@/logic/mockData';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { createSearchIndexes, searchPosts } from '@/logic/searchUtils';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -14,6 +14,7 @@ import { useBadges } from '@/hooks/useBadges';
 import { useHotPosts } from '@/hooks/useHotPosts';
 import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { usePosts } from '@/context/PostContext';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -27,6 +28,7 @@ function BrowseContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { currentAvatar } = useAuth();
+  const { posts: allPosts } = usePosts();
 
   // Read URL params
   const urlQuery = searchParams.get('q') || '';
@@ -58,9 +60,9 @@ function BrowseContent() {
   const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
 
   // Logic dependencies
-  const searchIndexes = useMemo(() => createSearchIndexes(MOCK_POSTS, MOCK_AVATARS, CATEGORIES), []);
-  const { badgeMap } = useBadges(MOCK_POSTS);
-  const { hotPostIds } = useHotPosts(MOCK_POSTS);
+  const searchIndexes = useMemo(() => createSearchIndexes(allPosts, MOCK_AVATARS, CATEGORIES), [allPosts]);
+  const { badgeMap } = useBadges(allPosts);
+  const { hotPostIds } = useHotPosts(allPosts);
 
   const updateUrl = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -116,12 +118,12 @@ function BrowseContent() {
 
             // 1. Initial filter (Avatar or Search)
             if (selectedAvatar) {
-                posts = MOCK_POSTS.filter(post => post.avatar_id === selectedAvatar.id);
+                posts = allPosts.filter(post => post.avatar_id === selectedAvatar.id);
             } else if (debouncedSearchQuery.trim().length >= 2) {
                 const results = await searchPosts(searchIndexes, debouncedSearchQuery, 100);
                 posts = results.map(r => r.post);
             } else {
-                posts = [...MOCK_POSTS];
+                posts = [...allPosts];
             }
 
             // 2. Category filter

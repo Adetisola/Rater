@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from '../context/AuthContext';
-import { MOCK_POSTS, calculatePostMetrics } from '../logic/mockData';
+import { usePosts } from '../context/PostContext';
+import { calculatePostMetrics } from '../logic/mockData';
 import { Button } from './ui/Button';
 import { MasonryGrid } from './MasonryGrid';
 import { useBadges } from '../hooks/useBadges';
@@ -88,6 +89,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const { currentAvatar: me, allAvatars, logout, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
+  const { posts: allPosts } = usePosts();
 
   // Edit State
   type EditState = 'idle' | 'editing' | 'saving' | 'error';
@@ -132,15 +134,15 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   });
 
   // External Metadata (Badges, Hot Status)
-  const { badgeMap } = useBadges(MOCK_POSTS);
-  const { hotPostIds } = useHotPosts(MOCK_POSTS);
+  const { badgeMap } = useBadges(allPosts);
+  const { hotPostIds } = useHotPosts(allPosts);
   
   const avatarPosts = useMemo(() => {
     if (!targetAvatar) return [];
-    return MOCK_POSTS
+    return allPosts
       .filter(p => p.avatar_id === targetAvatar.id)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [targetAvatar]);
+  }, [targetAvatar, allPosts]);
 
   // Async stats calculation
   useEffect(() => {

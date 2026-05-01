@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { 
-    MOCK_POSTS, 
     getReviewsByPostId, 
     getReviewerDisplayName, 
     calculatePostMetrics, 
@@ -12,8 +11,11 @@ import {
 } from '../logic/mockData';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
+import { usePosts } from '../context/PostContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { PostActionsMenu } from './PostActionsMenu';
+import { sharePost } from '../lib/postActions';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
@@ -46,6 +48,7 @@ interface PostDetailOverlayProps {
 
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const { currentAvatar, allAvatars } = useAuth();
+  const { posts } = usePosts();
   const router = useRouter();
 
   const handleClose = onClose || (() => router.back());
@@ -62,8 +65,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [isFetchingReviews, setIsFetchingReviews] = useState(true);
 
   // External Metadata (Badges, Hot Status)
-  const { badgeMap } = useBadges(MOCK_POSTS);
-  const { hotPostIds } = useHotPosts(MOCK_POSTS);
+  const { badgeMap } = useBadges(posts);
+  const { hotPostIds } = useHotPosts(posts);
   const badge = badgeMap[post.id];
   const isHot = hotPostIds.has(post.id);
   const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
@@ -319,40 +322,14 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     </div>
                     
                     {/* Action Buttons */}
-                    <div className="absolute top-6 right-6 flex gap-3 z-20">
-                         <button 
-                            onClick={async (e) => {
-                                e.stopPropagation();
-                                try {
-                                    const response = await fetch(post.image_url);
-                                    const blob = await response.blob();
-                                    const url = window.URL.createObjectURL(blob);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    window.URL.revokeObjectURL(url);
-                                } catch (err) {
-                                    console.error('Download failed', err);
-                                    window.open(post.image_url, '_blank');
-                                }
-                            }}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-                        >
-                            <Download className="w-5 h-5 text-black" />
-                        </button>
-
-                        <button 
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setIsShareOpen(true);
-                            }}
-                            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform"
-                        >
-                            <Share2 className="w-5 h-5 text-black" />
-                        </button>
+                    <div className="absolute top-6 right-6 z-20">
+                        <PostActionsMenu 
+                            post={post} 
+                            className="flex gap-3"
+                            buttonClassName="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform text-black"
+                            iconSizeClass="w-5 h-5"
+                            onReport={() => setIsReportOpen(true)}
+                        />
                     </div>
                 </div>
 
@@ -515,22 +492,26 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     </div>
                 </div>
 
-                {isShareOpen && <SharePostOverlay onClose={() => setIsShareOpen(false)} post_id={post.id} />}
-
-                <div className="text-xs text-[#EB5757] font-medium pt-2">
-                     *Attribution is claimed by the submitter and not independently verified. 
-                     <button onClick={() => setIsReportOpen(true)} className="underline text-sm font-semibold ml-1 hover:text-[#c0392b]">Report</button> if you believe attribution is incorrect.
-                </div>
-                
-                {isReportOpen && (
-                    <ReportPostOverlay 
-                        onClose={() => setIsReportOpen(false)} 
-                        onSubmit={(reason, details) => {
-                            console.log('Report submitted:', reason, details);
-                            setIsReportOpen(false);
-                        }} 
-                    />
+                {!isSelfPost && (
+                  <>
+                    <div className="text-xs text-[#EB5757] font-medium pt-2">
+                         *Attribution is claimed by the submitter and not independently verified. 
+                         <button onClick={() => setIsReportOpen(true)} className="underline text-sm font-semibold ml-1 hover:text-[#c0392b]">Report</button> if you believe attribution is incorrect.
+                    </div>
+                    
+                    {isReportOpen && (
+                        <ReportPostOverlay 
+                            onClose={() => setIsReportOpen(false)} 
+                            onSubmit={(reason, details) => {
+                                console.log('Report submitted:', reason, details);
+                                setIsReportOpen(false);
+                            }} 
+                        />
+                    )}
+                  </>
                 )}
+
+                {isShareOpen && <SharePostOverlay onClose={() => setIsShareOpen(false)} post_id={post.id} />}
             </div>
 
             {/* RIGHT COLUMN: Review Form */}
@@ -721,7 +702,11 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             document.body.removeChild(link); window.URL.revokeObjectURL(url);
                         } catch (err) { window.open(post.image_url, '_blank'); }
                     }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Download className="w-5 h-5 text-black" /></button>
-                    <button onClick={(e) => { e.stopPropagation(); setIsShareOpen(true); }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Share2 className="w-5 h-5 text-black" /></button>
+                    <button onClick={async (e) => { 
+                        e.stopPropagation(); 
+                        const handledNatively = await sharePost(post.id, post.title);
+                        if (!handledNatively) setIsShareOpen(true);
+                    }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Share2 className="w-5 h-5 text-black" /></button>
                </div>
                <div className="absolute bottom-6 right-6 flex md:flex-col flex-row gap-3 z-50 pointer-events-auto">
                     <button onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale >= ZOOM_IN_SCALE}><Plus className="w-6 h-6 text-black" /></button>

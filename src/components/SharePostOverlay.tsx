@@ -38,11 +38,21 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center p-4"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+    >
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       />
 
       {/* Modal Content */}

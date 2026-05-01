@@ -17,8 +17,12 @@ export function TopLoadingBar() {
   useEffect(() => {
     // Intercept clicks on links globally
     const handleAnchorClick = (e: MouseEvent) => {
+      // Skip if the click originated from inside an element that opts out (e.g. PostActionsMenu)
+      const target = e.target as Element;
+      if (target.closest("[data-no-route-loader]")) return;
+
       // Find closest anchor tag
-      const anchor = (e.target as Element).closest("a") as HTMLAnchorElement | null;
+      const anchor = target.closest("a") as HTMLAnchorElement | null;
       if (!anchor) return;
       
       const href = anchor.href;

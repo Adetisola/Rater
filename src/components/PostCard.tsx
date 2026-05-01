@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { usePostMetrics } from '../hooks/usePostMetrics';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
+import { PostActionsMenu } from './PostActionsMenu';
 
 interface PostCardProps {
   post: Post;
@@ -155,6 +156,13 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                             </div>
                         </div>
                     )}
+
+                    <PostActionsMenu 
+                        post={post} 
+                        isCardContext={true}
+                        className="absolute top-3 right-3 z-30 opacity-0 md:group-hover:opacity-100 max-md:opacity-100 transition-opacity duration-200"
+                        buttonClassName="w-8 h-8 border-none transition-all max-md:bg-black/20 max-md:backdrop-blur-md max-md:text-white md:bg-white md:hover:bg-gray-100 md:text-black"
+                    />
                 </div>
             </div>
 
@@ -180,6 +188,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
 
                 <div 
                     className="flex items-center gap-2 mb-2 sm:mb-4 group/avatar pointer-events-auto cursor-pointer relative z-20 w-fit"
+                    data-no-route-loader
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();

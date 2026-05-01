@@ -115,7 +115,15 @@ function GlobalLoaderContent() {
 
   // 2. INTENT DETECTION (Hooking into clicks and history API)
   useEffect(() => {
+    // Suppression window: when a click inside [data-no-route-loader] is detected,
+    // block ALL loader triggers for a short period to cover pushState calls
+    // that may follow from the same user interaction.
+    let suppressUntil = 0;
+
     const handleNavigationIntent = (url: URL | string) => {
+      // Respect the suppression window
+      if (Date.now() < suppressUntil) return;
+
       const href = typeof url === "string" ? url : url.pathname;
       if (href.startsWith("/app") || href.includes("/app/")) {
         // Defer start to the next tick to avoid scheduling updates during 
@@ -128,7 +136,15 @@ function GlobalLoaderContent() {
 
     // A. Intercept Link clicks
     const handleAnchorClick = (e: MouseEvent) => {
-      const anchor = (e.target as Element).closest("a");
+      // Skip if the click originated from inside an element that opts out
+      const target = e.target as Element;
+      if (target.closest("[data-no-route-loader]")) {
+        // Suppress all loader triggers for 100ms to also block pushState-based triggers
+        suppressUntil = Date.now() + 100;
+        return;
+      }
+
+      const anchor = target.closest("a");
       if (!anchor) return;
 
       const href = anchor.href;

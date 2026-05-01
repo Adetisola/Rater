@@ -222,7 +222,7 @@ export function MobileSearchOverlay({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
             {sortBy !== 'balanced' && (

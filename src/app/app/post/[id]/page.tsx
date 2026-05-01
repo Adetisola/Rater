@@ -1,13 +1,34 @@
-import { MOCK_POSTS } from "@/logic/mockData";
-import { PostDetailContent } from "@/components/PostDetailContent";
-import { notFound } from "next/navigation";
+"use client";
 
-export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const post = MOCK_POSTS.find((p) => p.id === id);
+import { usePosts } from "@/context/PostContext";
+import { PostDetailContent } from "@/components/PostDetailContent";
+import { notFound, useParams } from "next/navigation";
+
+export default function PostDetailPage() {
+  const { id } = useParams() as { id: string };
+  const { posts, allPosts } = usePosts();
+  
+  const post = allPosts.find((p) => p.id === id);
 
   if (!post) {
     notFound();
+  }
+
+  if (post.is_deleted) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
+        <h2 className="text-2xl font-bold text-[#111111] mb-2">This post is no longer available</h2>
+        <p className="text-gray-500 max-w-md mx-auto mb-8">
+          The author has removed this design or it is no longer visible.
+        </p>
+        <button 
+          onClick={() => window.history.back()}
+          className="px-8 py-3 bg-[#FEC312] text-[#111111] font-bold rounded-full hover:bg-[#FFD342] transition-all"
+        >
+          Go Back
+        </button>
+      </div>
+    );
   }
 
   return (

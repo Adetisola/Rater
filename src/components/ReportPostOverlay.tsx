@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -23,6 +24,11 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
   const [details, setDetails] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = () => {
     if (reason === 'Select') return;
@@ -33,12 +39,24 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
     onSubmit(reason, details);
   };
 
-  return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center p-4"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+    >
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       />
 
       {/* Modal Content */}
@@ -132,6 +150,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -6,8 +6,8 @@ import { highlightMatches } from '../logic/searchUtils';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
-import { MOCK_POSTS } from '../logic/mockData';
 import { useAuth } from '../context/AuthContext';
+import { usePosts } from '../context/PostContext';
 import type { RecentItemData } from '../hooks/useRecentSearches';
 
 import Link from 'next/link';
@@ -46,6 +46,7 @@ export function SearchResults({
     : (results.avatars.length > 0 || results.posts.length > 0 || results.categories.length > 0);
   
   const { allAvatars } = useAuth();
+  const { posts: allPosts } = usePosts();
   
   const [mounted, setMounted] = useState(false);
 
@@ -147,7 +148,7 @@ export function SearchResults({
                 }
 
                 if (item.type === 'post') {
-                  const postObj = MOCK_POSTS.find(p => p.id === item.postId);
+                  const postObj = allPosts.find(p => p.id === item.postId);
                   if (!postObj) return null;
                   return (
                     <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">

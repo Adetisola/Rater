@@ -1,4 +1,22 @@
-export type Category = 'Web Design' | 'Mobile App Design' | 'Logo Design' | 'Brand Identity Design' | 'Poster Design' | 'Flyer Design' | 'Social Media Design' | 'AI Image' | '3D Design';
+export type Category = 
+  | 'Web Design' 
+  | 'Mobile App Design' 
+  | 'Brand Identity Design' 
+  | 'Logo Design' 
+  | 'Poster Design' 
+  | 'Flyer Design' 
+  | 'Social Media Design' 
+  | 'AI Image' 
+  | '3D Design'
+  | 'Packaging Design'
+  | 'Banner Design'
+  | 'Ad Creative Design'
+  | 'Illustration'
+  | 'Icon Design'
+  | 'Typography Design'
+  | 'UI Design'
+  | 'Landing Page Design'
+  | 'Dashboard Design';
 
 export interface Avatar {
   id: string;
@@ -33,6 +51,7 @@ export interface Review {
   aesthetics: number;
   comment?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface Post {
@@ -42,6 +61,8 @@ export interface Post {
   category: Category;
   image_url: string;
   avatar_id: string;
+  is_deleted?: boolean;
+  deleted_at?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -64,8 +85,24 @@ export interface Badge {
 // --- MOCK DATABASE ---
 
 export const CATEGORIES: Category[] = [
-  'Web Design', 'Mobile App Design', 'Brand Identity Design', 
-  'Logo Design', 'Poster Design', 'Flyer Design', 'Social Media Design', 'AI Image', '3D Design'
+  'Web Design', 
+  'Mobile App Design', 
+  'Brand Identity Design', 
+  'Logo Design', 
+  'Poster Design', 
+  'Flyer Design', 
+  'Social Media Design', 
+  'AI Image', 
+  '3D Design',
+  'Packaging Design',
+  'Banner Design',
+  'Ad Creative Design',
+  'Illustration',
+  'Icon Design',
+  'Typography Design',
+  'UI Design',
+  'Landing Page Design',
+  'Dashboard Design'
 ];
 
 /**
@@ -2199,4 +2236,27 @@ export function getReviewerDisplayName(review: Review): string {
     return avatar?.name || 'Unknown Avatar';
   }
   return review.reviewer_name || 'Anonymous';
+}
+
+/**
+ * SIMULATED DB MUTATIONS
+ */
+
+export async function updatePost(postId: string, updates: Partial<Post>): Promise<Post> {
+  await delay(800);
+  console.log(`[DB] Updating post ${postId}`, updates);
+  // In a real app, this would be a PATCH request
+  return { id: postId, ...updates } as Post;
+}
+
+export async function deletePost(postId: string): Promise<boolean> {
+  await delay(1000);
+  console.log(`[DB] Deleting post ${postId} (Soft Delete Simulation)`);
+  return true;
+}
+
+export async function hardDeletePost(postId: string): Promise<boolean> {
+  await delay(1500);
+  console.log(`[DB] HARD Deleting post ${postId} and cascading relations`);
+  return true;
 }

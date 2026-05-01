@@ -28,7 +28,9 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "../context/AuthContext";
+import { PostProvider } from "../context/PostContext";
 import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
+import { GlobalOverlays } from "../components/GlobalOverlays";
 
 export default function RootLayout({
   children,
@@ -42,8 +44,11 @@ export default function RootLayout({
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
-          <GlobalRouteLoader />
-          {children}
+          <PostProvider>
+            <GlobalRouteLoader />
+            <GlobalOverlays />
+            {children}
+          </PostProvider>
         </AuthProvider>
       </body>
     </html>
