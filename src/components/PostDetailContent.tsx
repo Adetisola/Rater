@@ -446,7 +446,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             onClick={() => setIsExpanded(!isExpanded)}
                             className="text-xs font-bold text-[#111111] mt-3 flex items-center gap-1.5 hover:text-[#FEC312] transition-colors uppercase tracking-widest group"
                         >
-                            <span>{isExpanded ? 'Show Less' : 'Read Full Description'}</span>
+                            <span>{isExpanded ? 'Show Less' : 'Read more'}</span>
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} group-hover:translate-y-0.5`} />
                         </button>
                     )}
