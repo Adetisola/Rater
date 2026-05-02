@@ -19,7 +19,7 @@ import { sharePost } from '../lib/postActions';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
-import { formatTimeAgo } from '../lib/utils';
+import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { useBadges } from '../hooks/useBadges';
@@ -393,7 +393,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                             </div>
                         )}
                     </div>
-                    <span className="text-xs font-medium text-gray-400">{formatTimeAgo(post.created_at)}</span>
+                    <span 
+                      className="text-xs font-medium text-gray-400"
+                      title={getFullTimestamp(post.created_at)}
+                    >
+                      {formatTimestamp(post.created_at)}
+                    </span>
                 </div>
 
                 {/* 3. Title */}
@@ -598,7 +603,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     </motion.div>
                 ) : visibleReviews.map((review) => {
                     const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
-                    const timeLabel = formatTimeAgo(review.created_at);
+                    const timeLabel = formatTimestamp(review.created_at);
+                    const fullTime = getFullTimestamp(review.created_at);
 
                     return (
                         <motion.div 
@@ -623,7 +629,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                             <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
                                         ))}
                                     </div>
-                                    <span className="text-xs text-gray-400 font-medium">{timeLabel}</span>
+                                    <span 
+                                      className="text-xs text-gray-400 font-medium"
+                                      title={fullTime}
+                                    >
+                                      {timeLabel}
+                                    </span>
                                 </div>
 
                                 {review.comment && <p className="text-sm text-[#111111] leading-relaxed mb-6">{review.comment}</p>}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Post } from '../logic/mockData';
-import { formatTimeAgo } from '../lib/utils';
+import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import type { BadgeType } from '../logic/mockData';
 import Link from 'next/link';
@@ -171,8 +171,11 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                     <span className="bg-white text-[#111111] text-[10px] uppercase font-semibold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
                         {post.category}
                     </span>
-                    <span className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2">
-                        {formatTimeAgo(post.created_at)}
+                    <span 
+                        className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2"
+                        title={getFullTimestamp(post.created_at)}
+                    >
+                        {formatTimestamp(post.created_at)}
                     </span>
                 </div>
 
