@@ -175,7 +175,11 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     return () => { isMounted = false; };
   }, [avatarPosts]);
 
-  const signUpDate = targetAvatar ? new Date(targetAvatar.created_at).getFullYear() : null;
+  const joinedDate = useMemo(() => {
+    if (!targetAvatar) return null;
+    const date = new Date(targetAvatar.created_at);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  }, [targetAvatar]);
   const isMe = me?.id === avatarId;
 
   const startEditing = () => {
@@ -616,8 +620,8 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
           </div>
 
           <div className="flex gap-2 justify-center md:justify-start mb-6">
-            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-black uppercase tracking-widest">
-              Member since {signUpDate}
+            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider">
+              Joined {joinedDate}
             </span>
           </div>
 

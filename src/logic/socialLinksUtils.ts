@@ -12,7 +12,8 @@ export type SocialPlatform =
   | 'linktree'
   | 'github'
   | 'pinterest'
-  | 'facebook';
+  | 'facebook'
+  | 'reddit';
 
 export interface SocialLink {
   type: SocialPlatform;
@@ -33,6 +34,7 @@ const PLATFORM_DOMAINS: { pattern: RegExp; type: SocialPlatform }[] = [
   { pattern: /(?:^|\.)pinterest\.com/i, type: 'pinterest' },
   { pattern: /(?:^|\.)pin\.it/i, type: 'pinterest' },
   { pattern: /(?:^|\.)facebook\.com/i, type: 'facebook' },
+  { pattern: /(?:^|\.)reddit\.com/i, type: 'reddit' },
 ];
 
 /** Extract all URLs from text */
@@ -169,6 +171,13 @@ export function extractUsername(rawUrl: string, platform: SocialPlatform): strin
         }
         return segments[0];
 
+      case 'reddit':
+        // Handle /user/username or /u/username
+        if (segments[0] === 'user' || segments[0] === 'u') {
+          return segments[1] || undefined;
+        }
+        return segments[0];
+
       default:
         return segments[0];
     }
@@ -216,4 +225,5 @@ export const PLATFORM_META: Record<SocialPlatform, { label: string; color: strin
   github: { label: 'GitHub', color: '#181717' },
   pinterest: { label: 'Pinterest', color: '#BD081C' },
   facebook: { label: 'Facebook', color: '#1877F2' },
+  reddit: { label: 'Reddit', color: '#FF4500' },
 };

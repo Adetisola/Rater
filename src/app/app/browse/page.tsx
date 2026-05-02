@@ -336,7 +336,7 @@ function BrowseContent() {
               {!isProcessing && (
                 <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
                     <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] select-none">
+                    <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
                         {sortedPosts.length > 0 
                           ? "You've reached the end of the feed"
                           : sortedPosts.length === 0 && debouncedSearchQuery.trim() 
