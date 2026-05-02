@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreVertical, Menu, Logs, Edit2, Trash2, Share2, Download, Flag, Check } from 'lucide-react';
+import { MoreVertical, Edit2, Trash2, Share2, Download, Flag, Check } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { showDeleteConfirmation } from './GlobalOverlays';
