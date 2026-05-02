@@ -681,6 +681,23 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
               onBioChange={setEditBio}
             />
 
+            {/* Hint for Social Links */}
+            <AnimatePresence>
+              {editState !== 'idle' && editSocialLinks.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-2 flex items-start gap-1.5 justify-center md:justify-start overflow-hidden"
+                >
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-medium text-gray-500">
+                    <span className="text-sm leading-none">💡</span>
+                    <span>Tip: Paste your social links in your bio to add them as social icons e.g. www.x.com/username</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <AnimatePresence>
               {editState !== 'idle' && (
                 <motion.div 
