@@ -15,6 +15,7 @@ import { useHotPosts } from '@/hooks/useHotPosts';
 import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { usePosts } from '@/context/PostContext';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -43,6 +44,9 @@ function BrowseContent() {
   // Results state
   const [sortedPosts, setSortedPosts] = useState<Post[]>([]);
   const [isProcessing, setIsProcessing] = useState(true);
+
+  // Scroll Restoration
+  useScrollRestoration('browse-feed', !isProcessing);
 
   // Sync debounced search to URL
   useEffect(() => {
