@@ -1,9 +1,14 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#FEC312",
+};
 
 export const metadata: Metadata = {
   title: "Rater — Judgment is built, not found",
   description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
+  manifest: "/manifest.json",
   openGraph: {
     title: "Rater — Judgment is built, not found",
     description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
@@ -29,8 +34,10 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "../context/AuthContext";
 import { PostProvider } from "../context/PostContext";
+import { TimeProvider } from "../context/TimeContext";
 import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
 import { GlobalOverlays } from "../components/GlobalOverlays";
+import { PWARegistry } from "../components/PWARegistry";
 
 export default function RootLayout({
   children,
@@ -40,14 +47,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icons/logo-rater-hover.svg" />
+        <link rel="icon" type="image/svg+xml" href="/icons/rater-logo-white-bg.svg" />
       </head>
       <body suppressHydrationWarning>
         <AuthProvider>
           <PostProvider>
-            <GlobalRouteLoader />
-            <GlobalOverlays />
-            {children}
+            <TimeProvider>
+              <PWARegistry />
+              <GlobalRouteLoader />
+              <GlobalOverlays />
+              {children}
+            </TimeProvider>
           </PostProvider>
         </AuthProvider>
       </body>

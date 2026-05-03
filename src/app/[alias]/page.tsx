@@ -11,7 +11,7 @@ import { Footer } from '../../components/Footer';
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
-  const { allAvatars, currentAvatar } = useAuth();
+  const { allAvatars, currentAvatar, isLoading } = useAuth();
   const router = useRouter();
 
   // Decode just in case
@@ -42,6 +42,14 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
       router.replace(`/@${redirectAvatar.username}`);
     }
   }, [targetAvatar, redirectAvatar, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="w-10 h-10 border-4 border-[#FEC312] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!targetAvatar && !redirectAvatar) {
     return (

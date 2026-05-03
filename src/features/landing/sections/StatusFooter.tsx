@@ -5,7 +5,7 @@
 // Status: gradient text statement + large "Rater" typographic stamp
 // Footer: logo, tagline, copyright — horizontal on desktop, stacked on mobile
 
-const logoRaterHover = '/assets/landing/footer/logo-rater-hover.svg';
+const logoRater = '/assets/landing/footer/rater-logo-black-bg.svg';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
 
 export function StatusFooter() {
@@ -44,7 +44,7 @@ export function StatusFooter() {
             {/* Left: Logo */}
             <div className="flex items-center justify-center">
               <img
-                src={logoRaterHover}
+                src={logoRater}
                 alt="Rater logo"
                 width={36}
                 height={36}

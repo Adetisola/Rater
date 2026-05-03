@@ -196,7 +196,8 @@ export const MOCK_POSTS: Post[] = [
     category: 'Web Design',
     image_url: 'https://images.unsplash.com/photo-1547658719-da2b51169166?auto=format&fit=crop&q=80&w=800',
     avatar_id: 'user_1',
-    created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 8).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
   },
   {
     id: 'post_8',

@@ -10,6 +10,7 @@ import { usePostMetrics } from '../hooks/usePostMetrics';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { PostActionsMenu } from './PostActionsMenu';
+import { useNow } from '../context/TimeContext';
 
 interface PostCardProps {
   post: Post;
@@ -28,6 +29,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
   const { allAvatars } = useAuth();
   const { metrics, loading: metricsLoading } = usePostMetrics(post.id);
   const router = useRouter();
+  const now = useNow();
 
   useEffect(() => {
     if (retryCount === 0) {
@@ -108,6 +110,9 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
   const isTopRated = badge === 'top_rated_active';
   const avatar = allAvatars[post.avatar_id];
 
+  const isEdited = post.updated_at && 
+    new Date(post.updated_at).getTime() > new Date(post.created_at).getTime();
+
   return (
     <Link href={`/app/post/${post.id}`} className="group relative break-inside-avoid block">
       <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
@@ -175,7 +180,13 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2"
                         title={getFullTimestamp(post.created_at)}
                     >
-                        {formatTimestamp(post.created_at)}
+                        {formatTimestamp(post.created_at, now)}
+                        {isEdited && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span>Edited</span>
+                          </>
+                        )}
                     </span>
                 </div>
 

@@ -865,6 +865,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             onConfirm={() => {
                 logout();
                 setShowLogoutConfirm(false);
+                router.push('/app/browse');
             }} 
         />
       )}

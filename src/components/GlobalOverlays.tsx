@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { EditPostOverlay } from './EditPostOverlay';
 import { DeletePostOverlay } from './DeletePostOverlay';
 import { usePosts } from '../context/PostContext';
+import { InstallPromptUI } from './InstallPromptUI';
 
 // Global singleton-like mechanism to trigger delete overlay from anywhere
 let triggerDelete: (postId: string) => void = () => {};
@@ -45,6 +46,7 @@ export function GlobalOverlays() {
     <>
       <EditPostOverlay />
       <DeletePostOverlay postId={deletePostId} onClose={() => setDeletePostId(null)} />
+      <InstallPromptUI />
       
       {/* Undo Toast */}
       <AnimatePresence>

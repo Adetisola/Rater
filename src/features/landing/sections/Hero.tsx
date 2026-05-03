@@ -65,14 +65,14 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             <Link href="/" className="flex items-center">
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative">
                 <img 
-                  src="/icons/logo-rater.svg" 
+                  src="/icons/rater-logo-transparent-bg-stroked.svg" 
                   alt="Rater Logo" 
                   width={48}
                   height={48}
                   className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" 
                 />
                 <img 
-                  src="/icons/logo-rater-hover.svg" 
+                  src="/icons/rater-logo-black-bg.svg" 
                   alt="Rater Logo Hover" 
                   width={48}
                   height={48}

@@ -12,6 +12,7 @@ import {
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
+import { useNow } from '../context/TimeContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PostActionsMenu } from './PostActionsMenu';
@@ -49,6 +50,7 @@ interface PostDetailOverlayProps {
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const { currentAvatar, allAvatars } = useAuth();
   const { posts } = usePosts();
+  const now = useNow();
   const router = useRouter();
 
   const handleClose = onClose || (() => router.back());
@@ -397,7 +399,13 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                       className="text-xs font-medium text-gray-400"
                       title={getFullTimestamp(post.created_at)}
                     >
-                      {formatTimestamp(post.created_at)}
+                      {formatTimestamp(post.created_at, now)}
+                      {post.updated_at && new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() && (
+                        <>
+                          <span className="mx-1">•</span>
+                          <span>Edited</span>
+                        </>
+                      )}
                     </span>
                 </div>
 
@@ -603,8 +611,10 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                     </motion.div>
                 ) : visibleReviews.map((review) => {
                     const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
-                    const timeLabel = formatTimestamp(review.created_at);
+                    const timeLabel = formatTimestamp(review.created_at, now);
                     const fullTime = getFullTimestamp(review.created_at);
+                    const isReviewEdited = review.updated_at && 
+                      new Date(review.updated_at).getTime() > new Date(review.created_at).getTime();
 
                     return (
                         <motion.div 
@@ -634,6 +644,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                       title={fullTime}
                                     >
                                       {timeLabel}
+                                      {isReviewEdited && (
+                                        <>
+                                          <span className="mx-1">•</span>
+                                          <span>Edited</span>
+                                        </>
+                                      )}
                                     </span>
                                 </div>
 

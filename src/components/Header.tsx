@@ -196,8 +196,8 @@ export function Header({
               onClick={onLogoClick}
               className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
             >
-              <img src="/icons/logo-rater.svg" alt="Rater Logo" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" />
-              <img src="/icons/logo-rater-hover.svg" alt="Rater Logo Hover" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
+              <img src="/icons/rater-logo-transparent-bg-stroked.svg" alt="Rater Logo" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" />
+              <img src="/icons/rater-logo-black-bg.svg" alt="Rater Logo Hover" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
             </Link>
           ) : (
             <Link 
@@ -327,6 +327,15 @@ export function Header({
 
         {showWidgets && (
         <div className={`flex items-center gap-2 shrink-0 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+            <motion.button 
+              layoutId="mobile-search-circle"
+              onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
+              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group overflow-hidden"
+              style={{ borderRadius: 9999 }}
+            >
+              <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
+            </motion.button>
+
             <div className="flex items-center gap-2">
                 {currentAvatar ? null : (
                     <div className="flex items-center gap-2">
@@ -348,7 +357,7 @@ export function Header({
                 )}
 
                 {currentAvatar && (
-                    <div className="relative ml-1 sm:ml-2 flex xs:hidden min-[769px]:flex">
+                    <div className="relative ml-1 sm:ml-2 flex xs:hidden min-[769px]:flex items-center gap-2">
                         <Button
                             variant="outline" 
                             onClick={onPostClick}
@@ -365,30 +374,11 @@ export function Header({
                     </div>
                 )}
             </div>
-
-            <motion.button 
-              layoutId="mobile-search-circle"
-              onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
-              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group overflow-hidden"
-              style={{ borderRadius: 9999 }}
-            >
-              <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
-            </motion.button>
         </div>
         )}
 
         {showWidgets && (
         <div className={`hidden xs:flex min-[769px]:hidden flex-1 justify-end items-center gap-3 relative z-40 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
-            {currentAvatar && (
-                <Button
-                    variant="outline" 
-                    onClick={onPostClick}
-                    className="h-11 sm:h-12 rounded-full px-4 sm:px-5 text-base sm:text-lg font-medium gap-2 group transition-all duration-300"
-                >
-                    <CloudUpload strokeWidth={2.25} className="h-5 w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
-                    <span className="flex items-center">Post</span>
-                </Button>
-            )}
             <motion.button 
                 layoutId="tablet-search-pill"
                 onClick={() => onMobileSearchOpen?.('tablet-search-pill')}
@@ -411,6 +401,16 @@ export function Header({
                     </div>
                 </div>
             </motion.button>
+            {currentAvatar && (
+                <Button
+                    variant="outline" 
+                    onClick={onPostClick}
+                    className="h-11 sm:h-12 rounded-full px-4 sm:px-5 text-base sm:text-lg font-medium gap-2 group transition-all duration-300"
+                >
+                    <CloudUpload strokeWidth={2.25} className="h-5 w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
+                    <span className="flex items-center">Post</span>
+                </Button>
+            )}
         </div>
         )}
       </div>

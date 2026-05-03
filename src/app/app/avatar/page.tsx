@@ -23,7 +23,7 @@ export default function MyAvatarPage() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
         <div className="flex items-center justify-center mb-6">
-          <img src="/icons/logo-rater.svg" alt="" className="w-20 h-20 opacity-50" />
+          <img src="/icons/rater-logo-transparent-bg-stroked.svg" alt="" className="w-20 h-20 opacity-50" />
         </div>
         <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Identity required</h2>
         <p className="text-gray-500 mb-10 max-w-[280px]">Access your personal profile, posts, and saved favorites by logging in.</p>

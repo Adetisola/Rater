@@ -6,7 +6,7 @@
  * - EDIT mode: icons with dropdown (Edit / Remove), plus inline link suggestions.
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { SOCIAL_ICON_MAP } from './SocialIcons';
 import {
   detectFirstEligibleLink,
