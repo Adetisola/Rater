@@ -108,13 +108,12 @@ export function MobileSearchOverlay({
         searchInputRef.current?.focus();
       }, 400);
 
-      const handlePopState = (e: PopStateEvent) => {
-        e.preventDefault();
+      const handlePopState = () => {
+        // Just close the overlay. By not calling preventDefault(), 
+        // we allow the popstate to continue to the restoration system.
         onClose();
-        window.history.pushState(null, '', window.location.href);
       };
 
-      window.history.pushState(null, '', window.location.href);
       window.addEventListener('popstate', handlePopState);
 
       return () => {
@@ -135,7 +134,7 @@ export function MobileSearchOverlay({
         ? `/@${currentAvatar.username}` 
         : `/@${avatar.username}`;
       window.dispatchEvent(new Event('app-navigation-start'));
-      router.push(href);
+      router.push(href, { scroll: false });
     }
   };
 

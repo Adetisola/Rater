@@ -114,7 +114,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
     new Date(post.updated_at).getTime() > new Date(post.created_at).getTime();
 
   return (
-    <Link href={`/app/post/${post.id}`} className="group relative break-inside-avoid block">
+    <Link href={`/app/post/${post.id}`} scroll={false} className="group relative break-inside-avoid block">
       <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
         <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
             <div 
@@ -207,7 +207,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         e.preventDefault();
                         e.stopPropagation();
                         if (avatar?.username) {
-                            router.push(`/@${avatar.username}`);
+                            router.push(`/@${avatar.username}`, { scroll: false });
                         }
                     }}
                 >

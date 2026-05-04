@@ -165,28 +165,10 @@ function GlobalLoaderContent() {
       } catch (err) {}
     };
 
-    // B. Intercept history.pushState (for router.push)
-    const originalPush = window.history.pushState;
-    window.history.pushState = function(...args) {
-      const url = args[2];
-      if (url) handleNavigationIntent(url.toString());
-      return originalPush.apply(this, args);
-    };
-
-    // C. Intercept history.replaceState (for router.replace)
-    const originalReplace = window.history.replaceState;
-    window.history.replaceState = function(...args) {
-      const url = args[2];
-      if (url) handleNavigationIntent(url.toString());
-      return originalReplace.apply(this, args);
-    };
-
     document.addEventListener("click", handleAnchorClick, true);
 
     return () => {
       document.removeEventListener("click", handleAnchorClick, true);
-      window.history.pushState = originalPush;
-      window.history.replaceState = originalReplace;
     };
   }, []);
 

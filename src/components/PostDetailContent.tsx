@@ -469,6 +469,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 <div className="flex items-center justify-between">
                     <Link 
                         href={`/@${currentAvatar && post.avatar_id === currentAvatar.id ? currentAvatar.username : (avatar?.username ?? post.avatar_id)}`}
+                        scroll={false}
                         className="flex items-center gap-3 group/author"
                     >
                         <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">

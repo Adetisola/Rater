@@ -36,7 +36,7 @@ export default function MyAvatarPage() {
             >
                 Login/Sign up
             </Button>
-            <Link href="/app/browse" className="flex-1">
+            <Link href="/app/browse" scroll={false} className="flex-1">
               <Button className='h-12 px-8 rounded-full text-lg font-medium' variant="outline">Browse</Button>
             </Link>
         </div>

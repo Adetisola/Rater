@@ -126,7 +126,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                         onClose={onClose} 
                         onCreate={async () => {
                             onClose();
-                            router.push('/app/browse');
+                            router.push('/app/browse', { scroll: false });
                         }} 
                     />
                 </div>

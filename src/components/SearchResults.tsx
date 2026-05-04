@@ -301,6 +301,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
   return (
     <Link
       href={`/app/post/${post.id}`}
+      scroll={false}
       onClick={onClick}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start cursor-pointer"
     >

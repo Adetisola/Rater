@@ -42,7 +42,7 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
       // If we are on the post detail page, redirect to browse
       if (pathname.includes(`/app/post/${postId}`)) {
         window.dispatchEvent(new Event('app-navigation-start'));
-        router.push('/app/browse');
+        router.push('/app/browse', { scroll: false });
       }
       onClose();
       showUndoToast(postId);

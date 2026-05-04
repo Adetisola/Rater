@@ -44,7 +44,7 @@ export function FloatingPostButton() {
                 variant="outline" 
                 onClick={() => {
                   window.dispatchEvent(new Event('app-navigation-start'));
-                  router.push('/app/submit');
+                  router.push('/app/submit', { scroll: false });
                 }}
                 className={cn(
                     "w-[56px] h-[56px] sm:w-auto sm:h-14 rounded-full px-4 sm:px-6 shadow-2xl border-2 border-[#FEC312] bg-white transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap",

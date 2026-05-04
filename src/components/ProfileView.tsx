@@ -271,7 +271,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
         <h2 className="text-2xl font-semibold mb-4">Avatar not found</h2>
         <p className="text-gray-500 mb-8">The avatar you're looking for doesn't exist.</p>
-        <Link href="/app/browse">
+        <Link href="/app/browse" scroll={false}>
           <Button variant="outline" className="h-12 rounded-full px-8 text-lg">Back to Browse</Button>
         </Link>
       </div>
@@ -827,7 +827,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                 <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
                 <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
                 {isMe && (
-                  <Link href="/app/submit">
+                  <Link href="/app/submit" scroll={false}>
                     <Button variant="primary" className="h-12 px-8 rounded-full">Post your work</Button>
                   </Link>
                 )}
@@ -865,7 +865,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             onConfirm={() => {
                 logout();
                 setShowLogoutConfirm(false);
-                router.push('/app/browse');
+                router.push('/app/browse', { scroll: false });
             }} 
         />
       )}

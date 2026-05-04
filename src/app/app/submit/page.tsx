@@ -12,7 +12,7 @@ export default function AppSubmitPage() {
     <>
       <Header 
         onPostClick={() => {}} 
-        onLogoClick={() => router.push('/app/browse')} 
+        onLogoClick={() => router.push('/app/browse', { scroll: false })} 
         searchQuery={""}
         onSearchChange={() => {}}
         sortBy={"balanced"}

@@ -126,7 +126,7 @@ export function Header({
         ? `/@${currentAvatar.username}` 
         : `/@${avatar.username}`;
       window.dispatchEvent(new Event('app-navigation-start'));
-      router.push(href);
+      router.push(href, { scroll: false });
     }
   };
 
@@ -193,6 +193,7 @@ export function Header({
           {(!currentAvatar || hideControls) ? (
             <Link 
               href="/app/browse"
+              scroll={false}
               onClick={onLogoClick}
               className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
             >
@@ -202,6 +203,7 @@ export function Header({
           ) : (
             <Link 
                 href={`/@${currentAvatar.username}`}
+                scroll={false}
                 className="flex items-center gap-3 md:p-1.5 md:pr-4 rounded-full bg-white hover:bg-surface transition-all group"
             >
                 <div 
