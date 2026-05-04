@@ -22,7 +22,6 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
   
   // Refs to track navigation state without triggering re-renders
   const isRestoring = useRef(false);
-  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Force manual control
   useEffect(() => {
