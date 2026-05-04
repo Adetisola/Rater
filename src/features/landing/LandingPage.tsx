@@ -8,7 +8,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Hero } from './sections/Hero';
-import { useScrollToTop } from '../../hooks/useScrollToTop';
 
 const yellowMeshBg = '/assets/landing/Yellow mesh gradient background.jpg';
 const loaderLogoAnim = '/assets/icons/Rater Logo Black Animation.svg';
@@ -30,9 +29,6 @@ export function LandingPage() {
   const [dots, setDots] = useState('');
 
   const [activeSection, setActiveSection] = useState<string | null>(null);
-
-  // Force scroll to top on mount (prevents scroll restoration flicker)
-  useScrollToTop();
 
   // Progressively cycle loader dots for subtle motion
   useEffect(() => {

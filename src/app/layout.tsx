@@ -38,6 +38,7 @@ import { TimeProvider } from "../context/TimeContext";
 import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
 import { GlobalOverlays } from "../components/GlobalOverlays";
 import { PWARegistry } from "../components/PWARegistry";
+import { ScrollRestorationProvider } from "../components/ScrollRestorationProvider";
 
 export default function RootLayout({
   children,
@@ -53,10 +54,12 @@ export default function RootLayout({
         <AuthProvider>
           <PostProvider>
             <TimeProvider>
-              <PWARegistry />
-              <GlobalRouteLoader />
-              <GlobalOverlays />
-              {children}
+              <ScrollRestorationProvider>
+                <PWARegistry />
+                <GlobalRouteLoader />
+                <GlobalOverlays />
+                {children}
+              </ScrollRestorationProvider>
             </TimeProvider>
           </PostProvider>
         </AuthProvider>

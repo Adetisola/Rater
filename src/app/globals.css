@@ -5,7 +5,6 @@
 
 @layer base {
   html {
-    scroll-behavior: smooth;
     scroll-padding-top: 90px; /* offset for sticky navbar height */
   }
 

@@ -21,7 +21,6 @@ import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import { type SocialLink, getBioParts, formatDisplayUrl } from '../logic/socialLinksUtils';
-import { useScrollRestoration } from '../hooks/useScrollRestoration';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -114,9 +113,6 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
-  
-  // Scroll Restoration
-  useScrollRestoration('profile-' + avatarId);
 
   // Find the avatar to display
   const targetAvatar = allAvatars[avatarId];
