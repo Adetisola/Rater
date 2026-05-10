@@ -131,7 +131,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
           >
             {/* Header */}
             <div className="w-full flex justify-between items-center mb-6">
-              <h3 className="font-semibold text-lg text-black">Share Profile</h3>
+              <h3 className="font-medium text-lg text-black">Share Profile</h3>
               <button 
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-gray-50"
@@ -164,7 +164,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
             </div>
 
             <div className="text-center mb-8">
-              <p className="text-[17px] font-bold text-black mb-1">@{username}</p>
+              <p className="text-base font-semibold text-black mb-1">@{username}</p>
               <p className="text-sm text-gray-500 font-medium">rater-web.vercel.app/@{username}</p>
             </div>
 

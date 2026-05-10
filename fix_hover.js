@@ -7,7 +7,7 @@ let content = fs.readFileSync(filePath, 'utf8');
 // 1. Add group/card conditional to Link className
 content = content.replace(
   'className="group relative break-inside-avoid block"',
-  'className={`group ${!hasError ? \\'group/card\\' : \\'\\'} relative break-inside-avoid block`}'
+  "className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}"
 );
 
 // 2. We only want to replace group-hover: classes in the bottom half of the file (after line 192).

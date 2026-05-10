@@ -386,7 +386,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                  </div>
 
                  <div className="pt-4 flex items-center justify-center gap-6 w-full">
-                     <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-sm text-black font-medium">Cancel</Button>
+                     <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
                      <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
                         Continue
                      </Button>

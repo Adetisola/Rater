@@ -498,27 +498,32 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
         {/* Info */}
         <div className="flex-1 text-center md:text-left pt-2 min-w-0">
-          <div className="flex flex-col items-center md:flex-row md:items-start gap-2 md:gap-3.5 mb-3 min-w-0">
+          <div className="flex flex-col items-center md:items-start gap-1 mb-3 min-w-0">
             {/* USERNAME + DISPLAY NAME */}
             <div className="min-w-0">
               {editState !== 'idle' ? (
                 <div className="flex flex-col gap-1.5 mb-2">
                   {/* Display Name */}
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    disabled={editState === 'saving'}
-                    placeholder="Display Name"
-                    maxLength={50}
-                    className={cn(
-                      "text-3xl font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-black w-full placeholder:text-gray-300",
-                      editName.length > 50 && "text-red-500 border-red-300"
-                    )}
-                  />
+                  <div className="relative group">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      disabled={editState === 'saving'}
+                      placeholder="Display Name"
+                      maxLength={50}
+                      className={cn(
+                        "text-xl font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-black w-full placeholder:text-gray-300 pr-12",
+                        editName.length > 50 && "text-red-500 border-red-300"
+                      )}
+                    />
+                    <span className="absolute right-0 bottom-1 text-[10px] font-medium text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                      {editName.length}/50
+                    </span>
+                  </div>
                   {/* Username */}
-                  <div className="relative flex items-center gap-1.5 mt-1">
+                  <div className="relative flex items-center gap-1.5 mt-1 group">
                     <AtSign className="w-4 h-4 text-gray-400 shrink-0" />
                     <input
                       ref={usernameInputRef}
@@ -531,12 +536,15 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                       placeholder="username"
                       maxLength={20}
                       className={cn(
-                        "text-[15px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-600 placeholder:text-gray-300 flex-1",
+                        "text-[15px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-600 placeholder:text-gray-300 flex-1 pr-12",
                         usernameValidation.status === 'taken' && "text-red-500 border-red-300 focus:border-red-400",
                         usernameValidation.status === 'valid' && "border-green-300 focus:border-green-400",
                         usernameValidation.status === 'cooldown' && "text-amber-600 border-amber-300"
                       )}
                     />
+                    <span className="absolute right-0 bottom-1 text-[10px] font-medium text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                      {editUsername.length}/20
+                    </span>
                     {/* Validation indicator */}
                     {usernameValidation.status === 'checking' && (
                       <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin shrink-0" />
@@ -583,69 +591,91 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   )}
                 </div>
               ) : (
-                <>
-                  <h1 className="text-3xl font-medium text-black tracking-tight truncate">
+                <div className="flex flex-col items-center md:flex-row md:items-baseline md:gap-2">
+                  <h1 className="text-xl font-medium text-black tracking-tight truncate">
                     {targetAvatar.name}
                   </h1>
-                  <p className="text-[15px] text-gray-400 font-medium mt-0.5">@{targetAvatar.username}</p>
-                </>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[15px] text-gray-400 font-medium">@{targetAvatar.username}</p>
+                    {isMe && editState === 'idle' && (
+                      <button 
+                        onClick={startEditing}
+                        className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
-            <div className="flex items-center justify-center md:justify-start gap-2 md:mt-[6px]">
+            <div className="flex items-center justify-center md:justify-start gap-2 w-full">
               {editState !== 'idle' ? (
-                <input
-                  type="text"
-                  value={editRole}
-                  onChange={(e) => setEditRole(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={editState === 'saving'}
-                  placeholder="Role"
-                  className={cn(
-                    "text-[16px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-900 max-w-[140px] placeholder:text-gray-300",
-                    editRole.length > 50 && "text-red-500 border-red-300 focus:border-red-400"
-                  )}
-                />
+                <div className="relative w-full max-w-md group">
+                  <input
+                    type="text"
+                    value={editRole}
+                    onChange={(e) => setEditRole(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={editState === 'saving'}
+                    placeholder="Role"
+                    maxLength={50}
+                    className={cn(
+                      "text-[16px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-900 w-full placeholder:text-gray-300 pr-12",
+                      editRole.length > 50 && "text-red-500 border-red-300 focus:border-red-400"
+                    )}
+                  />
+                  <span className="absolute right-0 bottom-1 text-[10px] font-medium text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                    {editRole.length}/50
+                  </span>
+                </div>
               ) : (
                 <span className="text-[16px] font-medium text-gray-400">
                   {targetAvatar.role || 'Designer'}
                 </span>
               )}
-              {isMe && editState === 'idle' && (
-                <button 
-                  onClick={startEditing}
-                  className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
+              {/* Joined badge - Desktop only here */}
+              {editState === 'idle' && (
+                <span className="hidden md:inline-flex px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider ml-1 self-center">
+                  Joined {joinedDate}
+                </span>
               )}
             </div>
           </div>
 
-          <div className="flex gap-2 justify-center md:justify-start mb-6">
-            <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider">
-              Joined {joinedDate}
-            </span>
-          </div>
+          {editState === 'idle' && (
+            <div className="flex gap-2 justify-center md:hidden mb-6">
+              <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider">
+                Joined {joinedDate}
+              </span>
+            </div>
+          )}
 
           <div className="max-w-lg mb-8 text-center md:text-left text-[15px]">
             {editState !== 'idle' ? (
-              <textarea
-                value={editBio}
-                onChange={(e) => {
-                  setEditBio(e.target.value);
-                  e.target.style.height = 'auto';
-                  e.target.style.height = `${e.target.scrollHeight}px`;
-                }}
-                disabled={editState === 'saving'}
-                placeholder="Tell us about yourself..."
-                className={cn(
-                  "w-full bg-transparent leading-relaxed resize-none outline-none border border-transparent rounded-lg p-3 -ml-3 -mt-3 transition-all text-gray-900 overflow-hidden",
-                  "focus:bg-gray-50",
-                  editBio.length > 200 && "text-red-500 focus:border-red-300 focus:bg-red-50",
-                  editState === 'saving' && "opacity-70 pointer-events-none"
-                )}
-                rows={Math.max(3, editBio.split('\n').length)}
-              />
+              <div className="relative group">
+                <textarea
+                  value={editBio}
+                  onChange={(e) => {
+                    setEditBio(e.target.value);
+                    e.target.style.height = 'auto';
+                    e.target.style.height = `${e.target.scrollHeight}px`;
+                  }}
+                  disabled={editState === 'saving'}
+                  placeholder="Tell us about yourself..."
+                  maxLength={200}
+                  className={cn(
+                    "w-full bg-transparent leading-relaxed resize-none outline-none border border-transparent rounded-lg p-3 -ml-3 transition-all text-gray-900 overflow-hidden pb-8",
+                    "focus:bg-gray-50",
+                    editBio.length > 200 && "text-red-500 focus:border-red-300 focus:bg-red-50",
+                    editState === 'saving' && "opacity-70 pointer-events-none"
+                  )}
+                  rows={Math.max(3, editBio.split('\n').length)}
+                />
+                <div className="absolute right-6 bottom-2 text-[10px] font-medium text-gray-400 pointer-events-none pb-2 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                  {editBio.length}/200
+                </div>
+              </div>
              ) : (
                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
                   {targetAvatar.bio ? (
@@ -716,7 +746,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-2 flex items-start gap-1.5 justify-center md:justify-start overflow-hidden"
                 >
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-medium text-gray-500">
+                  <div className="flex items-center md:mt-2 gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-medium text-gray-500">
                     <span className="text-sm leading-none">💡</span>
                     <span>Tip: Paste your social links in your bio to add them as social links e.g. www.instagram.com/yourusername</span>
                   </div>

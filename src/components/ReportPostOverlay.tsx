@@ -122,7 +122,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                     <Button 
                         variant="ghost"
                         onClick={onClose}
-                        className="h-12 px-6 rounded-full text-lg font-medium text-gray-500 transition-all"
+                        className="h-12 px-6 rounded-full text-base font-medium text-gray-500 transition-all"
                     >
                         Cancel
                     </Button>

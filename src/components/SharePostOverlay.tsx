@@ -61,7 +61,6 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
         
         <h2 className="text-2xl font-semibold text-black mb-2">Share this Post</h2>
         <p className="text-sm text-gray-500 mb-2">Help others review or learn from this design.</p>
-        <p className="text-xs text-[#a77d00] font-medium mb-8">Attribution is claimed by the submitter.</p>
 
         {/* URL Input */}
         <div className="flex items-center gap-2 border-2 border-[#111111] rounded-xl px-4 py-3 mb-6">
@@ -76,7 +75,7 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
         <div className="flex items-center justify-center gap-4 mb-8">
             <Button 
                 variant="ghost"
-                className="h-10 px-6 rounded-full text-sm font-medium transition-all"
+                className="h-10 px-6 rounded-full text-base font-medium transition-all"
                 onClick={onClose}
             >
                 Close
