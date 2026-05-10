@@ -20,14 +20,16 @@ import { sharePost } from '../lib/postActions';
 
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
+import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
+import { useNavigationStore } from '../store/navigationStore';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
-import { motion, useMotionValue } from 'framer-motion';
+import { motion, useMotionValue, useAnimation, type PanInfo } from 'framer-motion';
 import { 
     ArrowLeft, 
     Download, 
@@ -36,7 +38,10 @@ import {
     Check, 
     X, 
     Plus, 
-    Minus 
+    Minus,
+    Lock,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
@@ -45,9 +50,113 @@ const RATE_LIMIT_KEY = 'rater_review_timestamps';
 interface PostDetailOverlayProps {
   post: Post;
   onClose?: () => void;
+  onDisableSwipe?: (disabled: boolean) => void;
 }
 
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const { posts } = usePosts();
+  const nextPostId = useNavigationStore(state => state.getNextPostId(post.id));
+  const prevPostId = useNavigationStore(state => state.getPrevPostId(post.id));
+  
+  const nextPost = useMemo(() => posts.find(p => p.id === nextPostId), [nextPostId, posts]);
+  const prevPost = useMemo(() => posts.find(p => p.id === prevPostId), [prevPostId, posts]);
+
+  const router = useRouter();
+  const pageX = useMotionValue(0);
+  const controls = useAnimation();
+
+  const handleDragEnd = async (_e: any, info: PanInfo) => {
+    document.body.style.overflow = '';
+    const threshold = window.innerWidth * 0.25;
+    const velocityThreshold = 500;
+    
+    const isRightSwipe = info.offset.x > threshold || info.velocity.x > velocityThreshold;
+    const isLeftSwipe = info.offset.x < -threshold || info.velocity.x < -velocityThreshold;
+
+    if (isRightSwipe && prevPostId) {
+      await controls.start({ x: window.innerWidth, transition: { type: 'spring', bounce: 0, duration: 0.3 } });
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.replace(`/app/post/${prevPostId}`, { scroll: false });
+    } 
+    else if (isLeftSwipe && nextPostId) {
+      await controls.start({ x: -window.innerWidth, transition: { type: 'spring', bounce: 0, duration: 0.3 } });
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.replace(`/app/post/${nextPostId}`, { scroll: false });
+    } 
+    else {
+      controls.start({ x: 0, transition: { type: 'spring', bounce: 0.1, duration: 0.4 } });
+    }
+  };
+
+  useEffect(() => {
+    controls.set({ x: 0 });
+    pageX.set(0);
+  }, [post.id, controls, pageX]);
+
+  useEffect(() => {
+    const unsubscribe = pageX.on("change", (v) => {
+      if (Math.abs(v) > 5) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+    return () => {
+      unsubscribe();
+      document.body.style.overflow = '';
+    };
+  }, [pageX]);
+
+  const [isSwipeDisabled, setIsSwipeDisabled] = useState(false);
+
+  if (!isMobile) {
+    return <PostDetailCore post={post} onClose={onClose} />;
+  }
+
+  return (
+    <div className="relative w-full min-h-screen overflow-hidden bg-black">
+      <motion.div
+        drag={isMobile && !isSwipeDisabled ? "x" : false}
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={1}
+        onDragEnd={handleDragEnd}
+        style={{ x: pageX, touchAction: 'pan-y' }}
+        animate={controls}
+        className="flex w-full min-h-screen"
+      >
+        {/* Previous Post */}
+        {prevPost && (
+          <div className="w-screen shrink-0 absolute left-[-100vw] top-0 h-full pointer-events-none">
+            <PostDetailCore post={prevPost} isAdjacent />
+          </div>
+        )}
+
+        {/* Current Post */}
+        <div className="w-screen shrink-0 relative z-10">
+          <PostDetailCore post={post} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
+        </div>
+
+        {/* Next Post */}
+        {nextPost && (
+          <div className="w-screen shrink-0 absolute left-[100vw] top-0 h-full pointer-events-none">
+            <PostDetailCore post={nextPost} isAdjacent />
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
+export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
   const { currentAvatar, allAvatars } = useAuth();
   const { posts } = usePosts();
   const now = useNow();
@@ -65,6 +174,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [isSelfPost, setIsSelfPost] = useState(false);
   const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
   const [isFetchingReviews, setIsFetchingReviews] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   // External Metadata (Badges, Hot Status)
   const { badgeMap } = useBadges(posts);
@@ -124,6 +234,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
   const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
+
+  useEffect(() => {
+    if (onDisableSwipe) {
+      onDisableSwipe(isImageFullscreen || isReportOpen || isShareOpen);
+    }
+  }, [isImageFullscreen, isReportOpen, isShareOpen, onDisableSwipe]);
   
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -180,6 +296,62 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   useEffect(() => {
     setVisibleCount(REVIEWS_PER_PAGE);
   }, [sortBy]);
+
+  // Contextual Navigation
+  const nextPostId = useNavigationStore(state => state.getNextPostId(post.id));
+  const prevPostId = useNavigationStore(state => state.getPrevPostId(post.id));
+
+  const handleNext = useCallback((e?: React.MouseEvent | KeyboardEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (nextPostId) {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.replace(`/app/post/${nextPostId}`, { scroll: false });
+    }
+  }, [nextPostId, router]);
+
+  const handlePrev = useCallback((e?: React.MouseEvent | KeyboardEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (prevPostId) {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.replace(`/app/post/${prevPostId}`, { scroll: false });
+    }
+  }, [prevPostId, router]);
+
+  // Keyboard Navigation
+  useEffect(() => {
+    if (isAdjacent) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isImageFullscreen || isReportOpen || isShareOpen) return;
+      const target = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA'].includes(target.tagName)) return;
+
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'ArrowLeft') handlePrev();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleNext, handlePrev, isImageFullscreen, isReportOpen, isShareOpen, isAdjacent]);
+
+  // Preload adjacent images
+  useEffect(() => {
+    if (nextPostId) {
+      const p = posts.find(p => p.id === nextPostId);
+      if (p?.image_url) new Image().src = p.image_url;
+    }
+    if (prevPostId) {
+      const p = posts.find(p => p.id === prevPostId);
+      if (p?.image_url) new Image().src = p.image_url;
+    }
+  }, [nextPostId, prevPostId, posts]);
+
+  // Scroll to top on mount/post change
+  useEffect(() => {
+    if (!isAdjacent) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [post.id, isAdjacent]);
+
+
 
   // Merged Collection
   const allReviews = useMemo(() => {
@@ -281,16 +453,16 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
+      initial={{ opacity: (isAdjacent || disableEntryAnimation) ? 1 : 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="w-full bg-white relative"
+      className="w-full bg-white relative min-h-screen"
     >
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         
-        {/* HEADER: Back Button */}
-        <div className="mb-8">
+        {/* HEADER: Back Button & Navigation Controls */}
+        <div className="mb-8 flex items-center justify-between">
             <Button 
                 variant="secondary" 
                 onClick={handleClose}
@@ -299,6 +471,28 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 <ArrowLeft className="w-5 h-5 text-black" />
                 Back
             </Button>
+
+            {/* Desktop Navigation Controls */}
+            <div className="hidden md:flex items-center gap-2">
+                <Button
+                    variant="secondary"
+                    onClick={handlePrev}
+                    disabled={!prevPostId}
+                    className="w-10 h-10 p-0 rounded-full border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
+                    aria-label="Previous post"
+                >
+                    <ChevronLeft className="w-5 h-5 text-black" />
+                </Button>
+                <Button
+                    variant="secondary"
+                    onClick={handleNext}
+                    disabled={!nextPostId}
+                    className="w-10 h-10 p-0 rounded-full border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
+                    aria-label="Next post"
+                >
+                    <ChevronRight className="w-5 h-5 text-black" />
+                </Button>
+            </div>
         </div>
 
         {/* MAIN GRID */}
@@ -309,27 +503,41 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                 
                 {/* 1. Image Preview */}
                 <div 
-                    className="group relative w-full aspect-auto xs:aspect-video rounded-[32px] overflow-hidden bg-gray-50 cursor-zoom-in"
-                    onClick={() => setIsImageFullscreen(true)}
+                    className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-auto xs:aspect-video'} rounded-[32px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                    onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
                 >
-                    <img 
-                        src={post.image_url} 
-                        alt={post.title} 
-                        className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500 group-hover:scale-105" 
-                    />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span className="text-white font-bold text-sm bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
-                            Click to view full image
-                        </span>
-                    </div>
+                    {imageError ? (
+                      <ImageFallback
+                        src={post.image_url}
+                        alt={post.title}
+                        className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500"
+                        fallbackClassName="w-full h-full rounded-[32px]"
+                        onErrorChange={(err) => setImageError(err)}
+                      />
+                    ) : (
+                      <>
+                        <img 
+                            src={post.image_url} 
+                            alt={post.title} 
+                            className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500" 
+                            onError={() => setImageError(true)}
+                        />
+                        <div className="absolute inset-0 bg-transparent opacity-0 group-hover:opacity-100 duration-300 flex items-center justify-center">
+                            <span className="text-black font-semibold text-sm bg-white/80 px-4 py-2 rounded-full backdrop-blur-md">
+                                View Full Image
+                            </span>
+                        </div>
+                      </>
+                    )}
+
                     
                     {/* Action Buttons */}
                     <div className="absolute top-6 right-6 z-20">
                         <PostActionsMenu 
                             post={post} 
                             className="flex gap-3"
-                            buttonClassName="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:scale-105 transition-transform text-black"
-                            iconSizeClass="w-5 h-5"
+                            buttonClassName="w-12 h-12 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
+                            iconSizeClass="w-6 h-6"
                             onReport={() => setIsReportOpen(true)}
                         />
                     </div>
@@ -348,7 +556,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                 onClick={() => setIsTopRatedTooltipVisible(!isTopRatedTooltipVisible)}
                             >
                                 <span 
-                                    className="text-[10px] font-bold uppercase tracking-wider text-[#111111] px-2.5 py-1 rounded-full flex items-center gap-1 border-2 border-transparent"
+                                    className="text-[10px] font-bold uppercase tracking-wider text-black px-2.5 py-1 rounded-full flex items-center gap-1 border-2 border-transparent"
                                     style={{
                                         background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
                                     }}
@@ -411,7 +619,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* 3. Title */}
                 <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-xl xs:text-2xl font-semibold text-[#111111] leading-tight">
+                    <h1 className="text-xl xs:text-xl font-semibold text-black leading-tight">
                         {post.title}
                     </h1>
                     <div 
@@ -419,7 +627,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         className="relative group/tooltip cursor-help"
                         onClick={() => setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible)}
                     >
-                        <span className="text-sm font-medium sm:font-semibold text-black flex items-center">
+                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center">
                             {isHot && (
                                 <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                     {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -451,13 +659,13 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* 4. Description */}
                 <div>
-                    <p className={`text-base text-gray-600 leading-relaxed transition-all duration-300 ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                    <p className={`text-sm text-gray-600 leading-relaxed transition-all duration-300 ${!isExpanded ? 'line-clamp-3' : ''}`}>
                         {post.description}
                     </p>
                     {post.description.length > 160 && (
                         <button 
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="text-xs font-bold text-[#111111] mt-3 flex items-center gap-1.5 hover:text-[#FEC312] transition-colors uppercase tracking-widest group"
+                            className="text-xs font-bold text-black mt-3 flex items-center gap-1.5 hover:text-[#FEC312] transition-colors uppercase tracking-widest group"
                         >
                             <span>{isExpanded ? 'Show Less' : 'Read more'}</span>
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} group-hover:translate-y-0.5`} />
@@ -479,15 +687,21 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                 alt="Avatar" 
                             />
                         </div>
-                        <div className="text-left">
-                            <span className="block text-sm font-semibold text-[#111111] group-hover/author:text-[#FEC312] transition-colors">{avatar?.name || 'Unknown'}</span>
-                            <span className="block text-[10px] text-gray-400 font-medium tracking-wider">View Profile</span>
+                        <div className="text-left flex flex-col min-w-0">
+                            <span className="block text-sm font-semibold text-black group-hover/author:text-[#FEC312] transition-colors truncate">{avatar?.name || 'Unknown'}</span>
+                            <span className="block text-[10px] text-gray-400 font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
                         </div>
                     </Link>
 
                     <div className="flex items-center gap-2">
                          {!metrics?.rating_unlocked ? (
-                             <span className="text-xs xs:text-sm font-bold text-[#009241]">Rating Unlocks at 3 Reviews</span>
+                             <div className="relative group/lock cursor-help flex items-center gap-1.5 pl-2">
+                                 <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
+                                 <Lock className="w-4 h-4 text-gray-400 group-hover/lock:text-gray-500 transition-colors" />
+                                 <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
+                                     <p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>
+                                 </div>
+                             </div>
                          ) : (
                              <>
                                 <div className="flex gap-1">
@@ -500,7 +714,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                         />
                                     ))}
                                 </div>
-                                <span className="text-2xl font-semibold text-[#111111]">{metrics.average_score}</span>
+                                <span className="text-2xl font-semibold text-black">{metrics.average_score}</span>
                              </>
                          )}
                     </div>
@@ -565,7 +779,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
         {/* BOTTOM SECTION: Reviews List */}
         <div className="border-t border-gray-100 pt-8 xs:pt-12">
             <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-2xl font-semibold text-[#111111]">Reviews ({allReviews.length})</h2>
+                <h2 className="text-2xl font-semibold text-black">Reviews ({allReviews.length})</h2>
                 
                 <div className="relative">
                     <button 
@@ -582,7 +796,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                 <button
                                     key={option}
                                     onClick={() => { setSortBy(option); setIsSortOpen(false); }}
-                                    className={`w-full text-left px-4 py-3 text-sm font-semibold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-[#111111]'}`}
+                                    className={`w-full text-left px-4 py-3 text-sm font-semibold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-black'}`}
                                 >
                                     {option}
                                     {sortBy === option && <Check className="w-4 h-4" />}
@@ -605,7 +819,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         <div className="w-16 h-16 bg-[#FEC312]/10 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Plus className="w-8 h-8 text-[#FEC312]" />
                         </div>
-                        <h3 className="text-xl font-semibold text-[#111111] mb-2">Be the first to rate this design</h3>
+                        <h3 className="text-xl font-semibold text-black mb-2">Be the first to rate this design</h3>
                         <p className="text-gray-500 max-w-xs mx-auto text-[15px] leading-relaxed">
                             Your feedback helps the designer improve and helps the community find the best work.
                         </p>
@@ -634,7 +848,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.reviewer_id || review.reviewer_name || review.id}`} alt="" className="w-full h-full object-cover" />
                                         )}
                                     </div>
-                                    <span className="font-semibold text-base text-[#111111]">{getReviewerDisplayName(review)}</span>
+                                    <span className="font-semibold text-base text-black">{getReviewerDisplayName(review)}</span>
                                     <div className="flex gap-0.5">
                                         {[1,2,3,4,5].map(i => (
                                             <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
@@ -654,32 +868,34 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                                     </span>
                                 </div>
 
-                                {review.comment && <p className="text-sm text-[#111111] leading-relaxed mb-6">{review.comment}</p>}
+                                {review.comment && <p className="text-sm text-black leading-relaxed mb-6">{review.comment}</p>}
 
                                 <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
-                                        <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Clarity">
+                                        <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Clarity">
                                             <img src="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" alt="Clarity" className="w-5 h-5 object-contain" />
                                             {review.clarity}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Purpose">
+                                        <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Purpose">
                                             <img src="https://img.icons8.com/color/96/goal--v1.png" alt="Purpose" className="w-5 h-5 object-contain" />
                                             {review.purpose}
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-md font-semibold text-[#111111]" title="Aesthetics">
+                                        <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Aesthetics">
                                             <img src="https://img.icons8.com/color/96/color-palette.png" alt="Aesthetics" className="w-5 h-5 object-contain" />
                                             {review.aesthetics}
                                         </div>
                                     </div>
+
+
                                     <div className="text-right shrink-0 xs:hidden">
                                         <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                        <div className="text-xl font-semibold md:font-bold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
+                                        <div className="text-xl font-semibold md:font-bold text-black">{ratingAvg.toFixed(1)}/5.0</div>
                                     </div>
                                 </div>
                             </div>
                             <div className="hidden xs:block text-right shrink-0">
                                 <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                <div className="text-xl font-semibold text-[#111111]">{ratingAvg.toFixed(1)}/5.0</div>
+                                <div className="text-xl font-semibold text-black">{ratingAvg.toFixed(1)}/5.0</div>
                             </div>
                         </motion.div>
                     );
@@ -760,9 +976,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
                         else { lastTapRef.current = now; }
                    }}
                />
-          </div>
+           </div>
       )}
     </motion.div>
   );
 }
-

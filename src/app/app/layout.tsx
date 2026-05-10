@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { FloatingPostButton } from "@/components/FloatingPostButton";
 import { Footer } from "@/components/Footer";
 import { BrowseKeepAlive } from "@/components/BrowseKeepAlive";
@@ -10,7 +11,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isBrowse = pathname === "/app/browse" || pathname === "/app/browse/";
 
   return (
-    <div className="min-h-screen w-full min-w-full bg-white flex flex-col font-sans text-[#111111]">
+    <div className="min-h-screen w-full min-w-full bg-white flex flex-col font-sans text-black">
       
       {/* Always-mounted browse layer — never removed from DOM */}
       {/* visibility:hidden keeps it in document flow, preserving scroll position */}
@@ -25,7 +26,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           zIndex: isBrowse ? "auto" : -1,
         }}
       >
-        <BrowseKeepAlive />
+        <Suspense fallback={null}>
+          <BrowseKeepAlive />
+        </Suspense>
       </div>
 
       {/* Other pages render on top when not on browse */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from 'react';
-import BrowseContent from './BrowseContent';
+import BrowseContent from '@/components/BrowseContent';
 
 export default function BrowsePage() {
   return (

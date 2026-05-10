@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { Post } from '../logic/mockData';
 import { PostCard } from './PostCard';
 import { useMasonryColumns } from '../hooks/useMasonryColumns';
+import { useNavigationStore } from '../store/navigationStore';
 
 import type { BadgeType } from '../logic/badgeUtils';
 
@@ -46,6 +47,9 @@ export function MasonryGrid({ posts, badgeMap, hotPostIds, isLoading }: MasonryG
                 post={post} 
                 badge={badgeMap[post.id]} 
                 isHot={hotPostIds.has(post.id)} 
+                onClick={() => {
+                  useNavigationStore.getState().setNavigationContext(posts.map(p => p.id));
+                }}
               />
             ))}
           </div>

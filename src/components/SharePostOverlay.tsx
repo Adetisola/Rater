@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Button } from './ui/Button';
 const whatsappIcon = '/icons/icons8-whatsapp.svg';
 const xIcon = '/icons/icons8-x.svg';
 const linkedinIcon = '/icons/icons8-linkedin.svg';
@@ -58,7 +59,7 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
       {/* Modal Content */}
       <div className="w-full max-w-md bg-white rounded-[32px] p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 text-center">
         
-        <h2 className="text-2xl font-semibold text-[#111111] mb-2">Share this Post</h2>
+        <h2 className="text-2xl font-semibold text-black mb-2">Share this Post</h2>
         <p className="text-sm text-gray-500 mb-2">Help others review or learn from this design.</p>
         <p className="text-xs text-[#a77d00] font-medium mb-8">Attribution is claimed by the submitter.</p>
 
@@ -73,18 +74,19 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
 
         {/* Actions */}
         <div className="flex items-center justify-center gap-4 mb-8">
-            <button 
+            <Button 
+                variant="ghost"
+                className="h-10 px-6 rounded-full text-sm font-medium transition-all"
                 onClick={onClose}
-                className="px-8 py-3 rounded-full text-sm font-semibold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
             >
                 Close
-            </button>
+            </Button>
             <button 
                 onClick={handleCopy}
                 className={`px-8 py-3 rounded-full text-sm font-semibold transition-all duration-500 flex items-center gap-2 ${
                     copied 
                     ? "bg-[#10b981] text-white border-2 border-[#10b981]" 
-                    : "text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white"
+                    : "text-black border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white"
                 }`}
             >
                 {copied ? (

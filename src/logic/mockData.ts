@@ -23,6 +23,8 @@ export type Category =
 export interface Avatar {
   id: string;
   username: string;                  // UNIQUE public handle (URL slug)
+  email: string;                     // UNIQUE email address
+  show_email?: boolean;              // User preference to show email publicly
   name: string;                      // Display name (flexible)
   role: string;                      // public-facing identity label
   avatar_url?: string;
@@ -111,6 +113,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_1': {
     id: 'user_1',
     username: 'timi',
+    email: 'timi@rater.com',
     name: 'Timi',
     role: 'Product Designer',
     avatar_url: 'https://i.ibb.co/4nPVJ9kP/8f726ed71fc83469a1c54aa4cf114282.jpg',
@@ -130,6 +133,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_2': {
     id: 'user_2',
     username: 'sarah_chen',
+    email: 'sarah@rater.com',
     name: 'Sarah Chen',
     role: 'UI/UX Designer',
     avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
@@ -142,6 +146,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_3': {
     id: 'user_3',
     username: 'marcus_j',
+    email: 'marcus@rater.com',
     name: 'Marcus Johnson',
     role: 'Creative Director',
     avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
@@ -154,6 +159,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_4': {
     id: 'user_4',
     username: 'elena_r',
+    email: 'elena@rater.com',
     name: 'Elena Rodriguez',
     role: 'Visual Designer',
     avatar_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150',
@@ -166,6 +172,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_5': {
     id: 'user_5',
     username: 'james_park',
+    email: 'james@rater.com',
     name: 'James Park',
     role: 'Branding Specialist',
     avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
@@ -178,6 +185,7 @@ export const MOCK_AVATARS: Record<string, Avatar> = {
   'user_blocked': {
     id: 'user_blocked',
     username: 'spammer',
+    email: 'spammer@rater.com',
     name: 'Spammer',
     role: 'Designer',
     bg_color: '#999999',
@@ -312,7 +320,7 @@ export const MOCK_POSTS: Post[] = [
     title: 'Creative Agency Logo',
     description: 'Dynamic and playful logomark for a digital creative studio.',
     category: 'Logo Design',
-    image_url: 'https://images.unsplash.com/photo-1626785774625-ddcddc3445e9?auto=format&fit=crop&q=80&w=800',
+    image_url: 'https://images.unsplash.com/photo-1773332585861-72cf1558a6fc?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDF8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1MHx8fGVufDB8fHx8fA%3D%3D',
     avatar_id: 'user_1',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
   },
@@ -374,7 +382,7 @@ export const MOCK_POSTS: Post[] = [
     id: 'post_5',
     title: 'Summer Event Flyer',
     description: 'Bright and energetic flyer design for a summer music festival.',
-    category: 'Flyer Design',
+    category: 'Illustration',
     image_url: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=800',
     avatar_id: 'user_1',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
@@ -384,7 +392,7 @@ export const MOCK_POSTS: Post[] = [
     title: 'Charity Gala Flyer',
     description: 'Elegant invitation design for a black-tie fundraising event.',
     category: 'Flyer Design',
-    image_url: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800',
+    image_url: 'https://images.unsplash.com/photo-1765568562615-4bf854edcf1a?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw2MXx8fGVufDB8fHx8fA%3D%3D',
     avatar_id: 'user_3',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
   },
@@ -465,7 +473,7 @@ export const MOCK_POSTS: Post[] = [
     title: 'Nature Synthesis',
     description: 'AI exploration of bioluminescent flora in a deep forest.',
     category: 'AI Image',
-    image_url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&q=80&w=800',
+    image_url: 'https://plus.unsplash.com/premium_photo-1773954455018-901a7a9f13bc?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHw1NXx8fGVufDB8fHx8fA%3D%3D',
     avatar_id: 'user_2',
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
   },

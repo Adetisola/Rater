@@ -82,10 +82,9 @@ const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; is
 
 interface ProfileViewProps {
   avatarId: string;
-  isOwnProfile?: boolean;
 }
 
-export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps) {
+export function ProfileView({ avatarId }: ProfileViewProps) {
   const { currentAvatar: me, allAvatars, logout, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
@@ -107,6 +106,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
   // Smart Bio Links state
   const [editSocialLinks, setEditSocialLinks] = useState<SocialLink[]>([]);
+  const [editShowEmail, setEditShowEmail] = useState(false);
 
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
 
@@ -188,6 +188,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
     setEditBio(targetAvatar.bio || '');
     setEditName(targetAvatar.name);
     setEditSocialLinks(targetAvatar.social_links ? [...targetAvatar.social_links] : []);
+    setEditShowEmail(targetAvatar.show_email ?? false);
     handleUsernameChange(targetAvatar.username); // reset to current
     setSaveError('');
     setEditState('editing');
@@ -227,6 +228,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
       bio: editBio.trim(),
       name: editName,
       social_links: editSocialLinks,
+      show_email: editShowEmail,
       ...(usernameChanged ? { username: editUsername } : {}),
     });
       
@@ -295,6 +297,18 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
         )}
       </AnimatePresence>
 
+      {/* HEADER: Back Button */}
+      <div className="mb-4 md:mb-8">
+          <Button 
+              variant="secondary" 
+              onClick={() => router.back()}
+              className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+          >
+              <ArrowLeft className="w-5 h-5 text-black" />
+              Back
+          </Button>
+      </div>
+
       {isMe && (
         <div className="md:hidden absolute top-8 right-4 z-40">
             <button 
@@ -347,18 +361,6 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
         </div>
       )}
 
-      {!isOwnProfile && (
-        <div className="mb-8">
-            <Button 
-                variant="secondary" 
-                onClick={() => router.back()}
-                className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
-            >
-                <ArrowLeft className="w-5 h-5 text-black" />
-                Back
-            </Button>
-        </div>
-      )}
 
       {/* Avatar Header */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
@@ -511,7 +513,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                     placeholder="Display Name"
                     maxLength={50}
                     className={cn(
-                      "text-3xl font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-[#111111] w-full placeholder:text-gray-300",
+                      "text-3xl font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-black w-full placeholder:text-gray-300",
                       editName.length > 50 && "text-red-500 border-red-300"
                     )}
                   />
@@ -582,7 +584,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                 </div>
               ) : (
                 <>
-                  <h1 className="text-3xl font-medium text-[#111111] tracking-tight truncate">
+                  <h1 className="text-3xl font-medium text-black tracking-tight truncate">
                     {targetAvatar.name}
                   </h1>
                   <p className="text-[15px] text-gray-400 font-medium mt-0.5">@{targetAvatar.username}</p>
@@ -675,11 +677,35 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             {/* Smart Bio Links — Social Icon Row + Suggestion */}
             <SocialLinksRow
               links={editState !== 'idle' ? editSocialLinks : (targetAvatar.social_links || [])}
+              email={targetAvatar.show_email ? targetAvatar.email : undefined}
               isEditing={editState !== 'idle'}
               bioText={editBio}
               onLinksChange={setEditSocialLinks}
               onBioChange={setEditBio}
             />
+
+            <AnimatePresence mode="wait">
+              {editState !== 'idle' && (
+                <motion.div
+                   key="edit-email"
+                   initial={{ opacity: 0, height: 0 }}
+                   animate={{ opacity: 1, height: 'auto' }}
+                   exit={{ opacity: 0, height: 0 }}
+                   className="mt-4 flex items-center justify-center md:justify-start overflow-hidden"
+                >
+                  <label className="flex items-center gap-2 cursor-pointer group select-none">
+                    <input 
+                      type="checkbox" 
+                      checked={editShowEmail} 
+                      onChange={(e) => setEditShowEmail(e.target.checked)} 
+                      disabled={editState === 'saving'}
+                      className="w-4 h-4 rounded-sm border-gray-300 text-[#FEC312] focus:ring-[#FEC312] cursor-pointer"
+                    />
+                    <span className="text-[13px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Show email on profile</span>
+                  </label>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Hint for Social Links */}
             <AnimatePresence>
@@ -692,7 +718,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                 >
                   <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-medium text-gray-500">
                     <span className="text-sm leading-none">💡</span>
-                    <span>Tip: Paste your social links in your bio to add them as social icons e.g. www.x.com/username</span>
+                    <span>Tip: Paste your social links in your bio to add them as social links e.g. www.instagram.com/yourusername</span>
                   </div>
                 </motion.div>
               )}
@@ -704,21 +730,20 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
                    initial={{ opacity: 0, height: 0 }}
                    animate={{ opacity: 1, height: 'auto' }}
                    exit={{ opacity: 0, height: 0 }}
-                   className="flex items-center justify-center md:justify-start gap-3 mt-4"
+                   className="flex items-center justify-center md:justify-start gap-2 mt-4"
                 >
                   <Button 
-                      variant="primary" 
-                      className="h-9 px-5 rounded-full text-sm font-medium"
+                      variant="outline" 
+                      className="h-10 px-6 rounded-full text-sm font-medium transition-all"
                       onClick={handleSave}
                       disabled={editState === 'saving' || editBio.length > 200 || editRole.length > 50 || ['checking', 'taken', 'invalid_format', 'cooldown'].includes(usernameValidation.status)}
+                      isLoading={editState === 'saving'}
                   >
-                    {editState === 'saving' ? (
-                       <><div className="w-3.5 h-3.5 rounded-full border-2 border-white border-t-white/30 animate-spin mr-1" /> Saving...</>
-                    ) : 'Save'}
+                    Save
                   </Button>
                   <Button 
                       variant="ghost"
-                      className="h-9 px-5 rounded-full text-sm font-medium text-gray-500"
+                      className="h-10 px-6 rounded-full text-sm font-medium transition-all"
                       onClick={handleCancel}
                       disabled={editState === 'saving'}
                   >
@@ -735,19 +760,19 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
 
           <div className="flex items-center justify-center md:justify-start gap-4">
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
-               <span className="block text-2xl text-[#111111]">
+               <span className="block text-2xl text-black">
                  <AnimatedMetric value={avatarPosts.length} />
                </span>
                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Posts</span>
             </div>
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
-               <span className="block text-2xl text-[#111111]">
+               <span className="block text-2xl text-black">
                  <AnimatedMetric value={stats.totalReviews} />
                </span>
                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Reviews</span>
             </div>
             <div className="text-center md:text-left">
-               <span className="block text-2xl text-[#111111]">
+               <span className="block text-2xl text-black">
                  <AnimatedMetric value={stats.avgRating} isFloat />
                </span>
                <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Avg Rating</span>
@@ -780,7 +805,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
           className={cn(
             "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
             activeTab === 'posts' 
-              ? "border-[#111111] text-[#111111]" 
+              ? "border-[#111111] text-black" 
               : "border-transparent text-gray-400 hover:text-gray-600"
           )}
         >
@@ -793,7 +818,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             className={cn(
               "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
               activeTab === 'saved' 
-                ? "border-[#111111] text-[#111111]" 
+                ? "border-[#111111] text-black" 
                 : "border-transparent text-gray-400 hover:text-gray-600"
             )}
           >
@@ -846,7 +871,7 @@ export function ProfileView({ avatarId, isOwnProfile = false }: ProfileViewProps
             <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
                 <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />
             </div>
-            <h3 className="text-3xl font-semibold mb-4 text-[#111111]">Coming Soon!</h3>
+            <h3 className="text-3xl font-semibold mb-4 text-black">Coming Soon!</h3>
             <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
                 You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
             </p>

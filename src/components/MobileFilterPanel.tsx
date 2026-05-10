@@ -156,13 +156,13 @@ export function MobileFilterPanel({
     <>
       {/* SORT BY SECTION */}
       <div className="mb-8 relative text-left">
-        <label className="block text-sm font-bold text-[#111111] mb-3">Sort by</label>
+        <label className="block text-sm font-bold text-black mb-3">Sort by</label>
         <div className="relative">
           <button 
             onClick={() => setIsSortOpen(!isSortOpen)}
             className="w-full h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
           >
-            <span className="text-sm font-medium text-[#111111]">{getSortLabel(sortBy)}</span>
+            <span className="text-sm font-medium text-black">{getSortLabel(sortBy)}</span>
             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
           </button>
           
@@ -175,7 +175,7 @@ export function MobileFilterPanel({
                     onSortChange(key);
                     setIsSortOpen(false);
                   }}
-                  className="w-full text-left px-4 py-3 text-sm font-medium text-[#111111] hover:bg-gray-50 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-4 py-3 text-sm font-medium text-black hover:bg-gray-50 flex items-center justify-between transition-colors"
                 >
                   {label}
                   {sortBy === key && <Check className="w-4 h-4 text-[#FEC312]" strokeWidth={2.5} />}
@@ -188,7 +188,7 @@ export function MobileFilterPanel({
 
       {/* CATEGORY SECTION */}
       <div className="mb-6 text-left">
-        <label className="block text-sm font-bold text-[#111111] mb-3">Category</label>
+        <label className="block text-sm font-bold text-black mb-3">Category</label>
         <div className="flex flex-wrap gap-2.5">
           {CATEGORIES.map(cat => {
             const isSelected = selectedCategories.includes(cat);
@@ -199,8 +199,8 @@ export function MobileFilterPanel({
                 className={cn(
                   "group pl-1.5 pr-2.5 py-2 rounded-full border-2 text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                   isSelected 
-                    ? "bg-[#ebebeb] border-[#727272] text-[#111111]" 
-                    : "bg-white border-[#E0E0E0] text-[#111111] hover:bg-[#fafafa]"
+                    ? "bg-[#ebebeb] border-[#727272] text-black" 
+                    : "bg-white border-[#E0E0E0] text-black hover:bg-[#fafafa]"
                 )}
               >
                 <div className={cn(
@@ -224,12 +224,12 @@ export function MobileFilterPanel({
     <div className="flex gap-3">
       <button 
         onClick={handleReset}
-        className="flex-1 px-5 py-3 rounded-full text-sm font-bold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white border border-gray-200"
+        className="flex-1 px-5 py-3 rounded-full text-sm font-bold text-black transition-all duration-300 hover:bg-[#FEC312] hover:text-white border border-gray-200"
       >
         Reset
       </button>
       <Button 
-        className="flex-1 rounded-full px-5 py-3 bg-[#FEC312] border-2 border-[#FEC312] text-[#111111] font-bold hover:bg-[#eeb40e] transition-all duration-300 shadow-none"
+        className="flex-1 rounded-full px-5 py-3 bg-[#FEC312] border-2 border-[#FEC312] text-black font-bold hover:bg-[#eeb40e] transition-all duration-300 shadow-none"
         onClick={handleApply}
       >
         Apply
@@ -277,7 +277,7 @@ export function MobileFilterPanel({
 
               {/* Header */}
               <div className="px-5 py-3 border-b border-gray-100 flex justify-between items-center shrink-0">
-                <span className="text-lg font-bold text-[#111111]">Filters</span>
+                <span className="text-lg font-bold text-black">Filters</span>
                 <button 
                   onClick={handleBackdropClose}
                   className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
@@ -325,7 +325,7 @@ export function MobileFilterPanel({
       >
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center shrink-0 w-full text-left">
-          <span className="text-xl font-bold text-[#111111]">Filters</span>
+          <span className="text-xl font-bold text-black">Filters</span>
           <button 
             onClick={onClose}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"

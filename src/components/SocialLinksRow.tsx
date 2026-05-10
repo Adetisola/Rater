@@ -20,12 +20,14 @@ import {
 } from '../logic/socialLinksUtils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '../lib/utils';
-import { Edit2, Trash2, X, Check, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, X, Check, AlertCircle, Mail } from 'lucide-react';
 
 // ─── Types ───
 interface SocialLinksRowProps {
   /** Current social_links array from avatar */
   links: SocialLink[];
+  /** Optional public email to display at the end of the row */
+  email?: string;
   /** Whether the profile is in edit mode */
   isEditing: boolean;
   /** Current bio text (for link detection during editing) */
@@ -287,6 +289,7 @@ function SocialIconEdit({
 // ─── Main Component ───
 export function SocialLinksRow({
   links,
+  email,
   isEditing,
   bioText,
   onLinksChange,
@@ -394,12 +397,12 @@ export function SocialLinksRow({
     }
   }, [links, bioText, onLinksChange, onBioChange]);
 
-  if (links.length === 0 && !suggestion) return null;
+  if (links.length === 0 && !suggestion && (!email || isEditing)) return null;
 
   return (
     <div className="mt-2 flex flex-col items-center md:items-start">
       {/* Icon Row */}
-      {links.length > 0 && (
+      {(links.length > 0 || (!isEditing && email)) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -416,6 +419,20 @@ export function SocialLinksRow({
             ) : (
               <SocialIconView key={`${link.type}-${i}`} link={link} />
             )
+          )}
+          {!isEditing && email && (
+            <div className="relative group/email">
+              <a
+                href={`mailto:${email}`}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-gray-50 transition-all"
+                title={email}
+              >
+                <Mail className="w-3.5 h-3.5 text-gray-400 group-hover/email:text-[#FEC312] transition-colors" />
+                <span className="text-xs text-gray-500 group-hover/email:text-gray-700 font-medium transition-colors">
+                  Contact
+                </span>
+              </a>
+            </div>
           )}
         </motion.div>
       )}

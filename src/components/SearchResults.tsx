@@ -125,7 +125,7 @@ export function SearchResults({
                           <Search className="w-4 h-4 text-gray-400" />
                         </div>
                         <div className="flex-1 min-w-0 flex items-center justify-between">
-                          <span className="font-medium text-sm text-[#111111] truncate">{item.query}</span>
+                          <span className="font-medium text-sm text-black truncate">{item.query}</span>
                           <span className="text-xs font-semibold text-gray-400">Search</span>
                         </div>
                       </div>
@@ -276,7 +276,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       
       {/* Name */}
       <div className="flex-1 min-w-0">
-        <span className="font-semibold text-sm text-[#111111]">{avatar.name}</span>
+        <span className="font-semibold text-sm text-black">{avatar.name}</span>
         <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
       </div>
     </div>
@@ -316,7 +316,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm text-[#111111] truncate">
+        <h4 className="font-medium text-sm text-black truncate">
           <HighlightedText segments={titleSegments} />
         </h4>
         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
@@ -352,7 +352,7 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       </div>
       
       {/* Category Name */}
-      <span className="font-medium text-sm text-[#111111]">{category}</span>
+      <span className="font-medium text-sm text-black">{category}</span>
     </div>
   );
 }

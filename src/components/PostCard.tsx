@@ -6,20 +6,23 @@ import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import type { BadgeType } from '../logic/mockData';
 import Link from 'next/link';
+import { ImageFallback } from './ImageFallback';
 import { usePostMetrics } from '../hooks/usePostMetrics';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { PostActionsMenu } from './PostActionsMenu';
 import { useNow } from '../context/TimeContext';
+import { Lock } from 'lucide-react';
 
 interface PostCardProps {
   post: Post;
   badge?: BadgeType;
   isHot?: boolean;
   isLoading?: boolean;
+  onClick?: () => void;
 }
 
-export function PostCard({ post, badge, isHot = false, isLoading: parentLoading = false }: PostCardProps) {
+export function PostCard({ post, badge, isHot = false, isLoading: parentLoading = false, onClick }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -63,9 +66,6 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
   }, [post.image_url, retryCount, post.id]);
 
   const showSkeleton = parentLoading || metricsLoading || (!imageLoaded && !hasError);
-  const displayImageUrl = hasError 
-    ? 'https://images.unsplash.com/photo-1557683316-973673baf926?q=80&w=800'
-    : post.image_url;
 
   if (showSkeleton) {
       return (
@@ -114,14 +114,21 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
     new Date(post.updated_at).getTime() > new Date(post.created_at).getTime();
 
   return (
-    <Link href={`/app/post/${post.id}`} scroll={false} className="group relative break-inside-avoid block">
+    <Link 
+      href={`/app/post/${post.id}`} 
+      scroll={false} 
+      className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
+      onClick={onClick}
+    >
       <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
-        <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-            <div 
-              className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
-              style={{ backgroundImage: `url(${displayImageUrl})` }}
-            />
-        </div>
+        {!hasError && (
+          <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+              <div 
+                className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
+                style={{ backgroundImage: `url(${post.image_url})` }}
+              />
+          </div>
+        )}
 
         <div className="relative z-10">
             <div className={`relative w-full rounded-[20px] ${isTopRated ? 'p-[2px]' : 'overflow-hidden'}`}>
@@ -131,15 +138,28 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                     </div>
                 )}
                 <div className={`relative z-10 w-full h-full overflow-hidden ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}>
-                    <img 
-                        src={displayImageUrl} 
-                        alt={post.title} 
-                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105 block"
-                    />
+                    {hasError ? (
+                      <div className="w-full aspect-4/3">
+                        <ImageFallback
+                          src={post.image_url}
+                          alt={post.title}
+                          className="w-full h-auto object-cover transition-transform duration-500 block"
+                          fallbackClassName={`w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}
+                          onErrorChange={(err) => setHasError(err)}
+                          onLoadChange={(loaded) => setImageLoaded(loaded)}
+                        />
+                      </div>
+                    ) : (
+                      <img 
+                          src={post.image_url} 
+                          alt={post.title} 
+                          className="w-full h-auto object-cover transition-transform duration-500 block"
+                      />
+                    )}
                     
                     {isTopRated && (
                         <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
-                            <div className="bg-white text-[#111111] text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                            <div className="bg-white text-black text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
                                 <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
                                     {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
                                     <DotLottieReact
@@ -166,18 +186,18 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         post={post} 
                         isCardContext={true}
                         className="absolute top-3 right-3 z-30 opacity-0 md:group-hover:opacity-100 max-md:opacity-100 transition-opacity duration-200"
-                        buttonClassName="w-8 h-8 border-none transition-all max-md:bg-black/20 max-md:backdrop-blur-md max-md:text-white md:bg-white md:hover:bg-gray-100 md:text-black"
+                        buttonClassName="w-8 h-8 border-none transition-all max-md:bg-black/20 max-md:backdrop-blur-md max-md:text-white md:bg-white md:backdrop-blur-md md:hover:bg-white/80 md:text-black"
                     />
                 </div>
             </div>
 
             <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
                 <div className="flex justify-between items-center mb-3">
-                    <span className="bg-white text-[#111111] text-[10px] uppercase font-semibold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
+                    <span className="bg-white text-black text-[10px] uppercase font-semibold tracking-wider px-3 py-1 rounded-full truncate max-w-[100px] xs:max-w-none block">
                         {post.category}
                     </span>
                     <span 
-                        className="text-[12px] text-[#999999] font-medium group-hover:text-white/80 transition-colors shrink-0 ml-2"
+                        className="text-[12px] text-[#999999] font-medium group-hover/card:text-white/80 transition-colors shrink-0 ml-2"
                         title={getFullTimestamp(post.created_at)}
                     >
                         {formatTimestamp(post.created_at, now)}
@@ -190,18 +210,18 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                     </span>
                 </div>
 
-                <h3 className="font-medium lg:font-semibold text-sm xs:text-lg text-[#111111] mb-2 leading-tight group-hover:text-white transition-colors truncate">
+                <h3 className="font-medium text-sm xs:text-[16px] text-black leading-tight group-hover/card:text-white transition-colors truncate">
                     {post.title}
                 </h3>
 
-                <div className="hidden md:block mb-4">
-                    <p className="text-xs text-[#111111] leading-relaxed line-clamp-3 group-hover:text-white/90 transition-colors truncate">
+                <div className="hidden md:block mb-3">
+                    <p className="text-xs text-black leading-relaxed line-clamp-3 group-hover/card:text-white/90 transition-colors truncate">
                         {post.description}
                     </p>
                 </div>
 
                 <div 
-                    className="flex items-center gap-2 mb-2 sm:mb-4 group/avatar pointer-events-auto cursor-pointer relative z-20 w-fit"
+                    className="flex items-center gap-2 mb-2 sm:mb-4 group/avatar pointer-events-auto cursor-pointer relative z-20 max-w-full"
                     data-no-route-loader
                     onClick={(e) => {
                         e.preventDefault();
@@ -211,23 +231,28 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         }
                     }}
                 >
-                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden ring-0 group-hover/avatar:ring-2 ring-[#FEC312] transition-all">
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden ring-0 group-hover/avatar:ring-1 ring-[#FEC312] transition-all shrink-0">
                         <img 
                             src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatar_id}`} 
                             alt="Avatar" 
                             className="w-full h-full object-cover" 
                         />
                     </div>
-                    <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white group-hover/avatar:text-[#FEC312] transition-colors">
-                        {avatar?.name || 'Unknown'}
-                    </span>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-xs md:text-sm font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-[#FEC312] transition-colors truncate shrink-0">
+                            {avatar?.name || 'Unknown'}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors truncate">
+                            @{avatar?.username || post.avatar_id}
+                        </span>
+                    </div>
                 </div>
 
-                <div className="pt-2 sm:pt-4 border-t border-black/5 group-hover:border-white/20 flex items-center justify-between transition-colors">
+                <div className="pt-2 sm:pt-3 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
                     <div className="relative group/tooltip cursor-help">
                         <div className="flex items-start gap-1 xs:gap-1.5">
-                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover:brightness-0 group-hover:invert transition-all" />
-                            <span className="text-xs md:text-sm font-medium text-[#111111] group-hover:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
+                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                            <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
                                 {metrics?.review_count || 0}
                                 {isHot && (
                                     <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
@@ -259,9 +284,13 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
 
                     <div className="flex items-center gap-1.5 w-auto justify-end">
                         {!metrics?.rating_unlocked ? (
-                            <span className="text-[10px] md:text-[12px] font-bold md:font-semibold text-[#009241] group-hover:text-[#4ade80] transition-colors text-right">
-                                Rating Unlocks at 3 Reviews
-                            </span>
+                            <div className="relative group/lock cursor-help flex items-center gap-1 pl-2">
+                                <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-4 sm:h-4 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                <Lock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
+                                    <p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>
+                                </div>
+                            </div>
                         ) : (
                             <>
                                 <div className="flex gap-0.5">
@@ -271,13 +300,13 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                             <img
                                                 key={i} 
                                                 src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"} 
-                                                className={`w-3 h-3 sm:w-4 sm:h-4 ${isActive ? 'group-hover:brightness-0 group-hover:invert transition-all' : ''}`} 
+                                                className={`w-3 h-3 sm:w-4 sm:h-4 ${isActive ? 'group-hover/card:brightness-0 group-hover/card:invert transition-all' : ''}`} 
                                                 alt="" 
                                             />
                                         );
                                     })}
                                 </div>
-                                <span className="text-sm font-medium text-[#111111] group-hover:text-white transition-colors">
+                                <span className="text-sm font-medium text-black group-hover/card:text-white transition-colors">
                                     {metrics.average_score}
                                 </span>
                             </>

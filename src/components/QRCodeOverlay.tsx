@@ -131,7 +131,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
           >
             {/* Header */}
             <div className="w-full flex justify-between items-center mb-6">
-              <h3 className="font-semibold text-lg text-[#111111]">Share Profile</h3>
+              <h3 className="font-semibold text-lg text-black">Share Profile</h3>
               <button 
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-gray-50"
@@ -164,7 +164,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
             </div>
 
             <div className="text-center mb-8">
-              <p className="text-[17px] font-bold text-[#111111] mb-1">@{username}</p>
+              <p className="text-[17px] font-bold text-black mb-1">@{username}</p>
               <p className="text-sm text-gray-500 font-medium">rater-web.vercel.app/@{username}</p>
             </div>
 
@@ -172,7 +172,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
             <div className="flex gap-3 w-full">
               <button 
                 onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-gray-100 hover:bg-gray-200 text-[#111111] font-semibold text-sm transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-gray-100 hover:bg-gray-200 text-black font-semibold text-sm transition-colors"
               >
                 {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                 {copied ? "Copied" : "Copy Link"}

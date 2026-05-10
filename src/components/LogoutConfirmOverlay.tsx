@@ -45,7 +45,7 @@ export function LogoutConfirmOverlay({ onClose, onConfirm }: LogoutConfirmOverla
             <LogOut className="w-8 h-8 text-red-500" />
         </div>
 
-        <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Confirm Logout</h2>
+        <h2 className="text-2xl font-semibold mb-3 text-black">Confirm Logout</h2>
         <p className="text-gray-500 mb-8 leading-relaxed">
             Are you sure you want to log out? You'll need your passkey to sign back in.
         </p>
@@ -53,15 +53,15 @@ export function LogoutConfirmOverlay({ onClose, onConfirm }: LogoutConfirmOverla
         <div className="flex flex-col gap-3">
             <Button 
                 onClick={onConfirm}
-                variant="primary"
-                className="w-full h-12 rounded-full font-medium bg-[#ff4848] hover:bg-[#ff3333] border-[#ff4848] text-white"
+                variant="outline"
+                className="w-full h-12 rounded-full border-red-600 hover:bg-red-600 text-lg font-medium transition-all"
             >
                 Yes, Logout
             </Button>
             <Button 
                 onClick={onClose}
-                variant="outline"
-                className="w-full h-12 rounded-full font-semibold"
+                variant="ghost"
+                className="w-full h-12 rounded-full text-lg font-medium text-gray-500 transition-all"
             >
                 Cancel
             </Button>

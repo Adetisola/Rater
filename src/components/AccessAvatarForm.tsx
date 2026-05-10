@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Eye, EyeOff, AlertCircle, Lock, AtSign } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Lock, AtSign, Mail } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ForgotPasskeyOverlay } from './ForgotPasskeyOverlay';
 
@@ -15,7 +15,8 @@ interface AccessAvatarFormProps {
 }
 
 export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormProps) {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
+  const [loginMode, setLoginMode] = useState<'username' | 'email'>('username');
   const [passkey, setPasskey] = useState('');
   const [showPasskey, setShowPasskey] = useState(false);
   const [error, setError] = useState('');
@@ -55,26 +56,41 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
     return val.replace(/^@/, '');
   };
 
-  const usernameFormatValid = (val: string): boolean => {
+  const isIdentifierValid = (val: string): boolean => {
     if (!val) return true; // empty is not an error, just disabled
-    return /^[a-z0-9_]{3,20}$/.test(val);
+    if (loginMode === 'username') {
+      return /^[a-z0-9_]{3,20}$/.test(val);
+    } else {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+    }
   };
 
-  const handleUsernameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIdentifierInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    // Allow typing freely but strip @ for stored value
-    setUsername(raw.startsWith('@') ? raw.slice(1) : raw);
+    if (loginMode === 'username') {
+      setIdentifier(raw.startsWith('@') ? raw.slice(1) : raw);
+    } else {
+      setIdentifier(raw);
+    }
     setError('');
+  };
+
+  const getErrorMessage = () => {
+    if (loginMode === 'username') {
+      return 'Enter a valid username (3-20 chars, letters, numbers, underscores)';
+    } else {
+      return 'Enter a valid email address';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (lockoutTime) return;
 
-    const normalized = normalizeUsername(username);
+    const normalized = loginMode === 'username' ? normalizeUsername(identifier) : identifier.trim().toLowerCase();
 
-    if (!usernameFormatValid(normalized)) {
-      setError('Enter a valid username');
+    if (!isIdentifierValid(normalized)) {
+      setError(loginMode === 'username' ? 'Enter a valid username' : 'Enter a valid email');
       return;
     }
 
@@ -86,7 +102,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
     if (success) {
       onSuccess();
     } else {
-      setError('Invalid username or passkey');
+      setError('Invalid credentials');
     }
     
     setIsLoading(false);
@@ -113,18 +129,34 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold uppercase text-gray-600 tracking-wider ml-1">Username</label>
+              <div className="flex justify-between items-end ml-1 mb-1">
+                <label className="text-xs font-semibold uppercase text-gray-600 tracking-wider">
+                  {loginMode === 'username' ? 'Username' : 'Email'}
+                </label>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setLoginMode(prev => prev === 'username' ? 'email' : 'username');
+                    setIdentifier('');
+                    setError('');
+                  }}
+                  className="text-[11px] font-medium text-gray-400 hover:text-[#FEC312] transition-colors"
+                >
+                  {loginMode === 'username' ? 'Use email instead' : 'Login with username'}
+                </button>
+              </div>
               <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                  <AtSign className="w-4 h-4" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-opacity duration-200">
+                  {loginMode === 'username' ? <AtSign className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
                 </div>
                 <Input 
-                    placeholder="username" 
-                    value={username}
-                    onChange={handleUsernameInput}
+                    type={loginMode === 'email' ? 'email' : 'text'}
+                    placeholder={loginMode === 'username' ? "username" : "email address"} 
+                    value={identifier}
+                    onChange={handleIdentifierInput}
                     className={cn(
-                      "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal",
-                      username && !usernameFormatValid(normalizeUsername(username)) && "border-red-300 focus-visible:border-red-400"
+                      "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal transition-all duration-200",
+                      identifier && !isIdentifierValid(loginMode === 'username' ? normalizeUsername(identifier) : identifier) && "border-red-300 focus-visible:border-red-400"
                     )}
                     disabled={isLoading}
                     autoCapitalize="none"
@@ -132,8 +164,8 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                     spellCheck={false}
                 />
               </div>
-              {username && !usernameFormatValid(normalizeUsername(username)) && (
-                <p className="text-[11px] text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">Enter a valid username (3-20 chars, letters, numbers, underscores)</p>
+              {identifier && !isIdentifierValid(loginMode === 'username' ? normalizeUsername(identifier) : identifier) && (
+                <p className="text-[11px] text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">{getErrorMessage()}</p>
               )}
             </div>
 
@@ -174,20 +206,11 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
               <Button 
                   type="submit" 
                   variant="outline"
-                  className={cn(
-                    "w-[140px] h-12 rounded-full text-lg font-semibold transition-all",
-                    isLoading && "opacity-80 cursor-wait"
-                  )}
-                  disabled={isLoading || !username || !passkey || !usernameFormatValid(normalizeUsername(username))}
+                  className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all"
+                  disabled={isLoading || !identifier || !passkey || !isIdentifierValid(loginMode === 'username' ? normalizeUsername(identifier) : identifier)}
+                  isLoading={isLoading}
               >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-[#111111]/30 border-t-[#111111] rounded-full animate-spin" />
-                      <span>Verifying...</span>
-                    </div>
-                  ) : (
-                    "Continue"
-                  )}
+                  Continue
               </Button>
             </div>
          </form>
@@ -198,7 +221,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
             Don't have an avatar?{' '}
             <button 
                 onClick={onCreateNew}
-                className="text-[#111111] font-semibold hover:text-[#FEC312]"
+                className="text-black font-semibold hover:text-[#FEC312]"
                 disabled={isLoading}
             >
                 Create one

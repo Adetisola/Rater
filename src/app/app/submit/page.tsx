@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Header } from "@/components/Header";
+
 import { SubmitPage } from "@/components/SubmitPage";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -10,17 +10,7 @@ export default function AppSubmitPage() {
 
   return (
     <>
-      <Header 
-        onPostClick={() => {}} 
-        onLogoClick={() => router.push('/app/browse', { scroll: false })} 
-        searchQuery={""}
-        onSearchChange={() => {}}
-        sortBy={"balanced"}
-        onSortChange={() => {}}
-        selectedCategories={[]}
-        onCategoryChange={() => {}}
-        hideControls={true}
-      />
+
       <main className="flex-1 w-full pt-2">
         <AnimatePresence mode="wait">
             <motion.div 

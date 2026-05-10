@@ -25,7 +25,7 @@ export default function MyAvatarPage() {
         <div className="flex items-center justify-center mb-6">
           <img src="/icons/rater-logo-transparent-bg-stroked.svg" alt="" className="w-20 h-20 opacity-50" />
         </div>
-        <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Identity required</h2>
+        <h2 className="text-2xl font-semibold mb-3 text-black">Identity required</h2>
         <p className="text-gray-500 mb-10 max-w-[280px]">Access your personal profile, posts, and saved favorites by logging in.</p>
         
         <div className="flex flex-col sm:flex-row gap-4 max-w-[400px]">
@@ -45,5 +45,5 @@ export default function MyAvatarPage() {
     );
   }
 
-  return <ProfileView avatarId={currentAvatar.id} isOwnProfile={true} />;
+  return <ProfileView avatarId={currentAvatar.id} />;
 }

@@ -71,7 +71,7 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
     >
       <div className="flex items-center gap-2 border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black select-none">
         {iconUrl && <img src={iconUrl} alt={`${label} icon`} className="w-5 h-5 object-contain" />}
-        <span className="text-[14px] xs:text-base font-medium text-[#111111] group-hover:text-black">
+        <span className="text-[14px] xs:text-base font-medium text-black group-hover:text-black">
           {label}
         </span>
       </div>
@@ -220,7 +220,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn }: ReviewFormProp
                 >
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                     <span className="text-xs font-medium text-gray-500">
-                        Reviewing as <span className="text-[#111111] font-semibold">{initialName}</span>
+                        Reviewing as <span className="text-black font-semibold">{initialName}</span>
                     </span>
                 </motion.div>
             )}

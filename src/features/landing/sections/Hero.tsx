@@ -89,7 +89,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               href="#what-is-rater"
               onClick={() => onSectionClick?.('what-is-rater')}
               className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
-                activeSection === 'what-is-rater' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+                activeSection === 'what-is-rater' ? 'text-[#FEC312]' : 'text-black hover:text-[#FEC312]'
               }`}
             >
               What is Rater
@@ -100,7 +100,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               href="#what-changes"
               onClick={() => onSectionClick?.('what-changes')}
               className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
-                activeSection === 'what-changes' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+                activeSection === 'what-changes' ? 'text-[#FEC312]' : 'text-black hover:text-[#FEC312]'
               }`}
             >
               What Changes
@@ -111,7 +111,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               href="#how-it-works"
               onClick={() => onSectionClick?.('how-it-works')}
               className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
-                activeSection === 'how-it-works' ? 'text-[#FEC312]' : 'text-[#111111] hover:text-[#FEC312]'
+                activeSection === 'how-it-works' ? 'text-[#FEC312]' : 'text-black hover:text-[#FEC312]'
               }`}
             >
               How it works
@@ -132,7 +132,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
           <div className="flex-1 flex justify-end">
             <Link 
               href="/app"
-              className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-medium text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
+              className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-medium text-black hover:bg-[#FEC312] hover:text-white transition-all duration-300"
             >
               Enter Rater
             </Link>
@@ -179,7 +179,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               style={{ willChange: 'transform, opacity' }}
-              className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-[#111111] text-center leading-tight tracking-tight px-4 w-full"
+              className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-black text-center leading-tight tracking-tight px-4 w-full"
             >
               <span className="block sm:inline">Judgment is built, </span>
               <span className="block sm:inline">
@@ -224,7 +224,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               {/* Secondary CTA */}
               <a 
                 href="#how-it-works"
-                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-[#111111] hover:text-[#FEC312] transition-colors"
+                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-black hover:text-[#FEC312] transition-colors"
               >
                 How it works
               </a>

@@ -11,7 +11,7 @@ import { Footer } from '../../components/Footer';
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
-  const { allAvatars, currentAvatar, isLoading } = useAuth();
+  const { allAvatars, isLoading } = useAuth();
   const router = useRouter();
 
   // Decode just in case
@@ -54,7 +54,7 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
   if (!targetAvatar && !redirectAvatar) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-white">
-        <h2 className="text-2xl font-semibold mb-3 text-[#111111]">Profile not found</h2>
+        <h2 className="text-2xl font-semibold mb-3 text-black">Profile not found</h2>
         <p className="text-gray-500">No avatar exists with this username.</p>
       </div>
     );
@@ -65,13 +65,13 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
   }
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col font-sans text-[#111111]">
+    <div className="min-h-screen w-full bg-white flex flex-col font-sans text-black">
       <Suspense fallback={null}>
         <TopLoadingBar />
       </Suspense>
 
       <div className="flex-1 w-full pt-4">
-        <ProfileView avatarId={targetAvatar.id} isOwnProfile={currentAvatar?.id === targetAvatar.id} />
+        <ProfileView avatarId={targetAvatar.id} />
       </div>
 
       <Footer />

@@ -12,6 +12,7 @@ import type { Post, Avatar, Category } from '../logic/mockData';
 import { MOCK_POSTS } from '../logic/mockData';
 import { useAuth } from '../context/AuthContext';
 import { useRecentSearches } from '../hooks/useRecentSearches';
+import { useNavigationStore } from '../store/navigationStore';
 import { Search } from 'lucide-react';
 
 // Maps internal sort keys → display labels for active filter pills
@@ -139,8 +140,9 @@ export function MobileSearchOverlay({
   };
 
   // Handle post click
-  const handlePostClick = (post: Post) => {
+  const handlePostClick = (post: Post, contextIds?: string[]) => {
     addPost(post.id);
+    useNavigationStore.getState().setNavigationContext(contextIds || [post.id]);
     onClose();
     onPostSelect?.(post);
   };
@@ -226,7 +228,7 @@ export function MobileSearchOverlay({
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
             {sortBy !== 'balanced' && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
-                <span className="text-xs font-medium text-[#111111]">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
+                <span className="text-xs font-medium text-black">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
                 <button 
                   onClick={() => onSortChange('balanced')}
                   className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
@@ -238,7 +240,7 @@ export function MobileSearchOverlay({
             
             {selectedCategories.map(cat => (
               <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                <span className="text-xs font-medium text-[#111111]">{cat}</span>
+                <span className="text-xs font-medium text-black">{cat}</span>
                 <button 
                   onClick={() => {
                     const newCats = selectedCategories.filter(c => c !== cat);
@@ -301,7 +303,7 @@ export function MobileSearchOverlay({
                             <Search className="w-4 h-4 text-gray-400" />
                           </div>
                           <div className="flex-1 min-w-0 flex items-center justify-between">
-                            <span className="font-medium text-sm text-[#111111] truncate">{item.query}</span>
+                            <span className="font-medium text-sm text-black truncate">{item.query}</span>
                             <span className="text-xs font-semibold text-gray-400">Search</span>
                           </div>
                         </div>
@@ -329,7 +331,7 @@ export function MobileSearchOverlay({
                     return (
                       <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">
                          <div className="flex-1 min-w-0">
-                           <PostResultItem post={postObj} onClick={() => handlePostClick(postObj)} />
+                           <PostResultItem post={postObj} onClick={() => handlePostClick(postObj, recentItems.filter(i => i.type === 'post').map(i => i.postId as string))} />
                          </div>
                          {removeBtn}
                       </div>
@@ -397,7 +399,7 @@ export function MobileSearchOverlay({
                     <PostResultItem 
                       key={result.post.id}
                       post={result.post}
-                      onClick={() => handlePostClick(result.post)}
+                      onClick={() => handlePostClick(result.post, searchResults.posts.map(r => r.post.id))}
                     />
                   ))}
                 </div>
@@ -442,7 +444,7 @@ interface AvatarResultItemProps {
 }
 
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
-  const initials = avatar.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const initials = avatar.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
     <div
@@ -460,7 +462,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <span className="font-bold text-sm text-[#111111]">{avatar.name}</span>
+        <span className="font-bold text-sm text-black">{avatar.name}</span>
         <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
       </div>
     </div>
@@ -486,7 +488,7 @@ function PostResultItem({ post, onClick }: PostResultItemProps) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-sm text-[#111111] truncate">{post.title}</h4>
+        <h4 className="font-bold text-sm text-black truncate">{post.title}</h4>
         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{post.description}</p>
       </div>
     </button>
@@ -507,7 +509,7 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">
         <span className="text-[#FEC312] text-sm">📁</span>
       </div>
-      <span className="font-medium text-sm text-[#111111]">{category}</span>
+      <span className="font-medium text-sm text-black">{category}</span>
     </div>
   );
 }

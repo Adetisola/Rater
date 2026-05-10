@@ -21,7 +21,16 @@ export function normalizeNameForUsername(name: string): string {
  * Generates a unique username from a display name given a list of existing usernames.
  */
 export function generateUsernameFromName(name: string, existingUsernames: string[]): string {
-  const base = normalizeNameForUsername(name) || 'user';
+  let base = normalizeNameForUsername(name);
+  
+  if (!base) {
+    base = 'user';
+  } else if (base.length < 3) {
+    base = base.padEnd(3, '1');
+  } else if (base.length > 15) {
+    base = base.slice(0, 15).replace(/_$/, '');
+  }
+
   const existingNormalized = existingUsernames.map(u => u.toLowerCase());
 
   if (!existingNormalized.includes(base)) {

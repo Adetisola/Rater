@@ -249,7 +249,7 @@ export default function BrowseContent() {
                 <div className="max-w-[1600px] mx-auto px-6 mb-6">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
                     <span className="text-sm font-medium text-gray-600">Avatar:</span>
-                    <span className="text-sm font-bold text-[#111111]">{selectedAvatar.name}</span>
+                    <span className="text-sm font-bold text-black">{selectedAvatar.name}</span>
                     <button 
                       onClick={clearAvatarFilter}
                       className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
@@ -265,7 +265,7 @@ export default function BrowseContent() {
                   <div className="flex flex-wrap items-center gap-2">
                     {sortBy !== 'balanced' && (
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
-                        <span className="text-xs font-medium text-[#111111]">{SORT_LABELS[sortBy] ?? sortBy}</span>
+                        <span className="text-xs font-medium text-black">{SORT_LABELS[sortBy] ?? sortBy}</span>
                         <button 
                           onClick={() => setSortBy('balanced')}
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
@@ -277,7 +277,7 @@ export default function BrowseContent() {
                     
                     {selectedCategories.map(cat => (
                       <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                        <span className="text-xs font-medium text-[#111111]">{cat}</span>
+                        <span className="text-xs font-medium text-black">{cat}</span>
                         <button 
                           onClick={() => handleCategoryChange(selectedCategories.filter(c => c !== cat))}
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
@@ -293,7 +293,7 @@ export default function BrowseContent() {
                           setSortBy('balanced');
                           handleCategoryChange([]);
                         }}
-                        className="text-xs font-medium text-gray-500 hover:text-[#111111] underline transition-colors"
+                        className="text-xs font-medium text-gray-500 hover:text-black underline transition-colors"
                       >
                         Clear all
                       </button>

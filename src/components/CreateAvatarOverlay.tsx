@@ -41,7 +41,15 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
 
   // Name State
   const [nameError, setNameError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
   
+  const validateEmailFormat = (email: string) => {
+    const trimmed = email.trim();
+    if (!trimmed) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "Enter a valid email";
+    return null;
+  };
+
   const { signup, allAvatars, checkUsernameAvailable } = useAuth();
 
   const generatedUsernamePreview = useMemo(() => {
@@ -124,11 +132,13 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
 
   const handleCreateStepSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const err = validateDisplayName(name);
-    if (err) {
-      setNameError(err);
-      return;
-    }
+    const nameErr = validateDisplayName(name);
+    const emailErr = validateEmailFormat(email);
+    
+    if (nameErr) setNameError(nameErr);
+    if (emailErr) setEmailError(emailErr);
+
+    if (nameErr || emailErr) return;
     if (!validation.canSubmit || passkeyMismatch) return;
     
     // Jump to username step
@@ -140,12 +150,17 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
     if (validationResult.status !== 'valid' && validationResult.status !== 'unchanged') return;
     
     setIsSubmitting(true);
-    const success = await signup(name, passkey, avatarPreview || undefined, usernameInput);
+    const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput);
     
-    if (success) {
-      onCreate(name, passkey, email || undefined);
+    if (result.ok) {
+      onCreate(name, passkey, email);
     } else {
       setIsSubmitting(false);
+      if (result.error === 'Email already in use') {
+        setDirection(-1);
+        setStep('create');
+        setEmailError(result.error);
+      }
     }
   };
 
@@ -182,7 +197,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
             className="w-full flex flex-col items-center"
           >
              <div className="text-center mb-6 pt-2">
-                <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-[#111111]'}`}>Create your Avatar</h2>
+                <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Avatar</h2>
                 
                 <div 
                     className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
@@ -226,7 +241,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={avatarUploadState === 'uploading'}
-                      className="text-[14px] font-medium text-[#111111] tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
+                      className="text-[14px] font-medium text-black tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
                   >
                       {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
                   </button>
@@ -273,6 +288,28 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                                  </p>
                              )}
                          </div>
+                     )}
+                 </div>
+
+                 <div className="relative space-y-1">
+                     <Input 
+                         type="email"
+                         placeholder="Email Address" 
+                         value={email}
+                         onChange={(e) => {
+                           setEmail(e.target.value);
+                           setEmailError(null);
+                         }}
+                         className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${
+                            emailError 
+                                ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
+                                : 'border-gray-300 focus-visible:border-[#FEC312]'
+                         }`}
+                     />
+                     {emailError && (
+                         <p className="text-xs text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">
+                             {emailError}
+                         </p>
                      )}
                  </div>
 
@@ -348,17 +385,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                     {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
                  </div>
 
-                 <Input 
-                     type="email" 
-                     placeholder="Recovery Email (optional)" 
-                     value={email}
-                     onChange={(e) => setEmail(e.target.value)}
-                     className="h-12 rounded-xl text-base px-4 border transition-all outline-none focus-visible:border-[#FEC312]"
-                 />
-
                  <div className="pt-4 flex items-center justify-center gap-6 w-full">
                      <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-sm text-black font-medium">Cancel</Button>
-                     <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0} className="px-12 h-12 rounded-full text-base font-semibold min-w-[140px]">
+                     <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
                         Continue
                      </Button>
                  </div>
@@ -379,13 +408,13 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
               <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <AtSign className="w-8 h-8 text-[#FEC312]" />
               </div>
-              <h2 className="text-2xl font-medium text-[#111111] mb-2">Claim your username</h2>
+              <h2 className="text-2xl font-medium text-black mb-2">Claim your username</h2>
               <p className="text-gray-400 text-sm">This is your unique identity on Rater</p>
             </div>
 
             <div className="w-full space-y-6 px-1">
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400 pointer-events-none group-focus-within:text-[#111111]">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400 pointer-events-none group-focus-within:text-black">
                   <span className="text-[13px] font-medium tracking-tight">rater-web.vercel.app/@</span>
                 </div>
                 <Input 
@@ -421,8 +450,14 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
               </AnimatePresence>
 
               <div className="flex flex-col gap-3 pt-6">
-                <Button variant='primary' onClick={handleFinalSubmit} disabled={!['valid', 'unchanged'].includes(validationResult.status) || isSubmitting} className="h-12 text-lg font-medium rounded-full">
-                  {isSubmitting || validationResult.status === 'checking' ? <Loader2 className="w-5 h-5 animate-spin" /> : "Claim & Continue"}
+                <Button 
+                  variant='outline' 
+                  onClick={handleFinalSubmit} 
+                  disabled={!['valid', 'unchanged'].includes(validationResult.status) || isSubmitting} 
+                  className="w-full h-12 rounded-full text-lg font-medium transition-all"
+                  isLoading={isSubmitting || validationResult.status === 'checking'}
+                >
+                  Claim & Continue
                 </Button>
                 <Button 
                   variant='secondary'

@@ -39,8 +39,8 @@ const PLATFORM_DOMAINS: { pattern: RegExp; type: SocialPlatform }[] = [
 
 /** Extract all URLs from text */
 export function extractUrls(text: string): string[] {
-  // Matches http(s):// URLs and www. URLs
-  const regex = /https?:\/\/[^\s<>\"']+|www\.[^\s<>\"']+/gi;
+  // Matches http(s):// URLs, www. URLs, and known bare domains
+  const regex = /https?:\/\/[^\s<>\"']+|www\.[^\s<>\"']+|(?:\b(?:instagram|twitter|x|youtube|behance|dribbble|linktr|github|pinterest|facebook|reddit)\.(?:com|net|ee|it)(?:\/[^\s<>\"']*)?)/gi;
   return text.match(regex) || [];
 }
 
@@ -48,9 +48,10 @@ export function extractUrls(text: string): string[] {
 export function getBioParts(text: string): (string | { url: string })[] {
   if (!text) return [];
   // Use capturing group to keep the delimiters in the split result
-  const regex = /(https?:\/\/[^\s<>\"']+|www\.[^\s<>\"']+)/gi;
+  const regex = /(https?:\/\/[^\s<>\"']+|www\.[^\s<>\"']+|(?:\b(?:instagram|twitter|x|youtube|behance|dribbble|linktr|github|pinterest|facebook|reddit)\.(?:com|net|ee|it)(?:\/[^\s<>\"']*)?))/gi;
   return text.split(regex).map(part => {
-    if (part.match(regex)) {
+    // Safe check: part might be undefined if regex capture fails
+    if (part && part.match(/^https?:\/\//i) || part && part.match(/^www\./i) || part && part.match(/^(?:instagram|twitter|x|youtube|behance|dribbble|linktr|github|pinterest|facebook|reddit)\.(?:com|net|ee|it)/i)) {
       return { url: part };
     }
     return part;
@@ -60,7 +61,9 @@ export function getBioParts(text: string): (string | { url: string })[] {
 /** Normalize a raw URL string (ensure https://) */
 function normalizeUrl(raw: string): string {
   let url = raw.trim();
-  if (url.startsWith('www.')) url = 'https://' + url;
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
   // Remove trailing punctuation that might be part of sentence
   url = url.replace(/[.,;:!?)]+$/, '');
   return url;

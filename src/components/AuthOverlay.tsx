@@ -53,7 +53,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
           <button 
             onClick={() => setActiveTab('login')}
             className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${
-              activeTab === 'login' ? 'text-[#111111]' : 'text-gray-400 hover:text-gray-600'
+              activeTab === 'login' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -70,7 +70,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
           <button 
             onClick={() => setActiveTab('signup')}
             className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${
-              activeTab === 'signup' ? 'text-[#111111]' : 'text-gray-400 hover:text-gray-600'
+              activeTab === 'signup' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -98,7 +98,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                 className="w-full flex flex-col items-center"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-semibold text-[#111111] mb-2">Welcome Back</h2>
+                  <h2 className="text-2xl font-semibold text-black mb-2">Welcome Back</h2>
                   <p className="text-gray-500 text-sm">Enter your @username to continue</p>
                 </div>
                 <AccessAvatarForm 
@@ -115,7 +115,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                 className="w-full flex-1 flex flex-col items-center"
               >
                 <div className="text-center mb-2 shrink-0">
-                  <h2 className="text-2xl font-semibold text-[#111111]">Create Avatar</h2>
+                  <h2 className="text-2xl font-semibold text-black">Create Avatar</h2>
                   <p className="text-gray-500 text-sm mb-2">Join the community of Judges</p>
                 </div>
                 

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/Button';
-import { Check, FileUp, Lock } from 'lucide-react';
+import { Check, FileUp, Lock, CloudUpload, ArrowLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { Textarea } from './ui/Textarea';
@@ -12,15 +12,20 @@ import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { AuthOverlay } from './AuthOverlay';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useRouter } from 'next/navigation';
 
 interface PostFormProps {
   initialPost?: Post | null;
+  mode?: 'create' | 'edit';
   onSuccess?: () => void;
   onCancel?: () => void;
   isOverlay?: boolean;
 }
 
-export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }: PostFormProps) {
+export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = false }: PostFormProps) {
+  const router = useRouter();
+  const formMode = mode || (initialPost ? 'edit' : 'create');
+  const isEditMode = formMode === 'edit';
   const isEditing = !!initialPost;
   
   // FORM STATE
@@ -71,12 +76,91 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
     );
   }, [initialPost, title, category, description, image]);
 
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+
+  const validateAndSetImage = (file: File) => {
+    setUploadError(null);
+    
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif'];
+    const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.heic', '.heif'];
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+      setUploadError("Unsupported image format");
+      return false;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image must be under 5MB");
+      return false;
+    }
+
+    if (imagePreview && imagePreview.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview);
+    }
+
+    setImage(file);
+    const objectUrl = URL.createObjectURL(file);
+    setImagePreview(objectUrl);
+    return true;
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImage(file);
-      const objectUrl = URL.createObjectURL(file);
-      setImagePreview(objectUrl);
+      validateAndSetImage(file);
+    }
+    if (e.target) {
+      e.target.value = '';
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      validateAndSetImage(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      triggerFileInput();
     }
   };
 
@@ -129,7 +213,7 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
     return (
       <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
         <Lock className="w-16 h-16 text-gray-200 mb-6" />
-        <h1 className="text-3xl font-semibold mb-4 text-[#111111]">Login Required</h1>
+        <h1 className="text-3xl font-semibold mb-4 text-black">Login Required</h1>
         <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
           You must be logged in to post your work and receive feedback from the community.
         </p>
@@ -160,7 +244,7 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
             autoplay
           />
         </div>
-        <h1 className="text-2xl font-semibold mb-4 text-[#111111]">
+        <h1 className="text-2xl font-semibold mb-4 text-black">
           {isEditing ? "Post Updated!" : "Post Submitted!"}
         </h1>
         <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
@@ -185,9 +269,21 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
     >
       
       {/* HEADER */}
+      {!isOverlay && (
+        <div className="mb-6 md:mb-8">
+          <Button 
+            variant="secondary" 
+            onClick={() => router.back()}
+            className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+          >
+            <ArrowLeft className="w-5 h-5 text-black" />
+            Back
+          </Button>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
         <div>
-          <h1 className="text-3xl font-semibold mb-1.5 text-[#111111]">
+          <h1 className="text-3xl font-medium mb-1.5 text-black">
             {isEditing ? "Edit your Work" : "Post your Work"}
           </h1>
           <p className="text-sm text-gray-400">
@@ -222,43 +318,102 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
         <div className="space-y-10">
         
           {/* IMAGE UPLOAD */}
-          <div className="group relative w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] rounded-[32px] flex flex-col items-center justify-center hover:bg-[#FFF6DD] hover:border-[#FEC312] transition-all cursor-pointer overflow-hidden">
-            <input 
-              type="file" 
-              accept="image/*" 
-              className="absolute inset-0 opacity-0 cursor-pointer z-10"
-              onChange={handleImageUpload}
-            />
-            
-            {imagePreview ? (
-              <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/5">
-                <div 
-                  className="absolute inset-0 bg-cover bg-center blur-lg scale-110 opacity-60"
-                  style={{ backgroundImage: `url(${imagePreview})` }}
+          <div className="space-y-2">
+            <div 
+              className={cn(
+                "group relative rounded-[32px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEC312]",
+                !isEditMode ? "w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-[#FEC312] transition-all cursor-pointer" : "h-[180px] w-fit min-w-[200px] max-w-full bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
+                isDragging && !isEditMode && "bg-[#FFF6DD] border-[#FEC312] shadow-[0_0_20px_rgba(254,195,18,0.15)]"
+              )}
+              onDragEnter={!isEditMode ? handleDragEnter : undefined}
+              onDragOver={!isEditMode ? handleDragOver : undefined}
+              onDragLeave={!isEditMode ? handleDragLeave : undefined}
+              onDrop={!isEditMode ? handleDrop : undefined}
+              onClick={!isEditMode ? triggerFileInput : undefined}
+              onKeyDown={!isEditMode ? handleKeyDown : undefined}
+              tabIndex={!isEditMode ? 0 : undefined}
+              role={!isEditMode ? "button" : "img"}
+              aria-label={!isEditMode ? "Upload design image" : "Uploaded design image"}
+            >
+              {!isEditMode && (
+                <input 
+                  type="file" 
+                  accept="image/png, image/jpeg, image/webp, image/avif, image/heic, image/heif" 
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  ref={fileInputRef}
                 />
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
-                  className="relative z-10 max-w-full max-h-full object-contain" 
-                />
-                <div className="absolute top-4 right-4 z-20 flex gap-2">
-                   <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-widest">Preview</div>
+              )}
+              
+              {isDragging && !isEditMode ? (
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#FFF6DD]/80 backdrop-blur-sm pointer-events-none transition-opacity duration-200">
+                  <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                    <FileUp strokeWidth={2} className="w-12 h-12 text-[#FEC312] mb-3" />
+                    <p className="text-xl font-semibold text-black">Drop image here</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center text-center p-6">
-                <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                  <FileUp strokeWidth={1.5} className="w-15 h-15 opacity-40 group-hover:opacity-60 transition-opacity" />
+              ) : null}
+
+              {imagePreview ? (
+                <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/5">
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center blur-lg scale-110 opacity-60 pointer-events-none"
+                    style={{ backgroundImage: `url(${imagePreview})` }}
+                  />
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className={cn(
+                      "relative z-10 pointer-events-none object-contain",
+                      isEditMode ? "h-full w-auto max-w-full" : "max-w-full max-h-full"
+                    )}
+                  />
+                  <div className={cn("absolute z-20 flex gap-2", isEditMode ? "top-3 right-3" : "top-4 right-4")}>
+                     {isEditMode ? (
+                       <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                         <Lock className="w-2.5 h-2.5" /> Uploaded Image
+                       </div>
+                     ) : (
+                       <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-widest">Preview</div>
+                     )}
+                  </div>
+                  {!isEditMode && (
+                    <div className="absolute bottom-4 right-4 z-20">
+                      <button 
+                        type="button"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white/90 hover:bg-white backdrop-blur-md rounded-full text-xs font-semibold text-black shadow-lg transition-transform active:scale-95 pointer-events-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          triggerFileInput();
+                        }}
+                      >
+                        <FileUp className="w-3.5 h-3.5" />
+                        Change
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <p className="text-lg font-medium text-[#111111] mb-1">Drop your Design</p>
-                <p className="text-sm text-gray-400">Supports PNG, JPG (Max 10MB)</p>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center text-center p-6 pointer-events-none">
+                  <div className="w-16 h-16 mb-4 flex items-center justify-center">
+                    <FileUp strokeWidth={1.5} className="w-15 h-15 opacity-40 group-hover:opacity-60 transition-opacity" />
+                  </div>
+                  <p className="text-lg font-medium text-black mb-1">Drop your Design</p>
+                  <p className="text-sm text-gray-400">Supports PNG, JPG, WEBP, AVIF (Max 5MB)</p>
+                </div>
+              )}
+            </div>
+            {uploadError && !isEditMode && (
+              <p className="text-red-500 text-sm font-medium animate-in fade-in pl-4">
+                {uploadError}
+              </p>
             )}
           </div>
 
           {/* TITLE & DESCRIPTION */}
-          <div className="space-y-6">
-            <div>
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h3 className="font-medium text-[16px] text-black">Title</h3>
               <Input 
                 placeholder="Title" 
                 value={title}
@@ -267,7 +422,9 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
               />
             </div>
             
-            <div className="relative">
+            <div className="space-y-2">
+              <h3 className="font-medium text-[16px] text-black">Description</h3>
+              <div className="relative">
               <Textarea 
                 placeholder="Description" 
                 value={description}
@@ -280,10 +437,11 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
               </div>
             </div>
           </div>
+        </div>
 
-          {/* CATEGORIES */}
-          <div className="space-y-4" ref={categoryRef}>
-            <h3 className="font-medium text-lg text-[#111111]">Enter a Category</h3>
+        {/* CATEGORIES */}
+          <div className="space-y-2" ref={categoryRef}>
+            <h3 className="font-medium text-[16px] text-black">Category Tag</h3>
             <div className="relative">
               <Input
                 type="text"
@@ -389,9 +547,9 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
             <div className="bg-gray-50/50 border border-gray-200/60 rounded-[28px] p-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full bg-[#FEC312]/10 flex items-center justify-center shrink-0">
-                  <FileUp className="w-4 h-4 text-[#FEC312]" />
+                  <CloudUpload className="w-4 h-4 text-[#FEC312]" />
                 </div>
-                <h3 className="font-semibold text-lg text-[#111111]">Upload Your Work</h3>
+                <h3 className="font-medium text-lg text-black">Upload Your Work</h3>
               </div>
               <p className="text-sm text-gray-500 mb-6 leading-relaxed">
                 Share your design and get rated by the community.
@@ -412,12 +570,13 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
 
             <div className="flex flex-col gap-3">
               <Button 
-                className="px-8 h-12 rounded-full text-lg font-medium transition-transform active:scale-[0.98]" 
-                variant="primary"
+                className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all" 
+                variant="outline"
                 disabled={!title || (!image && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
                 onClick={handleSubmit}
+                isLoading={isSubmitting}
               >
-                {isSubmitting ? "Processing..." : isEditing ? "Update Post" : "Publish Design"}
+                {isEditing ? "Update Post" : "Post Design"}
               </Button>
               {isEditing && (
                 <Button 
@@ -442,12 +601,13 @@ export function PostForm({ initialPost, onSuccess, onCancel, isOverlay = false }
               Cancel
             </Button>
             <Button 
-              className="px-10 h-12 rounded-full text-lg font-medium transition-transform active:scale-[0.98]" 
-              variant="primary"
+              className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all" 
+              variant="outline"
               disabled={!title || (!image && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
               onClick={handleSubmit}
+              isLoading={isSubmitting}
             >
-              {isSubmitting ? "Processing..." : isEditing ? "Update Post" : "Publish Design"}
+              {isEditing ? "Update Post" : "Post Design"}
             </Button>
           </div>
         )}

@@ -103,7 +103,7 @@ export function FilterDropdown({
             >
               {/* Category Pills */}
               {selectedCategories.map(cat => (
-                <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap animate-in fade-in zoom-in duration-200">
+                <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-black whitespace-nowrap animate-in fade-in zoom-in duration-200">
                   {cat}
                   <button 
                     onClick={(e) => {
@@ -153,13 +153,13 @@ export function FilterDropdown({
 
             {/* SORT BY SECTION */}
             <div className="mb-8 relative flex items-center gap-4">
-                <label className="text-sm font-semibold text-[#111111] whitespace-nowrap">Sort by</label>
+                <label className="text-sm font-semibold text-black whitespace-nowrap">Sort by</label>
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
                         className="w-60 h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
                     >
-                        <span className="text-sm font-medium text-[#111111]">{getSortLabel(sortBy)}</span>
+                        <span className="text-sm font-medium text-black">{getSortLabel(sortBy)}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
@@ -173,7 +173,7 @@ export function FilterDropdown({
                                 onSortChange(key);
                                 setIsSortOpen(false);
                             }}
-                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-[#111111] hover:bg-gray-50 flex items-center justify-between transition-colors"
+                            className="w-full text-left px-4 py-2.5 text-sm font-medium text-black hover:bg-gray-50 flex items-center justify-between transition-colors"
                             >
                             {label}
                             {sortBy === key && <Check className="w-4 h-4 text-[#FEC312]" strokeWidth={2.5} />}
@@ -186,7 +186,7 @@ export function FilterDropdown({
 
             {/* CATEGORY SECTION */}
             <div className="mb-10">
-            <label className="block text-sm font-semibold text-[#111111] mb-3">Category</label>
+            <label className="block text-sm font-semibold text-black mb-3">Category</label>
             <div className="flex flex-wrap gap-2.5">
                 {CATEGORIES.map(cat => {
                 const isSelected = selectedCategories.includes(cat);
@@ -197,8 +197,8 @@ export function FilterDropdown({
                     className={cn(
                     "group pl-1.5 pr-2.5 py-2 rounded-full border-2 text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                     isSelected 
-                        ? "bg-[#ebebeb] border-[#727272] text-[#111111]" 
-                        : "bg-white border-[#E0E0E0] text-[#111111] hover:bg-[#fafafa]"
+                        ? "bg-[#ebebeb] border-[#727272] text-black" 
+                        : "bg-white border-[#E0E0E0] text-black hover:bg-[#fafafa]"
                     )}
                 >
                     {/* Toggle Indicator */}
@@ -219,7 +219,9 @@ export function FilterDropdown({
 
             {/* FOOTER ACTIONS */}
             <div className="flex items-center justify-start gap-4 pt-6 border-t border-[#F5F5F5]">
-            <button 
+            <Button 
+                variant="ghost"
+                className="h-10 px-6 rounded-full text-sm font-medium transition-all"
                 onClick={() => {
                   if (onReset) {
                     onReset();
@@ -228,12 +230,11 @@ export function FilterDropdown({
                     onCategoryChange([]);
                   }
                 }}
-                className="px-5 py-2 rounded-full text-sm font-semibold text-[#111111] transition-all duration-300 hover:bg-[#FEC312] hover:text-white"
             >
                 Reset
-            </button>
+            </Button>
             <Button 
-                className="rounded-full px-5 bg-white border-2 border-[#FEC312] text-[#111111] font-semibold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
+                className="rounded-full px-5 bg-white border-2 border-[#FEC312] text-black font-semibold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
                 onClick={onClose}
             >
                 Apply

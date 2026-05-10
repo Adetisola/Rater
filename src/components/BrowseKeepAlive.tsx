@@ -1,1 +1,1 @@
-export { default as BrowseKeepAlive } from "@/app/app/browse/BrowseContent";
+export { default as BrowseKeepAlive } from "./BrowseContent";

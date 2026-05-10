@@ -207,7 +207,7 @@ export function Header({
                 className="flex items-center gap-3 md:p-1.5 md:pr-4 rounded-full bg-white hover:bg-surface transition-all group"
             >
                 <div 
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+                    className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
                     style={{ backgroundColor: currentAvatar.bg_color }}
                 >
                     {currentAvatar.avatar_url ? (
@@ -216,7 +216,7 @@ export function Header({
                         currentAvatar.name.charAt(0).toUpperCase()
                     )}
                 </div>
-                <span className="text-sm font-semibold text-[#111111] hidden md:inline">{currentAvatar.name}</span>
+                <span className="text-sm font-semibold text-black hidden md:inline">{currentAvatar.name}</span>
             </Link>
           )}
         </div>
@@ -245,7 +245,7 @@ export function Header({
                   onClick={() => searchInputRef.current?.focus()}
                 >
                   {selectedCategories.map(cat => (
-                    <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-[#111111] whitespace-nowrap animate-in fade-in zoom-in duration-200">
+                    <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-black whitespace-nowrap animate-in fade-in zoom-in duration-200">
                       {cat}
                       <button 
                         onClick={(e) => {
@@ -391,7 +391,7 @@ export function Header({
                     <img src="/icons/search.svg" alt="Search" className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" />
                     <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
                         {selectedCategories.length > 0 ? (
-                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-[#111111] whitespace-nowrap overflow-hidden">
+                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap overflow-hidden">
                                 <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedCategories[0]}</span>
                                 {selectedCategories.length > 1 && <span className="ml-1 text-gray-500 shrink-0">+{selectedCategories.length - 1}</span>}
                             </span>

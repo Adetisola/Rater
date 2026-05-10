@@ -7,8 +7,8 @@ import { generateUsernameFromName } from '../logic/usernameUtils';
 interface AuthContextType {
   currentAvatar: Avatar | null;
   allAvatars: Record<string, Avatar>;
-  login: (name: string, passkey: string) => Promise<boolean>;
-  signup: (name: string, passkey: string, avatar_url?: string, username?: string) => Promise<boolean>;
+  login: (identifier: string, passkey: string) => Promise<boolean>;
+  signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string) => Promise<{ ok: boolean; error?: string }>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
   checkUsernameAvailable: (username: string, excludeId: string) => Promise<boolean>;
   logout: () => void;
@@ -64,11 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [sessionAvatars, mockOverrides]);
 
-  const login = useCallback(async (usernameInput: string, passkey: string): Promise<boolean> => {
+  const login = useCallback(async (identifier: string, passkey: string): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     // Normalize: strip @, extract from profile URLs, trim, lowercase
-    let normalized = usernameInput.trim().toLowerCase();
+    let normalized = identifier.trim().toLowerCase();
     
     // Handle pasted profile URLs (e.g. "rater.app/@timmycodes")
     const urlMatch = normalized.match(/\/@([a-z0-9_]+)/);
@@ -79,9 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       normalized = normalized.replace(/^@/, '');
     }
 
-    // Lookup by username ONLY
+    // Lookup by username OR email
     const avatar = Object.values(allAvatars).find(
-      a => a.username.toLowerCase() === normalized && a.passkey === passkey
+      a => (a.username.toLowerCase() === normalized || a.email?.toLowerCase() === normalized) && a.passkey === passkey
     );
 
     if (avatar) {
@@ -93,16 +93,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   }, [allAvatars]);
 
-  const signup = useCallback(async (name: string, passkey: string, avatar_url?: string, username?: string): Promise<boolean> => {
+  const signup = useCallback(async (name: string, email: string, passkey: string, avatar_url?: string, username?: string): Promise<{ ok: boolean; error?: string }> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    const existing = Object.values(allAvatars).map(a => a.username);
+    const existingUsernames = Object.values(allAvatars).map(a => a.username.toLowerCase());
+    const existingEmails = Object.values(allAvatars).map(a => a.email?.toLowerCase()).filter(Boolean);
     
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (existingEmails.includes(normalizedEmail)) {
+      return { ok: false, error: 'Email already in use' };
+    }
+
     // Use provided username or generate one based on name.
     // If a provided username is already taken (race condition), use the utility to generate a unique variant.
-    let finalUsername = username?.trim() || generateUsernameFromName(name, existing);
-    if (username && existing.includes(finalUsername.toLowerCase())) {
-        finalUsername = generateUsernameFromName(finalUsername, existing);
+    let finalUsername = username?.trim() || generateUsernameFromName(name, existingUsernames);
+    if (username && existingUsernames.includes(finalUsername.toLowerCase())) {
+        finalUsername = generateUsernameFromName(finalUsername, existingUsernames);
     }
 
     const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
@@ -110,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const newAvatar: Avatar = {
       id: newId,
       username: finalUsername,
+      email: normalizedEmail,
       name: name.trim(),
       role: 'Designer',
       passkey,
@@ -123,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSessionAvatars(prev => ({ ...prev, [newId]: newAvatar }));
     setCurrentAvatar(newAvatar);
     localStorage.setItem('rater_avatar_id', newId);
-    return true;
+    return { ok: true };
   }, [allAvatars]);
 
   const checkUsernameAvailable = useCallback(async (username: string, excludeId: string): Promise<boolean> => {

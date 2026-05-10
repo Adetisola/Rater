@@ -84,7 +84,7 @@ export function FullscreenAvatarOverlay({ isOpen, onClose, avatarUrl, name }: Fu
                     className="w-11 h-11 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all group"
                     title="Download Avatar"
                 >
-                    <Download className="w-5 h-5 md:w-5.5 md:h-5.5 text-[#111111]" />
+                    <Download className="w-5 h-5 md:w-5.5 md:h-5.5 text-black" />
                 </button>
             </div>
             
