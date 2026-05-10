@@ -1,13 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
 import { SubmitPage } from "@/components/SubmitPage";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function AppSubmitPage() {
-  const router = useRouter();
-
   return (
     <>
 
