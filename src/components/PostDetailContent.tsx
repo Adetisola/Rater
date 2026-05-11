@@ -767,7 +767,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">
                             <div className="w-16 h-16 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🙌</div>
-                            <h3 className="font-bold text-xl mb-2">Thanks for your feedback</h3>
+                            <h3 className="font-semibold text-xl mb-2">Thanks for your feedback</h3>
                             <p className="text-gray-500">Your review has been recorded.</p>
                          </div>
                     )}
@@ -848,14 +848,16 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.reviewer_id || review.reviewer_name || review.id}`} alt="" className="w-full h-full object-cover" />
                                         )}
                                     </div>
-                                    <span className="font-semibold text-base text-black">{getReviewerDisplayName(review)}</span>
-                                    <div className="flex gap-0.5">
-                                        {[1,2,3,4,5].map(i => (
-                                            <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
-                                        ))}
+                                    <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
+                                        <span className="font-medium text-base text-black truncate max-w-[150px] xs:max-w-none">{getReviewerDisplayName(review)}</span>
+                                        <div className="flex gap-0.5">
+                                            {[1,2,3,4,5].map(i => (
+                                                <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
+                                            ))}
+                                        </div>
                                     </div>
                                     <span 
-                                      className="text-xs text-gray-400 font-medium"
+                                      className="text-xs text-gray-400 font-medium ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0"
                                       title={fullTime}
                                     >
                                       {timeLabel}
@@ -889,7 +891,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                                     <div className="text-right shrink-0 xs:hidden">
                                         <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                        <div className="text-xl font-semibold md:font-bold text-black">{ratingAvg.toFixed(1)}/5.0</div>
+                                        <div className="text-lg font-semibold md:font-bold text-black">{ratingAvg.toFixed(1)}/5.0</div>
                                     </div>
                                 </div>
                             </div>
