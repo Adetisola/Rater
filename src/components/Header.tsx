@@ -13,6 +13,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useRecentSearches } from '../hooks/useRecentSearches';
+import { useAmbientPlaceholder } from '../hooks/useAmbientPlaceholder';
+import { AmbientPlaceholder } from './AmbientPlaceholder';
 import { AuthOverlay } from './AuthOverlay';
 
 interface HeaderProps {
@@ -63,6 +65,14 @@ export function Header({
 
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Ambient rotating placeholder (desktop only)
+  const ambientPlaceholder = useAmbientPlaceholder({
+    isFocused: isSearchFocused,
+    inputValue: searchQuery,
+    hasCategories: selectedCategories.length > 0,
+    enabled: true, // always enabled — visibility gated by CSS (desktop only)
+  });
 
   // Data state
   const [searchResults, setSearchResults] = useState<SectionedSearchResults>({ avatars: [], posts: [], categories: [] });
@@ -256,27 +266,34 @@ export function Header({
                     </span>
                   ))}
 
-                  <input 
-                    ref={searchInputRef}
-                    type="text" 
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    onFocus={() => { 
-                      setIsSearchFocused(true); 
-                      if (hasResults || recentItems.length > 0) setShowSearchResults(true); 
-                    }}
-                    onBlur={() => setIsSearchFocused(false)}
-                    onKeyDown={(e) => {
-                      handleKeyDown(e);
-                      if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
-                        const newCats = [...selectedCategories];
-                        newCats.pop();
-                        onCategoryChange(newCats);
-                      }
-                    }}
-                    placeholder={selectedCategories.length === 0 ? "Search by title, avatar, or category..." : ""} 
-                    className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 h-8"
-                  />
+                  <div className="relative flex-1 min-w-[120px] h-8">
+                    <input 
+                      ref={searchInputRef}
+                      type="text" 
+                      value={searchQuery}
+                      onChange={(e) => onSearchChange(e.target.value)}
+                      onFocus={() => { 
+                        setIsSearchFocused(true); 
+                        if (hasResults || recentItems.length > 0) setShowSearchResults(true); 
+                      }}
+                      onBlur={() => setIsSearchFocused(false)}
+                      onKeyDown={(e) => {
+                        handleKeyDown(e);
+                        if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
+                          const newCats = [...selectedCategories];
+                          newCats.pop();
+                          onCategoryChange(newCats);
+                        }
+                      }}
+                      placeholder="" 
+                      className="w-full h-full bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 relative z-[1]"
+                    />
+                    <AmbientPlaceholder
+                      text={ambientPlaceholder.currentText}
+                      transitionKey={ambientPlaceholder.transitionKey}
+                      visible={searchQuery === '' && selectedCategories.length === 0}
+                    />
+                  </div>
                 </div>
                 
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">

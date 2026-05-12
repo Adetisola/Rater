@@ -299,7 +299,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                      ) : (
                          <div className="flex justify-between items-start px-2 mt-1">
                              <p className="text-[11px] text-gray-500 leading-tight pr-2">
-                                 This is your display name — emojis allowed.
+                                 It's your display name(emojis allowed)
                              </p>
                              {name.trim() && (
                                  <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none">
@@ -336,7 +336,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                     <div className="relative">
                         <Input 
                             type={showPasskey ? "text" : "password"}
-                            placeholder="Enter Passkey (min. 8 characters)" 
+                            placeholder="Enter Passkey" 
                             value={passkey}
                             onChange={(e) => setPasskey(e.target.value)}
                             onFocus={() => {}}

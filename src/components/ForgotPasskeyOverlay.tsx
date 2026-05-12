@@ -44,7 +44,7 @@ export function ForgotPasskeyOverlay({ onCancel, onSend }: ForgotPasskeyOverlayP
         <div className="bg-white w-full max-w-md rounded-[32px] p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col items-center">
             
             <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-2 text-black">Recover your Avatar</h2>
+                <h2 className="text-2xl font-medium mb-2 text-black">Recover your Avatar</h2>
                 <p className="text-sm text-gray-500 max-w-[290px] mx-auto leading-relaxed">
                     If you added an email when creating this avatar, we can help you recover access.
                 </p>
@@ -53,21 +53,18 @@ export function ForgotPasskeyOverlay({ onCancel, onSend }: ForgotPasskeyOverlayP
             <div className="w-full mb-8">
                  <Input 
                      type="email"
-                     placeholder="Enter the email linked to this avatar" 
+                     placeholder="Enter the email linked to your avatar" 
                      value={email}
                      onChange={(e) => setEmail(e.target.value)}
                      className="h-12 rounded-xl border-gray-300 text-sm px-4 focus-visible:ring-[#FEC312]/20 focus-visible:border-[#FEC312]"
                  />
-                 <p className="text-[10px] text-center text-black mt-3 font-medium opacity-60">
-                    If no email was added, this avatar cannot be recovered.
-                 </p>
             </div>
 
             <div className="flex items-center justify-center gap-4 w-full">
                  <Button 
                     variant="ghost"
                     onClick={onCancel}
-                    className="h-12 px-6 rounded-full text-lg font-medium text-gray-500 transition-all"
+                    className="h-12 px-6 rounded-full text-base font-medium text-gray-500 transition-all"
                  >
                     Cancel
                  </Button>

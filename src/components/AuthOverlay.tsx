@@ -99,7 +99,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
               >
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-medium text-black mb-1">Welcome Back</h2>
-                  <p className="text-gray-500 text-sm">Enter your @username to continue</p>
+                  <p className="text-gray-500 text-sm">Enter your @username/email to continue</p>
                 </div>
                 <AccessAvatarForm 
                   onSuccess={handleLoginSuccess} 
