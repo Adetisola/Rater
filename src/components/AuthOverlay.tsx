@@ -98,7 +98,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                 className="w-full flex flex-col items-center"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-semibold text-black mb-2">Welcome Back</h2>
+                  <h2 className="text-2xl font-medium text-black mb-1">Welcome Back</h2>
                   <p className="text-gray-500 text-sm">Enter your @username to continue</p>
                 </div>
                 <AccessAvatarForm 
@@ -115,7 +115,7 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                 className="w-full flex-1 flex flex-col items-center"
               >
                 <div className="text-center mb-2 shrink-0">
-                  <h2 className="text-2xl font-semibold text-black">Create Avatar</h2>
+                  <h2 className="text-2xl font-medium text-black">Create Avatar</h2>
                   <p className="text-gray-500 text-sm mb-2">Join the community of Judges</p>
                 </div>
                 

@@ -101,17 +101,17 @@ export function ImageFallback({
         <div className="absolute inset-0 bg-gray-300" />
 
         {/* Content */}
-        <div className={`relative z-10 flex flex-col items-center justify-center w-full h-full min-h-[160px] gap-3 px-6 py-8 transition-opacity duration-300 ${isRetrying ? 'opacity-40' : 'opacity-100'}`}>
+        <div className={`relative z-10 flex flex-col items-center justify-center w-full h-full min-h-[130px] md:min-h-[160px] gap-2 md:gap-3 px-6 py-6 md:py-8 transition-opacity duration-300 ${isRetrying ? 'opacity-30' : 'opacity-100'}`}>
           {/* Desaturated Logo */}
           <img
             src="/icons/rater-logo-transparent-bg-stroked.svg"
             alt=""
-            className="w-10 h-10 grayscale brightness-75 contrast-75 pointer-events-none select-none"
+            className="w-8 h-8 md:w-10 md:h-10 grayscale brightness-75 contrast-75 pointer-events-none select-none"
             draggable={false}
           />
 
           {/* Primary Text */}
-          <p className="text-[13px] font-medium text-black text-center leading-tight select-none">
+          <p className="text-[10px] md:text-[13px] font-medium text-black text-center leading-tight select-none">
             This work couldn&apos;t be displayed
           </p>
 

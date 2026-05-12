@@ -8,7 +8,7 @@ interface AuthContextType {
   currentAvatar: Avatar | null;
   allAvatars: Record<string, Avatar>;
   login: (identifier: string, passkey: string) => Promise<boolean>;
-  signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string) => Promise<{ ok: boolean; error?: string }>;
+  signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string) => Promise<{ ok: boolean; error?: string }>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
   checkUsernameAvailable: (username: string, excludeId: string) => Promise<boolean>;
   logout: () => void;
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return false;
   }, [allAvatars]);
 
-  const signup = useCallback(async (name: string, email: string, passkey: string, avatar_url?: string, username?: string): Promise<{ ok: boolean; error?: string }> => {
+  const signup = useCallback(async (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string): Promise<{ ok: boolean; error?: string }> => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     const existingUsernames = Object.values(allAvatars).map(a => a.username.toLowerCase());
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       username: finalUsername,
       email: normalizedEmail,
       name: name.trim(),
-      role: 'Designer',
+      role: role || 'Designer',
       passkey,
       avatar_url,
       bg_color: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],

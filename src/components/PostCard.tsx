@@ -159,7 +159,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                     
                     {isTopRated && (
                         <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
-                            <div className="bg-white text-black text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                            <div className="bg-white text-black text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
                                 <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
                                     {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
                                     <DotLottieReact
@@ -221,7 +221,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                 </div>
 
                 <div 
-                    className="flex items-center gap-2 mb-2 sm:mb-4 group/avatar pointer-events-auto cursor-pointer relative z-20 max-w-full"
+                    className="flex items-center gap-2 mb-2 sm:mb-3 group/avatar pointer-events-auto cursor-pointer relative z-20 max-w-full"
                     data-no-route-loader
                     onClick={(e) => {
                         e.preventDefault();
@@ -238,11 +238,11 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                             className="w-full h-full object-cover" 
                         />
                     </div>
-                    <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="text-xs md:text-sm font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-[#FEC312] transition-colors truncate shrink-0">
+                    <div className="flex-1 min-w-0 truncate text-black group-hover/card:text-white transition-colors">
+                        <span className="text-xs font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-[#FEC312] transition-colors">
                             {avatar?.name || 'Unknown'}
                         </span>
-                        <span className="text-[10px] text-gray-400 font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors truncate">
+                        <span className="ml-1.5 text-[10px] text-gray-400 font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors">
                             @{avatar?.username || post.avatar_id}
                         </span>
                     </div>

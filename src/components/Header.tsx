@@ -204,10 +204,10 @@ export function Header({
             <Link 
                 href={`/@${currentAvatar.username}`}
                 scroll={false}
-                className="flex items-center gap-3 md:p-1.5 md:pr-4 rounded-full bg-white hover:bg-surface transition-all group"
+                className="block shrink-0 transition-all hover:scale-105 active:scale-95"
             >
                 <div 
-                    className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs shrink-0"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden shadow-sm"
                     style={{ backgroundColor: currentAvatar.bg_color }}
                 >
                     {currentAvatar.avatar_url ? (
@@ -216,7 +216,6 @@ export function Header({
                         currentAvatar.name.charAt(0).toUpperCase()
                     )}
                 </div>
-                <span className="text-sm font-semibold text-black hidden md:inline">{currentAvatar.name}</span>
             </Link>
           )}
         </div>
@@ -226,10 +225,7 @@ export function Header({
             {(!currentAvatar) ? (
               <div className="w-[44px] h-[44px] sm:w-12 sm:h-12" />
             ) : (
-              <div className="flex items-center gap-3 p-1.5 pr-4 rounded-full">
-                <div className="w-10 h-10 rounded-full" />
-                <span className="text-sm font-semibold hidden md:inline">{currentAvatar.name}</span>
-              </div>
+              <div className="w-10 h-10 rounded-full" />
             )}
           </div>
         )}

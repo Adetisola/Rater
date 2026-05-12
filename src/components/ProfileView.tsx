@@ -497,10 +497,10 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         </div>
 
         {/* Info */}
-        <div className="flex-1 text-center md:text-left pt-2 min-w-0">
-          <div className="flex flex-col items-center md:items-start gap-1 mb-3 min-w-0">
+        <div className="flex-1 text-center md:text-left pt-2 min-w-0 w-full">
+          <div className="flex flex-col items-center md:items-start gap-1 mb-3 min-w-0 w-full">
             {/* USERNAME + DISPLAY NAME */}
-            <div className="min-w-0">
+            <div className="min-w-0 w-full">
               {editState !== 'idle' ? (
                 <div className="flex flex-col gap-1.5 mb-2">
                   {/* Display Name */}
@@ -591,12 +591,12 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center md:flex-row md:items-baseline md:gap-2">
-                  <h1 className="text-xl font-medium text-black tracking-tight truncate">
+                <div className="flex flex-col items-center md:flex-row md:items-baseline md:gap-2 w-full">
+                  <h1 className="text-xl md:text-2xl font-medium text-black tracking-tight break-all w-full md:w-auto px-4 md:px-0">
                     {targetAvatar.name}
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <p className="text-[15px] text-gray-400 font-medium">@{targetAvatar.username}</p>
+                  <div className="flex items-center justify-center md:justify-start gap-2 w-full md:w-auto">
+                    <p className="text-[15px] text-gray-400 font-medium break-all px-4 md:px-0">@{targetAvatar.username}</p>
                     {isMe && editState === 'idle' && (
                       <button 
                         onClick={startEditing}
@@ -651,7 +651,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             </div>
           )}
 
-          <div className="max-w-lg mb-8 text-center md:text-left text-[15px]">
+          <div className="max-w-lg mb-8 text-center md:text-left text-[15px] mx-auto md:mx-0 px-4 md:px-0">
             {editState !== 'idle' ? (
               <div className="relative group">
                 <textarea

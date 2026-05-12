@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { generateUsernameFromName } from '../logic/usernameUtils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AtSign, ChevronLeft, Loader2, CheckCircle2, UserRound, Pencil, Eye, EyeOff } from 'lucide-react';
+import { AtSign, ChevronLeft, Loader2, CheckCircle2, UserRound, Pencil, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface CreateAvatarOverlayProps {
@@ -36,8 +36,11 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // UI Steps
-  const [step, setStep] = useState<'create' | 'username'>('create');
+  const [step, setStep] = useState<'create' | 'username' | 'role'>('create');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Role State
+  const [selectedRole, setSelectedRole] = useState('');
 
   // Name State
   const [nameError, setNameError] = useState<string | null>(null);
@@ -146,11 +149,27 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
     setStep('username');
   };
 
-  const handleFinalSubmit = async () => {
+  const handleUsernameStepSubmit = async () => {
     if (validationResult.status !== 'valid' && validationResult.status !== 'unchanged') return;
     
+    // Move to role step
+    setDirection(1);
+    setStep('role');
+  };
+
+  const SUGGESTED_ROLES = [
+    'Logo Designer', 'Brand Designer', 'UI Designer', 'UX Designer',
+    'Graphic Designer', 'Product Designer', 'Illustrator', 'Creative Developer',
+    'Motion Designer', '3D Artist', 'Visual Designer', 'Web Designer',
+    'Art Director', 'Photographer', 'AI Artist',
+  ];
+
+  const handleRoleSubmit = async () => {
+    const role = selectedRole.trim();
+    if (!role) return;
+
     setIsSubmitting(true);
-    const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput);
+    const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput, role);
     
     if (result.ok) {
       onCreate(name, passkey, email);
@@ -393,7 +412,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                  </div>
             </form>
           </motion.div>
-        ) : (
+        ) : step === 'username' ? (
           <motion.div
             key="username"
             custom={direction}
@@ -408,7 +427,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
               <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <AtSign className="w-8 h-8 text-[#FEC312]" />
               </div>
-              <h2 className="text-2xl font-medium text-black mb-2">Claim your username</h2>
+              <h2 className="text-xl font-medium text-black mb-1">Claim your username</h2>
               <p className="text-gray-400 text-sm">This is your unique identity on Rater</p>
             </div>
 
@@ -422,10 +441,10 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                   value={usernameInput}
                   onChange={(e) => handleUsernameChange(e.target.value)}
                   className={cn(
-                    "h-14 pl-[170px] pr-4 text-[17px] font-medium rounded-2xl border-2 transition-all outline-none",
-                    validationResult.status === 'valid' && "border-green-200 focus-visible:border-green-400 bg-green-50/10",
-                    validationResult.status === 'taken' && "border-red-200 focus-visible:border-red-400 bg-red-50/10",
-                    (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-100"
+                    "h-12 pl-[170px] pr-4 text-base font-normal rounded-xl border transition-all outline-none",
+                    validationResult.status === 'valid' && "border-green-400 focus-visible:border-green-400 bg-green-50/10",
+                    validationResult.status === 'taken' && "border-red-400 focus-visible:border-red-400 bg-red-50/10",
+                    (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-300 focus-visible:border-[#FEC312]"
                   )}
                   disabled={isSubmitting}
                 />
@@ -452,12 +471,12 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
               <div className="flex flex-col gap-3 pt-6">
                 <Button 
                   variant='outline' 
-                  onClick={handleFinalSubmit} 
+                  onClick={handleUsernameStepSubmit} 
                   disabled={!['valid', 'unchanged'].includes(validationResult.status) || isSubmitting} 
                   className="w-full h-12 rounded-full text-lg font-medium transition-all"
-                  isLoading={isSubmitting || validationResult.status === 'checking'}
+                  isLoading={validationResult.status === 'checking'}
                 >
-                  Claim & Continue
+                  Continue
                 </Button>
                 <Button 
                   variant='secondary'
@@ -466,6 +485,91 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAva
                     setStep('create');
                   }} 
                   className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Go back
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="role"
+            custom={direction}
+            variants={stepVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="w-full flex flex-col items-center"
+          >
+            <div className="text-center mb-8 mt-8">
+              <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-8 h-8 text-[#FEC312]" />
+              </div>
+              <h2 className="text-xl font-medium text-black mb-1">Who are you?</h2>
+              <p className="text-gray-400 text-sm">Choose or describe your creative role.</p>
+            </div>
+
+            <div className="w-full space-y-6 px-1">
+              {/* Custom role input */}
+              <div className="relative group">
+                <Input 
+                  autoFocus
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value.slice(0, 50))}
+                  placeholder="e.g. Visual Storyteller"
+                  className={cn(
+                    "h-12 px-4 text-base font-normal rounded-xl border transition-all outline-none",
+                    selectedRole.trim() ? "border-[#FEC312] focus-visible:border-[#FEC312]" : "border-gray-300 focus-visible:border-[#FEC312]"
+                  )}
+                  disabled={isSubmitting}
+                  maxLength={50}
+                />
+                <span className={cn(
+                  "absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-medium transition-opacity duration-200",
+                  selectedRole.length > 0 ? "text-gray-300 opacity-100" : "opacity-0"
+                )}>
+                  {selectedRole.length}/50
+                </span>
+              </div>
+
+              {/* Suggested role chips */}
+              <div className="flex flex-wrap gap-2">
+                {SUGGESTED_ROLES.map((role) => (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => setSelectedRole(role)}
+                    className={cn(
+                      "px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all duration-200",
+                      selectedRole === role
+                        ? "bg-[#FEC312]/10 border-[#FEC312]/40 text-black"
+                        : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                    )}
+                  >
+                    {role}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-col gap-3 pt-4">
+                <Button 
+                  variant='outline' 
+                  onClick={handleRoleSubmit} 
+                  disabled={!selectedRole.trim() || isSubmitting}
+                  className="w-full h-12 rounded-full text-lg font-medium transition-all"
+                  isLoading={isSubmitting}
+                >
+                  Complete Setup
+                </Button>
+                <Button 
+                  variant='secondary'
+                  onClick={() => {
+                    setDirection(-1);
+                    setStep('username');
+                  }} 
+                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+                  disabled={isSubmitting}
                 >
                   <ChevronLeft className="w-4 h-4" /> Go back
                 </Button>
