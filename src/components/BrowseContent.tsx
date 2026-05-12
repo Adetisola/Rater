@@ -9,7 +9,6 @@ import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
 import { MOCK_AVATARS, CATEGORIES, calculatePostMetrics, type Post, type Avatar } from '@/logic/mockData';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { createSearchIndexes, searchPosts } from '@/logic/searchUtils';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useBadges } from '@/hooks/useBadges';
 import { useHotPosts } from '@/hooks/useHotPosts';
 import { X } from 'lucide-react';
@@ -39,18 +38,15 @@ export default function BrowseContent() {
 
   // Local state for fast typing in search
   const [searchQuery, setSearchQuery] = useState(urlQuery);
-  const debouncedSearchQuery = useDebounce(searchQuery, 200);
 
   // Results state
   const [sortedPosts, setSortedPosts] = useState<Post[]>([]);
   const [isProcessing, setIsProcessing] = useState(true);
 
-  // Sync debounced search to URL
-  useEffect(() => {
-    if (debouncedSearchQuery !== urlQuery) {
-      updateUrl({ q: debouncedSearchQuery || null });
-    }
-  }, [debouncedSearchQuery, urlQuery]);
+  // Handle search submission (only on Enter)
+  const handleSearchSubmit = (query: string) => {
+    updateUrl({ q: query || null });
+  };
 
   const selectedAvatar = useMemo(() => {
     if (!avatarId) return null;
@@ -120,8 +116,8 @@ export default function BrowseContent() {
             // 1. Initial filter (Avatar or Search)
             if (selectedAvatar) {
                 posts = allPosts.filter(post => post.avatar_id === selectedAvatar.id);
-            } else if (debouncedSearchQuery.trim().length >= 2) {
-                const results = await searchPosts(searchIndexes, debouncedSearchQuery, 100);
+            } else if (urlQuery.trim().length >= 2) {
+                const results = await searchPosts(searchIndexes, urlQuery, 100);
                 posts = results.map(r => r.post);
             } else {
                 posts = [...allPosts];
@@ -161,7 +157,7 @@ export default function BrowseContent() {
 
             // 4. Balanced Curated Sort
             let finalPosts = posts;
-            if (sortBy === 'balanced' && debouncedSearchQuery.trim().length < 2) {
+            if (sortBy === 'balanced' && urlQuery.trim().length < 2) {
                 finalPosts = await curatedFreshnessSort(posts);
             }
 
@@ -182,7 +178,7 @@ export default function BrowseContent() {
 
     processPosts();
     return () => { isMounted = false; };
-  }, [searchIndexes, debouncedSearchQuery, selectedCategories, sortBy, selectedAvatar]);
+  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar]);
 
   return (
     <>
@@ -194,6 +190,7 @@ export default function BrowseContent() {
         onLogoClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onSearchSubmit={handleSearchSubmit}
         sortBy={sortBy}
         onSortChange={setSortBy}
         selectedCategories={selectedCategories}
@@ -218,6 +215,7 @@ export default function BrowseContent() {
         activeLayoutId={searchLayoutId}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onSearchSubmit={handleSearchSubmit}
         sortBy={sortBy}
         onSortChange={setSortBy}
         selectedCategories={selectedCategories}
@@ -302,14 +300,17 @@ export default function BrowseContent() {
                 </div>
               )}
               
-              {debouncedSearchQuery.trim().length >= 2 && !selectedAvatar && (
+              {urlQuery.trim().length >= 2 && !selectedAvatar && (
                 <div className="max-w-[1600px] mx-auto px-6 mb-5">
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-sm text-gray-500 font-medium">Results for</span>
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111] rounded-full">
-                      <span className="text-sm font-semibold text-white">"{debouncedSearchQuery.trim()}"</span>
+                      <span className="text-sm font-semibold text-white">"{urlQuery.trim()}"</span>
                       <button
-                        onClick={() => setSearchQuery('')}
+                        onClick={() => {
+                            setSearchQuery('');
+                            handleSearchSubmit('');
+                        }}
                         className="w-4 h-4 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
                         aria-label="Clear search"
                       >
@@ -340,7 +341,7 @@ export default function BrowseContent() {
                     <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
                         {sortedPosts.length > 0 
                           ? "You've reached the end of the feed"
-                          : sortedPosts.length === 0 && debouncedSearchQuery.trim() 
+                          : sortedPosts.length === 0 && urlQuery.trim() 
                             ? "No matches found for your search"
                             : "No posts found"}
                     </p>

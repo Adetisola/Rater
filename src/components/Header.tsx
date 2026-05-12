@@ -22,6 +22,7 @@ interface HeaderProps {
     onLogoClick?: () => void;
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    onSearchSubmit?: (query: string) => void;
     sortBy: string;
     onSortChange: (sort: string) => void;
     selectedCategories: string[];
@@ -40,6 +41,7 @@ export function Header({
     onLogoClick, 
     searchQuery, 
     onSearchChange,
+    onSearchSubmit,
     sortBy,
     onSortChange,
     selectedCategories,
@@ -116,6 +118,11 @@ export function Header({
   const isRecentMode = isSearchFocused && debouncedQuery.trim() === '';
 
   useEffect(() => {
+    if (!isSearchFocused) {
+      setShowSearchResults(false);
+      return;
+    }
+
     if (isRecentMode && recentItems.length > 0) {
       setShowSearchResults(true);
     } else if (debouncedQuery.trim().length >= 2 && hasResults) {
@@ -123,7 +130,7 @@ export function Header({
     } else {
       setShowSearchResults(false);
     }
-  }, [debouncedQuery, hasResults, isRecentMode, recentItems.length]);
+  }, [debouncedQuery, hasResults, isRecentMode, recentItems.length, isSearchFocused]);
 
   // Handle avatar click
   const handleAvatarClick = (avatar: Avatar) => {
@@ -171,6 +178,7 @@ export function Header({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       if (searchQuery.trim().length > 0) addSearch(searchQuery.trim());
+      onSearchSubmit?.(searchQuery.trim());
       setShowSearchResults(false);
       searchInputRef.current?.blur();
     } else if (e.key === 'Escape') {
@@ -244,7 +252,7 @@ export function Header({
         <div className={`hidden min-[769px]:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
           <div className="relative w-full group">
             <div className={`relative w-full transition-opacity duration-200 ${isFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 z-10 transition-opacity ${isSearching ? 'opacity-20' : 'opacity-40 group-focus-within:opacity-100'}`} />
+                <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 z-10 transition-opacity pointer-events-none ${isSearching ? 'opacity-20' : 'opacity-40 group-focus-within:opacity-100'}`} />
 
                 <div 
                   className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-[#FEC312] bg-white flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-[#FEC312]/10"
@@ -286,7 +294,7 @@ export function Header({
                         }
                       }}
                       placeholder="" 
-                      className="w-full h-full bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 relative z-[1]"
+                      className="w-full h-full bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 relative z-1"
                     />
                     <AmbientPlaceholder
                       text={ambientPlaceholder.currentText}
@@ -296,7 +304,27 @@ export function Header({
                   </div>
                 </div>
                 
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-0.5">
+                    <AnimatePresence>
+                      {searchQuery && (
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSearchChange('');
+                            onSearchSubmit?.('');
+                            searchInputRef.current?.focus();
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                          title="Clear search"
+                        >
+                          <X size={16} strokeWidth={2.5} />
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
+                    
                     <button 
                         onClick={() => setIsFilterOpen(true)}
                         className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
@@ -319,6 +347,7 @@ export function Header({
               onRecentSearchClick={(q) => {
                  addSearch(q);
                  onSearchChange(q);
+                 onSearchSubmit?.(q);
               }}
               onRemoveRecentItem={removeItem}
               onClearRecent={clearAll}
@@ -334,6 +363,7 @@ export function Header({
                  selectedCategories={selectedCategories}
                  onCategoryChange={onCategoryChange}
                  onReset={onReset}
+                 onSearchSubmit={onSearchSubmit}
                  className="top-0 left-0 w-full shadow-2xl"
             />
           </div>

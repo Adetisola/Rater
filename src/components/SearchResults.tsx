@@ -71,12 +71,6 @@ export function SearchResults({
         document.body
       )}
       
-      {/* Header-area backdrop - close with blur */}
-      <div 
-        className="absolute inset-x-0 -top-20 h-32 z-41" 
-        onClick={onClose}
-      />
-      
       {/* Results Dropdown */}
       <div 
         className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden max-h-[70vh] overflow-y-auto"
@@ -302,6 +296,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
     <Link
       href={`/post/${post.id}`}
       scroll={false}
+      onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start cursor-pointer"
     >

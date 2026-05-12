@@ -28,6 +28,7 @@ interface MobileSearchOverlayProps {
   onClose: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onSearchSubmit?: (query: string) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
   selectedCategories: string[];
@@ -44,6 +45,7 @@ export function MobileSearchOverlay({
   onClose,
   searchQuery,
   onSearchChange,
+  onSearchSubmit,
   sortBy,
   onSortChange,
   selectedCategories,
@@ -160,6 +162,7 @@ export function MobileSearchOverlay({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       if (searchQuery.trim().length > 0) addSearch(searchQuery.trim());
+      onSearchSubmit?.(searchQuery.trim());
       searchInputRef.current?.blur();
       onClose();
     } else if (e.key === 'Escape') {
@@ -211,8 +214,25 @@ export function MobileSearchOverlay({
                 onChange={(e) => onSearchChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Start typing to search..." 
-                className="w-full h-11 pl-12 pr-4 bg-transparent font-sans text-base placeholder:text-gray-400 focus:outline-none"
+                className="w-full h-11 pl-12 pr-10 bg-transparent font-sans text-base placeholder:text-gray-400 focus:outline-none"
               />
+              <AnimatePresence>
+                {searchQuery && (
+                  <motion.button
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSearchChange('');
+                      searchInputRef.current?.focus();
+                    }}
+                    className="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 active:bg-gray-100 transition-colors"
+                  >
+                    <X size={16} strokeWidth={2.5} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </motion.div>
 
         <button 
@@ -296,6 +316,7 @@ export function MobileSearchOverlay({
                             e.preventDefault(); e.stopPropagation(); 
                             addSearch(item.query);
                             onSearchChange(item.query); 
+                            onSearchSubmit?.(item.query);
                           }}
                           className="flex-1 w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
                         >

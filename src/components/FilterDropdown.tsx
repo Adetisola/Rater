@@ -23,6 +23,7 @@ interface FilterDropdownProps {
   selectedCategories: string[];
   onCategoryChange: (categories: string[]) => void;
   onReset?: () => void;
+  onSearchSubmit?: (query: string) => void;
   className?: string; // Allow positioning customization
 }
 
@@ -51,6 +52,7 @@ export function FilterDropdown({
   selectedCategories,
   onCategoryChange,
   onReset,
+  onSearchSubmit,
   className 
 }: FilterDropdownProps) {
   const [mounted, setMounted] = useState(false);
@@ -124,11 +126,13 @@ export function FilterDropdown({
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 onKeyDown={(e) => {
-                  // Backspace to remove last tag if input is empty
                   if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
                     const newCats = [...selectedCategories];
                     newCats.pop();
                     onCategoryChange(newCats);
+                  } else if (e.key === 'Enter') {
+                    onSearchSubmit?.(searchQuery);
+                    onClose();
                   }
                 }}
                 placeholder={selectedCategories.length === 0 ? "Search by title, avatar, or category..." : ""} 

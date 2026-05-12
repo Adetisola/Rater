@@ -42,8 +42,8 @@ const AMBIENT_MESSAGES: Record<string, string[]> = {
   evening: [
     "Good evening",
     "Evening inspiration hits different",
-    "Browsing after hours?",
-    "Quiet hours, good designs",
+    "Browsing late, huh?",
+    "Quiet hours",
   ],
   night: [
     "Hi, night owl",
