@@ -1,12 +1,5 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { Suspense } from 'react';
-import BrowseContent from '@/components/BrowseContent';
-
-export default function BrowsePage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen bg-white" />}>
-      <BrowseContent />
-    </Suspense>
-  );
+export default function LegacyBrowse() {
+  redirect("/browse");
 }

@@ -12,8 +12,8 @@ export function FloatingPostButton() {
   const pathname = usePathname();
   const params = useParams();
 
-  // Only show on Avatar pages (/app/avatar, or /@username) for logged in users
-  const isAvatarPage = pathname.startsWith('/app/avatar') || pathname.startsWith('/@');
+  // Only show on Avatar pages (/avatar, or /@username) for logged in users
+  const isAvatarPage = pathname.startsWith('/avatar') || pathname.startsWith('/@');
   if (!currentAvatar || !isAvatarPage) return null;
 
   // If we are on an avatar page, we should only show the post button if it's OUR OWN profile
@@ -26,14 +26,14 @@ export function FloatingPostButton() {
       }
   }
   
-  // For /app/avatar/[username] (legacy or secondary)
+  // For /avatar/[username] (legacy or secondary)
   if (params.username) {
       const routeUsername = (params.username as string).toLowerCase();
       if (routeUsername !== currentAvatar.username.toLowerCase()) return null;
   }
   
-  // Also handle the base /app/avatar (which currently redirects but let's be safe)
-  if (pathname === '/app/avatar' && !params.username && !params.alias) {
+  // Also handle the base /avatar (which currently redirects but let's be safe)
+  if (pathname === '/avatar' && !params.username && !params.alias) {
       // Just showing for the owner is implied here since it's the base route
   }
 
@@ -44,7 +44,7 @@ export function FloatingPostButton() {
                 variant="outline" 
                 onClick={() => {
                   window.dispatchEvent(new Event('app-navigation-start'));
-                  router.push('/app/submit', { scroll: false });
+                  router.push('/submit', { scroll: false });
                 }}
                 className={cn(
                     "w-[56px] h-[56px] sm:w-auto sm:h-14 rounded-full px-4 sm:px-6 shadow-2xl border-2 border-[#FEC312] bg-white transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap",

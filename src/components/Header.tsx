@@ -192,7 +192,7 @@ export function Header({
         <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
           {(!currentAvatar || hideControls) ? (
             <Link 
-              href="/app/browse"
+              href="/browse"
               scroll={false}
               onClick={onLogoClick}
               className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"

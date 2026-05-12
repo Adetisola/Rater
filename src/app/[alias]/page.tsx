@@ -9,6 +9,34 @@ import { FloatingPostButton } from '../../components/FloatingPostButton';
 import { TopLoadingBar } from '../../components/TopLoadingBar';
 import { Footer } from '../../components/Footer';
 
+/**
+ * Reserved route segments that cannot be used as usernames.
+ * These match top-level app routes to prevent conflicts.
+ */
+const RESERVED_ROUTES = new Set([
+  'browse',
+  'submit',
+  'settings',
+  'post',
+  'login',
+  'signup',
+  'search',
+  'notifications',
+  'profile',
+  'api',
+  'avatar',
+  'app',
+  'admin',
+  'about',
+  'help',
+  'terms',
+  'privacy',
+  'feed',
+  'explore',
+  'discover',
+  'home',
+]);
+
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
   const { allAvatars, isLoading } = useAuth();
@@ -23,6 +51,11 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
   }
 
   const slug = decodedAlias.slice(1).toLowerCase();
+
+  // Guard: reject reserved route names used as usernames
+  if (RESERVED_ROUTES.has(slug)) {
+    notFound();
+  }
 
   // 1. Find by current username
   const targetAvatar = Object.values(allAvatars).find(

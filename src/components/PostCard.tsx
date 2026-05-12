@@ -115,7 +115,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
 
   return (
     <Link 
-      href={`/app/post/${post.id}`} 
+      href={`/post/${post.id}`} 
       scroll={false} 
       className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
       onClick={onClick}

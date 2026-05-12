@@ -189,7 +189,7 @@ export default function BrowseContent() {
       <Header 
         onPostClick={() => {
           window.dispatchEvent(new Event('app-navigation-start'));
-          router.push('/app/submit', { scroll: false });
+          router.push('/submit', { scroll: false });
         }} 
         onLogoClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
         searchQuery={searchQuery}
@@ -201,7 +201,7 @@ export default function BrowseContent() {
         hideControls={false}
         onPostSelect={(post) => {
           window.dispatchEvent(new Event('app-navigation-start'));
-          router.push(`/app/post/${post.id}`, { scroll: false });
+          router.push(`/post/${post.id}`, { scroll: false });
         }}
         onAvatarSelect={handleAvatarSelect}
         onReset={resetFilters}
@@ -224,7 +224,7 @@ export default function BrowseContent() {
         onCategoryChange={handleCategoryChange}
         onPostSelect={(post) => {
           window.dispatchEvent(new Event('app-navigation-start'));
-          router.push(`/app/post/${post.id}`, { scroll: false });
+          router.push(`/post/${post.id}`, { scroll: false });
           setIsMobileSearchOpen(false);
         }}
         onAvatarSelect={(avatar) => {

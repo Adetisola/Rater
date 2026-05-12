@@ -52,7 +52,7 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
 
   // 3. Handle Route Changes
   useEffect(() => {
-    const isAppScope = pathname.startsWith('/app') || pathname.startsWith('/@');
+    const isAppScope = pathname !== '/' && !pathname.startsWith('/app');
     if (!isAppScope) {
       sessionStorage.removeItem("rater_is_pop_nav");
       return;

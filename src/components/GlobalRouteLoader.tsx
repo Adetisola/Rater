@@ -89,8 +89,9 @@ function GlobalLoaderContent() {
       lastPathname.current = pathname;
       lastSearch.current = currentSearch;
 
-      // Only act if we are within the app scope
-      if (pathname.startsWith("/app")) {
+      // Only act if we are within the app scope (all non-landing routes)
+      const isAppScope = pathname !== '/' && !pathname.startsWith('/app');
+      if (isAppScope) {
         // Fallback: If intent wasn't caught (e.g. browser back button), start it now
         if (status === "idle") {
           startLoader();
@@ -125,7 +126,10 @@ function GlobalLoaderContent() {
       if (Date.now() < suppressUntil) return;
 
       const href = typeof url === "string" ? url : url.pathname;
-      if (href.startsWith("/app") || href.includes("/app/")) {
+      // Trigger for all in-app routes (exclude landing page and legacy /app/* which redirects)
+      const isAppRoute = href !== '/' && !href.startsWith('/app');
+      const isProfileRoute = href.startsWith('/@') || href.startsWith('/%40');
+      if (isAppRoute || isProfileRoute) {
         // Defer start to the next tick to avoid scheduling updates during 
         // sensitive phases like useInsertionEffect (common in Next.js 15 router)
         setTimeout(() => {

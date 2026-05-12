@@ -8,7 +8,7 @@
  * Returns true if handled natively (mobile), false if the caller should show custom UI (desktop).
  */
 export async function sharePost(postId: string, title?: string): Promise<boolean> {
-  const url = `${window.location.origin}/app/post/${postId}`;
+  const url = `${window.location.origin}/post/${postId}`;
 
   // Simple mobile detection
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

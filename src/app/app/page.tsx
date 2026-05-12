@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function AppIndex() {
-  redirect("/app/browse");
+export default function LegacyAppIndex() {
+  redirect("/browse");
 }

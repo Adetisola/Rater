@@ -84,12 +84,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     if (isRightSwipe && prevPostId) {
       await controls.start({ x: window.innerWidth, transition: { type: 'spring', bounce: 0, duration: 0.3 } });
       window.dispatchEvent(new Event('app-navigation-start'));
-      router.replace(`/app/post/${prevPostId}`, { scroll: false });
+      router.replace(`/post/${prevPostId}`, { scroll: false });
     } 
     else if (isLeftSwipe && nextPostId) {
       await controls.start({ x: -window.innerWidth, transition: { type: 'spring', bounce: 0, duration: 0.3 } });
       window.dispatchEvent(new Event('app-navigation-start'));
-      router.replace(`/app/post/${nextPostId}`, { scroll: false });
+      router.replace(`/post/${nextPostId}`, { scroll: false });
     } 
     else {
       controls.start({ x: 0, transition: { type: 'spring', bounce: 0.1, duration: 0.4 } });
@@ -305,7 +305,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (nextPostId) {
       window.dispatchEvent(new Event('app-navigation-start'));
-      router.replace(`/app/post/${nextPostId}`, { scroll: false });
+      router.replace(`/post/${nextPostId}`, { scroll: false });
     }
   }, [nextPostId, router]);
 
@@ -313,7 +313,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (prevPostId) {
       window.dispatchEvent(new Event('app-navigation-start'));
-      router.replace(`/app/post/${prevPostId}`, { scroll: false });
+      router.replace(`/post/${prevPostId}`, { scroll: false });
     }
   }, [prevPostId, router]);
 
