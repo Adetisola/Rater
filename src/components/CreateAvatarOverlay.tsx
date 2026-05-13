@@ -16,6 +16,7 @@ interface CreateAvatarOverlayProps {
   onClose: () => void;
   onCreate: (name: string, passkey: string, email?: string) => void;
   isEmbedded?: boolean;
+  prefillName?: string;
 }
 
 // Validation Helper
@@ -26,8 +27,8 @@ function validateDisplayName(name: string): string | null {
   return null;
 }
 
-export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded }: CreateAvatarOverlayProps) {
-  const [name, setName] = useState('');
+export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName }: CreateAvatarOverlayProps) {
+  const [name, setName] = useState(prefillName || '');
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
   const [email, setEmail] = useState('');

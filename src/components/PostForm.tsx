@@ -65,6 +65,42 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // --- DRAFT PERSISTENCE ---
+  useEffect(() => {
+    if (formMode === 'create') {
+      const saved = localStorage.getItem('rater_post_form_draft');
+      if (saved) {
+        try {
+          const draft = JSON.parse(saved);
+          if (draft.title) setTitle(draft.title);
+          if (draft.description) setDescription(draft.description);
+          if (draft.categoryInputValue) {
+            setCategoryInputValue(draft.categoryInputValue);
+            if (CATEGORIES.includes(draft.categoryInputValue as Category)) {
+              setCategory(draft.categoryInputValue as Category);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse post draft', e);
+        }
+      }
+    }
+  }, [formMode]);
+
+  useEffect(() => {
+    if (formMode !== 'create') return;
+    
+    const timeout = setTimeout(() => {
+      const draft = { title, description, categoryInputValue };
+      const hasContent = title.trim() || description.trim() || categoryInputValue.trim();
+      if (hasContent) {
+        localStorage.setItem('rater_post_form_draft', JSON.stringify(draft));
+      }
+    }, 600);
+
+    return () => clearTimeout(timeout);
+  }, [title, description, categoryInputValue, formMode]);
 
   const hasChanges = useMemo(() => {
     if (!initialPost) return true;
@@ -199,6 +235,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           created_at: new Date().toISOString()
         };
         addPost(newPost);
+        localStorage.removeItem('rater_post_form_draft');
         setIsSuccess(true);
         setTimeout(() => onSuccess?.(), 1500);
       }
@@ -582,7 +619,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 <Button 
                   variant="ghost" 
                   className="h-12 rounded-full text-gray-500 font-medium"
-                  onClick={onCancel}
+                  onClick={() => {
+                    if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
+                    onCancel?.();
+                  }}
                 >
                   Cancel
                 </Button>
@@ -593,13 +633,16 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
         {isOverlay && (
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button 
-              variant="ghost" 
-              className="h-12 px-8 rounded-full text-gray-500 font-medium"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
+              <Button 
+                variant="ghost" 
+                className="h-12 px-8 rounded-full text-gray-500 font-medium"
+                onClick={() => {
+                  if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
+                  onCancel?.();
+                }}
+              >
+                Cancel
+              </Button>
             <Button 
               className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all" 
               variant="outline"

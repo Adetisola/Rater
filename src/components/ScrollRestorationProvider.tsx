@@ -22,19 +22,14 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
   
   // Refs to track navigation state without triggering re-renders
   const isRestoring = useRef(false);
+  const visitedRoutes = useRef<Set<string>>(new Set());
+  const prevRouteKey = useRef<string>(routeKey);
 
   // 1. Force manual control
   useEffect(() => {
     if ('scrollRestoration' in history) {
       history.scrollRestoration = 'manual';
     }
-    
-    const handlePop = () => {
-      sessionStorage.setItem("rater_is_pop_nav", "true");
-    };
-
-    window.addEventListener('popstate', handlePop);
-    return () => window.removeEventListener('popstate', handlePop);
   }, []);
 
   // 2. Continuous Scroll Capture
@@ -54,12 +49,18 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const isAppScope = pathname !== '/' && !pathname.startsWith('/app');
     if (!isAppScope) {
-      sessionStorage.removeItem("rater_is_pop_nav");
+      prevRouteKey.current = routeKey;
       return;
     }
 
-    const isPop = sessionStorage.getItem("rater_is_pop_nav") === "true";
-    sessionStorage.removeItem("rater_is_pop_nav");
+    // Identify if this is a back/forward nav by checking if we've visited this exact route before
+    const isPop = visitedRoutes.current.has(routeKey);
+
+    // Update history tracking: add the route we are LEAVING
+    if (prevRouteKey.current !== routeKey) {
+      visitedRoutes.current.add(prevRouteKey.current);
+      prevRouteKey.current = routeKey;
+    }
 
     const savedStr = sessionStorage.getItem("rater_scroll_" + routeKey);
     const saved = savedStr ? parseInt(savedStr, 10) : 0;
@@ -82,20 +83,18 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
 
     isRestoring.current = true;
     let elapsed = 0;
-    const MAX_WAIT = 5000; // Increased to 5s to handle heavy pages
-    const INTERVAL = 30;   // Check more frequently (30ms)
+    const MAX_WAIT = 5000;
+    const INTERVAL = 30;
 
     const tryRestore = () => {
       const maxScroll = document.body.scrollHeight - window.innerHeight;
       
-      // If page is ready or we've waited too long, scroll
       if (maxScroll >= saved || elapsed >= MAX_WAIT) {
         window.scrollTo({
           top: saved,
           behavior: 'instant' as any
         });
         
-        // Safety: ensure it stuck. Masonry grids can jump multiple times.
         setTimeout(() => {
             if (Math.abs(window.scrollY - saved) > 5) {
                 window.scrollTo({ top: saved, behavior: 'instant' as any });

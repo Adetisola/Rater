@@ -720,23 +720,14 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     </div>
                 </div>
 
-                {!isSelfPost && (
-                  <>
-                    <div className="text-xs text-[#EB5757] font-medium pt-2">
-                         *Attribution is claimed by the submitter and not independently verified. 
-                         <button onClick={() => setIsReportOpen(true)} className="underline text-sm font-semibold ml-1 hover:text-[#c0392b]">Report</button> if you believe attribution is incorrect.
-                    </div>
-                    
-                    {isReportOpen && (
-                        <ReportPostOverlay 
-                            onClose={() => setIsReportOpen(false)} 
-                            onSubmit={(reason, details) => {
-                                console.log('Report submitted:', reason, details);
-                                setIsReportOpen(false);
-                            }} 
-                        />
-                    )}
-                  </>
+                {isReportOpen && (
+                    <ReportPostOverlay 
+                        onClose={() => setIsReportOpen(false)} 
+                        onSubmit={(reason, details) => {
+                            console.log('Report submitted:', reason, details);
+                            setIsReportOpen(false);
+                        }} 
+                    />
                 )}
 
                 {isShareOpen && <SharePostOverlay onClose={() => setIsShareOpen(false)} post_id={post.id} />}
@@ -763,6 +754,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             onSubmit={handleReviewSubmit} 
                             isLoggedIn={!!currentAvatar}
                             initialName={currentAvatar?.name}
+                            postId={post.id}
+                            userId={currentAvatar?.id}
                         />
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">

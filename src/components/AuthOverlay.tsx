@@ -11,9 +11,11 @@ import { CreateAvatarOverlay } from './CreateAvatarOverlay';
 interface AuthOverlayProps {
   onClose: () => void;
   initialTab?: 'login' | 'signup';
+  prefillName?: string;
+  redirectOnSuccess?: boolean;
 }
 
-export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps) {
+export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redirectOnSuccess = true }: AuthOverlayProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
@@ -126,8 +128,11 @@ export function AuthOverlay({ onClose, initialTab = 'login' }: AuthOverlayProps)
                         onClose={onClose} 
                         onCreate={async () => {
                             onClose();
-                            router.push('/browse', { scroll: false });
-                        }} 
+                            if (redirectOnSuccess) {
+                                router.push('/browse', { scroll: false });
+                            }
+                        }}
+                        prefillName={prefillName}
                     />
                 </div>
               </motion.div>
