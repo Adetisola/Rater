@@ -32,17 +32,25 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // 2. Continuous Scroll Capture
+  // 2. Continuous Scroll Capture (Debounced to prevent saving clamped values during layout shifts)
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
     const handleScroll = () => {
       if (isRestoring.current) return;
       
-      // Save position for the current route
-      sessionStorage.setItem("rater_scroll_" + routeKey, window.scrollY.toString());
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        // Save position for the current route
+        sessionStorage.setItem("rater_scroll_" + routeKey, window.scrollY.toString());
+      }, 100);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
   }, [routeKey]);
 
   // 3. Handle Route Changes
@@ -90,17 +98,23 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
       const maxScroll = document.body.scrollHeight - window.innerHeight;
       
       if (maxScroll >= saved || elapsed >= MAX_WAIT) {
-        window.scrollTo({
-          top: saved,
-          behavior: 'instant' as any
-        });
+        window.scrollTo({ top: saved, behavior: 'instant' as any });
         
-        setTimeout(() => {
-            if (Math.abs(window.scrollY - saved) > 5) {
-                window.scrollTo({ top: saved, behavior: 'instant' as any });
-            }
+        const restoreStart = performance.now();
+        const stabilityObserver = new ResizeObserver(() => {
+          if (Math.abs(window.scrollY - saved) > 5) {
+            window.scrollTo({ top: saved, behavior: 'instant' as any });
+          }
+          if (performance.now() - restoreStart > 3000) {
+            stabilityObserver.disconnect();
             isRestoring.current = false;
-        }, 150);
+          }
+        });
+        stabilityObserver.observe(document.body);
+        setTimeout(() => {
+          stabilityObserver.disconnect();
+          isRestoring.current = false;
+        }, 3000);
         return;
       }
       

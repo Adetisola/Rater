@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Header } from '@/components/Header';
@@ -29,39 +29,7 @@ export default function BrowseContent() {
   const pathname = usePathname();
   const { currentAvatar } = useAuth();
   const { posts: allPosts } = usePosts();
-  const prevIsActive = useRef(pathname === '/browse' || pathname === '/browse/');
 
-  // Handle browse-specific scroll persistence for the keep-alive layer
-  useEffect(() => {
-    const isBrowseActive = pathname === '/browse' || pathname === '/browse/';
-    
-    // 1. Returning to browse: Restore position
-    if (isBrowseActive && !prevIsActive.current) {
-      const savedStr = sessionStorage.getItem('rater_browse_scroll');
-      const savedPos = savedStr ? parseInt(savedStr, 10) : 0;
-      
-      if (savedPos > 0) {
-        let elapsed = 0;
-        const tryRestore = () => {
-          const maxScroll = document.body.scrollHeight - window.innerHeight;
-          if (maxScroll >= savedPos || elapsed >= 3000) {
-            window.scrollTo({ top: savedPos, behavior: 'instant' as any });
-          } else {
-            elapsed += 50;
-            setTimeout(tryRestore, 50);
-          }
-        };
-        setTimeout(tryRestore, 50);
-      }
-    }
-    
-    // 2. Leaving browse: Capture position
-    if (!isBrowseActive && prevIsActive.current) {
-      sessionStorage.setItem('rater_browse_scroll', window.scrollY.toString());
-    }
-
-    prevIsActive.current = isBrowseActive;
-  }, [pathname]);
 
   // Read URL params
   const urlQuery = searchParams.get('q') || '';
