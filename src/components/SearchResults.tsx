@@ -64,6 +64,7 @@ export function SearchResults({
       {createPortal(
         <div 
             className="fixed inset-0 z-40 bg-transparent" 
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               (onSoftClose || onClose)();
             }}

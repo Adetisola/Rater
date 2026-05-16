@@ -16,7 +16,7 @@ export function WhatChanges() {
     state === 'exited'  ? 'reveal-exited'  : '';
 
   return (
-    <section id="what-changes" className="py-16 md:py-24 relative z-10">
+    <section id="what-changes" className="py-16 md:py-24 relative z-10 scroll-mt-[90px]">
       <div ref={sectionRef} className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-14 md:gap-20">
         
         {/* Left Side — Supporting Visual */}

@@ -4,10 +4,6 @@
 @config "../../tailwind.config.js";
 
 @layer base {
-  html {
-    scroll-padding-top: 90px; /* offset for sticky navbar height */
-  }
-
   body {
     @apply font-sans antialiased text-gray-900 bg-white;
   }

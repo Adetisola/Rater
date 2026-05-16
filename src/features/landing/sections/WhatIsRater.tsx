@@ -17,7 +17,7 @@ export function WhatIsRater() {
     state === 'exited'  ? 'reveal-exited'  : '';
 
   return (
-    <section id="what-is-rater" className="py-16 md:py-24 relative z-10">
+    <section id="what-is-rater" className="py-16 md:py-24 relative z-10 scroll-mt-[90px]">
       <div ref={sectionRef} className="max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col md:flex-row items-center gap-14 md:gap-20">
         
         {/* Left Side — Text Content */}

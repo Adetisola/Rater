@@ -67,6 +67,7 @@ export function Header({
 
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ambient rotating placeholder (desktop only)
   const ambientPlaceholder = useAmbientPlaceholder({
@@ -166,6 +167,7 @@ export function Header({
   };
 
   const handleCloseSearch = () => {
+    if (blurTimeoutRef.current) { clearTimeout(blurTimeoutRef.current); blurTimeoutRef.current = null; }
     setIsSearchFocused(false);
     setShowSearchResults(false);
     searchInputRef.current?.blur();
@@ -281,10 +283,14 @@ export function Header({
                       value={searchQuery}
                       onChange={(e) => onSearchChange(e.target.value)}
                       onFocus={() => { 
+                        if (blurTimeoutRef.current) { clearTimeout(blurTimeoutRef.current); blurTimeoutRef.current = null; }
                         setIsSearchFocused(true); 
                         if (hasResults || recentItems.length > 0) setShowSearchResults(true); 
                       }}
-                      onBlur={() => setIsSearchFocused(false)}
+                      onBlur={() => {
+                        if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
+                        blurTimeoutRef.current = setTimeout(() => { setIsSearchFocused(false); }, 150);
+                      }}
                       onKeyDown={(e) => {
                         handleKeyDown(e);
                         if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {

@@ -48,7 +48,7 @@ export function HowItWorks() {
   const stateClass = state === 'visible' ? 'reveal-visible' : '';
 
   return (
-    <section id="how-it-works" className="py-16 md:py-24 relative z-10 bg-white" ref={sectionRef}>
+    <section id="how-it-works" className="py-16 md:py-24 relative z-10 bg-white scroll-mt-[90px]" ref={sectionRef}>
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12">
 
         {/* ── MOBILE LAYOUT (<768px): normal flow, no absolute positioning ── */}
