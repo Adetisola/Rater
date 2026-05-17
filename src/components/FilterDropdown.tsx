@@ -29,9 +29,9 @@ interface FilterDropdownProps {
 
 // Internal sort key → display label mapping (mirrors App.tsx SORT_LABELS)
 const SORT_OPTIONS: { key: string; label: string }[] = [
-  { key: 'highest_rated', label: 'Highest Rated' },
-  { key: 'most_reviewed', label: 'Most Reviewed' },
-  { key: 'newest',        label: 'Newest'        },
+  { key: 'highest_rated', label: 'Top' },
+  { key: 'most_reviewed', label: 'Hot' },
+  { key: 'newest',        label: 'Recent'        },
 ];
 
 // Returns the display label for a given sort key
@@ -161,7 +161,7 @@ export function FilterDropdown({
                 <div className="relative">
                     <button 
                         onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="w-60 h-12 px-5 bg-transparent border border-[#EBEBEB] rounded-xl flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
+                        className="w-48 py-2 px-4 bg-transparent border border-[#EBEBEB] rounded-full flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
                     >
                         <span className="text-sm font-medium text-black">{getSortLabel(sortBy)}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />

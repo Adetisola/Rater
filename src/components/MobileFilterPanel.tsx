@@ -22,9 +22,9 @@ interface MobileFilterPanelProps {
 
 // Internal sort key → display label mapping
 const SORT_OPTIONS: { key: string; label: string }[] = [
-  { key: 'highest_rated', label: 'Highest Rated' },
-  { key: 'most_reviewed', label: 'Most Reviewed' },
-  { key: 'newest',        label: 'Newest'        },
+  { key: 'highest_rated', label: 'Top' },
+  { key: 'most_reviewed', label: 'Hot' },
+  { key: 'newest',        label: 'Recent'        },
 ];
 
 function getSortLabel(sortKey: string): string {

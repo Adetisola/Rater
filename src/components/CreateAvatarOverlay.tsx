@@ -17,6 +17,7 @@ interface CreateAvatarOverlayProps {
   onCreate: (name: string, passkey: string, email?: string) => void;
   isEmbedded?: boolean;
   prefillName?: string;
+  onLogin?: () => void;
 }
 
 // Validation Helper
@@ -27,7 +28,7 @@ function validateDisplayName(name: string): string | null {
   return null;
 }
 
-export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName }: CreateAvatarOverlayProps) {
+export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin }: CreateAvatarOverlayProps) {
   const [name, setName] = useState(prefillName || '');
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
@@ -411,6 +412,20 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                         Continue
                      </Button>
                  </div>
+                 {onLogin && (
+                   <div className="text-center pt-2">
+                      <p className="text-sm text-gray-500">
+                        Already have an avatar?{' '}
+                        <button 
+                            type="button"
+                            onClick={onLogin}
+                            className="text-black font-semibold hover:text-[#FEC312]"
+                        >
+                            Login
+                        </button>
+                      </p>
+                   </div>
+                 )}
             </form>
           </motion.div>
         ) : step === 'username' ? (

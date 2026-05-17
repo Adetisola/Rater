@@ -4,6 +4,7 @@ export type Category =
   | 'Web Design' 
   | 'Mobile App Design' 
   | 'Brand Identity Design' 
+  | 'Mockup Design' 
   | 'Logo Design' 
   | 'Poster Design' 
   | 'Flyer Design' 
@@ -84,14 +85,15 @@ export interface Badge {
 // --- MOCK DATABASE ---
 
 export const CATEGORIES: Category[] = [
-  'Web Design', 
-  'Mobile App Design', 
-  'Brand Identity Design', 
-  'Logo Design', 
-  'Poster Design', 
-  'Flyer Design', 
-  'Social Media Design', 
-  'AI Image', 
+  'Web Design',
+  'Mobile App Design',
+  'Brand Identity Design',
+  'Mockup Design',
+  'Logo Design',
+  'Poster Design',
+  'Flyer Design',
+  'Social Media Design',
+  'AI Image',
   '3D Design',
   'Packaging Design',
   'Banner Design',

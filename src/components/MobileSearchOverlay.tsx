@@ -18,9 +18,9 @@ import { Search } from 'lucide-react';
 // Maps internal sort keys → display labels for active filter pills
 const SORT_OPTION_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
-  highest_rated: 'Highest Rated',
-  most_reviewed: 'Most Reviewed',
-  newest: 'Newest',
+  highest_rated: 'Top',
+  most_reviewed: 'Hot',
+  newest: 'Recent',
 };
 
 interface MobileSearchOverlayProps {

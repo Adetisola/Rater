@@ -407,11 +407,11 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   />
                   <div className={cn("absolute z-20 flex gap-2", isEditMode ? "top-3 right-3" : "top-4 right-4")}>
                      {isEditMode ? (
-                       <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-bold text-white uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                       <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-semibold text-white uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
                          <Lock className="w-2.5 h-2.5" /> Uploaded Image
                        </div>
                      ) : (
-                       <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-widest">Preview</div>
+                       <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-semibold text-white uppercase tracking-widest">Preview</div>
                      )}
                   </div>
                   {!isEditMode && (

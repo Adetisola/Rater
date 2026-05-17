@@ -17,9 +17,9 @@ import { usePosts } from '@/context/PostContext';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
-  highest_rated: 'Highest Rated',
-  most_reviewed: 'Most Reviewed',
-  newest: 'Newest',
+  highest_rated: 'Top',
+  most_reviewed: 'Hot',
+  newest: 'Recent',
 };
 
 

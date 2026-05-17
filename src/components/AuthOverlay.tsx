@@ -133,6 +133,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                             }
                         }}
                         prefillName={prefillName}
+                        onLogin={() => setActiveTab('login')}
                     />
                 </div>
               </motion.div>

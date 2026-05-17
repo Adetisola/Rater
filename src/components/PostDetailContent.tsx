@@ -227,8 +227,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
   }, [userReviews, post.id]);
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [sortBy, setSortBy] = useState('Newest');
-  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('Recent');
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
@@ -363,9 +362,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
       const getAvg = (r: Review) => (r.clarity + r.purpose + r.aesthetics) / 3;
       const getTime = (r: Review) => new Date(r.created_at).getTime();
 
-      if (sortBy === 'Highest Rated') return getAvg(b) - getAvg(a);
-      if (sortBy === 'Lowest Rated') return getAvg(a) - getAvg(b);
-      if (sortBy === 'Newest') return getTime(b) - getTime(a);
+      if (sortBy === 'Top') return getAvg(b) - getAvg(a);
+      if (sortBy === 'Critical') return getAvg(a) - getAvg(b);
+      if (sortBy === 'Recent') return getTime(b) - getTime(a);
       if (sortBy === 'Oldest') return getTime(a) - getTime(b);
       return 0;
     });
@@ -618,16 +617,16 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </div>
 
                 {/* 3. Title */}
-                <div className="flex items-center justify-between mb-2">
-                    <h1 className="text-xl xs:text-xl font-semibold text-black leading-tight">
+                <div className="flex items-center justify-between mb-2 gap-4">
+                    <h1 className="text-lg xs:text-xl font-semibold text-black leading-tight">
                         {post.title}
                     </h1>
                     <div 
                         ref={reviewCountTooltipRef}
-                        className="relative group/tooltip cursor-help"
+                        className="relative group/tooltip cursor-help shrink-0"
                         onClick={() => setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible)}
                     >
-                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center">
+                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap">
                             {isHot && (
                                 <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                     {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -771,32 +770,24 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
         {/* BOTTOM SECTION: Reviews List */}
         <div className="border-t border-gray-100 pt-8 xs:pt-12">
-            <div className="flex items-center gap-4 mb-8">
-                <h2 className="text-2xl font-semibold text-black">Reviews ({allReviews.length})</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
+                <h2 className="text-2xl font-semibold text-black shrink-0">Reviews ({allReviews.length})</h2>
                 
-                <div className="relative">
-                    <button 
-                        onClick={() => setIsSortOpen(!isSortOpen)}
-                        className="px-4 py-2 border border-black rounded-lg text-sm font-semibold flex items-center gap-2 bg-white hover:bg-gray-50"
-                    >
-                        {sortBy}
-                        <ChevronDown className={`w-4 h-4 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {isSortOpen && (
-                        <div className="absolute top-full left-0 mt-2 w-40 bg-white border border-gray-100 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                            {['Highest Rated', 'Lowest Rated', 'Newest', 'Oldest'].map((option) => (
-                                <button
-                                    key={option}
-                                    onClick={() => { setSortBy(option); setIsSortOpen(false); }}
-                                    className={`w-full text-left px-4 py-3 text-sm font-semibold hover:bg-gray-50 flex items-center justify-between ${sortBy === option ? 'bg-gray-50 text-[#FEC312]' : 'text-black'}`}
-                                >
-                                    {option}
-                                    {sortBy === option && <Check className="w-4 h-4" />}
-                                </button>
-                            ))}
-                        </div>
-                    )}
+                <div className="flex flex-wrap gap-2 sm:ml-auto">
+                    {['Recent', 'Top', 'Critical', 'Oldest'].map((option) => (
+                        <button
+                            key={option}
+                            type="button"
+                            onClick={() => setSortBy(option)}
+                            className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all duration-200 ${
+                                sortBy === option
+                                    ? "bg-[#FEC312]/10 border-[#FEC312]/40 text-black"
+                                    : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                            }`}
+                        >
+                            {option}
+                        </button>
+                    ))}
                 </div>
             </div>
 

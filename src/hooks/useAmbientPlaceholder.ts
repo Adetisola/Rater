@@ -51,6 +51,7 @@ const AMBIENT_MESSAGES: Record<string, string[]> = {
     "Midnight inspiration?",
     "Still exploring?",
     "Late-night design session?",
+    "Burning pixels tonight?",
     "The quiet hours are creative",
     "Ideas don't sleep early",
     "Night mode fits you",
