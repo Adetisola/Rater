@@ -222,14 +222,15 @@ export function MobileFilterPanel({
 
   const footerContent = (
     <div className="flex gap-3">
-      <button 
+      <Button 
+        variant="ghost"
+        className="flex-1 h-10 px-6 rounded-full text-sm font-medium transition-all"
         onClick={handleReset}
-        className="flex-1 px-5 py-3 rounded-full text-sm font-bold text-black transition-all duration-300 hover:bg-[#FEC312] hover:text-white border border-gray-200"
       >
         Reset
-      </button>
+      </Button>
       <Button 
-        className="flex-1 rounded-full px-5 py-3 bg-[#FEC312] border-2 border-[#FEC312] text-black font-bold hover:bg-[#eeb40e] transition-all duration-300 shadow-none"
+        className="flex-1 rounded-full px-5 bg-white border-2 border-[#FEC312] text-black font-semibold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
         onClick={handleApply}
       >
         Apply
