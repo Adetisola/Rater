@@ -35,7 +35,6 @@ import {
     Download, 
     Share2, 
     ChevronDown, 
-    Check, 
     X, 
     Plus, 
     Minus,
