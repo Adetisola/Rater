@@ -13,6 +13,7 @@ import { usePosts } from '../context/PostContext';
 import { AuthOverlay } from './AuthOverlay';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useRouter } from 'next/navigation';
+import { AmbientSuccessText } from './AmbientSuccessText';
 
 interface PostFormProps {
   initialPost?: Post | null;
@@ -284,11 +285,11 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         <h1 className="text-2xl font-semibold mb-4 text-black">
           {isEditing ? "Post Updated!" : "Post Submitted!"}
         </h1>
-        <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+        <div className="text-gray-500 max-w-md mx-auto leading-relaxed">
           {isEditing 
-            ? "Your changes have been saved." 
-            : "Your design has been posted successfully. The community will start reviewing it shortly."}
-        </p>
+            ? <AmbientSuccessText />
+            : <p>Your design has been posted. The community will start reviewing it shortly.</p>}
+        </div>
       </div>
     );
   }

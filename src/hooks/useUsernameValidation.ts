@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { RESERVED_ROUTES } from '../lib/constants';
 
 export type UsernameValidationStatus =
   | 'idle'
@@ -77,6 +78,16 @@ export function useUsernameValidation({
         else if (value.length < 3) message = 'At least 3 characters required.';
         else if (value.length > 20) message = 'Maximum 20 characters.';
         setResult({ status: 'invalid_format', message, suggestions: [] });
+        return;
+      }
+
+      // Reserved routes check (synchronous)
+      if (RESERVED_ROUTES.has(normalized)) {
+        setResult({ 
+          status: 'taken', 
+          message: 'This username is reserved and cannot be claimed.', 
+          suggestions: generateSuggestions(normalized) 
+        });
         return;
       }
 

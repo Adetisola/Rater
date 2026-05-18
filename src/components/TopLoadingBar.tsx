@@ -43,7 +43,7 @@ export function TopLoadingBar() {
         if (url.origin !== currentUrl.origin) return;
         
         // 2. SCOPE CRITICAL: Apply loader for all app routes (exclude landing page)
-        const isAppRoute = url.pathname !== '/' && !url.pathname.startsWith('/app');
+        const isAppRoute = url.pathname !== '/';
         const isProfileRoute = url.pathname.startsWith('/@') || url.pathname.startsWith('/%40');
         if (!isAppRoute && !isProfileRoute) return;
 

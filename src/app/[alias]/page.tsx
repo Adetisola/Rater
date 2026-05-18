@@ -8,34 +8,9 @@ import { ProfileView } from '../../components/ProfileView';
 import { FloatingPostButton } from '../../components/FloatingPostButton';
 import { TopLoadingBar } from '../../components/TopLoadingBar';
 import { Footer } from '../../components/Footer';
+import { RESERVED_ROUTES } from '../../lib/constants';
 
-/**
- * Reserved route segments that cannot be used as usernames.
- * These match top-level app routes to prevent conflicts.
- */
-const RESERVED_ROUTES = new Set([
-  'browse',
-  'submit',
-  'settings',
-  'post',
-  'login',
-  'signup',
-  'search',
-  'notifications',
-  'profile',
-  'api',
-  'avatar',
-  'app',
-  'admin',
-  'about',
-  'help',
-  'terms',
-  'privacy',
-  'feed',
-  'explore',
-  'discover',
-  'home',
-]);
+
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);

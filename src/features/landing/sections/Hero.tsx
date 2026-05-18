@@ -131,7 +131,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
           {/* Right Side: CTA Button */}
           <div className="flex-1 flex justify-end">
             <Link 
-              href="/app"
+              href="/browse"
               className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-medium text-black hover:bg-[#FEC312] hover:text-white transition-all duration-300"
             >
               Enter Rater
@@ -215,7 +215,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             >
               {/* Primary CTA */}
               <Link 
-                href="/app"
+                href="/browse"
                 className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-[#FEC312] text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-white hover:bg-[#e6b00f] transition-all duration-300"
               >
                 Enter Rater

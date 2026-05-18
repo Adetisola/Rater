@@ -38,7 +38,7 @@ export function OfflineStatus() {
             <WifiOff className="w-5 h-5 text-white" />
           </div>
           <span className="text-base font-semibold">Connection looks unstable</span>
-          <span className="text-sm font-medium text-white/60">Go buy Data</span>
+          <span className="text-sm font-medium text-white/60">Abi you no get Data</span>
         </motion.div>
       )}
     </AnimatePresence>

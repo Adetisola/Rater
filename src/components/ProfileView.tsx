@@ -21,6 +21,7 @@ import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import { type SocialLink, getBioParts, formatDisplayUrl } from '../logic/socialLinksUtils';
+import { AmbientSuccessText } from './AmbientSuccessText';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -114,6 +115,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
   const bioInputRef = useRef<HTMLTextAreaElement>(null);
+  const roleInputRef = useRef<HTMLInputElement>(null);
 
   // Find the avatar to display
   const targetAvatar = allAvatars[avatarId];
@@ -183,7 +185,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   }, [targetAvatar]);
   const isMe = me?.id === avatarId;
 
-  const startEditing = (focusTarget: 'username' | 'bio' = 'username') => {
+  const startEditing = (focusTarget: 'username' | 'bio' | 'role' = 'username') => {
     if (!targetAvatar) return;
     setEditRole(targetAvatar.role || '');
     setEditBio(targetAvatar.bio || '');
@@ -196,6 +198,8 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     setTimeout(() => {
       if (focusTarget === 'bio') {
         bioInputRef.current?.focus();
+      } else if (focusTarget === 'role') {
+        roleInputRef.current?.focus();
       } else {
         usernameInputRef.current?.focus();
       }
@@ -299,7 +303,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#111111] text-white px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 pointer-events-none"
           >
             <Check className="w-4 h-4 text-green-400" />
-            <span className="text-sm font-medium tracking-wide">Profile saved</span>
+            <AmbientSuccessText className="text-sm font-medium tracking-wide" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -620,6 +624,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
               {editState !== 'idle' ? (
                 <div className="relative w-full max-w-md group">
                   <input
+                    ref={roleInputRef}
                     type="text"
                     value={editRole}
                     onChange={(e) => setEditRole(e.target.value)}
@@ -636,11 +641,20 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     {editRole.length}/50
                   </span>
                 </div>
-              ) : (
-                <span className="text-[16px] font-medium text-gray-400">
-                  {targetAvatar.role}
-                </span>
-              )}
+              ) : targetAvatar.role || isMe ? (
+                targetAvatar.role ? (
+                  <span className="text-[16px] font-medium text-gray-400">
+                    {targetAvatar.role}
+                  </span>
+                ) : (
+                  <button 
+                    onClick={() => startEditing('role')}
+                    className="text-[16px] font-base text-gray-400 hover:text-[#FEC312] transition-colors focus:outline-none"
+                  >
+                    Tell us your creative role
+                  </button>
+                )
+              ) : null}
               {/* Joined badge - Desktop only here */}
               {editState === 'idle' && (
                 <span className="hidden md:inline-flex px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider ml-1 self-center">

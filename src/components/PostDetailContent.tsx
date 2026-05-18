@@ -709,7 +709,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             key={i} 
                                             src={i <= Math.floor(metrics.average_score) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} 
                                             alt="star"
-                                            className="w-6 h-6"
+                                            className="w-5 h-5"
                                         />
                                     ))}
                                 </div>

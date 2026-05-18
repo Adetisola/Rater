@@ -55,7 +55,7 @@ function ScrollRestorationContent({ children }: { children: React.ReactNode }) {
 
   // 3. Handle Route Changes
   useEffect(() => {
-    const isAppScope = pathname !== '/' && !pathname.startsWith('/app');
+    const isAppScope = pathname !== '/';
     if (!isAppScope) {
       prevRouteKey.current = routeKey;
       return;

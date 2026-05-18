@@ -12,29 +12,17 @@ export function FloatingPostButton() {
   const pathname = usePathname();
   const params = useParams();
 
-  // Only show on Avatar pages (/avatar, or /@username) for logged in users
-  const isAvatarPage = pathname.startsWith('/avatar') || pathname.startsWith('/@');
-  if (!currentAvatar || !isAvatarPage) return null;
+  // Only show on profile pages (/@username) for logged in users
+  const isProfilePage = pathname.startsWith('/@');
+  if (!currentAvatar || !isProfilePage) return null;
 
-  // If we are on an avatar page, we should only show the post button if it's OUR OWN profile
-  // For /@username
+  // Only show the post button on OUR OWN profile
   if (params.alias) {
       const routeAlias = decodeURIComponent(params.alias as string);
       if (routeAlias.startsWith('@')) {
           const routeUsername = routeAlias.slice(1).toLowerCase();
           if (routeUsername !== currentAvatar.username.toLowerCase()) return null;
       }
-  }
-  
-  // For /avatar/[username] (legacy or secondary)
-  if (params.username) {
-      const routeUsername = (params.username as string).toLowerCase();
-      if (routeUsername !== currentAvatar.username.toLowerCase()) return null;
-  }
-  
-  // Also handle the base /avatar (which currently redirects but let's be safe)
-  if (pathname === '/avatar' && !params.username && !params.alias) {
-      // Just showing for the owner is implied here since it's the base route
   }
 
   return (

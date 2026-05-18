@@ -82,7 +82,7 @@ export function SearchResults({
         {recentMode && recentItems.length > 0 ? (
           <div>
             <div className="px-4 py-3 bg-gray-50 flex items-center justify-between border-b border-gray-100">
-              <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recent</span>
+              <span className="text-xs font-semibold text-gray-500 tracking-wide">Recent</span>
               <button 
                 onMouseDown={(e) => {
                   e.preventDefault();

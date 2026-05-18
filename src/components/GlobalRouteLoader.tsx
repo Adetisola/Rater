@@ -90,7 +90,7 @@ function GlobalLoaderContent() {
       lastSearch.current = currentSearch;
 
       // Only act if we are within the app scope (all non-landing routes)
-      const isAppScope = pathname !== '/' && !pathname.startsWith('/app');
+      const isAppScope = pathname !== '/';
       if (isAppScope) {
         // Fallback: If intent wasn't caught (e.g. browser back button), start it now
         if (status === "idle") {
@@ -126,8 +126,8 @@ function GlobalLoaderContent() {
       if (Date.now() < suppressUntil) return;
 
       const href = typeof url === "string" ? url : url.pathname;
-      // Trigger for all in-app routes (exclude landing page and legacy /app/* which redirects)
-      const isAppRoute = href !== '/' && !href.startsWith('/app');
+      // Trigger for all in-app routes (exclude landing page)
+      const isAppRoute = href !== '/';
       const isProfileRoute = href.startsWith('/@') || href.startsWith('/%40');
       if (isAppRoute || isProfileRoute) {
         // Defer start to the next tick to avoid scheduling updates during 
