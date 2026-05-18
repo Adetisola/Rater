@@ -278,8 +278,8 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   if (!targetAvatar) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
-        <h2 className="text-2xl font-semibold mb-4">Avatar not found</h2>
-        <p className="text-gray-500 mb-8">The avatar you're looking for doesn't exist.</p>
+        <h2 className="text-2xl font-semibold mb-4">This profile doesn't exist.</h2>
+        <p className="text-gray-500 mb-8">Omo bro you don lost 😂</p>
         <Link href="/browse" scroll={false}>
           <Button variant="outline" className="h-12 rounded-full px-8 text-lg">Back to Browse</Button>
         </Link>

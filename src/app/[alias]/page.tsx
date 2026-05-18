@@ -87,8 +87,8 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
   if (!targetAvatar && !redirectAvatar) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-white">
-        <h2 className="text-2xl font-semibold mb-3 text-black">Profile not found</h2>
-        <p className="text-gray-500">No avatar exists with this username.</p>
+        <h2 className="text-2xl font-semibold mb-3 text-black">This profile doesn’t exist.</h2>
+        <p className="text-gray-500">Omo bro, you don lost 😂</p>
       </div>
     );
   }

@@ -482,7 +482,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div className="relative">
               <Input
                 type="text"
-                placeholder="Select a category"
+                placeholder="What kind of work is this?"
                 value={categoryInputValue}
                 onChange={(e) => {
                   setCategoryInputValue(e.target.value);
