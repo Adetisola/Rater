@@ -467,7 +467,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               </div>
 
               {validationResult.message && (
-                <p className={cn("text-xs font-medium px-4", validationResult.status === 'valid' || validationResult.status === 'unchanged' ? "text-green-600" : "text-amber-600")}>
+                <p className={cn("text-xs font-medium -mt-3 px-1", validationResult.status === 'valid' || validationResult.status === 'unchanged' ? "text-green-600" : "text-amber-600")}>
                   {validationResult.message}
                 </p>
               )}

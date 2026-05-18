@@ -24,4 +24,8 @@ export const RESERVED_ROUTES = new Set([
   'explore',
   'discover',
   'home',
+  'rater',
+  'rater_official',
+  'timi_adetisola',
+  'official_rater',
 ]);
