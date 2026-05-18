@@ -321,7 +321,7 @@ export default function BrowseContent() {
                     <span className="text-sm text-gray-400">
                       {isProcessing ? 'Searching...' : (
                         sortedPosts.length === 0
-                          ? 'No posts found'
+                          ? 'Nothing here yet'
                           : `${sortedPosts.length} post${sortedPosts.length === 1 ? '' : 's'} found`
                       )}
                     </span>
@@ -343,10 +343,9 @@ export default function BrowseContent() {
                         {sortedPosts.length > 0 
                           ? "You've reached the end of the feed"
                           : sortedPosts.length === 0 && urlQuery.trim() 
-                            ? "No matches found for your search"
-                            : "No posts found"}
+                            ? "Everybody still dey create"
+                            : "Nothing here yet"}
                     </p>
-                    <p className="text-[10px] text-gray-300 mt-2 font-medium">✨ Refined & Curated Daily</p>
                 </div>
               )}
             </motion.div>

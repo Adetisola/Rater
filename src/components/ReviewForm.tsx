@@ -314,7 +314,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
            <div className="relative">
                <Textarea 
-                  placeholder={isLoggedIn ? `${initialName}, Add a comment... (Optional)` : "What do you think..."} 
+                  placeholder={isLoggedIn ? `${initialName}, What do you think?...` : "What do you think?..."} 
                   value={comment}
                   onChange={(e) => {
                       if (e.target.value.length <= 200) {

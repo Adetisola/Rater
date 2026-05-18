@@ -5,8 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 // ─── Placeholder categories ───────────────────────────────────────────
 
 const FUNCTIONAL_PROMPTS = [
-  "Search title, avatar, or category",
-  "Search creators and designs",
+  "Search work, creatives, or categories",
+  "Search logo, UI, posters and more...",
   "Explore creative work",
   "Find work worth rating",
   "Search visual inspiration",
@@ -22,6 +22,9 @@ const FUNCTIONAL_PROMPTS = [
   "Discover design work",
   "Explore aesthetic-focused work",
   "Search purposeful designs",
+  "Search designs that inspire you",
+  "Find something sharp",
+  "Let’s see what people are cooking",
 ];
 
 const AMBIENT_MESSAGES: Record<string, string[]> = {
@@ -44,12 +47,14 @@ const AMBIENT_MESSAGES: Record<string, string[]> = {
     "Evening inspiration hits different",
     "Browsing late, huh?",
     "Quiet hours",
+    "Omo, late session?",
   ],
   night: [
     "Hi, night owl",
     "Designing late again?",
     "Midnight inspiration?",
     "Still exploring?",
+    "Ideas no dey sleep",
     "Late-night design session?",
     "Burning pixels tonight?",
     "The quiet hours are creative",
@@ -99,7 +104,7 @@ interface UseAmbientPlaceholderOptions {
   enabled: boolean;
 }
 
-const DEFAULT_PLACEHOLDER = "Search title, avatar, or category";
+const DEFAULT_PLACEHOLDER = "Search work, creatives, or categories";
 
 export function useAmbientPlaceholder({
   isFocused,

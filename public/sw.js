@@ -41,7 +41,7 @@ self.addEventListener('fetch', (event) => {
         return caches.match(event.request).then((response) => {
           if (response) return response;
           // Return offline fallback if we had one, but we don't right now
-          return new Response('Offline - Rater App', {
+          return new Response('Connection looks unstable. Go buy Data.', {
             headers: { 'Content-Type': 'text/html' }
           });
         });

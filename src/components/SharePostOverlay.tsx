@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Button } from './ui/Button';
+import { cn } from '../lib/utils';
 const whatsappIcon = '/icons/icons8-whatsapp.svg';
 const xIcon = '/icons/icons8-x.svg';
 const linkedinIcon = '/icons/icons8-linkedin.svg';
@@ -80,13 +81,13 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
             >
                 Close
             </Button>
-            <button 
+            <Button 
                 onClick={handleCopy}
-                className={`px-8 py-3 rounded-full text-sm font-semibold transition-all duration-500 flex items-center gap-2 ${
-                    copied 
-                    ? "bg-[#10b981] text-white border-2 border-[#10b981]" 
-                    : "text-black border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white"
-                }`}
+                variant="outline"
+                className={cn(
+                    "px-8 h-12 rounded-full text-lg font-medium transition-all flex items-center gap-2",
+                    copied && "bg-[#10b981] border-[#10b981] text-white hover:bg-[#0e9f6e] hover:border-[#0e9f6e] hover:text-white"
+                )}
             >
                 {copied ? (
                     <>
@@ -102,7 +103,7 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
                 ) : (
                     "Copy Link"
                 )}
-            </button>
+            </Button>
         </div>
 
         {/* Social Icons */}

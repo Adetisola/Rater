@@ -7,6 +7,7 @@ import { EditPostOverlay } from './EditPostOverlay';
 import { DeletePostOverlay } from './DeletePostOverlay';
 import { usePosts } from '../context/PostContext';
 import { InstallPromptUI } from './InstallPromptUI';
+import { OfflineStatus } from './OfflineStatus';
 
 // Global singleton-like mechanism to trigger delete overlay from anywhere
 let triggerDelete: (postId: string) => void = () => {};
@@ -47,6 +48,7 @@ export function GlobalOverlays() {
       <EditPostOverlay />
       <DeletePostOverlay postId={deletePostId} onClose={() => setDeletePostId(null)} />
       <InstallPromptUI />
+      <OfflineStatus />
       
       {/* Undo Toast */}
       <AnimatePresence>
@@ -57,7 +59,7 @@ export function GlobalOverlays() {
             exit={{ opacity: 0, scale: 0.95 }}
             className="fixed bottom-8 left-1/2 -translate-x-1/2 z-200 flex items-center gap-4 px-6 py-4 bg-[#111111] text-white rounded-2xl shadow-2xl border border-white/10"
           >
-            <span className="text-sm font-medium">Post deleted</span>
+            <span className="text-sm font-medium">Post removed</span>
             <div className="w-px h-4 bg-white/20" />
             <button 
               onClick={handleUndo}

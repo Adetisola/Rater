@@ -113,6 +113,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const usernameInputRef = useRef<HTMLInputElement>(null);
+  const bioInputRef = useRef<HTMLTextAreaElement>(null);
 
   // Find the avatar to display
   const targetAvatar = allAvatars[avatarId];
@@ -182,9 +183,9 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   }, [targetAvatar]);
   const isMe = me?.id === avatarId;
 
-  const startEditing = () => {
+  const startEditing = (focusTarget: 'username' | 'bio' = 'username') => {
     if (!targetAvatar) return;
-    setEditRole(targetAvatar.role || 'Designer');
+    setEditRole(targetAvatar.role || '');
     setEditBio(targetAvatar.bio || '');
     setEditName(targetAvatar.name);
     setEditSocialLinks(targetAvatar.social_links ? [...targetAvatar.social_links] : []);
@@ -192,7 +193,13 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     handleUsernameChange(targetAvatar.username); // reset to current
     setSaveError('');
     setEditState('editing');
-    setTimeout(() => usernameInputRef.current?.focus(), 50);
+    setTimeout(() => {
+      if (focusTarget === 'bio') {
+        bioInputRef.current?.focus();
+      } else {
+        usernameInputRef.current?.focus();
+      }
+    }, 50);
   };
 
   const handleCancel = () => {
@@ -224,7 +231,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     const usernameChanged = editUsername.toLowerCase().trim() !== targetAvatar.username.toLowerCase();
 
     const result = await updateProfile({
-      role: editRole.trim() || 'Designer',
+      role: editRole.trim(),
       bio: editBio.trim(),
       name: editName,
       social_links: editSocialLinks,
@@ -599,7 +606,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     <p className="text-[15px] text-gray-400 font-medium break-all px-4 md:px-0">@{targetAvatar.username}</p>
                     {isMe && editState === 'idle' && (
                       <button 
-                        onClick={startEditing}
+                        onClick={() => startEditing()}
                         className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
                       >
                         <Edit2 className="w-4 h-4" />
@@ -631,7 +638,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 </div>
               ) : (
                 <span className="text-[16px] font-medium text-gray-400">
-                  {targetAvatar.role || 'Designer'}
+                  {targetAvatar.role}
                 </span>
               )}
               {/* Joined badge - Desktop only here */}
@@ -655,6 +662,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             {editState !== 'idle' ? (
               <div className="relative group">
                 <textarea
+                  ref={bioInputRef}
                   value={editBio}
                   onChange={(e) => {
                     setEditBio(e.target.value);
@@ -662,7 +670,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     e.target.style.height = `${e.target.scrollHeight}px`;
                   }}
                   disabled={editState === 'saving'}
-                  placeholder="Tell us about yourself..."
+                  placeholder="Tell people what you create..."
                   maxLength={200}
                   className={cn(
                     "w-full bg-transparent leading-relaxed resize-none outline-none border border-transparent rounded-lg p-3 -ml-3 transition-all text-gray-900 overflow-hidden pb-8",
@@ -676,7 +684,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   {editBio.length}/200
                 </div>
               </div>
-             ) : (
+             ) : targetAvatar.bio || isMe ? (
                  <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
                   {targetAvatar.bio ? (
                     getBioParts(targetAvatar.bio).map((part, i) => {
@@ -699,10 +707,15 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                       );
                     })
                   ) : (
-                    "Enter your Bio"
+                    <button 
+                      onClick={() => startEditing('bio')}
+                      className="text-gray-500 hover:text-[#FEC312] transition-colors"
+                    >
+                      Say a little about yourself...
+                    </button>
                   )}
                 </p>
-             )}
+             ) : null}
 
             {/* Smart Bio Links — Social Icon Row + Suggestion */}
             <SocialLinksRow

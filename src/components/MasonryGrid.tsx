@@ -5,6 +5,7 @@ import type { Post } from '../logic/mockData';
 import { PostCard } from './PostCard';
 import { useMasonryColumns } from '../hooks/useMasonryColumns';
 import { useNavigationStore } from '../store/navigationStore';
+import { AmbientLoadingText } from './AmbientLoadingText';
 
 import type { BadgeType } from '../logic/badgeUtils';
 
@@ -33,7 +34,7 @@ export function MasonryGrid({ posts, badgeMap, hotPostIds, isLoading }: MasonryG
         <div className="absolute top-0 left-0 right-0 z-50 flex justify-center pt-10 pointer-events-none">
           <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm flex items-center gap-3">
             <div className="w-4 h-4 border-2 border-[#FEC312] border-t-transparent rounded-full animate-spin" />
-            <span className="text-xs font-semibold text-gray-500">Updating Feed...</span>
+            <AmbientLoadingText className="text-xs font-semibold text-gray-500" />
           </div>
         </div>
       )}

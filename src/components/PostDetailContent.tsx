@@ -24,6 +24,7 @@ import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
+import { AmbientLoadingText } from './AmbientLoadingText';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
@@ -758,8 +759,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">
                             <div className="w-16 h-16 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🙌</div>
-                            <h3 className="font-semibold text-xl mb-2">Thanks for your feedback</h3>
-                            <p className="text-gray-500">Your review has been recorded.</p>
+                            <h3 className="font-medium text-xl mb-2">Review added</h3>
+                            <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
                          </div>
                     )}
                 </div>
@@ -770,7 +771,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         {/* BOTTOM SECTION: Reviews List */}
         <div className="border-t border-gray-100 pt-8 xs:pt-12">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                <h2 className="text-2xl font-semibold text-black shrink-0">Reviews ({allReviews.length})</h2>
+                <h2 className="text-xl font-semibold text-black shrink-0">Reviews ({allReviews.length})</h2>
                 
                 <div className="flex flex-wrap gap-2 sm:ml-auto">
                     {['Recent', 'Top', 'Critical', 'Oldest'].map((option) => (
@@ -792,7 +793,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
             <div className="space-y-6">
                 {isFetchingReviews ? (
-                    <div className="py-20 text-center text-gray-400 font-medium">Loading reviews...</div>
+                    <div className="py-20 text-center text-gray-400 font-medium"><AmbientLoadingText /></div>
                 ) : allReviews.length === 0 ? (
                     <motion.div 
                         initial={{ opacity: 0, y: 16 }}

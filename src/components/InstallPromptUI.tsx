@@ -31,7 +31,7 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
           />
         }
         title="Install Rater"
-        description="For a faster, native experience"
+        description="Install Rater for a cleaner, app-like experience"
         actionButton={
           <button
             onClick={promptInstall}

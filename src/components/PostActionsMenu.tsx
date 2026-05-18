@@ -189,7 +189,7 @@ export function PostActionsMenu({
             className={cn(menuItemClass, "text-red-500 hover:bg-red-50")}
           >
             <Trash2 className="w-4 h-4" />
-            Delete Post
+            Remove Post
           </button>
           <div className="border-t border-gray-100 mx-3" />
           <button
