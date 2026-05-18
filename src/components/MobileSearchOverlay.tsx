@@ -433,7 +433,7 @@ export function MobileSearchOverlay({
           </div>
         ) : (
           <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
-            Search by title, avatar, or category...
+            Search work, creatives, or categories...
           </div>
         )}
       </div>

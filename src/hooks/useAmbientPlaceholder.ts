@@ -104,7 +104,7 @@ interface UseAmbientPlaceholderOptions {
   enabled: boolean;
 }
 
-const DEFAULT_PLACEHOLDER = "Search work, creatives, or categories";
+const DEFAULT_PLACEHOLDER = "Search work, creatives, or categories...";
 
 export function useAmbientPlaceholder({
   isFocused,

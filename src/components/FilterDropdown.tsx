@@ -135,7 +135,7 @@ export function FilterDropdown({
                     onClose();
                   }
                 }}
-                placeholder={selectedCategories.length === 0 ? "Search by title, avatar, or category..." : ""} 
+                placeholder={selectedCategories.length === 0 ? "Search work, creatives, or categories..." : ""} 
                 className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 h-8"
                 autoFocus
               />
