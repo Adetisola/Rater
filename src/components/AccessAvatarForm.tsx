@@ -50,7 +50,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
 
   // Normalize username input: strip @, extract from URLs, trim
   const normalizeUsername = (raw: string): string => {
-    let val = raw.trim().toLowerCase();
+    const val = raw.trim().toLowerCase();
     const urlMatch = val.match(/\/@([a-z0-9_]+)/);
     if (urlMatch) return urlMatch[1];
     return val.replace(/^@/, '');

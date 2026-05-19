@@ -1,6 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { RESERVED_ROUTES } from '../lib/constants';
 
+/**
+ * Represents the possible states of a username validation request.
+ * - 'idle': No validation is currently happening.
+ * - 'checking': Async validation is in progress.
+ * - 'valid': The username is available and valid.
+ * - 'taken': The username is already claimed or reserved.
+ * - 'invalid_format': The username doesn't match formatting requirements.
+ * - 'cooldown': The user recently changed their username and is in a cooldown period.
+ * - 'unchanged': The input matches the user's current username.
+ */
 export type UsernameValidationStatus =
   | 'idle'
   | 'checking'
@@ -10,6 +20,9 @@ export type UsernameValidationStatus =
   | 'cooldown'
   | 'unchanged';
 
+/**
+ * The comprehensive result of a username validation check.
+ */
 export interface UsernameValidationResult {
   status: UsernameValidationStatus;
   message: string;
@@ -21,6 +34,13 @@ const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
 const COOLDOWN_DAYS = 14;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
+/**
+ * Generates valid username suggestions based on a requested base string.
+ * Adds random digits, creative suffixes, or prefixes while respecting the 20-character limit.
+ * 
+ * @param base - The desired but unavailable username.
+ * @returns An array of available username alternatives.
+ */
 function generateSuggestions(base: string): string[] {
   // Clamp base to 15 chars to allow suffixes within the 20-char limit
   const safeBase = base.slice(0, 15);
@@ -37,6 +57,9 @@ function generateSuggestions(base: string): string[] {
   ].filter(s => /^[a-z0-9_]{3,20}$/.test(s));
 }
 
+/**
+ * Configuration options for the useUsernameValidation hook.
+ */
 interface UseUsernameValidationOptions {
   currentUsername: string;                        // The avatar's existing username (to detect unchanged)
   usernameLastChangedAt?: number;                 // Last change timestamp (for cooldown)
@@ -44,6 +67,14 @@ interface UseUsernameValidationOptions {
   debounceMs?: number;
 }
 
+/**
+ * A custom hook to handle the full lifecycle of username validation.
+ * It manages synchronous format checks, checks against reserved routes,
+ * validates modification cooldown periods, and debounces asynchronous availability checks.
+ *
+ * @param options - Required dependencies and configuration for validation.
+ * @returns The current input string, an onChange handler, the validation result state, and a manual validation trigger.
+ */
 export function useUsernameValidation({
   currentUsername,
   usernameLastChangedAt,

@@ -9,19 +9,39 @@ import { usePosts } from '../context/PostContext';
 import { InstallPromptUI } from './InstallPromptUI';
 import { OfflineStatus } from './OfflineStatus';
 
-// Global singleton-like mechanism to trigger delete overlay from anywhere
+/**
+ * Global singleton-like mechanism to trigger the delete confirmation overlay from anywhere in the app.
+ * This function reference is updated when the GlobalOverlays component mounts.
+ */
 let triggerDelete: (postId: string) => void = () => {};
 
+/**
+ * Programmatically opens the delete post confirmation overlay.
+ * @param postId - The ID of the post to be deleted.
+ */
 export function showDeleteConfirmation(postId: string) {
   triggerDelete(postId);
 }
 
+/**
+ * Global singleton-like mechanism to trigger the undo toast notification.
+ */
 let triggerUndoToast: (postId: string) => void = () => {};
 
+/**
+ * Programmatically shows a toast notification offering an option to undo a post deletion.
+ * @param postId - The ID of the recently deleted post.
+ */
 export function showUndoToast(postId: string) {
   triggerUndoToast(postId);
 }
 
+/**
+ * A root-level component responsible for rendering globally accessible UI overlays.
+ * Includes modals (Edit/Delete post), install prompts, offline status indicators, 
+ * and floating toast notifications (like Undo delete).
+ * Needs to be rendered near the top of the application tree.
+ */
 export function GlobalOverlays() {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [undoPostId, setUndoPostId] = useState<string | null>(null);

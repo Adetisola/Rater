@@ -103,7 +103,7 @@ export function formatDisplayUrl(url: string): string {
     return display;
   } catch {
     // Fallback if URL parsing fails
-    let fallback = url.replace(/^https?:\/\/(www\.)?/, '').trim();
+    const fallback = url.replace(/^https?:\/\/(www\.)?/, '').trim();
     if (fallback.length > 30) {
       return fallback.substring(0, 27) + '…';
     }

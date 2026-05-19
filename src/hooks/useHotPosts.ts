@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { type Post } from '../logic/mockData';
+import type { Post } from '@/types';
 import { computeHotPosts } from '../logic/hotPostUtils';
 
 export function useHotPosts(posts: Post[]) {

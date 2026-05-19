@@ -105,7 +105,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
       .toDataURL("image/png")
       .replace("image/png", "image/octet-stream");
       
-    let downloadLink = document.createElement("a");
+    const downloadLink = document.createElement("a");
     downloadLink.href = pngUrl;
     downloadLink.download = `rater-${username}.png`;
     document.body.appendChild(downloadLink);

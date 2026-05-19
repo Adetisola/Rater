@@ -4,6 +4,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff } from 'lucide-react';
 
+/**
+ * Global component that listens to network connection changes
+ * and displays an animated toast notification when the user goes offline.
+ */
 export function OfflineStatus() {
   const [isOffline, setIsOffline] = useState(false);
 

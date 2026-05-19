@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from 'react';
-import type { Post } from '../logic/mockData';
+import type { Post } from '@/types';
 import { PostCard } from './PostCard';
 import { useMasonryColumns } from '../hooks/useMasonryColumns';
 import { useNavigationStore } from '../store/navigationStore';

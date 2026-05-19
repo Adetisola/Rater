@@ -1,7 +1,11 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { type Post, MOCK_POSTS, updatePost as dbUpdatePost } from '../logic/mockData';
+import type { Post } from '@/types';
+// TODO(backend): Replace MOCK_POSTS and updatePost with Supabase queries.
+// All localStorage persistence below (rater_post_overrides, rater_deleted_posts,
+// rater_session_posts) should be replaced with real database operations.
+import { MOCK_POSTS, updatePost as dbUpdatePost } from '../logic/mockData';
 
 interface PostContextType {
   posts: Post[];

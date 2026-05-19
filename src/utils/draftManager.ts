@@ -1,6 +1,9 @@
 /**
  * Universal Review Draft System Utility
  * Handles persistence for both guests and authenticated users.
+ *
+ * TODO(backend): Replace localStorage draft persistence with Supabase
+ * draft storage. Guest sessions should use anonymous auth or device IDs.
  */
 
 export interface ReviewDraft {

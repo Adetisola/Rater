@@ -17,7 +17,7 @@ import {
   PLATFORM_META,
   type SocialLink,
   type SocialPlatform,
-} from '../logic/socialLinksUtils';
+} from '../utils/socialLinksUtils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { Edit2, Trash2, X, Check, AlertCircle, Mail } from 'lucide-react';

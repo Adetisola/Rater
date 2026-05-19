@@ -21,6 +21,9 @@ import {
 } from '../utils/draftManager';
 import { useDebounce } from '../hooks/useDebounce';
 
+/**
+ * Props for the ReviewForm component.
+ */
 interface ReviewFormProps {
   onSubmit: (ratings: { clarity: number; purpose: number; aesthetics: number }, comment: string, reviewerName: string) => void | Promise<void>;
   initialName?: string;
@@ -116,6 +119,12 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
   );
 }
 
+/**
+ * A form component for submitting reviews on a post.
+ * Features a star rating system across multiple criteria (Clarity, Purpose, Aesthetics),
+ * a comment box, and draft persistence to survive auth interruptions.
+ * Also intelligently prompts guest users to sign up after filling out their name.
+ */
 export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }: ReviewFormProps) {
   const [clarity, setClarity] = useState(0);
   const [purpose, setPurpose] = useState(0);

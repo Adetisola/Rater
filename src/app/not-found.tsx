@@ -2,6 +2,10 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Footer } from '@/components/Footer'
 
+/**
+ * Global 404 Not Found page.
+ * Displayed when a user navigates to a route that doesn't exist.
+ */
 export default function NotFound() {
   return (
     <div className="flex flex-col min-h-screen">

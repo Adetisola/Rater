@@ -4,14 +4,17 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { validatePasskey, getStrengthColor, getStrengthLabel } from '../logic/passkeyValidation';
+import { validatePasskey, getStrengthColor, getStrengthLabel } from '../utils/passkeyValidation';
 import { useAuth } from '../context/AuthContext';
-import { generateUsernameFromName } from '../logic/usernameUtils';
+import { generateUsernameFromName } from '../utils/usernameUtils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AtSign, ChevronLeft, Loader2, CheckCircle2, UserRound, Pencil, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+/**
+ * Props for the CreateAvatarOverlay component.
+ */
 interface CreateAvatarOverlayProps {
   onClose: () => void;
   onCreate: (name: string, passkey: string, email?: string) => void;
@@ -20,7 +23,11 @@ interface CreateAvatarOverlayProps {
   onLogin?: () => void;
 }
 
-// Validation Helper
+/**
+ * Helper to validate the display name length and presence.
+ * @param name - The display name string.
+ * @returns A string error message if invalid, or null if valid.
+ */
 function validateDisplayName(name: string): string | null {
   const trimmed = name.trim();
   if (trimmed.length === 0) return "Name cannot be empty";
@@ -28,6 +35,11 @@ function validateDisplayName(name: string): string | null {
   return null;
 }
 
+/**
+ * A multi-step form overlay (or embedded component) that guides a user through creating an avatar.
+ * Handles image upload with simulated latency, passkey validation, unique username claiming, 
+ * and role selection. It integrates with AuthContext for the final signup step.
+ */
 export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin }: CreateAvatarOverlayProps) {
   const [name, setName] = useState(prefillName || '');
   const [passkey, setPasskey] = useState('');

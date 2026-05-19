@@ -1,4 +1,4 @@
-import type { Post, Review, BadgeType } from './mockData';
+import type { Post, Review, BadgeType } from '../types';
 export type { BadgeType };
 import { MOCK_AVATARS, getReviewsByPostId, calculatePostMetrics, MOCK_BADGES } from './mockData';
 

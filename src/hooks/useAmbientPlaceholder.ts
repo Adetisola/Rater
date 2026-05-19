@@ -84,6 +84,9 @@ function randomInterval(): number {
 
 // ─── Hook ─────────────────────────────────────────────────────────────
 
+/**
+ * Represents the current state of the ambient placeholder hook.
+ */
 export interface AmbientPlaceholderState {
   /** The current placeholder text to display */
   currentText: string;
@@ -93,6 +96,9 @@ export interface AmbientPlaceholderState {
   transitionKey: number;
 }
 
+/**
+ * Configuration options required to drive the ambient placeholder behavior.
+ */
 interface UseAmbientPlaceholderOptions {
   /** Whether the input is focused */
   isFocused: boolean;
@@ -106,6 +112,13 @@ interface UseAmbientPlaceholderOptions {
 
 const DEFAULT_PLACEHOLDER = "Search work, creatives, or categories...";
 
+/**
+ * A custom hook that cycles through a rotating list of creative and time-aware placeholder 
+ * prompts when the search input is inactive. Reverts to the default placeholder upon focus or typing.
+ *
+ * @param options - Configuration options controlling the hook's active state.
+ * @returns An object containing the current placeholder text, activity state, and transition key.
+ */
 export function useAmbientPlaceholder({
   isFocused,
   inputValue,

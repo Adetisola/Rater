@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
-import type { Post, Avatar, Category } from '../logic/mockData';
+import type { Post, Avatar, Category } from '@/types';
 import { MOCK_POSTS } from '../logic/mockData';
 import { useAuth } from '../context/AuthContext';
 import { useRecentSearches } from '../hooks/useRecentSearches';

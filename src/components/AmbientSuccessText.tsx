@@ -8,6 +8,11 @@ const AMBIENT_SUCCESS_VARIANTS = [
   "All set."
 ];
 
+/**
+ * A simple component that displays a randomly selected success message 
+ * from a predefined set of conversational, "ambient" variants.
+ * Handles hydration mismatch by avoiding rendering until mounted.
+ */
 export function AmbientSuccessText({ className = "" }: { className?: string }) {
   const [text, setText] = useState("");
 

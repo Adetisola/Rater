@@ -1,5 +1,5 @@
 import Fuse, { type IFuseOptions, type FuseResultMatch } from 'fuse.js';
-import type { Post, Avatar, Category } from './mockData';
+import type { Post, Avatar, Category } from '../types';
 
 // ============================================================================
 // TEXT NORMALIZATION

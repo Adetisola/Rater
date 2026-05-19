@@ -2,6 +2,9 @@
  * DEVICE TRACKING UTILITY
  * Responsible for identifying unique devices and tracking review activity
  * across browser sessions.
+ *
+ * TODO(backend): Replace localStorage device tracking with Supabase
+ * anonymous auth or server-side device fingerprinting.
  */
 
 const STORAGE_KEY_DEVICE_ID = 'rater_device_id';

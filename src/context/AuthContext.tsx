@@ -1,8 +1,12 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { MOCK_AVATARS, type Avatar } from '../logic/mockData';
-import { generateUsernameFromName } from '../logic/usernameUtils';
+import type { Avatar } from '@/types';
+// TODO(backend): Replace MOCK_AVATARS with Supabase auth + avatars table.
+// All localStorage persistence below (rater_session_avatars, rater_mock_overrides,
+// rater_avatar_id) should be replaced with Supabase session management.
+import { MOCK_AVATARS } from '../logic/mockData';
+import { generateUsernameFromName } from '../utils/usernameUtils';
 
 interface AuthContextType {
   currentAvatar: Avatar | null;
@@ -146,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!currentAvatar) return { ok: false, error: 'Not authenticated.' };
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    let updatedAvatar = { ...currentAvatar, ...data };
+    const updatedAvatar = { ...currentAvatar, ...data };
 
     // --- Username change enforcement ---
     if (data.username !== undefined) {

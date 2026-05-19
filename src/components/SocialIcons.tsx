@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { SocialPlatform } from '../logic/socialLinksUtils';
+import type { SocialPlatform } from '../utils/socialLinksUtils';
 
 interface IconProps {
   className?: string;

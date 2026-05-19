@@ -1,6 +1,6 @@
 "use client";
 
-import type { Avatar, Category, Post } from '../logic/mockData';
+import type { Avatar, Category, Post } from '@/types';
 import type { SectionedSearchResults, HighlightSegment, PostSearchResult } from '../logic/searchUtils';
 import { highlightMatches } from '../logic/searchUtils';
 import { useState, useEffect } from 'react';
@@ -12,6 +12,9 @@ import type { RecentItemData } from '../hooks/useRecentSearches';
 
 import Link from 'next/link';
 
+/**
+ * Props for the SearchResults dropdown component.
+ */
 interface SearchResultsProps {
   results: SectionedSearchResults;
   isVisible: boolean;
@@ -27,6 +30,11 @@ interface SearchResultsProps {
   onClearRecent?: () => void;
 }
 
+/**
+ * A dropdown component that renders categorized search results (Categories, Avatars, Posts)
+ * or recent searches/items when in recentMode.
+ * Uses a portal for its backdrop to capture outside clicks and handle soft closing.
+ */
 export function SearchResults({ 
   results, 
   isVisible, 
@@ -235,11 +243,17 @@ export function SearchResults({
 // AVATAR RESULT ITEM
 // ============================================================================
 
+/**
+ * Props for a single avatar search result item.
+ */
 interface AvatarResultItemProps {
   avatar: Avatar;
   onClick: () => void;
 }
 
+/**
+ * Renders an individual avatar search result with their picture/initials, name, and role.
+ */
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
   const initials = avatar.name
     .split(' ')
@@ -282,11 +296,18 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
 // POST RESULT ITEM
 // ============================================================================
 
+/**
+ * Props for a single post search result item.
+ */
 interface PostResultItemProps {
   result: PostSearchResult;
   onClick: () => void;
 }
 
+/**
+ * Renders an individual post search result, applying highlight segments to the title and description
+ * based on the user's search query.
+ */
 function PostResultItem({ result, onClick }: PostResultItemProps) {
   const { post, matches } = result;
   
@@ -327,11 +348,17 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
 // CATEGORY RESULT ITEM
 // ============================================================================
 
+/**
+ * Props for a single category search result item.
+ */
 interface CategoryResultItemProps {
   category: Category;
   onClick: () => void;
 }
 
+/**
+ * Renders an individual category search result item.
+ */
 function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
   return (
     <div

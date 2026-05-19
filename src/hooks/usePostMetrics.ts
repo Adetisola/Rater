@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { calculatePostMetrics, type PostMetrics } from '../logic/mockData';
+import type { PostMetrics } from '@/types';
+import { calculatePostMetrics } from '../logic/mockData';
 
 /**
  * Hook to fetch metrics for a post.

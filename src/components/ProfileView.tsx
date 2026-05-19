@@ -20,7 +20,7 @@ import { cn } from '../lib/utils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
-import { type SocialLink, getBioParts, formatDisplayUrl } from '../logic/socialLinksUtils';
+import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
 import { AmbientSuccessText } from './AmbientSuccessText';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {

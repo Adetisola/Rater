@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { showDeleteConfirmation } from './GlobalOverlays';
 import { cn } from '../lib/utils';
-import { type Post } from '../logic/mockData';
+import type { Post } from '@/types';
 import { sharePost, downloadPostImage } from '../lib/postActions';
 import { createPortal } from 'react-dom';
 import { SharePostOverlay } from './SharePostOverlay';

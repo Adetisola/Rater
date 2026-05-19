@@ -9,11 +9,21 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { showUndoToast } from './GlobalOverlays';
 
+/**
+ * Props for the DeletePostOverlay component.
+ */
 interface DeletePostOverlayProps {
+  /** The ID of the post to delete, or null if the overlay is hidden */
   postId: string | null;
+  /** Callback fired when the overlay is closed without deleting, or after a successful deletion */
   onClose: () => void;
 }
 
+/**
+ * A modal overlay that prompts the user to confirm the deletion of a post.
+ * Uses a portal to render at the top level of the DOM. 
+ * Supports smooth enter/exit animations and handles post deletion via context.
+ */
 export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
   const { deletePost } = usePosts();
   const [isDeleting, setIsDeleting] = useState(false);

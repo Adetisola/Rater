@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import type { Review, Post, PostMetrics } from '@/types';
+// TODO(backend): Replace these mock functions with Supabase queries
 import { 
     getReviewsByPostId, 
     getReviewerDisplayName, 
     calculatePostMetrics, 
-    type Review, 
-    type Post, 
-    type PostMetrics 
 } from '../logic/mockData';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
@@ -21,7 +20,7 @@ import { sharePost } from '../lib/postActions';
 import { ReviewForm } from './ReviewForm';
 import { Button } from './ui/Button';
 import { ImageFallback } from './ImageFallback';
-import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
+import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { AmbientLoadingText } from './AmbientLoadingText';
@@ -47,12 +46,22 @@ import {
 const REVIEWS_PER_PAGE = 5;
 const RATE_LIMIT_KEY = 'rater_review_timestamps';
 
+/**
+ * Props for the PostDetailOverlay and PostDetailCore components.
+ */
 interface PostDetailOverlayProps {
+  /** The post object to display details for */
   post: Post;
+  /** Optional callback to fire when closing the detail view */
   onClose?: () => void;
+  /** Optional callback to disable swipe navigation, used when interactable child overlays are open */
   onDisableSwipe?: (disabled: boolean) => void;
 }
 
+/**
+ * Responsive wrapper for the post detail view.
+ * Handles mobile swipe-to-navigate gestures while delegating rendering to PostDetailCore.
+ */
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -156,6 +165,10 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
   );
 }
 
+/**
+ * The core detail view for a post, displaying images, metadata, metrics, and the review form.
+ * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
+ */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
   const { currentAvatar, allAvatars } = useAuth();
   const { posts } = usePosts();

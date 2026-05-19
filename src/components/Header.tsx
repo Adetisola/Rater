@@ -6,7 +6,7 @@ import { FilterDropdown } from './FilterDropdown';
 import { SearchResults } from './SearchResults';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
-import type { Post, Avatar, Category } from '../logic/mockData';
+import type { Post, Avatar, Category } from '@/types';
 import { CloudUpload, ListFilter, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
@@ -17,6 +17,9 @@ import { useAmbientPlaceholder } from '../hooks/useAmbientPlaceholder';
 import { AmbientPlaceholder } from './AmbientPlaceholder';
 import { AuthOverlay } from './AuthOverlay';
 
+/**
+ * Props for the Header component.
+ */
 interface HeaderProps {
     onPostClick: () => void;
     onLogoClick?: () => void;
@@ -36,6 +39,11 @@ interface HeaderProps {
     onMobileSearchOpen?: (activeId: string) => void;
 }
 
+/**
+ * The main application header.
+ * Handles search input, category filtering, authentication state display,
+ * and navigation controls. Includes responsive layouts for mobile, tablet, and desktop.
+ */
 export function Header({ 
     onPostClick, 
     onLogoClick, 

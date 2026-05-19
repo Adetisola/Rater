@@ -6,7 +6,9 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
-import { MOCK_AVATARS, CATEGORIES, calculatePostMetrics, type Post, type Avatar } from '@/logic/mockData';
+import type { Post, Avatar } from '@/types';
+// TODO(backend): Replace mock data imports with Supabase queries
+import { MOCK_AVATARS, CATEGORIES, calculatePostMetrics } from '@/logic/mockData';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { createSearchIndexes, searchPosts } from '@/logic/searchUtils';
 import { useBadges } from '@/hooks/useBadges';

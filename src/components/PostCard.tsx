@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { Post } from '../logic/mockData';
-import { formatTimestamp, getFullTimestamp } from '../logic/dateUtils';
+import type { Post, BadgeType } from '@/types';
+import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import type { BadgeType } from '../logic/mockData';
 import Link from 'next/link';
 import { ImageFallback } from './ImageFallback';
 import { usePostMetrics } from '../hooks/usePostMetrics';
@@ -14,14 +13,27 @@ import { PostActionsMenu } from './PostActionsMenu';
 import { useNow } from '../context/TimeContext';
 import { Lock } from 'lucide-react';
 
+/**
+ * Props for the PostCard component.
+ */
 interface PostCardProps {
+  /** The post object containing details like title, image, and metadata */
   post: Post;
+  /** Optional badge to display on the card (e.g., 'top_rated_active') */
   badge?: BadgeType;
+  /** Whether the post is currently "hot" based on recent engagement */
   isHot?: boolean;
+  /** Whether to show a skeleton loading state instead of the actual card content */
   isLoading?: boolean;
+  /** Optional click handler for when the card is pressed */
   onClick?: () => void;
 }
 
+/**
+ * A highly visual card component that displays a summary of a design post.
+ * Includes image loading fallbacks, interactive hover states, metadata, 
+ * and Lottie animations for badges (Hot, Top Rated).
+ */
 export function PostCard({ post, badge, isHot = false, isLoading: parentLoading = false, onClick }: PostCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);

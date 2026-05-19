@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Category } from '../logic/mockData';
+import type { Category } from '@/types';
 
 export type RecentItemData =
   | { type: "search"; query: string; timestamp: number }

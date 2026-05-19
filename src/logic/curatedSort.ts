@@ -12,7 +12,8 @@
  * - Bucket C: Recency only.
  */
 
-import { type Post, calculatePostMetrics } from './mockData';
+import type { Post } from '../types';
+import { calculatePostMetrics } from './mockData';
 import { computeBadges } from './badgeUtils';
 
 const BUCKET_B_WINDOW_DAYS = 17; // Middle of 14-21 range

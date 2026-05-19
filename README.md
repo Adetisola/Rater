@@ -1,63 +1,161 @@
-# Rater — Judgment is built, not found.
+# Rater
 
-Rater is a high-impact design evaluation platform built for designers who want to sharpen their visual judgment. Beyond simple inspiration, Rater provides a structured environment to observe, evaluate, and reflect on real-world design work across multiple categories.
+A design review platform where creatives submit their work and receive structured community feedback across clarity, purpose, and aesthetics.
 
-Train your design eye through community-driven feedback, structured data visualization, and a dynamic ranking system that celebrates excellence.
+## Stack
 
----
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS 4 |
+| State (global) | React Context (Auth, Posts, Time) |
+| State (ephemeral) | Zustand (navigation) |
+| Animations | Framer Motion + Lottie |
+| Search | Fuse.js (client-side fuzzy search) |
+| Icons | Lucide React |
+| PWA | Custom service worker (`public/sw.js`) |
 
-## 🚀 The Experience
+## Getting Started
 
-- **Curated Design Feed**: Explore a masonry grid of high-quality designs ranging from Web UI to Brand Identity.
-- **Structured Peer Reviews**: Evaluate work based on three core pillars: **Clarity**, **Purpose**, and **Aesthetics**.
-- **Dynamic Top Rated System**: A live ranking system that highlights the top 3 highest-performing designs from the last 7 days.
-- **Lightning-Fast Discovery**: Instant, fuzzy search powered by Fuse.js and a robust filtering system for categories and designers.
-- **Premium Interactions**: Fluid, buttery-smooth animations powered by Framer Motion and Lottie.
-
----
-
-## 🛠️ Tech Stack
-
-Rater is a modern web application built for speed and visual excellence.
-
-- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
-- **Library**: [React 19](https://react.dev/)
-- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/) & [DotLottie](https://lottiefiles.com/)
-- **Search Logic**: [Fuse.js](https://www.fusejs.io/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-
----
-
-## 📦 Getting Started
-
-### 1. Clone the repository
 ```bash
-git clone https://github.com/your-username/rater-web-app.git
-cd rater-web-app
-```
-
-### 2. Install dependencies
-```bash
+# Install dependencies
 npm install
-```
 
-### 3. Run the development server
-```bash
+# Start dev server (Turbopack)
 npm run dev
+
+# Production build
+npm run build
+
+# Start production server
+npm start
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
----
+The app runs at `http://localhost:3000`.
 
-## 🎨 Design Philosophy
+## Folder Structure
 
-Rater follows a "Vibe Coding" approach—prioritizing rich aesthetics, micro-interactions, and a premium feel. Every component is crafted to ensure that the interface never gets in the way of the art.
+```
+src/
+├── app/                    # Next.js App Router pages & layouts
+│   ├── (main)/             # Main route group (browse, submit, post, avatar)
+│   │   ├── layout.tsx      # Keep-alive layout for scroll restoration
+│   │   ├── browse/         # Browse feed page
+│   │   ├── submit/         # Post submission page
+│   │   ├── post/[id]/      # Post detail page
+│   │   └── avatar/         # Redirect helper → /@username
+│   ├── [alias]/            # Dynamic /@username profile pages
+│   ├── layout.tsx          # Root layout (providers, global overlays)
+│   └── not-found.tsx       # 404 page
+│
+├── components/             # All UI components (flat structure)
+│   ├── ui/                 # Primitives: Button, Input, StarRating, Textarea
+│   ├── Header.tsx          # App header with search, filters, navigation
+│   ├── PostCard.tsx         # Card in masonry grid
+│   ├── PostDetailContent.tsx # Full post view with reviews + gestures
+│   ├── ProfileView.tsx     # User profile with edit mode
+│   ├── BrowseContent.tsx   # Feed with sorting/filtering/search
+│   ├── ReviewForm.tsx      # Structured review submission form
+│   └── ...                 # ~45 components total
+│
+├── context/                # React Context providers
+│   ├── AuthContext.tsx      # User session, login/signup, avatar management
+│   ├── PostContext.tsx      # Post CRUD, soft-delete, localStorage persistence
+│   └── TimeContext.tsx      # Shared "now" timestamp for relative times
+│
+├── hooks/                  # Custom React hooks
+│   ├── useBadges.ts         # Badge computation (Top Rated, etc.)
+│   ├── useHotPosts.ts       # Hot post detection
+│   ├── usePostMetrics.ts    # Post rating calculations
+│   ├── useMasonryColumns.ts # Responsive column count
+│   ├── useDebounce.ts       # Input debouncing
+│   └── ...                  # 12 hooks total
+│
+├── logic/                  # Business logic & mock database
+│   ├── mockData.ts          # Mock DB: avatars, posts, reviews, metrics
+│   ├── badgeUtils.ts        # Badge computation logic
+│   ├── curatedSort.ts       # Curated feed sorting algorithm
+│   ├── hotPostUtils.ts      # Hot post scoring
+│   └── searchUtils.ts       # Fuse.js search index & query logic
+│
+├── types/                  # Centralized TypeScript types
+│   └── index.ts             # Post, Avatar, Review, Category, Badge, etc.
+│
+├── utils/                  # Pure utility functions (no app state)
+│   ├── dateUtils.ts         # Relative timestamp formatting
+│   ├── passkeyValidation.ts # Password strength validation
+│   ├── socialLinksUtils.ts  # Social link detection & formatting
+│   ├── usernameUtils.ts     # Username generation
+│   ├── draftManager.ts      # Review draft localStorage persistence
+│   └── deviceTracking.ts    # Anonymous device ID management
+│
+├── store/                  # Zustand stores
+│   └── navigationStore.ts   # Post navigation context (swipe between posts)
+│
+├── lib/                    # Shared utilities
+│   ├── utils.ts             # cn() helper (shadcn/ui convention)
+│   ├── constants.ts         # Reserved routes, app constants
+│   └── postActions.ts       # Share & download actions
+│
+└── features/               # Feature-specific modules
+    └── landing/             # Landing page components
+```
 
-- **Typography**: Focused on readability and impact.
-- **Color Palette**: Sophisticated neutrals with high-contrast accents (#FEC312).
-- **Motion**: Purposeful transitions that provide context and delight.
+## Routing
 
----
+| Route | Description |
+|-------|-------------|
+| `/` | Landing page |
+| `/browse` | Main feed with masonry grid |
+| `/submit` | Post submission form |
+| `/post/[id]` | Post detail with reviews |
+| `/@username` | User profile |
+| `/avatar` | Redirects to `/@username` |
 
-*Built with passion for the design community.*
+Legacy `/app/*` routes are permanently redirected via `next.config.ts`.
+
+## State Management
+
+**React Context** manages app-wide persistent state:
+- `AuthContext` — Current user session, all avatars, login/signup/logout
+- `PostContext` — Post list, CRUD operations, soft-delete
+- `TimeContext` — Shared `Date.now()` updated every 30s for relative timestamps
+
+**Zustand** manages ephemeral navigation state:
+- `navigationStore` — Tracks post navigation context for swipe-between-posts gesture
+
+All data currently persists to **localStorage** as the app uses mock data. Each persistence point is marked with `TODO(backend)` comments for the Supabase migration.
+
+## Key Systems
+
+### Scroll Restoration
+The `(main)/layout.tsx` uses a visibility-based keep-alive pattern to preserve the browse feed's scroll position across navigations. `ScrollRestorationProvider` handles per-route restoration.
+
+### Gesture Navigation
+`PostDetailContent.tsx` supports swipe-to-navigate between posts using Framer Motion drag gestures, with keyboard arrow key support.
+
+### Search
+Client-side fuzzy search powered by Fuse.js with debounced input. Indexes posts, avatars, and categories. Desktop uses an inline dropdown; mobile uses a fullscreen overlay.
+
+### PWA
+Service worker at `public/sw.js` with offline support and install prompting via `useInstallPrompt` hook.
+
+## Naming Conventions
+
+- **Components**: PascalCase (`PostCard.tsx`, `ReviewForm.tsx`)
+- **Hooks**: camelCase with `use` prefix (`useBadges.ts`, `useDebounce.ts`)
+- **Utils**: camelCase (`dateUtils.ts`, `draftManager.ts`)
+- **Types**: PascalCase interfaces/types in `src/types/index.ts`
+- **Context**: `[Name]Context.tsx` exporting `use[Name]()` hook
+
+## Backend Migration Notes
+
+The codebase is prepared for Supabase integration. All mock data access points are marked with `TODO(backend)` comments. The migration strategy:
+
+1. **Types are decoupled** — `src/types/index.ts` defines all domain types independently of mock data
+2. **Mock data is isolated** — All mock DB operations live in `src/logic/mockData.ts`
+3. **Contexts are the seam** — `AuthContext` and `PostContext` are the only consumers of mock data that components depend on
+4. **localStorage markers** — Every localStorage usage has a `TODO(backend)` explaining what to replace it with
+
+When migrating: replace `mockData.ts` exports with Supabase queries, update the two context files, and remove localStorage persistence. Components should not need changes.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { type Post, type BadgeType } from '../logic/mockData';
+import type { Post, BadgeType } from '@/types';
 import { computeBadges } from '../logic/badgeUtils';
 
 export function useBadges(posts: Post[]) {
