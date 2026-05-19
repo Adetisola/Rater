@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Textarea';
 import { StarRating } from './ui/StarRating';
@@ -135,6 +136,215 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
   const [showNameError, setShowNameError] = useState(false);
   const [isNameFocused, setIsNameFocused] = useState(false);
 
+  // --- GSAP RATE BUTTON HOVER EXPLOSION LOGIC ---
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const createStar = (x: number, y: number) => {
+    if (!btnRef.current) return;
+
+    // Create custom inline SVG to support perfect gradient fills and vectors
+    const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const size = 32 + Math.random() * 16; // Bolder size range from 32px to 48px!
+
+    star.setAttribute("viewBox", "0 0 83 80");
+    star.setAttribute("class", "absolute pointer-events-none select-none z-30 filter drop-shadow-[0_2px_5px_rgba(196,0,210,0.4)]");
+    star.style.width = `${size}px`;
+    star.style.height = `${size}px`;
+    star.style.left = `${x}px`;
+    star.style.top = `${y}px`;
+    star.style.transform = "translate(-50%, -50%)"; // Center perfectly on spawn
+
+    // Create linearGradient
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+    const gradId = `star-grad-${Math.random().toString(36).substring(2, 9)}`;
+    gradient.setAttribute("id", gradId);
+    gradient.setAttribute("x1", "0%");
+    gradient.setAttribute("y1", "0%");
+    gradient.setAttribute("x2", "100%");
+    gradient.setAttribute("y2", "100%");
+    
+    const stops = [
+      { offset: "0%", color: "#fec312" },
+      { offset: "33%", color: "#ff4f6d" },
+      { offset: "66%", color: "#c400d2" },
+      { offset: "100%", color: "#7c3bed" }
+    ];
+    
+    stops.forEach(s => {
+      const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+      stop.setAttribute("offset", s.offset);
+      stop.setAttribute("stop-color", s.color);
+      gradient.appendChild(stop);
+    });
+    defs.appendChild(gradient);
+    star.appendChild(defs);
+
+    // Create star path
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z");
+    path.setAttribute("fill", `url(#${gradId})`);
+    star.appendChild(path);
+
+    btnRef.current.appendChild(star);
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 50 + Math.random() * 70; // Increased distance for wider, looser explosion!
+
+    // Randomize rotation speed and direction
+    const rotation = (Math.random() - 0.5) * 360;
+
+    gsap.to(star, {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance,
+      rotation: rotation,
+      opacity: 0,
+      scale: 0.1,
+      duration: 1.2 + Math.random() * 0.4, // Increased duration for a slower, floaty, luxurious drift
+      delay: Math.random() * 0.05, // organic delay
+      ease: "power3.out", // Smooth deceleration
+      onComplete: () => star.remove(),
+    });
+  };
+
+  const handleHover = () => {
+    // 4. Don't trigger on mobile touch screens
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    if (!btnRef.current || !isComplete) return;
+
+    const rect = btnRef.current.getBoundingClientRect();
+
+    // 1. Button pop / bounce effect
+    gsap.to(btnRef.current, {
+      scale: 1.05,
+      duration: 0.2,
+      ease: "power2.out",
+    });
+
+    // 3. Glow flash effect
+    gsap.to(btnRef.current, {
+      boxShadow: "0 0 25px rgba(254, 195, 18, 0.9)",
+      duration: 0.12,
+      yoyo: true,
+      repeat: 1,
+      ease: "sine.inOut"
+    });
+
+    // 2. Spark burst (5 stars max)
+    const particleCount = 5;
+    for (let i = 0; i < particleCount; i++) {
+      createStar(rect.width / 2, rect.height / 2);
+    }
+
+    // Return button to normal scale
+    gsap.to(btnRef.current, {
+      scale: 1,
+      delay: 0.15,
+      duration: 0.2,
+      ease: "power2.inOut"
+    });
+  };
+
+  // --- GSAP SUCCESS CONFETTI RAIN LOGIC ---
+  const triggerSuccessConfetti = () => {
+    const confettiContainer = document.body;
+    const particleCount = 45; // Lush, beautiful celebration rain!
+
+    for (let i = 0; i < particleCount; i++) {
+      const isStar = Math.random() > 0.4; // 60% stars, 40% other confetti shapes
+      let element: HTMLElement;
+      const size = isStar ? (18 + Math.random() * 20) : (8 + Math.random() * 10);
+
+      if (isStar) {
+        // Create custom inline SVG to support perfect gradient fills and vectors
+        element = document.createElementNS("http://www.w3.org/2000/svg", "svg") as unknown as HTMLElement;
+        element.setAttribute("viewBox", "0 0 83 80");
+        element.setAttribute("class", "fixed pointer-events-none select-none z-[9999] filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]");
+        element.style.width = `${size}px`;
+        element.style.height = `${size}px`;
+
+        // Create linearGradient
+        const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+        const gradId = `confetti-grad-${i}-${Math.random().toString(36).substring(2, 9)}`;
+        gradient.setAttribute("id", gradId);
+        gradient.setAttribute("x1", "0%");
+        gradient.setAttribute("y1", "0%");
+        gradient.setAttribute("x2", "100%");
+        gradient.setAttribute("y2", "100%");
+        
+        // Brand color gradient varieties
+        const colors = [
+          ["#fec312", "#ff4f6d", "#c400d2", "#7c3bed"],
+          ["#ff4f6d", "#c400d2", "#7c3bed", "#fec312"],
+          ["#7c3bed", "#fec312", "#ff4f6d", "#c400d2"]
+        ][Math.floor(Math.random() * 3)];
+
+        const stops = [
+          { offset: "0%", color: colors[0] },
+          { offset: "33%", color: colors[1] },
+          { offset: "66%", color: colors[2] },
+          { offset: "100%", color: colors[3] }
+        ];
+        
+        stops.forEach(s => {
+          const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+          stop.setAttribute("offset", s.offset);
+          stop.setAttribute("stop-color", s.color);
+          gradient.appendChild(stop);
+        });
+        defs.appendChild(gradient);
+        element.appendChild(defs);
+
+        // Create star path
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", "M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z");
+        path.setAttribute("fill", `url(#${gradId})`);
+        element.appendChild(path);
+      } else {
+        // Create rectangular / round standard confetti piece in solid brand colors
+        element = document.createElement("div");
+        const brandColors = ["#fec312", "#ff4f6d", "#c400d2", "#7c3bed"];
+        const randomColor = brandColors[Math.floor(Math.random() * brandColors.length)];
+        const isRound = Math.random() > 0.5;
+
+        element.className = `fixed pointer-events-none select-none z-[9999] shadow-sm ${isRound ? 'rounded-full' : 'rounded-sm'}`;
+        element.style.width = isRound ? `${size}px` : `${size * 1.5}px`;
+        element.style.height = `${size}px`;
+        element.style.backgroundColor = randomColor;
+      }
+
+      // Initial top alignment just above the viewport, spread across screen width
+      const startX = Math.random() * window.innerWidth;
+      const startY = -50 - Math.random() * 100; // Staggered entry
+
+      element.style.left = `${startX}px`;
+      element.style.top = `${startY}px`;
+
+      confettiContainer.appendChild(element);
+
+      // Animation parameters
+      const travelDistanceY = window.innerHeight + 150;
+      const driftX = (Math.random() - 0.5) * 160; // Swaying motion
+      const rotation = (Math.random() - 0.5) * 720; // 3D spin roll
+      const duration = 2.0 + Math.random() * 2.0; // Gentler drift (2-4 seconds)
+      const delay = Math.random() * 0.8; // Beautiful staggered cascades
+
+      gsap.to(element, {
+        y: travelDistanceY,
+        x: driftX,
+        rotation: rotation,
+        opacity: 0.1, // Fade out at the bottom
+        duration: duration,
+        delay: delay,
+        ease: "sine.inOut",
+        onComplete: () => {
+          element.remove();
+        }
+      });
+    }
+  };
+
   // Guest engagement prompt — triggers only after name field completion
   const { 
     isVisible: isPromptVisible, 
@@ -199,9 +409,6 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
   // Calculate completeness
   const isComplete = clarity > 0 && purpose > 0 && aesthetics > 0;
-  
-  // Validation check
-  const canSubmit = isComplete && (isLoggedIn || name.trim().length > 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,6 +424,10 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
     // Simulate network delay
     setTimeout(() => {
         const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
+        
+        // Trigger screen success confetti rain!
+        triggerSuccessConfetti();
+        
         onSubmit({ clarity, purpose, aesthetics }, comment, finalName);
         
         // Clear drafts on success
@@ -342,9 +553,11 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
         </div>
 
         <Button 
+          ref={btnRef}
+          onMouseEnter={handleHover}
           type="submit" 
-          className="w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all" 
-          variant={canSubmit ? "outline" : "outline"}
+          className="relative w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all overflow-visible" 
+          variant="outline"
           disabled={!isComplete || isSubmitting}
           isLoading={isSubmitting}
         >

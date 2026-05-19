@@ -243,12 +243,21 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         }
                     }}
                 >
-                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-200 overflow-hidden ring-0 group-hover/avatar:ring-1 ring-[#FEC312] transition-all shrink-0">
-                        <img 
-                            src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatar_id}`} 
-                            alt="Avatar" 
-                            className="w-full h-full object-cover" 
-                        />
+                    <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden ring-0 group-hover/avatar:ring-1 ring-[#FEC312] transition-all shrink-0 flex items-center justify-center">
+                        {avatar?.avatar_url ? (
+                            <img 
+                                src={avatar.avatar_url} 
+                                alt="Avatar" 
+                                className="w-full h-full object-cover" 
+                            />
+                        ) : (
+                            <div 
+                                className="w-full h-full flex items-center justify-center text-[10px] md:text-xs text-white font-bold"
+                                style={{ backgroundColor: avatar?.bg_color || '#cccccc' }}
+                            >
+                                {(avatar?.name || 'Unknown').substring(0, 1).toUpperCase()}
+                            </div>
+                        )}
                     </div>
                     <div className="flex-1 min-w-0 truncate text-black group-hover/card:text-white transition-colors">
                         <span className="text-xs font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-[#FEC312] transition-colors">

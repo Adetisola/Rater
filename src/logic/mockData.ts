@@ -2186,7 +2186,30 @@ export async function calculatePostMetrics(postId: string, additionalReviews?: R
 export function getReviewerDisplayName(review: Review): string {
   if (review.reviewer_id) {
     const avatar = MOCK_AVATARS[review.reviewer_id];
-    return avatar?.name || 'Unknown Avatar';
+    if (avatar) return avatar.name;
+
+    // Check localStorage for dynamically created session avatars or mock overrides
+    if (typeof window !== 'undefined') {
+      try {
+        const savedSession = localStorage.getItem('rater_session_avatars');
+        if (savedSession) {
+          const sessionAvatars = JSON.parse(savedSession);
+          if (sessionAvatars[review.reviewer_id]) {
+            return sessionAvatars[review.reviewer_id].name;
+          }
+        }
+        const savedOverrides = localStorage.getItem('rater_mock_overrides');
+        if (savedOverrides) {
+          const mockOverrides = JSON.parse(savedOverrides);
+          if (mockOverrides[review.reviewer_id]) {
+            return mockOverrides[review.reviewer_id].name;
+          }
+        }
+      } catch (e) {
+        console.error("Error reading reviewer name from storage:", e);
+      }
+    }
+    return 'Unknown Avatar';
   }
   return review.reviewer_name || 'Anonymous';
 }

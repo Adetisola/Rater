@@ -313,7 +313,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           <Button 
               variant="secondary" 
               onClick={() => router.back()}
-              className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+              className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
           >
               <ArrowLeft className="w-5 h-5 text-black" />
               Back

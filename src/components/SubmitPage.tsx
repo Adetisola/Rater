@@ -8,7 +8,7 @@ export function SubmitPage() {
 
   const handleSuccess = () => {
     window.dispatchEvent(new Event('app-navigation-start'));
-    router.push('/browse', { scroll: false });
+    router.push('/browse?sort=newest', { scroll: false });
   };
 
   return <PostForm onSuccess={handleSuccess} />;

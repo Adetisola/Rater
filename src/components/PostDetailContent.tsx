@@ -14,6 +14,7 @@ import { usePosts } from '../context/PostContext';
 import { useNow } from '../context/TimeContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import gsap from 'gsap';
 import { PostActionsMenu } from './PostActionsMenu';
 import { sharePost } from '../lib/postActions';
 
@@ -184,7 +185,46 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
   
   // UI State
   const [hasReviewed, setHasReviewed] = useState(false);
+  const isFreshReviewRef = useRef(false);
+  const successStarRef = useRef<SVGPathElement>(null);
+  const successCheckRef = useRef<SVGPathElement>(null);
   const [isSelfPost, setIsSelfPost] = useState(false);
+
+  // GSAP animation for review success card
+  useEffect(() => {
+    if (hasReviewed && successStarRef.current && successCheckRef.current) {
+      const star = successStarRef.current;
+      const check = successCheckRef.current;
+
+      if (isFreshReviewRef.current) {
+        isFreshReviewRef.current = false;
+
+        // Set initial values for fresh animation
+        gsap.set(check, { strokeDasharray: 35, strokeDashoffset: 35, opacity: 0 });
+        gsap.set(star, { transformOrigin: "50% 50%" });
+
+        const tl = gsap.timeline();
+
+        // Star spins fast, slows down and stops
+        tl.fromTo(star, 
+          { rotation: -720, scale: 0.2, opacity: 0 },
+          { rotation: 0, scale: 1, opacity: 1, duration: 1.2, ease: "power4.out" }
+        );
+
+        // Checkmark animates / draws in place
+        tl.to(check, {
+          strokeDashoffset: 0,
+          opacity: 1,
+          duration: 0.6,
+          ease: "power2.out"
+        }, "-=0.3");
+      } else {
+        // If loaded in static already-reviewed state, make sure they are immediately in final static frame!
+        gsap.set(star, { rotation: 0, scale: 1, opacity: 1, transformOrigin: "50% 50%" });
+        gsap.set(check, { strokeDasharray: 35, strokeDashoffset: 0, opacity: 1 });
+      }
+    }
+  }, [hasReviewed]);
   const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
   const [isFetchingReviews, setIsFetchingReviews] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -424,6 +464,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         device_id: device_id
     };
 
+    isFreshReviewRef.current = true;
     setUserReviews([newReview, ...userReviews]);
     setHasReviewed(true);
     markPostAsReviewed(post.id);
@@ -471,14 +512,14 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
       transition={{ duration: 0.25, ease: "easeOut" }}
       className="w-full bg-white relative min-h-screen"
     >
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-0 pb-8">
         
         {/* HEADER: Back Button & Navigation Controls */}
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between sticky top-0 bg-transparent pt-8 pb-2 z-50">
             <Button 
                 variant="secondary" 
                 onClick={handleClose}
-                className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+                className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
             >
                 <ArrowLeft className="w-5 h-5 text-black" />
                 Back
@@ -490,7 +531,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     variant="secondary"
                     onClick={handlePrev}
                     disabled={!prevPostId}
-                    className="w-10 h-10 p-0 rounded-full border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
+                    className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
                     aria-label="Previous post"
                 >
                     <ChevronLeft className="w-5 h-5 text-black" />
@@ -499,7 +540,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     variant="secondary"
                     onClick={handleNext}
                     disabled={!nextPostId}
-                    className="w-10 h-10 p-0 rounded-full border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
+                    className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
                     aria-label="Next post"
                 >
                     <ChevronRight className="w-5 h-5 text-black" />
@@ -692,12 +733,21 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         scroll={false}
                         className="flex items-center gap-3 group/author"
                     >
-                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all">
-                            <img 
-                                src={avatar?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.avatar_id}`} 
-                                className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300" 
-                                alt="Avatar" 
-                            />
+                        <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all flex items-center justify-center">
+                            {avatar?.avatar_url ? (
+                                <img 
+                                    src={avatar.avatar_url} 
+                                    className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300" 
+                                    alt="Avatar" 
+                                />
+                            ) : (
+                                <div 
+                                    className="w-full h-full flex items-center justify-center text-sm text-white font-bold"
+                                    style={{ backgroundColor: avatar?.bg_color || '#cccccc' }}
+                                >
+                                    {(avatar?.name || 'Unknown').substring(0, 1).toUpperCase()}
+                                </div>
+                            )}
                         </div>
                         <div className="text-left flex flex-col min-w-0">
                             <span className="block text-sm font-semibold text-black group-hover/author:text-[#FEC312] transition-colors truncate">{avatar?.name || 'Unknown'}</span>
@@ -771,7 +821,40 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         />
                     ) : (
                          <div className="bg-gray-50 p-12 rounded-[32px] text-center">
-                            <div className="w-16 h-16 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🙌</div>
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
+                                <svg className="w-8 h-8 filter" viewBox="0 0 83 80">
+                                    <defs>
+                                        <linearGradient id="success-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stopColor="#fec312" />
+                                            <stop offset="33%" stopColor="#ff4f6d" />
+                                            <stop offset="66%" stopColor="#c400d2" />
+                                            <stop offset="100%" stopColor="#7c3bed" />
+                                        </linearGradient>
+                                    </defs>
+                                    <path 
+                                        ref={successStarRef}
+                                        d="M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z" 
+                                        fill="url(#success-star-grad)"
+                                        style={{
+                                            opacity: isFreshReviewRef.current ? 0 : 1,
+                                        }}
+                                    />
+                                    <path 
+                                        ref={successCheckRef}
+                                        d="M32 40 L40 48 L52 32" 
+                                        stroke="white" 
+                                        strokeWidth="5" 
+                                        strokeLinecap="round" 
+                                        strokeLinejoin="round" 
+                                        fill="none" 
+                                        style={{
+                                            opacity: isFreshReviewRef.current ? 0 : 1,
+                                            strokeDasharray: isFreshReviewRef.current ? 35 : undefined,
+                                            strokeDashoffset: isFreshReviewRef.current ? 35 : undefined,
+                                        }}
+                                    />
+                                </svg>
+                            </div>
                             <h3 className="font-medium text-xl mb-2">Review added</h3>
                             <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
                          </div>
@@ -838,15 +921,54 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         >
                             <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden shrink-0">
-                                        {review.reviewer_id && allAvatars[review.reviewer_id]?.avatar_url ? (
-                                            <img src={allAvatars[review.reviewer_id].avatar_url} alt="" className="w-full h-full object-cover" />
+                                    <div 
+                                        className={`w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-0 transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:ring-1 ring-[#FEC312]' : ''}`}
+                                        onClick={(e) => {
+                                            if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
+                                                e.stopPropagation();
+                                                router.push(`/@${allAvatars[review.reviewer_id].username}`, { scroll: false });
+                                            }
+                                        }}
+                                    >
+                                        {review.reviewer_id && allAvatars[review.reviewer_id] ? (
+                                            allAvatars[review.reviewer_id].avatar_url ? (
+                                                <img src={allAvatars[review.reviewer_id].avatar_url} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div 
+                                                    className="w-full h-full flex items-center justify-center text-xs text-white font-bold"
+                                                    style={{ backgroundColor: allAvatars[review.reviewer_id].bg_color || '#cccccc' }}
+                                                >
+                                                    {allAvatars[review.reviewer_id].name.substring(0, 1).toUpperCase()}
+                                                </div>
+                                            )
                                         ) : (
-                                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.reviewer_id || review.reviewer_name || review.id}`} alt="" className="w-full h-full object-cover" />
+                                            <div 
+                                                className="w-full h-full flex items-center justify-center text-xs text-white font-bold"
+                                                style={{ backgroundColor: '#cccccc' }}
+                                            >
+                                                {(review.reviewer_name || 'Anonymous').substring(0, 1).toUpperCase()}
+                                            </div>
                                         )}
                                     </div>
                                     <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
-                                        <span className="font-medium text-base text-black truncate max-w-[150px] xs:max-w-none">{getReviewerDisplayName(review)}</span>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span 
+                                                className={`font-medium text-base text-black truncate max-w-[150px] xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-[#FEC312]' : ''}`}
+                                                onClick={(e) => {
+                                                    if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
+                                                        e.stopPropagation();
+                                                        router.push(`/@${allAvatars[review.reviewer_id].username}`, { scroll: false });
+                                                    }
+                                                }}
+                                            >
+                                                {getReviewerDisplayName(review)}
+                                            </span>
+                                            {!review.reviewer_id && (
+                                                <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
+                                                    Guest
+                                                </span>
+                                            )}
+                                        </div>
                                         <div className="flex gap-0.5">
                                             {[1,2,3,4,5].map(i => (
                                                 <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />

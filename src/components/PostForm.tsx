@@ -14,6 +14,7 @@ import { usePosts } from '../context/PostContext';
 import { AuthOverlay } from './AuthOverlay';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { AmbientSuccessText } from './AmbientSuccessText';
 
 interface PostFormProps {
@@ -67,6 +68,38 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dotLottie, setDotLottie] = useState<any>(null);
+
+  // Trigger onSuccess only after Lottie plays once or fallback timeout
+  useEffect(() => {
+    if (!isSuccess) return;
+
+    let fallbackTimeout: NodeJS.Timeout;
+    let completed = false;
+
+    const handleComplete = () => {
+      if (completed) return;
+      completed = true;
+      clearTimeout(fallbackTimeout);
+      onSuccess?.();
+    };
+
+    // Fallback: If Lottie fails to load or play within 4.0s, close anyway
+    fallbackTimeout = setTimeout(() => {
+      handleComplete();
+    }, 4000);
+
+    if (dotLottie) {
+      dotLottie.addEventListener('complete', handleComplete);
+    }
+
+    return () => {
+      clearTimeout(fallbackTimeout);
+      if (dotLottie) {
+        dotLottie.removeEventListener('complete', handleComplete);
+      }
+    };
+  }, [isSuccess, dotLottie, onSuccess]);
   
   // --- DRAFT PERSISTENCE ---
   useEffect(() => {
@@ -223,7 +256,6 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         });
         if (success) {
           setIsSuccess(true);
-          setTimeout(() => onSuccess?.(), 1500);
         }
       } else {
         // Create new post
@@ -239,7 +271,6 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         addPost(newPost);
         localStorage.removeItem('rater_post_form_draft');
         setIsSuccess(true);
-        setTimeout(() => onSuccess?.(), 1500);
       }
     } catch (err) {
       console.error(err);
@@ -279,8 +310,11 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         <div className="w-48 h-48">
           <DotLottieReact
             src="https://lottie.host/a059d513-00d2-44a4-82a1-3d15c5bad2fc/OWXtqqeGsX.lottie"
-            loop
+            loop={false}
             autoplay
+            dotLottieRefCallback={(instance) => {
+              setDotLottie(instance);
+            }}
           />
         </div>
         <h1 className="text-2xl font-semibold mb-4 text-black">
@@ -289,7 +323,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         <div className="text-gray-500 max-w-md mx-auto leading-relaxed">
           {isEditing 
             ? <AmbientSuccessText />
-            : <p>Your design has been posted. The community will start reviewing it shortly.</p>}
+            : <p>Your design is live! Redirecting you to the recent feed to see your post...</p>}
         </div>
       </div>
     );
@@ -313,7 +347,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           <Button 
             variant="secondary" 
             onClick={() => router.back()}
-            className="rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+            className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
           >
             <ArrowLeft className="w-5 h-5 text-black" />
             Back
@@ -331,21 +365,22 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         </div>
 
         {/* IDENTITY INDICATOR */}
-        <div className="flex items-center gap-2.5 px-3 py-1.5 bg-gray-50 rounded-full border border-gray-100 self-start sm:self-center">
-          <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 shadow-sm border border-white">
-            {currentAvatar.avatar_url ? (
-              <img src={currentAvatar.avatar_url} alt={currentAvatar.name} className="w-full h-full object-cover" />
-            ) : (
-              <div 
-                className="w-full h-full flex items-center justify-center text-[10px] text-white font-bold"
+        <Link 
+            href={`/@${currentAvatar.username}`}
+            scroll={false}
+            className="block shrink-0 transition-all hover:scale-105 active:scale-95 self-start sm:self-center"
+        >
+            <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden shadow-sm"
                 style={{ backgroundColor: currentAvatar.bg_color }}
-              >
-                {currentAvatar.name.substring(0, 1).toUpperCase()}
-              </div>
-            )}
-          </div>
-          <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">@{currentAvatar.name}</span>
-        </div>
+            >
+                {currentAvatar.avatar_url ? (
+                    <img src={currentAvatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+                ) : (
+                    currentAvatar.name.charAt(0).toUpperCase()
+                )}
+            </div>
+        </Link>
       </div>
 
       <div className={cn(
@@ -591,7 +626,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 <h3 className="font-medium text-lg text-black">Upload Your Work</h3>
               </div>
               <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                Share your design and get rated by the community.
+                Share your work and get rated by the community.
               </p>
               <ul className="space-y-3 mb-8">
                 {[
@@ -615,7 +650,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 onClick={handleSubmit}
                 isLoading={isSubmitting}
               >
-                {isEditing ? "Update Post" : "Post Design"}
+                {isEditing ? "Update Post" : "Post"}
               </Button>
               {isEditing && (
                 <Button 
@@ -652,7 +687,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               onClick={handleSubmit}
               isLoading={isSubmitting}
             >
-              {isEditing ? "Update Post" : "Post Design"}
+              {isEditing ? "Update Post" : "Post"}
             </Button>
           </div>
         )}
