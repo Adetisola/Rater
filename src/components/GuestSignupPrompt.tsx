@@ -44,7 +44,7 @@ export function GuestSignupPrompt({
           </div>
         }
         title={personalizedTitle || 'Want to keep your reviews connected to you?'}
-        description="Create your avatar so your reviews stay part of you"
+        description="Create your avatar so your reviews stay connected to you"
         actionButton={
           <div className="flex items-center gap-2 shrink-0">
             <button

@@ -25,7 +25,7 @@ function generateSuggestions(base: string): string[] {
   // Clamp base to 15 chars to allow suffixes within the 20-char limit
   const safeBase = base.slice(0, 15);
   const digit = Math.floor(Math.random() * 899 + 100);
-  const randomWords = ['design', 'codes', 'art', 'ux', 'vault', 'labs'];
+  const randomWords = ['design', 'codes', 'art', 'ui', 'ux', 'vault', 'labs'];
   const randomSuffix = randomWords[Math.floor(Math.random() * randomWords.length)];
 
   return [
