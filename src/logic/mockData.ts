@@ -472,7 +472,7 @@ export const MOCK_POSTS: Post[] = [
 ];
 
 // --- MOCK REVIEWS ---
-export const MOCK_REVIEWS: Review[] = [
+const RAW_MOCK_REVIEWS: Review[] = [
   {
     id: 'r1',
     post_id: 'post_1',
@@ -2107,6 +2107,11 @@ export const MOCK_REVIEWS: Review[] = [
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10.64).toISOString()
   }
 ];
+
+export const MOCK_REVIEWS: Review[] = RAW_MOCK_REVIEWS.filter(review => {
+  const post = MOCK_POSTS.find(p => p.id === review.post_id);
+  return !post || review.reviewer_id !== post.avatar_id;
+});
 
 // --- MOCK BADGES (Historical & Active Store) ---
 export const MOCK_BADGES: Badge[] = [

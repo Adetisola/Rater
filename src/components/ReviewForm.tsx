@@ -138,111 +138,76 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
   // --- GSAP RATE BUTTON HOVER EXPLOSION LOGIC ---
   const btnRef = useRef<HTMLButtonElement>(null);
+  const hoverTimelineRef = useRef<gsap.core.Timeline | null>(null);
 
-  const createStar = (x: number, y: number) => {
-    if (!btnRef.current) return;
+  // Clean up active timelines on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimelineRef.current) {
+        hoverTimelineRef.current.kill();
+      }
+    };
+  }, []);
 
-    // Create custom inline SVG to support perfect gradient fills and vectors
-    const star = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    const size = 32 + Math.random() * 16; // Bolder size range from 32px to 48px!
-
-    star.setAttribute("viewBox", "0 0 83 80");
-    star.setAttribute("class", "absolute pointer-events-none select-none z-30 filter drop-shadow-[0_2px_5px_rgba(196,0,210,0.4)]");
-    star.style.width = `${size}px`;
-    star.style.height = `${size}px`;
-    star.style.left = `${x}px`;
-    star.style.top = `${y}px`;
-    star.style.transform = "translate(-50%, -50%)"; // Center perfectly on spawn
-
-    // Create linearGradient
-    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-    const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
-    const gradId = `star-grad-${Math.random().toString(36).substring(2, 9)}`;
-    gradient.setAttribute("id", gradId);
-    gradient.setAttribute("x1", "0%");
-    gradient.setAttribute("y1", "0%");
-    gradient.setAttribute("x2", "100%");
-    gradient.setAttribute("y2", "100%");
-    
-    const stops = [
-      { offset: "0%", color: "#fec312" },
-      { offset: "33%", color: "#ff4f6d" },
-      { offset: "66%", color: "#c400d2" },
-      { offset: "100%", color: "#7c3bed" }
-    ];
-    
-    stops.forEach(s => {
-      const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
-      stop.setAttribute("offset", s.offset);
-      stop.setAttribute("stop-color", s.color);
-      gradient.appendChild(stop);
-    });
-    defs.appendChild(gradient);
-    star.appendChild(defs);
-
-    // Create star path
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z");
-    path.setAttribute("fill", `url(#${gradId})`);
-    star.appendChild(path);
-
-    btnRef.current.appendChild(star);
-
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 50 + Math.random() * 70; // Increased distance for wider, looser explosion!
-
-    // Randomize rotation speed and direction
-    const rotation = (Math.random() - 0.5) * 360;
-
-    gsap.to(star, {
-      x: Math.cos(angle) * distance,
-      y: Math.sin(angle) * distance,
-      rotation: rotation,
-      opacity: 0,
-      scale: 0.1,
-      duration: 1.2 + Math.random() * 0.4, // Increased duration for a slower, floaty, luxurious drift
-      delay: Math.random() * 0.05, // organic delay
-      ease: "power3.out", // Smooth deceleration
-      onComplete: () => star.remove(),
-    });
-  };
-
-  const handleHover = () => {
-    // 4. Don't trigger on mobile touch screens
+  const handleMouseEnter = () => {
     if (!window.matchMedia('(hover: hover)').matches) return;
     if (!btnRef.current || !isComplete) return;
 
-    const rect = btnRef.current.getBoundingClientRect();
-
-    // 1. Button pop / bounce effect
-    gsap.to(btnRef.current, {
-      scale: 1.05,
-      duration: 0.2,
-      ease: "power2.out",
-    });
-
-    // 3. Glow flash effect
-    gsap.to(btnRef.current, {
-      boxShadow: "0 0 25px rgba(254, 195, 18, 0.9)",
-      duration: 0.12,
-      yoyo: true,
-      repeat: 1,
-      ease: "sine.inOut"
-    });
-
-    // 2. Spark burst (5 stars max)
-    const particleCount = 5;
-    for (let i = 0; i < particleCount; i++) {
-      createStar(rect.width / 2, rect.height / 2);
+    if (hoverTimelineRef.current) {
+      hoverTimelineRef.current.kill();
     }
 
-    // Return button to normal scale
-    gsap.to(btnRef.current, {
+    const tl = gsap.timeline();
+    hoverTimelineRef.current = tl;
+
+    // 1. Character-by-Character Staggered 3D Roll (Super Snappy!)
+    tl.to(btnRef.current.querySelectorAll('.rate-btn-span'), {
+      y: "-1.3em",
+      duration: 0.28,
+      stagger: 0.02,
+      ease: "power3.out"
+    }, 0);
+
+    // 2. Button Scale, Gold Background, and Glow
+    tl.to(btnRef.current, {
+      scale: 1.02,
+      backgroundColor: "#FEC312", // Rich amber/gold background
+      color: "#FFFFFF",
+      borderColor: "#FEC312",
+      boxShadow: "0 6px 20px rgba(254, 195, 18, 0.3)",
+      duration: 0.15,
+      ease: "power2.out"
+    }, 0);
+  };
+  const handleMouseLeave = () => {
+    if (!window.matchMedia('(hover: hover)').matches) return;
+    if (!btnRef.current) return;
+
+    if (hoverTimelineRef.current) {
+      hoverTimelineRef.current.kill();
+    }
+
+    const tl = gsap.timeline();
+    hoverTimelineRef.current = tl;
+
+    // Restore resting character state (roll back to 0 - Super Snappy!)
+    tl.to(btnRef.current.querySelectorAll('.rate-btn-span'), {
+      y: "0em",
+      duration: 0.28,
+      stagger: 0.02,
+      ease: "power3.out"
+    }, 0);
+
+    // Restore resting button coordinates and color
+    tl.to(btnRef.current, {
       scale: 1,
-      delay: 0.15,
+      backgroundColor: "#FFFFFF",
+      color: "#000000",
+      borderColor: "#FEC312",
+      boxShadow: "0 0 0px rgba(254, 195, 18, 0)",
       duration: 0.2,
-      ease: "power2.inOut"
-    });
+      ease: "power2.out"
+    }, 0);
   };
 
   // --- GSAP SUCCESS CONFETTI RAIN LOGIC ---
@@ -552,17 +517,31 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
            </div>
         </div>
 
-        <Button 
-          ref={btnRef}
-          onMouseEnter={handleHover}
-          type="submit" 
-          className="relative w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all overflow-visible" 
-          variant="outline"
-          disabled={!isComplete || isSubmitting}
-          isLoading={isSubmitting}
-        >
-          Rate
-        </Button>
+         <Button 
+           ref={btnRef}
+           onMouseEnter={handleMouseEnter}
+           onMouseLeave={handleMouseLeave}
+           type="submit" 
+           className="relative w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all overflow-hidden" 
+           variant="outline"
+           disabled={!isComplete || isSubmitting}
+           isLoading={isSubmitting}
+         >
+           <div className="relative w-[3.5rem] h-[1.3em] overflow-hidden flex justify-center items-center pointer-events-none select-none">
+             {['R', 'a', 't', 'e'].map((char, index) => (
+               <span 
+                 key={index} 
+                 className="rate-btn-span inline-block relative font-medium text-lg"
+                 style={{ 
+                   textShadow: "0px 1.3em currentColor",
+                   transform: "translateY(0.001deg)"
+                 }}
+               >
+                 {char}
+               </span>
+             ))}
+           </div>
+         </Button>
       </form>
 
       <GuestSignupPrompt 
