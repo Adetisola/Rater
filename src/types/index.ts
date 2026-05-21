@@ -39,7 +39,7 @@ export interface Avatar {
   email: string;                     // UNIQUE email address
   show_email?: boolean;              // User preference to show email publicly
   name: string;                      // Display name (flexible)
-  role: string;                      // public-facing identity label
+  role: string | null;               // public-facing identity label (nullable)
   avatar_url?: string;
   bg_color: string;
   bio?: string;
@@ -47,8 +47,8 @@ export interface Avatar {
   passkey: string;
   created_at: string;
   // Username history — for old-URL redirects and Supabase migration
-  usernameLastChangedAt?: number;    // Unix ms timestamp of last username change
-  previousUsernames?: string[];      // Ordered list of past usernames (oldest first)
+  username_last_changed_at?: string | null;    // ISO timestamp of last username change
+  previous_usernames?: string[];      // Ordered list of past usernames (oldest first)
   social_links?: SocialLink[];
 }
 

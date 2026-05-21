@@ -54,20 +54,20 @@ const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; is
         const duration = endNum < 5 ? 600 : 1000;
         const startTime = performance.now();
         const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
-        
+
         const update = (currentTime: number) => {
           const elapsed = Math.max(0, currentTime - startTime);
           const progress = Math.min(elapsed / duration, 1);
           const currentVal = endNum * easeOut(progress);
-          
+
           if (element) {
             element.textContent = isFloat ? currentVal.toFixed(1) : Math.round(currentVal).toString();
           }
-          
+
           if (progress < 1) {
             requestAnimationFrame(update);
           } else {
-             if (element) element.textContent = value.toString();
+            if (element) element.textContent = value.toString();
           }
         };
         requestAnimationFrame(update);
@@ -126,20 +126,20 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     [checkUsernameAvailable, avatarId]
   );
 
-  const { 
-    input: editUsername, 
-    handleChange: handleUsernameChange, 
-    result: usernameValidation 
+  const {
+    input: editUsername,
+    handleChange: handleUsernameChange,
+    result: usernameValidation
   } = useUsernameValidation({
     currentUsername: targetAvatar?.username ?? '',
-    usernameLastChangedAt: targetAvatar?.usernameLastChangedAt,
+    username_last_changed_at: targetAvatar?.username_last_changed_at,
     checkAvailability: memoizedCheckAvailability,
   });
 
   // External Metadata (Badges, Hot Status)
   const { badgeMap } = useBadges(allPosts);
   const { hotPostIds } = useHotPosts(allPosts);
-  
+
   const avatarPosts = useMemo(() => {
     if (!targetAvatar) return [];
     return allPosts
@@ -150,28 +150,28 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   // Async stats calculation
   useEffect(() => {
     let isMounted = true;
-    
+
     const computeStats = async () => {
-        let totalReviews = 0;
-        let totalScore = 0;
-        let ratedPosts = 0;
+      let totalReviews = 0;
+      let totalScore = 0;
+      let ratedPosts = 0;
 
-        const metricsList = await Promise.all(avatarPosts.map(p => calculatePostMetrics(p.id)));
-        
-        metricsList.forEach(metrics => {
-            totalReviews += metrics.review_count;
-            if (metrics.rating_unlocked) {
-                totalScore += metrics.average_score;
-                ratedPosts++;
-            }
-        });
+      const metricsList = await Promise.all(avatarPosts.map(p => calculatePostMetrics(p.id)));
 
-        if (isMounted) {
-            setStats({
-                totalReviews,
-                avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
-            });
+      metricsList.forEach(metrics => {
+        totalReviews += metrics.review_count;
+        if (metrics.rating_unlocked) {
+          totalScore += metrics.average_score;
+          ratedPosts++;
         }
+      });
+
+      if (isMounted) {
+        setStats({
+          totalReviews,
+          avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
+        });
+      }
     };
 
     computeStats();
@@ -221,7 +221,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
   const handleSave = async () => {
     if (!targetAvatar) return;
-    
+
     const isRoleInvalid = editRole.length > 50;
     const isBioInvalid = editBio.length > 200;
     const isNameInvalid = editName.trim().length === 0 || editName.length > 50;
@@ -231,18 +231,18 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
     setSaveError('');
     setEditState('saving');
-    
+
     const usernameChanged = editUsername.toLowerCase().trim() !== targetAvatar.username.toLowerCase();
 
     const result = await updateProfile({
-      role: editRole.trim(),
+      role: editRole.trim() || null,
       bio: editBio.trim(),
       name: editName,
       social_links: editSocialLinks,
       show_email: editShowEmail,
       ...(usernameChanged ? { username: editUsername } : {}),
     });
-      
+
     if (result.ok) {
       setEditState('idle');
       setShowSuccessToast(true);
@@ -296,7 +296,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       {/* SUCCESS TOAST */}
       <AnimatePresence>
         {showSuccessToast && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -310,65 +310,65 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
       {/* HEADER: Back Button */}
       <div className="mb-4 md:mb-8">
-          <Button 
-              variant="secondary" 
-              onClick={() => router.back()}
-              className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
-          >
-              <ArrowLeft className="w-5 h-5 text-black" />
-              Back
-          </Button>
+        <Button
+          variant="secondary"
+          onClick={() => router.back()}
+          className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
+        >
+          <ArrowLeft className="w-5 h-5 text-black" />
+          Back
+        </Button>
       </div>
 
       {isMe && (
         <div className="md:hidden absolute top-8 right-4 z-40">
-            <button 
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-50 transition-all shadow-sm active:scale-95"
-            >
-                <MoreHorizontal className="w-6 h-6 text-black" />
-            </button>
+          <button
+            onClick={() => setShowMobileMenu(!showMobileMenu)}
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+          >
+            <MoreHorizontal className="w-6 h-6 text-black" />
+          </button>
 
-            {showMobileMenu && (
-                <>
-                    <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
-                    <div className="absolute top-13 right-0 w-53 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                        <button 
-                            onClick={() => { startEditing(); setShowMobileMenu(false); }}
-                            className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
-                        >
-                            <Edit2 className="w-5 h-5" />
-                            <span className="font-semibold text-[15px]">Edit Avatar Profile</span>
-                        </button>
-                        <button 
-                            onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}
-                            className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
-                        >
-                            <QrCode className="w-5 h-5" />
-                            <span className="font-semibold text-[15px]">Share Profile</span>
-                        </button>
-                        <button 
-                            onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
-                            className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                        >
-                            <LogOut className="w-5 h-5" />
-                            <span className="font-semibold text-[15px]">Logout</span>
-                        </button>
-                    </div>
-                </>
-            )}
+          {showMobileMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
+              <div className="absolute top-13 right-0 w-53 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
+                <button
+                  onClick={() => { startEditing(); setShowMobileMenu(false); }}
+                  className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
+                >
+                  <Edit2 className="w-5 h-5" />
+                  <span className="font-semibold text-[15px]">Edit Avatar Profile</span>
+                </button>
+                <button
+                  onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}
+                  className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
+                >
+                  <QrCode className="w-5 h-5" />
+                  <span className="font-semibold text-[15px]">Share Profile</span>
+                </button>
+                <button
+                  onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
+                  className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-semibold text-[15px]">Logout</span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {/* Share Button for Mobile (Non-Owners) */}
       {!isMe && (
         <div className="md:hidden absolute top-8 right-4 z-40">
-            <button 
-                onClick={() => setShowQrCode(true)}
-                className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-all active:scale-95 text-gray-700"
-            >
-                <QrCode className="w-5 h-5" />
-            </button>
+          <button
+            onClick={() => setShowQrCode(true)}
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-all active:scale-95 text-gray-700"
+          >
+            <QrCode className="w-5 h-5" />
+          </button>
         </div>
       )}
 
@@ -376,36 +376,36 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       {/* Avatar Header */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
         <div className="relative group shrink-0 flex flex-col items-center">
-          <div 
+          <div
             className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all shadow-sm relative"
             style={{ backgroundColor: targetAvatar.bg_color }}
           >
             {targetAvatar.avatar_url ? (
-              <button 
+              <button
                 onClick={() => setShowFullscreenAvatar(true)}
                 className="w-full h-full cursor-zoom-in group/avatar"
               >
-                <img 
-                  src={targetAvatar.avatar_url} 
+                <img
+                  src={targetAvatar.avatar_url}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110"
                   alt=""
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </button>
             ) : (
-                <span className="animate-in fade-in duration-300">
-                    {targetAvatar.name.charAt(0).toUpperCase()}
-                </span>
+              <span className="animate-in fade-in duration-300">
+                {targetAvatar.name.charAt(0).toUpperCase()}
+              </span>
             )}
-            
+
             {isMe && (
-              <motion.div 
+              <motion.div
                 onMouseLeave={() => setIsConfirmingRemove(false)}
                 className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 rounded-full z-10"
               >
                 {!isConfirmingRemove ? (
                   <>
-                    <button 
+                    <button
                       onClick={() => fileInputRef.current?.click()}
                       className="p-2 rounded-full bg-white/20 hover:bg-[#FEC312] text-white transition-all transform hover:scale-110"
                       title="Change Avatar"
@@ -413,7 +413,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                       <Camera className="w-5 h-5" />
                     </button>
                     {targetAvatar.avatar_url && (
-                      <button 
+                      <button
                         onClick={handleAvatarRemove}
                         className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
                         title="Remove Avatar"
@@ -423,21 +423,21 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     )}
                   </>
                 ) : (
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="flex items-center gap-3 bg-white/10 p-1.5 px-3 rounded-full backdrop-blur-sm"
                   >
                     <span className="text-[10px] text-white font-bold uppercase tracking-tighter">Are you sure?</span>
                     <div className="flex gap-2">
-                       <button 
+                      <button
                         onClick={handleAvatarRemove}
                         className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
                         title="Yes, remove"
                       >
                         <Check className="w-4 h-4" />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
                         className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
                         title="Cancel"
@@ -452,15 +452,15 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           </div>
           {isMe && editState === 'idle' && (
             <button
-               onClick={() => fileInputRef.current?.click()}
-               className="md:hidden absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow border border-gray-100 text-gray-700 z-10 active:scale-95 transition-transform"
+              onClick={() => fileInputRef.current?.click()}
+              className="md:hidden absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow border border-gray-100 text-gray-700 z-10 active:scale-95 transition-transform"
             >
-               <Camera className="w-4 h-4" />
+              <Camera className="w-4 h-4" />
             </button>
           )}
           {isMe && editState !== 'idle' && (
             <div className="flex md:hidden items-center justify-center gap-2 mt-5 mb-1 z-10">
-              <button 
+              <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full transition-colors"
               >
@@ -468,28 +468,28 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 Change
               </button>
               {targetAvatar.avatar_url && (
-                <button 
+                <button
                   onClick={(e) => {
-                      e.preventDefault();
-                      if (isConfirmingRemove) {
-                          updateProfile({ avatar_url: undefined });
-                          setIsConfirmingRemove(false);
-                      } else {
-                          setIsConfirmingRemove(true);
-                      }
+                    e.preventDefault();
+                    if (isConfirmingRemove) {
+                      updateProfile({ avatar_url: undefined });
+                      setIsConfirmingRemove(false);
+                    } else {
+                      setIsConfirmingRemove(true);
+                    }
                   }}
                   className={cn(
-                      "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors",
-                      isConfirmingRemove ? "bg-red-500 text-white" : "text-red-500 bg-red-50 hover:bg-red-100"
+                    "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors",
+                    isConfirmingRemove ? "bg-red-500 text-white" : "text-red-500 bg-red-50 hover:bg-red-100"
                   )}
                 >
                   {isConfirmingRemove ? (
                     <>
-                        <Check className="w-3.5 h-3.5" /> Confirm
+                      <Check className="w-3.5 h-3.5" /> Confirm
                     </>
                   ) : (
                     <>
-                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                      <Trash2 className="w-3.5 h-3.5" /> Remove
                     </>
                   )}
                 </button>
@@ -497,7 +497,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             </div>
           )}
           {isMe && (
-            <input 
+            <input
               type="file"
               ref={fileInputRef}
               onChange={handleAvatarChange}
@@ -609,7 +609,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   <div className="flex items-center justify-center md:justify-start gap-2 w-full md:w-auto">
                     <p className="text-[15px] text-gray-400 font-medium break-all px-4 md:px-0">@{targetAvatar.username}</p>
                     {isMe && editState === 'idle' && (
-                      <button 
+                      <button
                         onClick={() => startEditing()}
                         className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
                       >
@@ -647,7 +647,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     {targetAvatar.role}
                   </span>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => startEditing('role')}
                     className="text-[16px] font-base text-gray-400 hover:text-[#FEC312] transition-colors focus:outline-none"
                   >
@@ -698,38 +698,38 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   {editBio.length}/200
                 </div>
               </div>
-             ) : targetAvatar.bio || isMe ? (
-                 <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                  {targetAvatar.bio ? (
-                    getBioParts(targetAvatar.bio).map((part, i) => {
-                      if (typeof part === 'string') return part;
-                      const originalUrl = part.url;
-                      const displayUrl = formatDisplayUrl(originalUrl);
-                      const href = originalUrl.startsWith('http') ? originalUrl : `https://${originalUrl}`;
-                      return (
-                        <a
-                          key={i}
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={originalUrl}
-                          className="bio-link"
-                        >
-                          {displayUrl}
-                          <span className="external-icon">↗</span>
-                        </a>
-                      );
-                    })
-                  ) : (
-                    <button 
-                      onClick={() => startEditing('bio')}
-                      className="text-gray-500 hover:text-[#FEC312] transition-colors"
-                    >
-                      Say a little about yourself...
-                    </button>
-                  )}
-                </p>
-             ) : null}
+            ) : targetAvatar.bio || isMe ? (
+              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {targetAvatar.bio ? (
+                  getBioParts(targetAvatar.bio).map((part, i) => {
+                    if (typeof part === 'string') return part;
+                    const originalUrl = part.url;
+                    const displayUrl = formatDisplayUrl(originalUrl);
+                    const href = originalUrl.startsWith('http') ? originalUrl : `https://${originalUrl}`;
+                    return (
+                      <a
+                        key={i}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={originalUrl}
+                        className="bio-link"
+                      >
+                        {displayUrl}
+                        <span className="external-icon">↗</span>
+                      </a>
+                    );
+                  })
+                ) : (
+                  <button
+                    onClick={() => startEditing('bio')}
+                    className="text-gray-500 hover:text-[#FEC312] transition-colors"
+                  >
+                    Say a little about yourself...
+                  </button>
+                )}
+              </p>
+            ) : null}
 
             {/* Smart Bio Links — Social Icon Row + Suggestion */}
             <SocialLinksRow
@@ -744,17 +744,17 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             <AnimatePresence mode="wait">
               {editState !== 'idle' && (
                 <motion.div
-                   key="edit-email"
-                   initial={{ opacity: 0, height: 0 }}
-                   animate={{ opacity: 1, height: 'auto' }}
-                   exit={{ opacity: 0, height: 0 }}
-                   className="mt-4 flex items-center justify-center md:justify-start overflow-hidden"
+                  key="edit-email"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-4 flex items-center justify-center md:justify-start overflow-hidden"
                 >
                   <label className="flex items-center gap-2 cursor-pointer group select-none">
-                    <input 
-                      type="checkbox" 
-                      checked={editShowEmail} 
-                      onChange={(e) => setEditShowEmail(e.target.checked)} 
+                    <input
+                      type="checkbox"
+                      checked={editShowEmail}
+                      onChange={(e) => setEditShowEmail(e.target.checked)}
                       disabled={editState === 'saving'}
                       className="w-4 h-4 rounded-sm border-gray-300 text-[#FEC312] focus:ring-[#FEC312] cursor-pointer"
                     />
@@ -783,30 +783,30 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
             <AnimatePresence>
               {editState !== 'idle' && (
-                <motion.div 
-                   initial={{ opacity: 0, height: 0 }}
-                   animate={{ opacity: 1, height: 'auto' }}
-                   exit={{ opacity: 0, height: 0 }}
-                   className="flex items-center justify-center md:justify-start gap-2 mt-4"
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="flex items-center justify-center md:justify-start gap-2 mt-4"
                 >
-                  <Button 
-                      variant="outline" 
-                      className="h-10 px-6 rounded-full text-sm font-medium transition-all"
-                      onClick={handleSave}
-                      disabled={editState === 'saving' || editBio.length > 200 || editRole.length > 50 || ['checking', 'taken', 'invalid_format', 'cooldown'].includes(usernameValidation.status)}
-                      isLoading={editState === 'saving'}
+                  <Button
+                    variant="outline"
+                    className="h-10 px-6 rounded-full text-sm font-medium transition-all"
+                    onClick={handleSave}
+                    disabled={editState === 'saving' || editBio.length > 200 || editRole.length > 50 || ['checking', 'taken', 'invalid_format', 'cooldown'].includes(usernameValidation.status)}
+                    isLoading={editState === 'saving'}
                   >
                     Save
                   </Button>
-                  <Button 
-                      variant="ghost"
-                      className="h-10 px-6 rounded-full text-sm font-medium transition-all"
-                      onClick={handleCancel}
-                      disabled={editState === 'saving'}
+                  <Button
+                    variant="ghost"
+                    className="h-10 px-6 rounded-full text-sm font-medium transition-all"
+                    onClick={handleCancel}
+                    disabled={editState === 'saving'}
                   >
                     Cancel
                   </Button>
-                  
+
                   {editState === 'error' && saveError && (
                     <span className="text-red-500 text-sm font-medium pl-2">{saveError}</span>
                   )}
@@ -817,30 +817,30 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
           <div className="flex items-center justify-center md:justify-start gap-4">
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
-               <span className="block text-2xl text-black">
-                 <AnimatedMetric value={avatarPosts.length} />
-               </span>
-               <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Posts</span>
+              <span className="block text-2xl text-black">
+                <AnimatedMetric value={avatarPosts.length} />
+              </span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Posts</span>
             </div>
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
-               <span className="block text-2xl text-black">
-                 <AnimatedMetric value={stats.totalReviews} />
-               </span>
-               <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Reviews</span>
+              <span className="block text-2xl text-black">
+                <AnimatedMetric value={stats.totalReviews} />
+              </span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Reviews</span>
             </div>
             <div className="text-center md:text-left">
-               <span className="block text-2xl text-black">
-                 <AnimatedMetric value={stats.avgRating} isFloat />
-               </span>
-               <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Avg Rating</span>
+              <span className="block text-2xl text-black">
+                <AnimatedMetric value={stats.avgRating} isFloat />
+              </span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Avg Rating</span>
             </div>
           </div>
         </div>
 
         <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
-          <Button 
-            variant="ghost" 
-            className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black" 
+          <Button
+            variant="ghost"
+            className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
             onClick={() => setShowQrCode(true)}
           >
             <QrCode className="w-4 h-4" />
@@ -852,17 +852,17 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
               Logout
             </Button>
           )}
-          </div>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
-        <button 
+      {/* Tabs */}
+      <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
+        <button
           onClick={() => setActiveTab('posts')}
           className={cn(
             "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
-            activeTab === 'posts' 
-              ? "border-[#111111] text-black" 
+            activeTab === 'posts'
+              ? "border-[#111111] text-black"
               : "border-transparent text-gray-400 hover:text-gray-600"
           )}
         >
@@ -870,12 +870,12 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           {isMe ? "My Posts" : "Posts"}
         </button>
         {isMe && (
-          <button 
+          <button
             onClick={() => setActiveTab('saved')}
             className={cn(
               "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
-              activeTab === 'saved' 
-                ? "border-[#111111] text-black" 
+              activeTab === 'saved'
+                ? "border-[#111111] text-black"
                 : "border-transparent text-gray-400 hover:text-gray-600"
             )}
           >
@@ -888,7 +888,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       {/* Tab Content */}
       <AnimatePresence mode="wait">
         {(activeTab === 'posts' || !isMe) ? (
-          <motion.div 
+          <motion.div
             key="posts"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -897,27 +897,27 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           >
             {avatarPosts.length > 0 ? (
               <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
-                  <MasonryGrid 
-                      posts={avatarPosts} 
-                      badgeMap={badgeMap} 
-                      hotPostIds={hotPostIds} 
-                  />
+                <MasonryGrid
+                  posts={avatarPosts}
+                  badgeMap={badgeMap}
+                  hotPostIds={hotPostIds}
+                />
               </div>
             ) : (
               <div className="py-20 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
                 <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No posts yet</h3>
+                <h3 className="text-xl font-medium mb-2">No posts yet</h3>
                 <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
                 {isMe && (
                   <Link href="/submit" scroll={false}>
-                    <Button variant="primary" className="h-12 px-8 rounded-full">Post your work</Button>
+                    <Button variant="primary" className="text-lg rounded-full">Post your work</Button>
                   </Link>
                 )}
               </div>
             )}
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="saved"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -926,15 +926,15 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             className="py-24 text-center bg-white rounded-[40px] border-2 border-[#FEC312] border-dashed shadow-xl shadow-[#FEC312]/5 max-w-2xl mx-auto px-8"
           >
             <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
-                <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />
+              <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />
             </div>
             <h3 className="text-3xl font-semibold mb-4 text-black">Coming Soon!</h3>
             <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
-                You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
+              You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
             </p>
             <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-gray-100 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-[#FEC312] animate-pulse" />
-                <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Development in Progress</span>
+              <span className="w-2 h-2 rounded-full bg-[#FEC312] animate-pulse" />
+              <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Development in Progress</span>
             </div>
           </motion.div>
         )}
@@ -942,13 +942,13 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
       {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}
       {showLogoutConfirm && (
-        <LogoutConfirmOverlay 
-            onClose={() => setShowLogoutConfirm(false)} 
-            onConfirm={() => {
-                logout();
-                setShowLogoutConfirm(false);
-                router.push('/browse', { scroll: false });
-            }} 
+        <LogoutConfirmOverlay
+          onClose={() => setShowLogoutConfirm(false)}
+          onConfirm={() => {
+            logout();
+            setShowLogoutConfirm(false);
+            router.push('/browse', { scroll: false });
+          }}
         />
       )}
       {showQrCode && targetAvatar && (

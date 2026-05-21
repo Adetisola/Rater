@@ -123,13 +123,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       username: finalUsername,
       email: normalizedEmail,
       name: name.trim(),
-      role: role || 'Designer',
+      role: role || null,
       passkey,
       avatar_url,
       bg_color: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
       is_blocked: false,
       created_at: new Date().toISOString(),
-      usernameLastChangedAt: undefined // Explicitly undefined until claimed
+      username_last_changed_at: null
     };
 
     setSessionAvatars(prev => ({ ...prev, [newId]: newAvatar }));
@@ -166,8 +166,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Cooldown enforcement (only if not a claim/skip from onboarding)
         const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
-        if (currentAvatar.usernameLastChangedAt && currentAvatar.usernameLastChangedAt > 1) {
-          const elapsed = Date.now() - currentAvatar.usernameLastChangedAt;
+        if (currentAvatar.username_last_changed_at && currentAvatar.username_last_changed_at !== '1') {
+          const lastChanged = new Date(currentAvatar.username_last_changed_at).getTime();
+          const elapsed = Date.now() - lastChanged;
           if (elapsed < COOLDOWN_MS) {
             const daysRemaining = Math.ceil((COOLDOWN_MS - elapsed) / (24 * 60 * 60 * 1000));
             return { ok: false, error: `Username can be changed again in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}.` };
@@ -175,16 +176,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 3. Push old username to history
-        updatedAvatar.previousUsernames = [
-          ...(currentAvatar.previousUsernames ?? []),
+        updatedAvatar.previous_usernames = [
+          ...(currentAvatar.previous_usernames ?? []),
           currentAvatar.username,
         ];
         updatedAvatar.username = newUsername;
-        // set to Date.now() unless we are explicitly setting a "claim" flag value (like 1)
-        updatedAvatar.usernameLastChangedAt = data.usernameLastChangedAt || Date.now();
+        // set to ISO string unless we are explicitly setting a "claim" flag value (like '1')
+        updatedAvatar.username_last_changed_at = data.username_last_changed_at || new Date().toISOString();
       }
-    } else if (data.usernameLastChangedAt !== undefined) {
-      updatedAvatar.usernameLastChangedAt = data.usernameLastChangedAt;
+    } else if (data.username_last_changed_at !== undefined) {
+      updatedAvatar.username_last_changed_at = data.username_last_changed_at;
     }
 
     // Trim display name

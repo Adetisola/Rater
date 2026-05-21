@@ -48,7 +48,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
   const [showPasskey, setShowPasskey] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // UI Steps
   const [step, setStep] = useState<'create' | 'username' | 'role'>('create');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,7 +59,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
   // Name State
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
-  
+
   const validateEmailFormat = (email: string) => {
     const trimmed = email.trim();
     if (!trimmed) return "Email is required";
@@ -86,7 +86,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
       document.body.style.overflow = originalStyle;
     };
   }, [isEmbedded]);
-  
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -96,9 +96,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
-      
+
       setAvatarUploadState('uploading');
-      
+
       try {
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate latency
         const reader = new FileReader();
@@ -136,10 +136,10 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     [checkUsernameAvailable]
   );
 
-  const { 
-    input: usernameInput, 
-    handleChange: handleUsernameChange, 
-    result: validationResult 
+  const {
+    input: usernameInput,
+    handleChange: handleUsernameChange,
+    result: validationResult
   } = useUsernameValidation({
     currentUsername: generatedUsernamePreview,
     checkAvailability: memoizedCheckAvailability,
@@ -151,13 +151,13 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     e.preventDefault();
     const nameErr = validateDisplayName(name);
     const emailErr = validateEmailFormat(email);
-    
+
     if (nameErr) setNameError(nameErr);
     if (emailErr) setEmailError(emailErr);
 
     if (nameErr || emailErr) return;
     if (!validation.canSubmit || passkeyMismatch) return;
-    
+
     // Jump to username step
     setDirection(1);
     setStep('username');
@@ -165,7 +165,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
   const handleUsernameStepSubmit = async () => {
     if (validationResult.status !== 'valid' && validationResult.status !== 'unchanged') return;
-    
+
     // Move to role step
     setDirection(1);
     setStep('role');
@@ -184,7 +184,23 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
     setIsSubmitting(true);
     const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput, role);
-    
+
+    if (result.ok) {
+      onCreate(name, passkey, email);
+    } else {
+      setIsSubmitting(false);
+      if (result.error === 'Email already in use') {
+        setDirection(-1);
+        setStep('create');
+        setEmailError(result.error);
+      }
+    }
+  };
+
+  const handleSkipRole = async () => {
+    setIsSubmitting(true);
+    const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput, undefined);
+
     if (result.ok) {
       onCreate(name, passkey, email);
     } else {
@@ -229,215 +245,211 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="w-full flex flex-col items-center"
           >
-             <div className="text-center mb-6 pt-2">
-                <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Avatar</h2>
-                
-                <div 
-                    className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
-                    onClick={() => avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
+            <div className="text-center mb-6 pt-2">
+              <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Avatar</h2>
+
+              <div
+                className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
+                onClick={() => avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
+              >
+                {avatarUploadState === 'uploading' ? (
+                  <Loader2 className="w-8 h-8 text-[#FEC312] animate-spin" />
+                ) : avatarUploadState === 'success' ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 z-20 animate-in fade-in">
+                    <CheckCircle2 className="w-8 h-8 text-white" />
+                  </div>
+                ) : null}
+
+                {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
+                  avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserRound className="w-10 h-10 text-gray-400 group-hover:text-gray-500 transition-colors" />
+                  )
+                ) : avatarPreview && avatarUploadState === 'uploading' ? (
+                  <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
+                ) : null}
+
+                {avatarUploadState === 'idle' && (
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                    <Pencil className="w-5 h-5 text-white" />
+                  </div>
+                )}
+              </div>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+
+              <div className="flex gap-4 justify-center items-center mt-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={avatarUploadState === 'uploading'}
+                  className="text-[14px] font-medium text-black tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
                 >
-                     {avatarUploadState === 'uploading' ? (
-                         <Loader2 className="w-8 h-8 text-[#FEC312] animate-spin" />
-                     ) : avatarUploadState === 'success' ? (
-                         <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 z-20 animate-in fade-in">
-                           <CheckCircle2 className="w-8 h-8 text-white" />
-                         </div>
-                     ) : null}
-
-                     {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
-                       avatarPreview ? (
-                           <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
-                       ) : (
-                           <UserRound className="w-10 h-10 text-gray-400 group-hover:text-gray-500 transition-colors" />
-                       )
-                     ) : avatarPreview && avatarUploadState === 'uploading' ? (
-                       <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
-                     ) : null}
-                     
-                     {avatarUploadState === 'idle' && (
-                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                          <Pencil className="w-5 h-5 text-white" />
-                       </div>
-                     )}
-                </div>
-
-                <input 
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageUpload}
-                    accept="image/*"
-                    className="hidden"
-                />
-                
-                <div className="flex gap-4 justify-center items-center mt-3">
-                  <button 
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={avatarUploadState === 'uploading'}
-                      className="text-[14px] font-medium text-black tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
+                  {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
+                </button>
+                {avatarPreview && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={avatarUploadState === 'uploading'}
+                    className="text-[14px] font-semibold text-red-500 tracking-wide hover:text-red-600 transition-colors disabled:opacity-50"
                   >
-                      {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
+                    Remove
                   </button>
-                  {avatarPreview && (
-                    <button 
-                        type="button"
-                        onClick={handleRemoveAvatar}
-                        disabled={avatarUploadState === 'uploading'}
-                        className="text-[14px] font-semibold text-red-500 tracking-wide hover:text-red-600 transition-colors disabled:opacity-50"
-                    >
-                        Remove
-                    </button>
-                  )}
-                </div>
+                )}
+              </div>
             </div>
 
             <form onSubmit={handleCreateStepSubmit} className="w-full space-y-4">
-                 <div className="relative space-y-1">
-                     <Input 
-                         placeholder="Your name" 
-                         value={name} 
-                         onChange={(e) => {
-                             setName(e.target.value);
-                             setNameError(null);
-                         }}
-                         className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${
-                            nameError 
-                                ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
-                                : 'border-gray-300 focus-visible:border-[#FEC312]'
-                         }`}
-                     />
-                     {nameError ? (
-                         <p className="text-xs text-red-500 font-medium ml-1">
-                             {nameError}
-                         </p>
-                     ) : (
-                         <div className="flex justify-between items-start px-2 mt-1">
-                             <p className="text-[11px] text-gray-500 leading-tight pr-2">
-                                 It's your display name(emojis allowed)
-                             </p>
-                             {name.trim() && (
-                                 <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none">
-                                     @{generatedUsernamePreview}
-                                 </p>
-                             )}
-                         </div>
-                     )}
-                 </div>
+              <div className="relative space-y-1">
+                <Input
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    setNameError(null);
+                  }}
+                  className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${nameError
+                    ? 'border-red-400 text-red-600 focus-visible:border-red-400'
+                    : 'border-gray-300 focus-visible:border-[#FEC312]'
+                    }`}
+                />
+                {nameError ? (
+                  <p className="text-xs text-red-500 font-medium ml-1">
+                    {nameError}
+                  </p>
+                ) : (
+                  <div className="flex justify-between items-start px-2 mt-1">
+                    <p className="text-[11px] text-gray-500 leading-tight pr-2">
+                      It's your display name(emojis allowed)
+                    </p>
+                    {name.trim() && (
+                      <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none">
+                        @{generatedUsernamePreview}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
-                 <div className="relative space-y-1">
-                     <Input 
-                         type="email"
-                         placeholder="Email Address" 
-                         value={email}
-                         onChange={(e) => {
-                           setEmail(e.target.value);
-                           setEmailError(null);
-                         }}
-                         className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${
-                            emailError 
-                                ? 'border-red-400 text-red-600 focus-visible:border-red-400' 
-                                : 'border-gray-300 focus-visible:border-[#FEC312]'
-                         }`}
-                     />
-                     {emailError && (
-                         <p className="text-xs text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">
-                             {emailError}
-                         </p>
-                     )}
-                 </div>
+              <div className="relative space-y-1">
+                <Input
+                  type="email"
+                  placeholder="Email Address"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setEmailError(null);
+                  }}
+                  className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${emailError
+                    ? 'border-red-400 text-red-600 focus-visible:border-red-400'
+                    : 'border-gray-300 focus-visible:border-[#FEC312]'
+                    }`}
+                />
+                {emailError && (
+                  <p className="text-xs text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">
+                    {emailError}
+                  </p>
+                )}
+              </div>
 
-                 <div className="space-y-2">
-                    <div className="relative">
-                        <Input 
-                            type={showPasskey ? "text" : "password"}
-                            placeholder="Enter Passkey" 
-                            value={passkey}
-                            onChange={(e) => setPasskey(e.target.value)}
-                            onFocus={() => {}}
-                            maxLength={64}
-                            className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${
-                                passkey.length > 0 && !validation.canSubmit 
-                                    ? 'border-amber-400 focus-visible:border-amber-400' 
-                                    : validation.canSubmit 
-                                        ? 'border-green-400 focus-visible:border-green-400'
-                                        : 'border-gray-300 focus-visible:border-[#FEC312]'
-                            }`}
+              <div className="space-y-2">
+                <div className="relative">
+                  <Input
+                    type={showPasskey ? "text" : "password"}
+                    placeholder="Enter Passkey"
+                    value={passkey}
+                    onChange={(e) => setPasskey(e.target.value)}
+                    onFocus={() => { }}
+                    maxLength={64}
+                    className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${passkey.length > 0 && !validation.canSubmit
+                      ? 'border-amber-400 focus-visible:border-amber-400'
+                      : validation.canSubmit
+                        ? 'border-green-400 focus-visible:border-green-400'
+                        : 'border-gray-300 focus-visible:border-[#FEC312]'
+                      }`}
+                  />
+                  <button type="button" onClick={() => setShowPasskey(!showPasskey)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    {showPasskey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+
+                {passkey.length > 0 && (
+                  <div className="px-1 space-y-3 pt-1">
+                    {/* Progress Bar */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-1.5 bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${validation.score}%` }}
+                          className="h-full rounded-full transition-all duration-300 ease-out"
+                          style={{ backgroundColor: getStrengthColor(validation.strength) }}
                         />
-                         <button type="button" onClick={() => setShowPasskey(!showPasskey)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                             {showPasskey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                         </button>
-                     </div>
+                      </div>
+                      <span
+                        className="text-[10px] font-bold min-w-[65px] text-right uppercase tracking-widest"
+                        style={{ color: getStrengthColor(validation.strength) }}
+                      >
+                        {getStrengthLabel(validation.strength)}
+                      </span>
+                    </div>
 
-                     {passkey.length > 0 && (
-                      <div className="px-1 space-y-3 pt-1">
-                          {/* Progress Bar */}
-                          <div className="flex items-center gap-3">
-                              <div className="flex-1 h-1.5 bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
-                                  <motion.div 
-                                      initial={{ width: 0 }}
-                                      animate={{ width: `${validation.score}%` }}
-                                      className="h-full rounded-full transition-all duration-300 ease-out"
-                                      style={{ backgroundColor: getStrengthColor(validation.strength) }}
-                                  />
-                              </div>
-                              <span 
-                                  className="text-[10px] font-bold min-w-[65px] text-right uppercase tracking-widest"
-                                  style={{ color: getStrengthColor(validation.strength) }}
-                              >
-                                  {getStrengthLabel(validation.strength)}
-                              </span>
+                    {/* Hints */}
+                    {validation.hints.length > 0 && (
+                      <div className="space-y-1.5 px-0.5">
+                        {validation.hints.slice(0, 2).map((hint, index) => (
+                          <div key={index} className="flex items-start gap-1.5 animate-in fade-in slide-in-from-left-1">
+                            <div className="w-1 h-1 rounded-full bg-gray-300 mt-1.5 shrink-0" />
+                            <p className="text-[11px] text-gray-500 font-medium leading-tight">
+                              {hint}
+                            </p>
                           </div>
-                          
-                          {/* Hints */}
-                          {validation.hints.length > 0 && (
-                              <div className="space-y-1.5 px-0.5">
-                                  {validation.hints.slice(0, 2).map((hint, index) => (
-                                      <div key={index} className="flex items-start gap-1.5 animate-in fade-in slide-in-from-left-1">
-                                          <div className="w-1 h-1 rounded-full bg-gray-300 mt-1.5 shrink-0" />
-                                          <p className="text-[11px] text-gray-500 font-medium leading-tight">
-                                              {hint}
-                                          </p>
-                                      </div>
-                                  ))}
-                              </div>
-                          )}
+                        ))}
                       </div>
                     )}
                   </div>
+                )}
+              </div>
 
-                 <div className="space-y-1">
-                    <Input 
-                        type={showPasskey ? "text" : "password"}
-                        placeholder="Confirm Passkey" 
-                        value={confirmPasskey}
-                        onChange={(e) => setConfirmPasskey(e.target.value)}
-                        className={`h-12 rounded-xl text-base px-4 transition-all outline-none border ${
-                            passkeyMismatch ? 'border-red-400 focus-visible:border-red-400' : 'border-gray-300 focus-visible:border-[#FEC312]'
-                        }`}
-                    />
-                    {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
-                 </div>
+              <div className="space-y-1">
+                <Input
+                  type={showPasskey ? "text" : "password"}
+                  placeholder="Confirm Passkey"
+                  value={confirmPasskey}
+                  onChange={(e) => setConfirmPasskey(e.target.value)}
+                  className={`h-12 rounded-xl text-base px-4 transition-all outline-none border ${passkeyMismatch ? 'border-red-400 focus-visible:border-red-400' : 'border-gray-300 focus-visible:border-[#FEC312]'
+                    }`}
+                />
+                {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
+              </div>
 
-                 <div className="pt-4 flex items-center justify-center gap-6 w-full">
-                     <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
-                     <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
-                        Continue
-                     </Button>
-                 </div>
-                 {onLogin && (
-                   <div className="text-center pt-2">
-                      <p className="text-sm text-gray-500">
-                        Already have an avatar?{' '}
-                        <button 
-                            type="button"
-                            onClick={onLogin}
-                            className="text-black font-semibold hover:text-[#FEC312]"
-                        >
-                            Login
-                        </button>
-                      </p>
-                   </div>
-                 )}
+              <div className="pt-4 flex items-center justify-center gap-6 w-full">
+                <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
+                <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
+                  Continue
+                </Button>
+              </div>
+              {onLogin && (
+                <div className="text-center pt-2">
+                  <p className="text-sm text-gray-500">
+                    Already have an avatar?{' '}
+                    <button
+                      type="button"
+                      onClick={onLogin}
+                      className="text-black font-semibold hover:text-[#FEC312]"
+                    >
+                      Login
+                    </button>
+                  </p>
+                </div>
+              )}
             </form>
           </motion.div>
         ) : step === 'username' ? (
@@ -464,7 +476,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400 pointer-events-none group-focus-within:text-black">
                   <span className="text-[13px] font-medium tracking-tight">rater-web.vercel.app/@</span>
                 </div>
-                <Input 
+                <Input
                   autoFocus
                   value={usernameInput}
                   onChange={(e) => handleUsernameChange(e.target.value)}
@@ -497,22 +509,22 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               </AnimatePresence>
 
               <div className="flex flex-col gap-3 pt-6">
-                <Button 
-                  variant='outline' 
-                  onClick={handleUsernameStepSubmit} 
-                  disabled={!['valid', 'unchanged'].includes(validationResult.status) || isSubmitting} 
+                <Button
+                  variant='outline'
+                  onClick={handleUsernameStepSubmit}
+                  disabled={!['valid', 'unchanged'].includes(validationResult.status) || isSubmitting}
                   className="w-full h-12 rounded-full text-lg font-medium transition-all"
                   isLoading={validationResult.status === 'checking'}
                 >
                   Continue
                 </Button>
-                <Button 
+                <Button
                   variant='secondary'
                   onClick={() => {
                     setDirection(-1);
                     setStep('create');
-                  }} 
-                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+                  }}
+                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-medium hover:bg-gray-50"
                 >
                   <ChevronLeft className="w-4 h-4" /> Go back
                 </Button>
@@ -534,14 +546,14 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="w-8 h-8 text-[#FEC312]" />
               </div>
-              <h2 className="text-xl font-medium text-black mb-1">Who are you?</h2>
-              <p className="text-gray-400 text-sm">Choose or describe your creative role.</p>
+              <h2 className="text-xl font-medium text-black mb-1">What do you create?</h2>
+              <p className="text-gray-400 text-sm">Tell us your creative role, or write your own.</p>
             </div>
 
             <div className="w-full space-y-6 px-1">
               {/* Custom role input */}
               <div className="relative group">
-                <Input 
+                <Input
                   autoFocus
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value.slice(0, 50))}
@@ -581,22 +593,31 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               </div>
 
               <div className="flex flex-col gap-3 pt-4">
-                <Button 
-                  variant='outline' 
-                  onClick={handleRoleSubmit} 
+                <Button
+                  variant='outline'
+                  onClick={handleRoleSubmit}
                   disabled={!selectedRole.trim() || isSubmitting}
                   className="w-full h-12 rounded-full text-lg font-medium transition-all"
                   isLoading={isSubmitting}
                 >
                   Complete Setup
                 </Button>
-                <Button 
+                <Button
+                  variant='ghost'
+                  type="button"
+                  onClick={handleSkipRole}
+                  disabled={isSubmitting}
+                  className="w-full h-12 rounded-full text-base font-medium transition-all text-gray-500 hover:text-black"
+                >
+                  Skip
+                </Button>
+                <Button
                   variant='secondary'
                   onClick={() => {
                     setDirection(-1);
                     setStep('username');
-                  }} 
-                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-semibold hover:bg-gray-50"
+                  }}
+                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-medium hover:bg-gray-50"
                   disabled={isSubmitting}
                 >
                   <ChevronLeft className="w-4 h-4" /> Go back

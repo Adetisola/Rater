@@ -62,7 +62,7 @@ function generateSuggestions(base: string): string[] {
  */
 interface UseUsernameValidationOptions {
   currentUsername: string;                        // The avatar's existing username (to detect unchanged)
-  usernameLastChangedAt?: number;                 // Last change timestamp (for cooldown)
+  username_last_changed_at?: string | null;       // Last change timestamp (for cooldown)
   checkAvailability: (username: string) => Promise<boolean>;  // Async uniqueness check
   debounceMs?: number;
 }
@@ -77,7 +77,7 @@ interface UseUsernameValidationOptions {
  */
 export function useUsernameValidation({
   currentUsername,
-  usernameLastChangedAt,
+  username_last_changed_at,
   checkAvailability,
   debounceMs = 350,
 }: UseUsernameValidationOptions) {
@@ -123,8 +123,9 @@ export function useUsernameValidation({
       }
 
       // Cooldown check (synchronous, before async)
-      if (usernameLastChangedAt) {
-        const elapsed = Date.now() - usernameLastChangedAt;
+      if (username_last_changed_at && username_last_changed_at !== '1') {
+        const lastChanged = new Date(username_last_changed_at).getTime();
+        const elapsed = Date.now() - lastChanged;
         if (elapsed < COOLDOWN_MS) {
           const daysRemaining = Math.ceil((COOLDOWN_MS - elapsed) / (24 * 60 * 60 * 1000));
           setResult({
@@ -156,7 +157,7 @@ export function useUsernameValidation({
         setResult({ status: 'idle', message: 'Could not check availability.', suggestions: [] });
       }
     },
-    [currentUsername, usernameLastChangedAt, checkAvailability]
+    [currentUsername, username_last_changed_at, checkAvailability]
   );
 
   const handleChange = useCallback(

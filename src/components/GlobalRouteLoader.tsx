@@ -9,8 +9,9 @@ const FAIL_SAFE_TIMEOUT = 5000; // ms (absolute maximum time if navigation hangs
 
 /**
  * GlobalRouteLoader
- * An advanced, split-trigger loading bar that prioritizes absolute responsiveness.
- * It uses both Intent Detection (clicks/history) and Settlement Detection (pathname/search).
+ * An advanced, context-aware global loading progress bar.
+ * It catches both anchor clicks and programmatic navigation intents via 'app-navigation-start',
+ * and remains active until a real page migration is detected.
  */
 function GlobalLoaderContent() {
   const pathname = usePathname();
@@ -19,8 +20,10 @@ function GlobalLoaderContent() {
   const [status, setStatus] = useState<"idle" | "loading" | "completing">("idle");
   const [progress, setProgress] = useState(0);
   
-  // Refs to track state and avoid effect loops
+  // Refs to track states
   const startTime = useRef<number>(0);
+  const startPathname = useRef<string>("");
+  const startSearch = useRef<string>("");
   const isRouteCompleted = useRef(false);
   const lastPathname = useRef(pathname);
   const lastSearch = useRef(searchParams.toString());
@@ -34,13 +37,15 @@ function GlobalLoaderContent() {
   };
 
   /**
-   * Intent Start: Triggered by user interaction or history change
+   * Intent Start: Triggered by user interaction, custom events, or history changes
    */
   const startLoader = () => {
-    // If navigation restarts while completing, reset cleanly
+    // Clean up any ongoing loaders
     cleanup();
     
     startTime.current = Date.now();
+    startPathname.current = window.location.pathname;
+    startSearch.current = window.location.search;
     isRouteCompleted.current = false;
     setStatus("loading");
     setProgress(0);
@@ -83,55 +88,54 @@ function GlobalLoaderContent() {
   // 1. SETTLEMENT DETECTION (Trigger on actual URL change)
   useEffect(() => {
     const currentSearch = searchParams.toString();
-    const hasChanged = pathname !== lastPathname.current || currentSearch !== lastSearch.current;
+    const urlChanged = pathname !== lastPathname.current || currentSearch !== lastSearch.current;
     
-    if (hasChanged) {
+    if (urlChanged) {
       lastPathname.current = pathname;
       lastSearch.current = currentSearch;
 
       // Only act if we are within the app scope (all non-landing routes)
       const isAppScope = pathname !== '/';
       if (isAppScope) {
-        // Fallback: If intent wasn't caught (e.g. browser back button), start it now
         if (status === "idle") {
+          // Fallback: If intent wasn't caught (e.g. browser back button), start it now
           startLoader();
+          isRouteCompleted.current = true;
+          setTimeout(() => {
+            finishLoader();
+          }, MIN_DURATION);
+        } else {
+          // Normal flow: Page migration completed!
+          isRouteCompleted.current = true;
+          
+          // Calculate remaining time for the minimum visible duration
+          const elapsed = Date.now() - startTime.current;
+          const remaining = Math.max(0, MIN_DURATION - elapsed);
+          
+          // Delay completion until both: 1. Route changed AND 2. Min duration met
+          setTimeout(() => {
+            finishLoader();
+          }, remaining);
         }
-        
-        isRouteCompleted.current = true;
-        
-        // Calculate remaining time for the minimum visible duration
-        const elapsed = Date.now() - startTime.current;
-        const remaining = Math.max(0, MIN_DURATION - elapsed);
-        
-        // Delay completion until both: 1. Route changed AND 2. Min duration met
-        setTimeout(() => {
-          finishLoader();
-        }, remaining);
       } else {
-        // Instantly clear if navigating out of app scope
+        // Instantly clear if navigating out of app scope (e.g. landing page)
         finishLoader();
       }
     }
-  }, [pathname, searchParams]);
+  }, [pathname, searchParams, status]);
 
-  // 2. INTENT DETECTION (Hooking into clicks and history API)
+  // 2. INTENT DETECTION (Hooking into clicks and custom events)
   useEffect(() => {
-    // Suppression window: when a click inside [data-no-route-loader] is detected,
-    // block ALL loader triggers for a short period to cover pushState calls
-    // that may follow from the same user interaction.
     let suppressUntil = 0;
 
     const handleNavigationIntent = (url: URL | string) => {
-      // Respect the suppression window
       if (Date.now() < suppressUntil) return;
 
       const href = typeof url === "string" ? url : url.pathname;
-      // Trigger for all in-app routes (exclude landing page)
       const isAppRoute = href !== '/';
       const isProfileRoute = href.startsWith('/@') || href.startsWith('/%40');
+      
       if (isAppRoute || isProfileRoute) {
-        // Defer start to the next tick to avoid scheduling updates during 
-        // sensitive phases like useInsertionEffect (common in Next.js 15 router)
         setTimeout(() => {
           startLoader();
         }, 0);
@@ -140,10 +144,8 @@ function GlobalLoaderContent() {
 
     // A. Intercept Link clicks
     const handleAnchorClick = (e: MouseEvent) => {
-      // Skip if the click originated from inside an element that opts out
       const target = e.target as Element;
       if (target.closest("[data-no-route-loader]")) {
-        // Suppress all loader triggers for 100ms to also block pushState-based triggers
         suppressUntil = Date.now() + 100;
         return;
       }
@@ -169,10 +171,19 @@ function GlobalLoaderContent() {
       } catch (err) {}
     };
 
+    // B. Intercept programmatic navigation starts
+    const handleCustomNavStart = () => {
+      setTimeout(() => {
+        startLoader();
+      }, 0);
+    };
+
     document.addEventListener("click", handleAnchorClick, true);
+    window.addEventListener("app-navigation-start", handleCustomNavStart);
 
     return () => {
       document.removeEventListener("click", handleAnchorClick, true);
+      window.removeEventListener("app-navigation-start", handleCustomNavStart);
     };
   }, []);
 
@@ -198,7 +209,7 @@ function GlobalLoaderContent() {
                 damping: 25,
                 mass: 0.5
               }}
-              className="h-full w-full rounded-full"
+              className="h-full w-full"
               style={{
                 background: "linear-gradient(to right, #fec312, #ff4f6d, #c400d2, #7c3bed)",
                 backgroundSize: "200% 100%",
@@ -219,3 +230,4 @@ export function GlobalRouteLoader() {
     </Suspense>
   );
 }
+

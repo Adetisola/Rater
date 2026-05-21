@@ -448,7 +448,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
         <div className="space-y-4 mb-8">
            <AnimatePresence mode="wait" initial={false}>
-              {!isLoggedIn ? (
+              {!isLoggedIn && (
                   <motion.div 
                       key="guest-name"
                       initial={{ height: 0, opacity: 0 }}
@@ -481,18 +481,6 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
                               </motion.p>
                           )}
                       </div>
-                  </motion.div>
-              ) : (
-                  <motion.div 
-                      key="logged-in-label"
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-2 py-1 px-1"
-                  >
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-xs font-medium text-gray-500">
-                          Reviewing as <span className="text-black font-semibold">{initialName}</span>
-                      </span>
                   </motion.div>
               )}
            </AnimatePresence>

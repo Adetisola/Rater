@@ -317,6 +317,7 @@ export function MobileSearchOverlay({
                             addSearch(item.query);
                             onSearchChange(item.query); 
                             onSearchSubmit?.(item.query);
+                            onClose();
                           }}
                           className="flex-1 w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
                         >

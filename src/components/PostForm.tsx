@@ -30,11 +30,11 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const formMode = mode || (initialPost ? 'edit' : 'create');
   const isEditMode = formMode === 'edit';
   const isEditing = !!initialPost;
-  
+
   // FORM STATE
   const [title, setTitle] = useState(initialPost?.title || '');
   const [category, setCategory] = useState<Category | ''>(initialPost?.category || '');
-  
+
   // CATEGORY AUTOCOMPLETE STATE
   const [categoryInputValue, setCategoryInputValue] = useState(initialPost?.category || '');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -44,7 +44,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   const filteredCategories = useMemo(() => {
     if (!categoryInputValue.trim()) return CATEGORIES;
-    return CATEGORIES.filter(c => 
+    return CATEGORIES.filter(c =>
       c.toLowerCase().includes(categoryInputValue.toLowerCase())
     );
   }, [categoryInputValue]);
@@ -100,7 +100,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       }
     };
   }, [isSuccess, dotLottie, onSuccess]);
-  
+
   // --- DRAFT PERSISTENCE ---
   useEffect(() => {
     if (formMode === 'create') {
@@ -125,7 +125,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   useEffect(() => {
     if (formMode !== 'create') return;
-    
+
     const timeout = setTimeout(() => {
       const draft = { title, description, categoryInputValue };
       const hasContent = title.trim() || description.trim() || categoryInputValue.trim();
@@ -154,11 +154,11 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   const validateAndSetImage = (file: File) => {
     setUploadError(null);
-    
+
     const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/heic', 'image/heif'];
     const validExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif', '.heic', '.heif'];
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-    
+
     if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
       setUploadError("Unsupported image format");
       return false;
@@ -217,7 +217,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     e.stopPropagation();
     dragCounter.current = 0;
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files?.[0];
     if (file) {
       validateAndSetImage(file);
@@ -237,13 +237,13 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   const handleSubmit = async () => {
     if (!currentAvatar) return;
-    
+
     if (!category || !CATEGORIES.includes(category as Category)) {
       setCategoryError(true);
       return;
     }
     setCategoryError(false);
-    
+
     setIsSubmitting(true);
 
     try {
@@ -288,9 +288,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           You must be logged in to post your work and receive feedback from the community.
         </p>
         <div className="flex gap-4 mt-10">
-          <Button 
-            className="h-12 px-8 rounded-full text-lg font-medium text-white" 
-            variant="primary" 
+          <Button
+            className="h-12 px-8 rounded-full text-lg font-medium text-white"
+            variant="primary"
             onClick={() => setShowAuthOverlay(true)}
           >
             Login / Sign up
@@ -321,7 +321,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           {isEditing ? "Post Updated!" : "Post Submitted!"}
         </h1>
         <div className="text-gray-500 max-w-md mx-auto leading-relaxed">
-          {isEditing 
+          {isEditing
             ? <AmbientSuccessText />
             : <p>Your design is live! Redirecting you to the recent feed to see your post...</p>}
         </div>
@@ -330,7 +330,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={isOverlay ? { opacity: 0, y: 20 } : { opacity: 0 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
@@ -340,12 +340,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         isOverlay ? "w-full max-w-4xl" : "max-w-[1200px] pb-32 pt-8 px-6"
       )}
     >
-      
+
       {/* HEADER */}
       {!isOverlay && (
         <div className="mb-6 md:mb-8">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={() => router.back()}
             className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
           >
@@ -365,21 +365,21 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         </div>
 
         {/* IDENTITY INDICATOR */}
-        <Link 
-            href={`/@${currentAvatar.username}`}
-            scroll={false}
-            className="block shrink-0 transition-all hover:scale-105 active:scale-95 self-start sm:self-center"
+        <Link
+          href={`/@${currentAvatar.username}`}
+          scroll={false}
+          className="block shrink-0 transition-all hover:scale-105 active:scale-95 self-start sm:self-center"
         >
-            <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden shadow-sm"
-                style={{ backgroundColor: currentAvatar.bg_color }}
-            >
-                {currentAvatar.avatar_url ? (
-                    <img src={currentAvatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-                ) : (
-                    currentAvatar.name.charAt(0).toUpperCase()
-                )}
-            </div>
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden shadow-sm"
+            style={{ backgroundColor: currentAvatar.bg_color }}
+          >
+            {currentAvatar.avatar_url ? (
+              <img src={currentAvatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+            ) : (
+              currentAvatar.name.charAt(0).toUpperCase()
+            )}
+          </div>
         </Link>
       </div>
 
@@ -387,13 +387,13 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         "grid gap-12 lg:gap-20 items-start",
         isOverlay ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-[1fr_380px]"
       )}>
-           
+
         {/* LEFT COLUMN: Inputs */}
         <div className="space-y-10">
-        
+
           {/* IMAGE UPLOAD */}
           <div className="space-y-2">
-            <div 
+            <div
               className={cn(
                 "group relative rounded-[32px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEC312]",
                 !isEditMode ? "w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-[#FEC312] transition-all cursor-pointer" : "h-[180px] w-fit min-w-[200px] max-w-full bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
@@ -410,15 +410,15 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               aria-label={!isEditMode ? "Upload design image" : "Uploaded design image"}
             >
               {!isEditMode && (
-                <input 
-                  type="file" 
-                  accept="image/png, image/jpeg, image/webp, image/avif, image/heic, image/heif" 
+                <input
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp, image/avif, image/heic, image/heif"
                   className="hidden"
                   onChange={handleImageUpload}
                   ref={fileInputRef}
                 />
               )}
-              
+
               {isDragging && !isEditMode ? (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#FFF6DD]/80 backdrop-blur-sm pointer-events-none transition-opacity duration-200">
                   <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
@@ -430,30 +430,30 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
               {imagePreview ? (
                 <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/5">
-                  <div 
+                  <div
                     className="absolute inset-0 bg-cover bg-center blur-lg scale-110 opacity-60 pointer-events-none"
                     style={{ backgroundImage: `url(${imagePreview})` }}
                   />
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
                     className={cn(
                       "relative z-10 pointer-events-none object-contain",
                       isEditMode ? "h-full w-auto max-w-full" : "max-w-full max-h-full"
                     )}
                   />
                   <div className={cn("absolute z-20 flex gap-2", isEditMode ? "top-3 right-3" : "top-4 right-4")}>
-                     {isEditMode ? (
-                       <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-semibold text-white uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
-                         <Lock className="w-2.5 h-2.5" /> Uploaded Image
-                       </div>
-                     ) : (
-                       <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-semibold text-white uppercase tracking-widest">Preview</div>
-                     )}
+                    {isEditMode ? (
+                      <div className="px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-semibold text-white uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                        <Lock className="w-2.5 h-2.5" /> Uploaded Image
+                      </div>
+                    ) : (
+                      <div className="px-3 py-1 bg-black/50 backdrop-blur-md rounded-full text-[10px] font-semibold text-white uppercase tracking-widest">Preview</div>
+                    )}
                   </div>
                   {!isEditMode && (
                     <div className="absolute bottom-4 right-4 z-20">
-                      <button 
+                      <button
                         type="button"
                         className="flex items-center gap-2 px-3 py-1.5 bg-white/90 hover:bg-white backdrop-blur-md rounded-full text-xs font-semibold text-black shadow-lg transition-transform active:scale-95 pointer-events-auto"
                         onClick={(e) => {
@@ -488,32 +488,32 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           <div className="space-y-8">
             <div className="space-y-2">
               <h3 className="font-medium text-[16px] text-black">Title</h3>
-              <Input 
-                placeholder="Title" 
+              <Input
+                placeholder="Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="h-12 text-base px-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-medium"
               />
             </div>
-            
+
             <div className="space-y-2">
               <h3 className="font-medium text-[16px] text-black">Description</h3>
               <div className="relative">
-              <Textarea 
-                placeholder="Description" 
-                value={description}
-                maxLength={400}
-                onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 resize-none font-medium"
-              />
-              <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
-                {description.length} / 400 chars
+                <Textarea
+                  placeholder="Description"
+                  value={description}
+                  maxLength={400}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 resize-none font-medium"
+                />
+                <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
+                  {description.length} / 400 chars
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* CATEGORIES */}
+          {/* CATEGORIES */}
           <div className="space-y-2" ref={categoryRef}>
             <h3 className="font-medium text-[16px] text-black">Category Tag</h3>
             <div className="relative">
@@ -556,18 +556,18 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   categoryError && "border-red-500 focus-visible:border-red-500"
                 )}
               />
-              
+
               {isCategoryDropdownOpen && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((cat, index) => {
                       const isHighlighted = index === highlightedIndex;
                       const isSelected = category === cat;
-                      
+
                       // Highlight matching text (simple case-insensitive match)
                       const regex = new RegExp(`(${categoryInputValue})`, 'gi');
                       const parts = cat.split(regex);
-                      
+
                       return (
                         <div
                           key={cat}
@@ -584,7 +584,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         >
                           <div>
                             {categoryInputValue.trim() ? (
-                              parts.map((part, i) => 
+                              parts.map((part, i) =>
                                 regex.test(part) ? (
                                   <span key={i} className="text-[#FEC312] font-medium">{part}</span>
                                 ) : (
@@ -623,16 +623,16 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 <div className="w-8 h-8 rounded-full bg-[#FEC312]/10 flex items-center justify-center shrink-0">
                   <CloudUpload className="w-4 h-4 text-[#FEC312]" />
                 </div>
-                <h3 className="font-medium text-lg text-black">Upload Your Work</h3>
+                <h3 className="font-medium text-lg text-black">Show what you're cooking</h3>
               </div>
               <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                Share your work and get rated by the community.
+                Share your creative work and get rated by the community.
               </p>
               <ul className="space-y-3 mb-8">
                 {[
-                  "Upload one image per post (for now)",
-                  "Focus on visual work (UI, branding, etc.)",
-                  "Add a clear title for better feedback"
+                  "One clean image per post (for now)",
+                  "Focus on visual work; UI, branding, or prints",
+                  "Give it a sharp title to tell your story"
                 ].map((point, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 shrink-0" />
@@ -643,8 +643,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             </div>
 
             <div className="flex flex-col gap-3">
-              <Button 
-                className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all" 
+              <Button
+                className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all"
                 variant="outline"
                 disabled={!title || (!image && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
                 onClick={handleSubmit}
@@ -653,8 +653,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 {isEditing ? "Update Post" : "Post"}
               </Button>
               {isEditing && (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="h-12 rounded-full text-gray-500 font-medium"
                   onClick={() => {
                     if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
@@ -670,18 +670,18 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
         {isOverlay && (
           <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
-              <Button 
-                variant="ghost" 
-                className="h-12 px-8 rounded-full text-gray-500 font-medium"
-                onClick={() => {
-                  if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
-                  onCancel?.();
-                }}
-              >
-                Cancel
-              </Button>
-            <Button 
-              className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all" 
+            <Button
+              variant="ghost"
+              className="h-12 px-8 rounded-full text-gray-500 font-medium"
+              onClick={() => {
+                if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
+                onCancel?.();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all"
               variant="outline"
               disabled={!title || (!image && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
               onClick={handleSubmit}

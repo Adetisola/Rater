@@ -1,12 +1,11 @@
 "use client";
 
-import { use, Suspense } from 'react';
+import { use } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useEffect } from 'react';
 import { ProfileView } from '../../components/ProfileView';
 import { FloatingPostButton } from '../../components/FloatingPostButton';
-import { TopLoadingBar } from '../../components/TopLoadingBar';
 import { Footer } from '../../components/Footer';
 import { RESERVED_ROUTES } from '../../lib/constants';
 
@@ -37,10 +36,10 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
     a => a.username.toLowerCase() === slug
   );
 
-  // 2. If not found, search previousUsernames for a redirect
+  // 2. If not found, search previous_usernames for a redirect
   const redirectAvatar = !targetAvatar
     ? Object.values(allAvatars).find(
-        a => a.previousUsernames?.some(prev => prev.toLowerCase() === slug)
+        a => a.previous_usernames?.some(prev => prev.toLowerCase() === slug)
       )
     : null;
 
@@ -74,10 +73,6 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
 
   return (
     <div className="min-h-screen w-full bg-white flex flex-col font-sans text-black">
-      <Suspense fallback={null}>
-        <TopLoadingBar />
-      </Suspense>
-
       <div className="flex-1 w-full pt-4">
         <ProfileView avatarId={targetAvatar.id} />
       </div>

@@ -39,8 +39,12 @@ create table categories (
 
 insert into categories (name) values 
   ('Web Design'), ('Mobile App Design'), ('Brand Identity Design'), 
-  ('Logo Design'), ('Poster Design'), ('Flyer Design'), 
-  ('Social Media Design'), ('AI Image'), ('3D Design');
+  ('Mockup Design'), ('Logo Design'), ('Poster Design'), 
+  ('Flyer Design'), ('Social Media Design'), ('AI Image'), 
+  ('3D Design'), ('Packaging Design'), ('Banner Design'), 
+  ('Ad Creative Design'), ('Illustration'), ('Icon Design'), 
+  ('Typography Design'), ('UI Design'), ('Landing Page Design'), 
+  ('Dashboard Design');
 ```
 
 #### Profiles
@@ -48,6 +52,8 @@ insert into categories (name) values
 create table profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique not null,
+  email text unique not null,
+  show_email boolean default false,
   name text not null,
   role text,
   avatar_url text,
@@ -93,7 +99,8 @@ create table reviews (
   purpose integer check (purpose >= 1 and purpose <= 5),
   aesthetics integer check (aesthetics >= 1 and aesthetics <= 5),
   comment text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
 );
 ```
 
@@ -109,7 +116,60 @@ create table badges (
 
 ---
 
-## 3. Computed Metrics (Views)
+## 3. Automation & Triggers
+
+### Timestamp Auto-Updates
+```sql
+-- Function to automatically update modified timestamps
+create or replace function public.update_modified_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+create trigger update_profiles_modtime 
+  before update on profiles 
+  for each row execute procedure public.update_modified_column();
+
+create trigger update_posts_modtime 
+  before update on posts 
+  for each row execute procedure public.update_modified_column();
+
+create trigger update_reviews_modtime 
+  before update on reviews 
+  for each row execute procedure public.update_modified_column();
+```
+
+### Supabase Auth User Profile Sync
+```sql
+-- Function to automatically create a profile when a new user signs up in auth.users
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, username, email, name, role, bg_color, is_blocked)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'username', 'user_' || substring(new.id::text from 1 for 8)),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', 'New Member'),
+    new.raw_user_meta_data->>'role',
+    coalesce(new.raw_user_meta_data->>'bg_color', '#FEC312'),
+    false
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create or replace trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+```
+
+---
+
+## 4. Computed Metrics (Views)
 
 Using a view for metrics ensures that average ratings and review counts are always accurate without needing to "sync" state in the frontend.
 
@@ -119,7 +179,7 @@ select
   p.id as post_id,
   count(r.id) as review_count,
   coalesce(round(avg((r.clarity + r.purpose + r.aesthetics) / 3.0), 1), 0) as average_score,
-  (count(r.id) >= 5) as rating_unlocked
+  (count(r.id) >= 3) as rating_unlocked
 from posts p
 left join reviews r on p.id = r.post_id
 group by p.id;
@@ -127,7 +187,7 @@ group by p.id;
 
 ---
 
-## 4. Performance Indexes
+## 5. Performance Indexes
 
 ```sql
 -- Speed up feed loading (newest first)
@@ -153,9 +213,13 @@ create index idx_posts_not_deleted on posts(is_deleted);
 
 ---
 
-## 5. Security (Row Level Security)
+## 6. Security (Row Level Security)
 
 ```sql
+-- Categories: Everyone can see
+alter table categories enable row level security;
+create policy "Categories are viewable by everyone." on categories for select using (true);
+
 -- Profiles: Everyone can see, owner can edit
 alter table profiles enable row level security;
 create policy "Public profiles are viewable by everyone." on profiles for select using (true);
@@ -170,11 +234,15 @@ create policy "Owners can manage own posts." on posts for all using (auth.uid() 
 alter table reviews enable row level security;
 create policy "Reviews are viewable by everyone." on reviews for select using (true);
 create policy "Anyone can insert reviews." on reviews for insert with check (true);
+
+-- Badges: Everyone can see
+alter table badges enable row level security;
+create policy "Badges are viewable by everyone." on badges for select using (true);
 ```
 
 ---
 
-## 6. Tradeoffs & Improvements
+## 7. Tradeoffs & Improvements
 
 | Feature | Design Choice | Reason |
 | :--- | :--- | :--- |
@@ -182,3 +250,4 @@ create policy "Anyone can insert reviews." on reviews for insert with check (tru
 | **History** | `TEXT[]` Array | **Simplicity**: Your frontend logic for redirects is already designed for arrays; a separate table adds join overhead for a simple check. |
 | **Social Links** | `JSONB` | **Flexibility**: No schema migrations needed when you add new social platforms (e.g., Threads, LinkedIn). |
 | **ID System** | UUID | **Security**: UUIDs prevent "ID guessing" (scrapers can't just increment `post_1` to `post_2`). |
+
