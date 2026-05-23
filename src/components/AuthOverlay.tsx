@@ -42,47 +42,45 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={onClose}
       />
 
       {/* Modal Container */}
-      <div className="bg-white w-full max-w-md rounded-[32px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh] md:max-h-[660px]">
+      <div className="bg-white w-full max-w-md rounded-[24px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh] md:max-h-[660px]">
 
         {/* Tab Header */}
         <div className="flex border-b border-gray-100 shrink-0">
-          <button 
+          <button
             onClick={() => setActiveTab('login')}
-            className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${
-              activeTab === 'login' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
-            }`}
+            className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${activeTab === 'login' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+              }`}
           >
             <div className="flex items-center justify-center gap-2">
               <LogIn className="w-4 h-4" />
               Login
             </div>
             {activeTab === 'login' && (
-              <motion.div 
+              <motion.div
                 layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-[#FEC312]" 
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FEC312]"
               />
             )}
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('signup')}
-            className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${
-              activeTab === 'signup' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
-            }`}
+            className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${activeTab === 'signup' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+              }`}
           >
             <div className="flex items-center justify-center gap-2">
               <UserPlus className="w-4 h-4" />
               Sign up
             </div>
             {activeTab === 'signup' && (
-              <motion.div 
+              <motion.div
                 layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-[#FEC312]" 
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FEC312]"
               />
             )}
           </button>
@@ -103,9 +101,9 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                   <h2 className="text-2xl font-medium text-black mb-1">Welcome Back</h2>
                   <p className="text-gray-500 text-sm">Enter your @username/email to continue</p>
                 </div>
-                <AccessAvatarForm 
-                  onSuccess={handleLoginSuccess} 
-                  onCreateNew={() => setActiveTab('signup')} 
+                <AccessAvatarForm
+                  onSuccess={handleLoginSuccess}
+                  onCreateNew={() => setActiveTab('signup')}
                 />
               </motion.div>
             ) : (
@@ -120,21 +118,21 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                   <h2 className="text-2xl font-medium text-black">Create Avatar</h2>
                   <p className="text-gray-500 text-sm mb-2">Join the community of Judges</p>
                 </div>
-                
+
                 {/* Embedded Signup Form without the extra fixed overlay wrapper */}
                 <div className="w-full flex-1 min-h-0">
-                    <CreateAvatarOverlay 
-                        isEmbedded
-                        onClose={onClose} 
-                        onCreate={async () => {
-                            onClose();
-                            if (redirectOnSuccess) {
-                                router.push('/browse', { scroll: false });
-                            }
-                        }}
-                        prefillName={prefillName}
-                        onLogin={() => setActiveTab('login')}
-                    />
+                  <CreateAvatarOverlay
+                    isEmbedded
+                    onClose={onClose}
+                    onCreate={async () => {
+                      onClose();
+                      if (redirectOnSuccess) {
+                        router.push('/browse', { scroll: false });
+                      }
+                    }}
+                    prefillName={prefillName}
+                    onLogin={() => setActiveTab('login')}
+                  />
                 </div>
               </motion.div>
             )}

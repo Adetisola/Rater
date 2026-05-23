@@ -72,9 +72,9 @@ export function MoreLikeThisSection({ currentPost }: MoreLikeThisSectionProps) {
   // Determine active posts for the selected view
   const activePosts = activeTab === 'related' ? relatedPosts : creatorPosts;
 
-  // Compute badges and hot status map dynamically for the active set
-  const { badgeMap } = useBadges(activePosts);
-  const { hotPostIds } = useHotPosts(activePosts);
+  // Compute badges and hot status map globally based on all available posts
+  const { badgeMap } = useBadges(posts);
+  const { hotPostIds } = useHotPosts(posts);
 
   return (
     <motion.div
