@@ -338,21 +338,21 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
                 >
                   <Edit2 className="w-5 h-5" />
-                  <span className="font-semibold text-[15px]">Edit Avatar Profile</span>
+                  <span className="font-medium text-[15px]">Edit Avatar Profile</span>
                 </button>
                 <button
                   onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}
                   className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
                 >
                   <QrCode className="w-5 h-5" />
-                  <span className="font-semibold text-[15px]">Share Profile</span>
+                  <span className="font-medium text-[15px]">Share Profile</span>
                 </button>
                 <button
                   onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
                   className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 >
                   <LogOut className="w-5 h-5" />
-                  <span className="font-semibold text-[15px]">Logout</span>
+                  <span className="font-medium text-[15px]">Logout</span>
                 </button>
               </div>
             </>
@@ -923,7 +923,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="py-24 text-center bg-white rounded-[40px] border-2 border-[#FEC312] border-dashed shadow-xl shadow-[#FEC312]/5 max-w-2xl mx-auto px-8"
+            className="py-24 text-center bg-white rounded-[24px] border-2 border-[#FEC312] border-dashed shadow-xl shadow-[#FEC312]/5 max-w-2xl mx-auto px-8"
           >
             <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />

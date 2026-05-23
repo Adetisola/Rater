@@ -395,7 +395,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           <div className="space-y-2">
             <div
               className={cn(
-                "group relative rounded-[32px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEC312]",
+                "group relative rounded-[24px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FEC312]",
                 !isEditMode ? "w-full aspect-video bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-[#FEC312] transition-all cursor-pointer" : "h-[180px] w-fit min-w-[200px] max-w-full bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
                 isDragging && !isEditMode && "bg-[#FFF6DD] border-[#FEC312] shadow-[0_0_20px_rgba(254,195,18,0.15)]"
               )}
@@ -618,7 +618,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         {/* RIGHT COLUMN: Onboarding & Actions */}
         {!isOverlay && (
           <div className="space-y-8 sticky top-32 lg:max-w-sm">
-            <div className="bg-gray-50/50 border border-gray-200/60 rounded-[28px] p-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-gray-50/50 border border-gray-200/60 rounded-[24px] p-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full bg-[#FEC312]/10 flex items-center justify-center shrink-0">
                   <CloudUpload className="w-4 h-4 text-[#FEC312]" />
