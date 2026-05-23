@@ -98,6 +98,12 @@ create table reviews (
   clarity integer check (clarity >= 1 and clarity <= 5),
   purpose integer check (purpose >= 1 and purpose <= 5),
   aesthetics integer check (aesthetics >= 1 and aesthetics <= 5),
+  usability integer check (usability >= 1 and usability <= 5),
+  recognition integer check (recognition >= 1 and recognition <= 5),
+  impact integer check (impact >= 1 and impact <= 5),
+  attention integer check (attention >= 1 and attention <= 5),
+  composition integer check (composition >= 1 and composition <= 5),
+  detail integer check (detail >= 1 and detail <= 5),
   comment text,
   created_at timestamptz default now(),
   updated_at timestamptz default now()

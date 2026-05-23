@@ -17,8 +17,8 @@ import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { PostActionsMenu } from './PostActionsMenu';
 import { sharePost } from '../lib/postActions';
-
 import { ReviewForm } from './ReviewForm';
+import { getReviewMode } from '../config/reviewModes';
 import { Button } from './ui/Button';
 import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
@@ -28,9 +28,12 @@ import { AmbientLoadingText } from './AmbientLoadingText';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
+import { MoreLikeThisSection } from './MoreLikeThisSection';
+import { PulseTab, shouldShowPulseTab } from './PulseTab';
+import { InsightsTab } from './InsightsTab';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
-import { motion, useMotionValue, useAnimation, type PanInfo } from 'framer-motion';
+import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import { 
     ArrowLeft, 
     Download, 
@@ -179,6 +182,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
   const handleClose = onClose || (() => router.back());
   
   // Data State
+  const modeConfig = getReviewMode(post.category);
+  const criteria = modeConfig.criteria;
   const [dbReviews, setDbReviews] = useState<Review[]>([]);
   const [userReviews, setUserReviews] = useState<Review[]>([]); 
   const [metrics, setMetrics] = useState<PostMetrics | null>(null);
@@ -281,6 +286,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [sortBy, setSortBy] = useState('Recent');
+  const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
@@ -412,7 +418,16 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
   const sortedReviews = useMemo(() => {
     return [...allReviews].sort((a, b) => {
-      const getAvg = (r: Review) => (r.clarity + r.purpose + r.aesthetics) / 3;
+      const getAvg = (r: Review) => {
+        let sum = 0, count = 0;
+        for (const c of criteria) {
+          if (r[c.dbKey] != null) {
+             sum += r[c.dbKey] as number;
+             count++;
+          }
+        }
+        return count > 0 ? sum / count : 0;
+      };
       const getTime = (r: Review) => new Date(r.created_at).getTime();
 
       if (sortBy === 'Top') return getAvg(b) - getAvg(a);
@@ -427,7 +442,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
   const hasMoreReviews = visibleCount < sortedReviews.length;
   const remainingReviews = sortedReviews.length - visibleCount;
 
-  const handleReviewSubmit = async (ratings: any, comment: string, reviewer_name: string) => {
+  const handleReviewSubmit = async (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewer_name: string) => {
     if (currentAvatar && post.avatar_id === currentAvatar.id) return;
     
     const device_id = getDeviceId();
@@ -451,18 +466,16 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         setRateLimitMessage(null);
     }
 
-    const newReview: Review = {
+    const newReview = {
         id: `r_new_${Date.now()}`,
         post_id: post.id,
-        clarity: ratings.clarity,
-        purpose: ratings.purpose,
-        aesthetics: ratings.aesthetics,
+        ...ratings,
         comment,
         reviewer_id: currentAvatar?.id,
         reviewer_name: currentAvatar ? undefined : reviewer_name,
         created_at: new Date().toISOString(),
         device_id: device_id
-    };
+    } as Review;
 
     isFreshReviewRef.current = true;
     setUserReviews([newReview, ...userReviews]);
@@ -795,7 +808,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 {isShareOpen && <SharePostOverlay onClose={() => setIsShareOpen(false)} post_id={post.id} />}
             </div>
 
-            {/* RIGHT COLUMN: Review Form */}
+            {/* RIGHT COLUMN: Tabbed Rate / Pulse / Insights Hub */}
             <div className="md:col-span-5 relative">
                 <div className="sticky top-8">
                     {rateLimitMessage && (
@@ -805,60 +818,150 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         </div>
                     )}
 
-                    {isSelfPost ? (
-                         <div className="bg-gray-50 p-12 rounded-[32px] text-center border-2 border-dashed border-gray-200">
-                            <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
-                            <h3 className="font-semibold text-xl mb-2 text-gray-700">Self-Review Locked</h3>
-                            <p className="text-gray-500">You cannot review your own post.</p>
-                         </div>
-                    ) : !hasReviewed ? (
-                        <ReviewForm 
-                            onSubmit={handleReviewSubmit} 
-                            isLoggedIn={!!currentAvatar}
-                            initialName={currentAvatar?.name}
-                            postId={post.id}
-                            userId={currentAvatar?.id}
-                        />
-                    ) : (
-                         <div className="bg-gray-50 p-12 rounded-[32px] text-center">
-                            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
-                                <svg className="w-8 h-8 filter" viewBox="0 0 83 80">
-                                    <defs>
-                                        <linearGradient id="success-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#fec312" />
-                                            <stop offset="33%" stopColor="#ff4f6d" />
-                                            <stop offset="66%" stopColor="#c400d2" />
-                                            <stop offset="100%" stopColor="#7c3bed" />
-                                        </linearGradient>
-                                    </defs>
-                                    <path 
-                                        ref={successStarRef}
-                                        d="M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z" 
-                                        fill="url(#success-star-grad)"
-                                        style={{
-                                            opacity: isFreshReviewRef.current ? 0 : 1,
-                                        }}
-                                    />
-                                    <path 
-                                        ref={successCheckRef}
-                                        d="M32 40 L40 48 L52 32" 
-                                        stroke="white" 
-                                        strokeWidth="5" 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round" 
-                                        fill="none" 
-                                        style={{
-                                            opacity: isFreshReviewRef.current ? 0 : 1,
-                                            strokeDasharray: isFreshReviewRef.current ? 35 : undefined,
-                                            strokeDashoffset: isFreshReviewRef.current ? 35 : undefined,
-                                        }}
-                                    />
-                                </svg>
+                    {/* Tab Bar */}
+                    {(() => {
+                        const showPulse = shouldShowPulseTab(post.id, isSelfPost);
+                        const tabs = [
+                            { key: 'rate' as const, label: 'Rate' },
+                            ...(showPulse ? [{ key: 'pulse' as const, label: 'Pulse' }] : []),
+                            { key: 'insights' as const, label: 'Insights' },
+                        ];
+
+                        return (
+                            <div className="bg-white border-2 border-gray-100 rounded-[32px]">
+                                {/* Tabs */}
+                                <div className="flex items-center border-b border-gray-100">
+                                    {tabs.map((tab) => (
+                                        <button
+                                            key={tab.key}
+                                            type="button"
+                                            onClick={() => setActiveTab(tab.key)}
+                                            className={`relative flex-1 py-3.5 text-[13px] font-semibold transition-colors duration-150 flex items-center justify-center gap-1.5 ${
+                                                activeTab === tab.key
+                                                    ? 'text-black'
+                                                    : 'text-gray-400 hover:text-gray-600'
+                                            }`}
+                                        >
+                                            {tab.label}
+                                            {(tab.key === 'pulse' || tab.key === 'insights') && (
+                                                <span className="px-1.5 py-0.5 rounded-[4px] bg-[#FEC312]/20 text-[#D9A000] text-[9px] font-bold uppercase tracking-wider leading-none mt-px">
+                                                    Beta
+                                                </span>
+                                            )}
+                                            {/* Active underline */}
+                                            {activeTab === tab.key && (
+                                                <motion.div
+                                                    layoutId="review-tab-underline"
+                                                    className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#FEC312] rounded-full"
+                                                    transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                                                />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Tab Content */}
+                                <div className="p-5 xs:p-6">
+                                    <AnimatePresence mode="wait" initial={false}>
+                                        {activeTab === 'rate' && (
+                                            <motion.div
+                                                key="rate-tab"
+                                                initial={{ opacity: 0, y: 6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -6 }}
+                                                transition={{ duration: 0.15 }}
+                                            >
+                                                {isSelfPost ? (
+                                                    <div className="bg-gray-50 p-10 rounded-[24px] text-center border-2 border-dashed border-gray-200">
+                                                        <div className="w-14 h-14 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🚫</div>
+                                                        <h3 className="font-semibold text-lg mb-2 text-gray-700">Self-Review Locked</h3>
+                                                        <p className="text-sm text-gray-500">You cannot review your own post.</p>
+                                                    </div>
+                                                ) : !hasReviewed ? (
+                                                    <ReviewForm 
+                                                        onSubmit={handleReviewSubmit} 
+                                                        isLoggedIn={!!currentAvatar}
+                                                        initialName={currentAvatar?.name}
+                                                        postId={post.id}
+                                                        userId={currentAvatar?.id}
+                                                        postCategory={post.category}
+                                                    />
+                                                ) : (
+                                                    <div className="bg-gray-50 p-10 rounded-[24px] text-center">
+                                                        <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
+                                                            <svg className="w-7 h-7 filter" viewBox="0 0 83 80">
+                                                                <defs>
+                                                                    <linearGradient id="success-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                                        <stop offset="0%" stopColor="#fec312" />
+                                                                        <stop offset="33%" stopColor="#ff4f6d" />
+                                                                        <stop offset="66%" stopColor="#c400d2" />
+                                                                        <stop offset="100%" stopColor="#7c3bed" />
+                                                                    </linearGradient>
+                                                                </defs>
+                                                                <path 
+                                                                    ref={successStarRef}
+                                                                    d="M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z" 
+                                                                    fill="url(#success-star-grad)"
+                                                                    style={{
+                                                                        opacity: isFreshReviewRef.current ? 0 : 1,
+                                                                    }}
+                                                                />
+                                                                <path 
+                                                                    ref={successCheckRef}
+                                                                    d="M32 40 L40 48 L52 32" 
+                                                                    stroke="white" 
+                                                                    strokeWidth="5" 
+                                                                    strokeLinecap="round" 
+                                                                    strokeLinejoin="round" 
+                                                                    fill="none" 
+                                                                    style={{
+                                                                        opacity: isFreshReviewRef.current ? 0 : 1,
+                                                                        strokeDasharray: isFreshReviewRef.current ? 35 : undefined,
+                                                                        strokeDashoffset: isFreshReviewRef.current ? 35 : undefined,
+                                                                    }}
+                                                                />
+                                                            </svg>
+                                                        </div>
+                                                        <h3 className="font-medium text-lg mb-2">Review added</h3>
+                                                        <p className="text-sm text-gray-500">Your thoughts are now part of the conversation.</p>
+                                                    </div>
+                                                )}
+                                            </motion.div>
+                                        )}
+
+                                        {activeTab === 'pulse' && (
+                                            <motion.div
+                                                key="pulse-tab"
+                                                initial={{ opacity: 0, y: 6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -6 }}
+                                                transition={{ duration: 0.15 }}
+                                            >
+                                                <PulseTab
+                                                    postId={post.id}
+                                                    isCreator={isSelfPost}
+                                                    creatorId={currentAvatar?.id}
+                                                    avatarId={currentAvatar?.id}
+                                                />
+                                            </motion.div>
+                                        )}
+
+                                        {activeTab === 'insights' && (
+                                            <motion.div
+                                                key="insights-tab"
+                                                initial={{ opacity: 0, y: 6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -6 }}
+                                                transition={{ duration: 0.15 }}
+                                            >
+                                                <InsightsTab reviews={allReviews} postCategory={post.category} />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </div>
-                            <h3 className="font-medium text-xl mb-2">Review added</h3>
-                            <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
-                         </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
 
@@ -905,7 +1008,14 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         </p>
                     </motion.div>
                 ) : visibleReviews.map((review) => {
-                    const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
+                    let sum = 0, count = 0;
+                    for (const c of criteria) {
+                      if (review[c.dbKey] != null) {
+                         sum += review[c.dbKey] as number;
+                         count++;
+                      }
+                    }
+                    const ratingAvg = count > 0 ? sum / count : 0;
                     const timeLabel = formatTimestamp(review.created_at, now);
                     const fullTime = getFullTimestamp(review.created_at);
                     const isReviewEdited = review.updated_at && 
@@ -993,18 +1103,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                                 <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
-                                        <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Clarity">
-                                            <img src="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" alt="Clarity" className="w-5 h-5 object-contain" />
-                                            {review.clarity}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Purpose">
-                                            <img src="https://img.icons8.com/color/96/goal--v1.png" alt="Purpose" className="w-5 h-5 object-contain" />
-                                            {review.purpose}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Aesthetics">
-                                            <img src="https://img.icons8.com/color/96/color-palette.png" alt="Aesthetics" className="w-5 h-5 object-contain" />
-                                            {review.aesthetics}
-                                        </div>
+                                        {criteria.map((c) => review[c.dbKey] != null ? (
+                                            <div key={c.dbKey} className="flex items-center gap-1.5 text-md font-semibold text-black" title={c.label}>
+                                                <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
+                                                {review[c.dbKey]}
+                                            </div>
+                                        ) : null)}
                                     </div>
 
 
@@ -1035,6 +1139,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 <div className="flex justify-center mt-10"><span className="text-sm text-gray-400 font-medium">All reviews shown</span></div>
             )}
         </div>
+
+        {/* RELATED DESIGNS SECTION */}
+        <MoreLikeThisSection currentPost={post} />
       </div>
 
       {/* Fullscreen Image Overlay */}

@@ -1,7 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');/* font-display: swap is handled via the &display=swap param above */
 
 @import "tailwindcss";
-@config "../../tailwind.config.js";
+
+@theme {
+  --font-sans: 'Poppins', sans-serif;
+  --color-primary: #FEC312;
+  --color-brand: #7C3BED;
+  --color-surface: #EBEBEB;
+  --color-muted: #999999;
+  --breakpoint-xs: 426px;
+}
+
 
 @layer base {
   body {

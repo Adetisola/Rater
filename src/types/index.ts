@@ -60,9 +60,17 @@ export interface Review {
   reviewer_id?: string;
   reviewer_name?: string;
   device_id?: string;
-  clarity: number;
-  purpose: number;
-  aesthetics: number;
+  clarity?: number;
+  purpose?: number;
+  aesthetics?: number;
+  // Contextual Fields
+  usability?: number;
+  recognition?: number;
+  impact?: number;
+  attention?: number;
+  composition?: number;
+  detail?: number;
+  
   comment?: string;
   created_at: string;
   updated_at?: string;
@@ -98,4 +106,52 @@ export interface Badge {
   post_id: string;
   badge_type: BadgeType;
   awarded_at: string;
+}
+
+// ─── Pulse (Focused Feedback Sessions) ────────────────────────────────────────
+
+export type PulseType = 'choice' | 'slider';
+
+export type PulseDuration = '30m' | '1h' | '6h' | '24h' | '3d' | '7d';
+
+export const PULSE_DURATION_LABELS: Record<PulseDuration, string> = {
+  '30m': '30 mins',
+  '1h': '1 hour',
+  '6h': '6 hours',
+  '24h': '24 hours',
+  '3d': '3 days',
+  '7d': '7 days',
+};
+
+export const PULSE_DURATION_MS: Record<PulseDuration, number> = {
+  '30m': 30 * 60 * 1000,
+  '1h': 60 * 60 * 1000,
+  '6h': 6 * 60 * 60 * 1000,
+  '24h': 24 * 60 * 60 * 1000,
+  '3d': 3 * 24 * 60 * 60 * 1000,
+  '7d': 7 * 24 * 60 * 60 * 1000,
+};
+
+export interface PulseVote {
+  choice: string | number | string[]; // option label for Choice, numeric value for Slider, array for multi-select
+  voter_id?: string;            // avatar ID if logged in
+  device_id: string;            // device fingerprint for guest de-duplication
+  voted_at: string;             // ISO timestamp
+}
+
+export interface PulseSession {
+  id: string;
+  post_id: string;
+  creator_id: string;           // avatar ID of the post creator who launched the session
+  question: string;
+  pulse_type: PulseType;
+  duration: PulseDuration;
+  options?: string[];           // answer options for choice
+  allow_multiple_selections?: boolean; // whether choice allows multiple selections
+  slider_min?: number;          // min value for slider type
+  slider_max?: number;          // max value for slider type
+  slider_step?: number;         // step increment for slider type
+  created_at: string;           // ISO timestamp
+  expires_at: string;           // ISO timestamp
+  votes: PulseVote[];
 }

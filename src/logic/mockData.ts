@@ -2173,7 +2173,20 @@ export async function calculatePostMetrics(postId: string, additionalReviews?: R
   }
 
   const totalSum = reviews.reduce((acc, review) => {
-    const avg = (review.clarity + review.purpose + review.aesthetics) / 3;
+    const criteriaKeys: (keyof Review)[] = [
+      'clarity', 'purpose', 'aesthetics',
+      'usability', 'recognition', 'impact', 
+      'attention', 'composition', 'detail'
+    ];
+    let sum = 0;
+    let count = 0;
+    for (const key of criteriaKeys) {
+      if (typeof review[key] === 'number' && review[key] > 0) {
+        sum += review[key] as number;
+        count++;
+      }
+    }
+    const avg = count > 0 ? sum / count : 0;
     return acc + avg;
   }, 0);
 

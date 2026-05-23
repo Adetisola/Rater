@@ -21,32 +21,20 @@ import {
   getGuestSessionId 
 } from '../utils/draftManager';
 import { useDebounce } from '../hooks/useDebounce';
+import type { Category, Review } from '../types';
+import { getReviewMode } from '../config/reviewModes';
 
 /**
  * Props for the ReviewForm component.
  */
 interface ReviewFormProps {
-  onSubmit: (ratings: { clarity: number; purpose: number; aesthetics: number }, comment: string, reviewerName: string) => void | Promise<void>;
+  onSubmit: (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewerName: string) => void | Promise<void>;
   initialName?: string;
   isLoggedIn?: boolean;
   postId: string;
   userId?: string;
+  postCategory?: Category;
 }
-
-const CRITERIA_INFO = {
-  Clarity: {
-    question: "How clear, readable, and well structured is the design?",
-    points: ["Hierarchy", "Spacing", "Readability", "Layout Balance"]
-  },
-  Purpose: {
-    question: "How well does the design communicate it's intended message or goal?",
-    points: ["Brand Fit", "UX intent", "Conversion Clarity", "Context Alignment"]
-  },
-  Aesthetics: {
-    question: "How visually appealing and polished is the design?",
-    points: ["Colour Usage", "Typography", "Style Consistency", "Overall Look & Feel"]
-  }
-};
 
 function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { question: string, points: string[] }, iconUrl?: string }) {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -126,10 +114,11 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
  * a comment box, and draft persistence to survive auth interruptions.
  * Also intelligently prompts guest users to sign up after filling out their name.
  */
-export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }: ReviewFormProps) {
-  const [clarity, setClarity] = useState(0);
-  const [purpose, setPurpose] = useState(0);
-  const [aesthetics, setAesthetics] = useState(0);
+export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, postCategory }: ReviewFormProps) {
+  const modeConfig = getReviewMode(postCategory);
+  const criteria = modeConfig.criteria;
+
+  const [ratings, setRatings] = useState<Partial<Record<keyof import('../types').Review, number>>>({});
   const [comment, setComment] = useState('');
   const [name, setName] = useState(initialName || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -335,9 +324,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
     const draftToRestore = snapshot || localDraft;
 
     if (draftToRestore) {
-      if (draftToRestore.ratings?.clarity) setClarity(draftToRestore.ratings.clarity);
-      if (draftToRestore.ratings?.purpose) setPurpose(draftToRestore.ratings.purpose);
-      if (draftToRestore.ratings?.aesthetics) setAesthetics(draftToRestore.ratings.aesthetics);
+      if (draftToRestore.ratings) setRatings(draftToRestore.ratings);
       if (draftToRestore.comment) setComment(draftToRestore.comment);
       if (draftToRestore.name && !isLoggedIn) setName(draftToRestore.name);
       
@@ -353,7 +340,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
   // 2. Auto-Save (Debounced)
   const currentDraftData = { 
-    ratings: { clarity, purpose, aesthetics }, 
+    ratings, 
     comment, 
     name 
   };
@@ -361,7 +348,8 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
   useEffect(() => {
     // Only save if there is some progress
-    const hasProgress = clarity > 0 || purpose > 0 || aesthetics > 0 || comment.trim() || name.trim();
+    const hasRatings = Object.values(ratings).some(val => val && val > 0);
+    const hasProgress = hasRatings || comment.trim() || name.trim();
     if (hasProgress) {
       saveDraft(postId, userId, debouncedDraft);
     }
@@ -373,7 +361,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
   };
 
   // Calculate completeness
-  const isComplete = clarity > 0 && purpose > 0 && aesthetics > 0;
+  const isComplete = criteria.every(c => (ratings[c.dbKey] || 0) > 0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -393,7 +381,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
         // Trigger screen success confetti rain!
         triggerSuccessConfetti();
         
-        onSubmit({ clarity, purpose, aesthetics }, comment, finalName);
+        onSubmit(ratings, comment, finalName);
         
         // Clear drafts on success
         deleteDraft(postId, userId);
@@ -405,45 +393,27 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId }
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="bg-white p-5 xs:p-8 rounded-[32px] border-2 border-gray-100">
+      <form onSubmit={handleSubmit} className="w-full pt-2">
         <h3 className="font-semibold text-xl mb-8 text-center">Rate this Design</h3>
         
         <div className="space-y-4 mb-8">
-          {/* CLARITY */}
-          <div className="flex items-center justify-between gap-1">
-              <CriteriaLabel 
-                  label="Clarity" 
-                  info={CRITERIA_INFO.Clarity} 
-                  iconUrl="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" 
-              />
-              <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
-                  <StarRating rating={clarity} onChange={setClarity} interactive size="lg" />
+          {criteria.map((c) => (
+              <div key={c.dbKey} className="flex items-center justify-between gap-1">
+                  <CriteriaLabel 
+                      label={c.label} 
+                      info={{ question: c.question, points: c.points }} 
+                      iconUrl={c.iconUrl} 
+                  />
+                  <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
+                      <StarRating 
+                          rating={ratings[c.dbKey] || 0} 
+                          onChange={(val) => setRatings(prev => ({ ...prev, [c.dbKey]: val }))} 
+                          interactive 
+                          size="lg" 
+                      />
+                  </div>
               </div>
-          </div>
-
-          {/* PURPOSE */}
-          <div className="flex items-center justify-between gap-1">
-              <CriteriaLabel 
-                  label="Purpose" 
-                  info={CRITERIA_INFO.Purpose} 
-                  iconUrl="https://img.icons8.com/color/96/goal--v1.png" 
-              />
-              <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
-                  <StarRating rating={purpose} onChange={setPurpose} interactive size="lg" />
-              </div>
-          </div>
-
-          {/* AESTHETICS */}
-          <div className="flex items-center justify-between gap-1">
-              <CriteriaLabel 
-                  label="Aesthetics" 
-                  info={CRITERIA_INFO.Aesthetics} 
-                  iconUrl="https://img.icons8.com/color/96/color-palette.png" 
-              />
-              <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
-                  <StarRating rating={aesthetics} onChange={setAesthetics} interactive size="lg" />
-              </div>
-          </div>
+          ))}
         </div>
 
         <div className="space-y-4 mb-8">
