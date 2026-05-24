@@ -183,7 +183,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
   
   // Data State
   const modeConfig = getReviewMode(post.category);
-  const criteria = modeConfig.criteria;
   const [dbReviews, setDbReviews] = useState<Review[]>([]);
   const [userReviews, setUserReviews] = useState<Review[]>([]); 
   const [metrics, setMetrics] = useState<PostMetrics | null>(null);
@@ -419,15 +418,18 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
   const sortedReviews = useMemo(() => {
     return [...allReviews].sort((a, b) => {
       const getAvg = (r: Review) => {
-        let sum = 0, count = 0;
-        for (const c of criteria) {
-          if (r[c.dbKey] != null) {
-             sum += r[c.dbKey] as number;
-             count++;
+        let sum = 0;
+        let count = 0;
+        modeConfig.criteria.forEach(c => {
+          const val = r[c.dbKey as keyof Review];
+          if (typeof val === 'number') {
+            sum += val;
+            count++;
           }
-        }
+        });
         return count > 0 ? sum / count : 0;
       };
+      
       const getTime = (r: Review) => new Date(r.created_at).getTime();
 
       if (sortBy === 'Top') return getAvg(b) - getAvg(a);
@@ -436,7 +438,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
       if (sortBy === 'Oldest') return getTime(a) - getTime(b);
       return 0;
     });
-  }, [allReviews, sortBy]);
+  }, [allReviews, sortBy, modeConfig]);
 
   const visibleReviews = sortedReviews.slice(0, visibleCount);
   const hasMoreReviews = visibleCount < sortedReviews.length;
@@ -569,7 +571,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 
                 {/* 1. Image Preview */}
                 <div 
-                    className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-auto xs:aspect-video'} rounded-[32px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                    className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-auto xs:aspect-video'} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
                     onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
                 >
                     {imageError ? (
@@ -577,7 +579,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         src={post.image_url}
                         alt={post.title}
                         className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500"
-                        fallbackClassName="w-full h-full rounded-[32px]"
+                        fallbackClassName="w-full h-full rounded-[24px]"
                         onErrorChange={(err) => setImageError(err)}
                       />
                     ) : (
@@ -602,8 +604,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         <PostActionsMenu 
                             post={post} 
                             className="flex gap-3"
-                            buttonClassName="w-12 h-12 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
-                            iconSizeClass="w-6 h-6"
+                            buttonClassName="w-10 h-10 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
+                            iconSizeClass="w-5 h-5"
                             onReport={() => setIsReportOpen(true)}
                         />
                     </div>
@@ -612,7 +614,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 {/* 2. Metadata Row */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 xs:gap-3">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider bg-black text-white px-3 py-1.5 rounded-full">
+                        <span className="text-[10px] font-semibold tracking-wider bg-transparent text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">
                             {post.category}
                         </span>
                         {badge === 'top_rated_active' && (
@@ -828,7 +830,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         ];
 
                         return (
-                            <div className="bg-white border-2 border-gray-100 rounded-[32px]">
+                            <div className="bg-white border-2 border-gray-100 rounded-[24px]">
                                 {/* Tabs */}
                                 <div className="flex items-center border-b border-gray-100">
                                     {tabs.map((tab) => (
@@ -872,10 +874,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 transition={{ duration: 0.15 }}
                                             >
                                                 {isSelfPost ? (
-                                                    <div className="bg-gray-50 p-10 rounded-[24px] text-center border-2 border-dashed border-gray-200">
-                                                        <div className="w-14 h-14 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">🚫</div>
-                                                        <h3 className="font-semibold text-lg mb-2 text-gray-700">Self-Review Locked</h3>
-                                                        <p className="text-sm text-gray-500">You cannot review your own post.</p>
+                                                    <div className="bg-gray-50 p-12 rounded-[24px] text-center border-2 border-dashed border-gray-200">
+                                                        <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
+                                                        <h3 className="font-semibold text-xl mb-2 text-gray-700">Self-Review Locked</h3>
+                                                        <p className="text-gray-500">You cannot review your own post.</p>
                                                     </div>
                                                 ) : !hasReviewed ? (
                                                     <ReviewForm 
@@ -922,8 +924,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                                 />
                                                             </svg>
                                                         </div>
-                                                        <h3 className="font-medium text-lg mb-2">Review added</h3>
-                                                        <p className="text-sm text-gray-500">Your thoughts are now part of the conversation.</p>
+                                                        <h3 className="font-medium text-xl mb-2">Review added</h3>
+                                                        <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
                                                     </div>
                                                 )}
                                             </motion.div>
@@ -997,7 +999,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     <motion.div 
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="py-20 px-8 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200"
+                        className="py-20 px-8 text-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200"
                     >
                         <div className="w-16 h-16 bg-[#FEC312]/10 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Plus className="w-8 h-8 text-[#FEC312]" />
@@ -1008,18 +1010,22 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         </p>
                     </motion.div>
                 ) : visibleReviews.map((review) => {
-                    let sum = 0, count = 0;
-                    for (const c of criteria) {
-                      if (review[c.dbKey] != null) {
-                         sum += review[c.dbKey] as number;
-                         count++;
+                    // Calculate dynamic rating average based on mode criteria
+                    let sum = 0;
+                    let count = 0;
+                    modeConfig.criteria.forEach(c => {
+                      const val = review[c.dbKey as keyof Review];
+                      if (typeof val === 'number') {
+                        sum += val;
+                        count++;
                       }
-                    }
+                    });
                     const ratingAvg = count > 0 ? sum / count : 0;
+                    
                     const timeLabel = formatTimestamp(review.created_at, now);
                     const fullTime = getFullTimestamp(review.created_at);
                     const isReviewEdited = review.updated_at && 
-                      new Date(review.updated_at).getTime() > new Date(review.created_at).getTime();
+                        new Date(review.updated_at).getTime() > new Date(review.created_at).getTime();
 
                     return (
                         <motion.div 
@@ -1103,12 +1109,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                                 <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
                                     <div className="flex flex-wrap gap-3 xs:gap-6">
-                                        {criteria.map((c) => review[c.dbKey] != null ? (
+                                        {modeConfig.criteria.map(c => (
                                             <div key={c.dbKey} className="flex items-center gap-1.5 text-md font-semibold text-black" title={c.label}>
                                                 <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
-                                                {review[c.dbKey]}
+                                                {review[c.dbKey as keyof Review] || '-'}
                                             </div>
-                                        ) : null)}
+                                        ))}
                                     </div>
 
 
@@ -1129,10 +1135,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
             {hasMoreReviews && (
                 <div className="flex justify-center mt-10">
-                    <button onClick={handleLoadMore} className="group relative px-8 py-3.5 bg-[#111111] text-white text-sm font-medium rounded-full hover:bg-[#222222] active:scale-[0.97] transition-all duration-200 flex items-center gap-2">
-                        Load More Reviews
-                        <span className="text-white/60 text-xs font-medium">({Math.min(REVIEWS_PER_PAGE, remainingReviews)} of {remainingReviews} remaining)</span>
-                    </button>
+                    <Button variant='ghost' onClick={handleLoadMore} className="group relative px-8 py-3.5 bg-transparent text-sm font-medium transition-all duration-200 flex items-center gap-2">
+                        Load More
+                        <span className="text-xs font-medium">({Math.min(REVIEWS_PER_PAGE, remainingReviews)} of {remainingReviews} remaining)</span>
+                    </Button>
                 </div>
             )}
             {!hasMoreReviews && sortedReviews.length > REVIEWS_PER_PAGE && (
