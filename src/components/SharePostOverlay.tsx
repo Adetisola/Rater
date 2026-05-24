@@ -1,36 +1,67 @@
+"use client";
+
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import whatsappIcon from '../assets/icons/icons8-whatsapp.svg';
-import xIcon from '../assets/icons/icons8-x.svg';
-import linkedinIcon from '../assets/icons/icons8-linkedin.svg';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Button } from './ui/Button';
+import { cn } from '../lib/utils';
+const whatsappIcon = '/icons/icons8-whatsapp.svg';
+const xIcon = '/icons/icons8-x.svg';
+const linkedinIcon = '/icons/icons8-linkedin.svg';
 
 
 interface SharePostOverlayProps {
   onClose: () => void;
-  postId: string;
+  post_id: string;
 }
 
-export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
-  const shareUrl = `http://rater.vercel.app/${postId}`;
+export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
+  const shareUrl = `https://rater-web.vercel.app/post/${post_id}`;
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (copied) {
+      const timeout = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [copied]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
-    // Could add toast here
+    setCopied(true);
   };
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   return createPortal(
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center p-4"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+    >
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       />
 
       {/* Modal Content */}
       <div className="w-full max-w-md bg-white rounded-[32px] p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 text-center">
         
-        <h2 className="text-2xl font-bold text-[#111111] mb-2">Share this Post</h2>
+        <h2 className="text-2xl font-semibold text-black mb-2">Share this Post</h2>
         <p className="text-sm text-gray-500 mb-2">Help others review or learn from this design.</p>
-        <p className="text-xs text-[#FEC312] font-medium mb-8">Attribution is claimed by the submitter.</p>
 
         {/* URL Input */}
         <div className="flex items-center gap-2 border-2 border-[#111111] rounded-xl px-4 py-3 mb-6">
@@ -43,18 +74,36 @@ export function SharePostOverlay({ onClose, postId }: SharePostOverlayProps) {
 
         {/* Actions */}
         <div className="flex items-center justify-center gap-4 mb-8">
-            <button 
+            <Button 
+                variant="ghost"
+                className="h-10 px-6 rounded-full text-base font-medium transition-all"
                 onClick={onClose}
-                className="px-8 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-all duration-300"
             >
                 Close
-            </button>
-            <button 
+            </Button>
+            <Button 
                 onClick={handleCopy}
-                className="px-8 py-3 rounded-full text-sm font-bold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all duration-300 flex items-center gap-2"
+                variant="outline"
+                className={cn(
+                    "px-8 h-12 rounded-full text-lg font-medium transition-all flex items-center gap-2",
+                    copied && "bg-[#10b981] border-[#10b981] text-white hover:bg-[#0e9f6e] hover:border-[#0e9f6e] hover:text-white"
+                )}
             >
-                Copy Link
-            </button>
+                {copied ? (
+                    <>
+                        <div className="h-10 w-10 -ml-6 -my-4">
+                          <DotLottieReact
+                              src="https://lottie.host/a059d513-00d2-44a4-82a1-3d15c5bad2fc/OWXtqqeGsX.lottie"
+                              loop
+                              autoplay
+                          />
+                        </div>
+                        Copied!
+                    </>
+                ) : (
+                    "Copy Link"
+                )}
+            </Button>
         </div>
 
         {/* Social Icons */}

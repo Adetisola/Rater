@@ -1,4 +1,7 @@
-import { useState } from 'react';
+"use client";
+
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronDown, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/Button';
 
@@ -21,6 +24,11 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
   const [details, setDetails] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSubmit = () => {
     if (reason === 'Select') return;
@@ -31,12 +39,24 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
     onSubmit(reason, details);
   };
 
-  return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-60 flex items-center justify-center p-4"
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+    >
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       />
 
       {/* Modal Content */}
@@ -46,19 +66,19 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
             <>
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-[#111111] mb-2">Report this Post</h2>
+                    <h2 className="text-2xl font-semibold text-black mb-2">Report this Post</h2>
                     <p className="text-sm text-gray-500">Help us understand what's wrong with this post.</p>
                 </div>
 
                 {/* Reason Dropdown */}
                 <div className="mb-6 relative">
-                    <label className="block text-sm font-bold text-[#111111] mb-2">Reason for report</label>
+                    <label className="block text-sm font-semibold text-black mb-2">Reason for report</label>
                     <button 
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-left flex items-center justify-between text-sm font-medium hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312]"
                     >
-                        <span className={reason === 'Select' ? 'text-gray-400' : 'text-[#111111]'}>{reason}</span>
+                        <span className={reason === 'Select' ? 'text-gray-400' : 'text-black'}>{reason}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
@@ -71,7 +91,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                                         setReason(r);
                                         setIsDropdownOpen(false);
                                     }}
-                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-[#111111] font-medium border-b border-gray-50 last:border-0"
+                                    className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors text-black font-medium border-b border-gray-50 last:border-0"
                                 >
                                     {r}
                                 </button>
@@ -82,7 +102,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
 
                 {/* Details Textarea */}
                 <div className="mb-8">
-                    <label className="block text-sm font-bold text-[#111111] mb-2">Tell us more (optional)</label>
+                    <label className="block text-sm font-semibold text-black mb-2">Tell us more (optional)</label>
                     <div className="relative">
                         <textarea 
                             value={details}
@@ -98,20 +118,22 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-4">
-                    <button 
+                <div className="flex items-center justify-center gap-4">
+                    <Button 
+                        variant="ghost"
                         onClick={onClose}
-                        className="flex-1 py-3 rounded-full text-sm font-bold text-[#111111] hover:bg-[#FEC312] hover:text-white transition-colors"
+                        className="h-12 px-6 rounded-full text-base font-medium text-gray-500 transition-all"
                     >
                         Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                        variant="outline"
                         disabled={reason === 'Select'}
                         onClick={handleSubmit}
-                        className="px-20 py-3 rounded-full text-sm font-bold text-[#111111] border-2 border-[#FEC312] hover:bg-[#FEC312] hover:text-white transition-all duration-300 inline-flex items-end"
+                        className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all"
                     >
                         Report
-                    </button>
+                    </Button>
                 </div>
             </>
         ) : (
@@ -119,7 +141,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                  <div className="w-20 h-20 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-6">
                     <ShieldCheck className="w-10 h-10" />
                  </div>
-                 <h2 className="text-2xl font-bold text-[#111111] mb-2">Report Submitted</h2>
+                 <h2 className="text-2xl font-bold text-black mb-2">Report Submitted</h2>
                  <p className="text-sm text-gray-500 mb-8 max-w-[280px] mx-auto leading-relaxed">
                     Thanks for letting us know. We appreciate your help in keeping our community safe.
                  </p>
@@ -130,6 +152,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

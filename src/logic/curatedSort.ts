@@ -2,17 +2,18 @@
  * Curated Freshness V1 — Default Homepage Sorting Algorithm
  * 
  * Buckets:
- * - Bucket A (Standout): Posts with badges. Rate-limited to 1 per 6-8 cards.
+ * - Bucket A (Standout): Posts with the Top Rated badge. Rate-limited to 1 per 6-8 cards.
  * - Bucket B (Active & Emerging): Posts from the last 14-21 days.
  * - Bucket C (Older Archive): All other posts.
  * 
  * Ordering:
- * - Bucket A: Badge priority (Top Rated > Most Discussed), then recency.
+ * - Bucket A: Top Rated badge, then recency.
  * - Bucket B: Recency with light engagement signal (review count).
  * - Bucket C: Recency only.
  */
 
-import type { Post } from './mockData';
+import type { Post } from '../types';
+import { calculatePostMetrics } from './mockData';
 import { computeBadges } from './badgeUtils';
 
 const BUCKET_B_WINDOW_DAYS = 17; // Middle of 14-21 range
@@ -20,7 +21,6 @@ const STANDOUT_SPACING = 7;      // Middle of 6-8 range
 
 /**
  * Seeded random for gentle, stable variation.
- * Uses the day as seed so shuffles are consistent within a day but vary daily.
  */
 function seededRandom(seed: number): () => number {
   return function() {
@@ -32,13 +32,13 @@ function seededRandom(seed: number): () => number {
 /**
  * Group posts by day (YYYY-MM-DD) and shuffle within each day group.
  */
-function shuffleWithinDays<T extends { createdAt: string }>(posts: T[], seed: number): T[] {
+function shuffleWithinDays<T extends { created_at: string }>(posts: T[], seed: number): T[] {
   const random = seededRandom(seed);
   
   // Group by day
   const dayGroups: Record<string, T[]> = {};
   posts.forEach(post => {
-    const day = post.createdAt.split('T')[0];
+    const day = post.created_at.split('T')[0];
     if (!dayGroups[day]) dayGroups[day] = [];
     dayGroups[day].push(post);
   });
@@ -57,26 +57,34 @@ function shuffleWithinDays<T extends { createdAt: string }>(posts: T[], seed: nu
 }
 
 /**
- * Curated Freshness Sort
+ * Curated Freshness Sort (Async Version)
  * Returns posts sorted according to the Curated Freshness V1 algorithm.
  */
-export function curatedFreshnessSort(posts: Post[]): Post[] {
+export async function curatedFreshnessSort(posts: Post[]): Promise<Post[]> {
   const now = Date.now();
   const BUCKET_B_MS = BUCKET_B_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
-  // Compute badges for all posts
-  const badgeMap = computeBadges(posts);
+  // 1. Compute badges for all posts (now async)
+  const badgeMap = await computeBadges(posts);
 
-  // Categorize into buckets
-  const bucketA: Post[] = []; // Standout (badge posts)
+  // 2. Pre-calculate metrics for all posts (needed for Bucket B sorting)
+  // This avoids async sorting pitfalls
+  const metricsMap: Record<string, { review_count: number }> = {};
+  await Promise.all(posts.map(async post => {
+    const m = await calculatePostMetrics(post.id);
+    metricsMap[post.id] = { review_count: m.review_count };
+  }));
+
+  // 3. Categorize into buckets
+  const bucketA: Post[] = []; // Standout (Top Rated badge)
   const bucketB: Post[] = []; // Active & Emerging (recent)
   const bucketC: Post[] = []; // Older Archive
 
   posts.forEach(post => {
     const badge = badgeMap[post.id];
-    const postAge = now - new Date(post.createdAt).getTime();
+    const postAge = now - new Date(post.created_at).getTime();
 
-    if (badge) {
+    if (badge === 'top_rated_active') {
       bucketA.push(post);
     } else if (postAge <= BUCKET_B_MS) {
       bucketB.push(post);
@@ -85,35 +93,28 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
     }
   });
 
-  // --- Sort Bucket A: Badge priority, then recency ---
+  // --- Sort Bucket A: Recency (only Top Rated badge exists) ---
   bucketA.sort((a, b) => {
-    const aBadge = badgeMap[a.id];
-    const bBadge = badgeMap[b.id];
-    
-    // Top Rated > Most Discussed
-    if (aBadge === 'top-rated' && bBadge !== 'top-rated') return -1;
-    if (bBadge === 'top-rated' && aBadge !== 'top-rated') return 1;
-
-    // Same badge type: sort by recency
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
   // --- Sort Bucket B: Recency with engagement signal ---
-  // Engagement bonus: Higher review count gets slight priority within same day
   bucketB.sort((a, b) => {
-    const aTime = new Date(a.createdAt).getTime();
-    const bTime = new Date(b.createdAt).getTime();
+    const aTime = new Date(a.created_at).getTime();
+    const bTime = new Date(b.created_at).getTime();
     
     // Primary: Recency
     const timeDiff = bTime - aTime;
     
     // If same day, use engagement as tiebreaker
-    const aDay = a.createdAt.split('T')[0];
-    const bDay = b.createdAt.split('T')[0];
+    const aDay = a.created_at.split('T')[0];
+    const bDay = b.created_at.split('T')[0];
     
     if (aDay === bDay) {
       // Slight engagement bonus (review count)
-      return b.rating.reviewCount - a.rating.reviewCount;
+      const aCount = metricsMap[a.id]?.review_count || 0;
+      const bCount = metricsMap[b.id]?.review_count || 0;
+      return bCount - aCount;
     }
     
     return timeDiff;
@@ -121,7 +122,7 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
 
   // --- Sort Bucket C: Recency only ---
   bucketC.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
   // --- Apply gentle variation (shuffle within day groups) ---
@@ -130,15 +131,13 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
   const shuffledC = shuffleWithinDays(bucketC, daySeed);
 
   // --- Interleave: Rate-limit Bucket A posts ---
-  // Max 1 standout post per STANDOUT_SPACING cards
   const result: Post[] = [];
   const standoutQueue = [...bucketA];
   const regularQueue = [...shuffledB, ...shuffledC];
 
-  let cardsSinceLastStandout = STANDOUT_SPACING; // Allow first standout early
+  let cardsSinceLastStandout = STANDOUT_SPACING; 
 
   while (standoutQueue.length > 0 || regularQueue.length > 0) {
-    // Check if we can insert a standout
     if (standoutQueue.length > 0 && cardsSinceLastStandout >= STANDOUT_SPACING) {
       result.push(standoutQueue.shift()!);
       cardsSinceLastStandout = 0;
@@ -146,7 +145,6 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
       result.push(regularQueue.shift()!);
       cardsSinceLastStandout++;
     } else if (standoutQueue.length > 0) {
-      // Only standouts left, just add them
       result.push(standoutQueue.shift()!);
     }
   }
@@ -154,9 +152,6 @@ export function curatedFreshnessSort(posts: Post[]): Post[] {
   return result;
 }
 
-/**
- * Check if current sort is the default "Curated Freshness"
- */
 export function isCuratedFreshness(sortBy: string): boolean {
-  return sortBy === '✨Curated Freshness✨';
+  return sortBy === 'balanced';
 }
