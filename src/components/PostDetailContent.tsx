@@ -169,6 +169,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     );
 }
 
+const RATE_LIMIT_KEY = 'rater_review_timestamps';
+
 /**
  * The core detail view for a post, displaying images, metadata, metrics, and the review form.
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
@@ -179,27 +181,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const now = useNow();
     const router = useRouter();
 
-<<<<<<< HEAD
-  const handleClose = onClose || (() => router.back());
-  
-  // Data State
-  const modeConfig = getReviewMode(post.category);
-  const criteria = modeConfig.criteria;
-  const [dbReviews, setDbReviews] = useState<Review[]>([]);
-  const [userReviews, setUserReviews] = useState<Review[]>([]); 
-  const [metrics, setMetrics] = useState<PostMetrics | null>(null);
-  
-  // UI State
-  const [hasReviewed, setHasReviewed] = useState(false);
-  const isFreshReviewRef = useRef(false);
-  const successStarRef = useRef<SVGPathElement>(null);
-  const successCheckRef = useRef<SVGPathElement>(null);
-  const [isSelfPost, setIsSelfPost] = useState(false);
-=======
     const handleClose = onClose || (() => router.back());
->>>>>>> local-v1/main
 
     // Data State
+    const modeConfig = getReviewMode(post.category);
+    const criteria = modeConfig.criteria;
     const [dbReviews, setDbReviews] = useState<Review[]>([]);
     const [userReviews, setUserReviews] = useState<Review[]>([]);
     const [metrics, setMetrics] = useState<PostMetrics | null>(null);
@@ -302,6 +288,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
+    const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
@@ -490,82 +477,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         setHasReviewed(true);
         markPostAsReviewed(post.id);
 
-<<<<<<< HEAD
-    return () => { isMounted = false; };
-  }, [post.id, currentAvatar, post.avatar_id]);
-
-  // 2. Derive metrics locally when userReviews change (Optimistic UI)
-  useEffect(() => {
-    if (userReviews.length > 0) {
-        calculatePostMetrics(post.id, userReviews).then(setMetrics);
-    }
-  }, [userReviews, post.id]);
-
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [sortBy, setSortBy] = useState('Recent');
-  const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
-  const [isReportOpen, setIsReportOpen] = useState(false);
-  const [isShareOpen, setIsShareOpen] = useState(false);
-  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
-  const [zoomScale, setZoomScale] = useState(1);
-  const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
-
-  useEffect(() => {
-    if (onDisableSwipe) {
-      onDisableSwipe(isImageFullscreen || isReportOpen || isShareOpen);
-    }
-  }, [isImageFullscreen, isReportOpen, isShareOpen, onDisableSwipe]);
-  
-  const imgRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lastTapRef = useRef(0);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
-  const [isReviewCountTooltipVisible, setIsReviewCountTooltipVisible] = useState(false);
-  const reviewCountTooltipRef = useRef<HTMLDivElement>(null);
-  const [isTopRatedTooltipVisible, setIsTopRatedTooltipVisible] = useState(false);
-  const topRatedTooltipRef = useRef<HTMLDivElement>(null);
-
-  const ZOOM_IN_SCALE = 2.5;
-
-  const updateConstraints = useCallback((scale: number) => {
-    if (!imgRef.current) return;
-    const { offsetWidth: w, offsetHeight: h } = imgRef.current;
-    const maxX = (w * (scale - 1)) / 2;
-    const maxY = (h * (scale - 1)) / 2;
-    setDragConstraints({ left: -maxX, right: maxX, top: -maxY, bottom: maxY });
-    return { maxX, maxY };
-  }, []);
-
-  useEffect(() => {
-    const bounds = updateConstraints(zoomScale);
-    if (zoomScale === 1) {
-      x.set(0);
-      y.set(0);
-    } else if (bounds) {
-      x.set(Math.max(-bounds.maxX, Math.min(bounds.maxX, x.get())));
-      y.set(Math.max(-bounds.maxY, Math.min(bounds.maxY, y.get())));
-    }
-  }, [zoomScale, updateConstraints, x, y]);
-
-  useEffect(() => {
-    if (!isImageFullscreen) return;
-    const el = containerRef.current;
-    if (!el) return;
-
-    const onWheel = (e: WheelEvent) => {
-      if (zoomScale <= 1) return;
-      e.preventDefault();
-      const { left: minX, right: maxX, top: minY, bottom: maxY } = dragConstraints;
-      const newX = Math.max(minX, Math.min(maxX, x.get() - e.deltaX));
-      const newY = Math.max(minY, Math.min(maxY, y.get() - e.deltaY));
-      x.set(newX);
-      y.set(newY);
-=======
         const updatedTimestamps = [...validTimestamps, Date.now()];
         localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
->>>>>>> local-v1/main
     };
 
     useEffect(() => {
