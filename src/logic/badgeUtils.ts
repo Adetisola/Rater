@@ -1,7 +1,7 @@
 import type { Post, Review, BadgeType } from '../types';
 export type { BadgeType };
 import { MOCK_AVATARS, getReviewsByPostId, calculatePostMetrics, MOCK_BADGES } from './mockData';
-
+import { getReviewMode } from '../config/reviewModes';
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const MIN_REVIEWS_FOR_BADGE = 5;
@@ -10,13 +10,15 @@ const MAX_TOP_RATED_BADGES = 3;
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Returns true if every review in the list has valid structured rating fields.
+ * Returns true if every review in the list has valid structured rating fields for its category.
  */
-function hasAllStructuredReviews(reviews: Review[]): boolean {
+function hasAllStructuredReviews(post: Post, reviews: Review[]): boolean {
+  const modeConfig = getReviewMode(post.category);
   return reviews.every(review => {
-    const { clarity, purpose, aesthetics } = review;
-    const isValid = (n: number) => typeof n === 'number' && n >= 1 && n <= 5;
-    return isValid(clarity) && isValid(purpose) && isValid(aesthetics);
+    return modeConfig.criteria.every(c => {
+      const val = review[c.dbKey];
+      return typeof val === 'number' && val >= 1 && val <= 5;
+    });
   });
 }
 
@@ -56,7 +58,7 @@ async function isEligibleForBadge(post: Post): Promise<boolean> {
   if (!isPostWithinWindow(post)) return false;
   
   const reviews = await getReviewsByPostId(post.id);
-  if (!hasAllStructuredReviews(reviews)) return false;
+  if (!hasAllStructuredReviews(post, reviews)) return false;
   
   if (!isAvatarNotBlocked(post)) return false;
   return true;
