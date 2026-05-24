@@ -29,7 +29,6 @@ import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
 import { MoreLikeThisSection } from './MoreLikeThisSection';
-<<<<<<< HEAD
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 
@@ -42,18 +41,6 @@ import {
     ChevronDown, 
     X, 
     Plus, 
-=======
-
-import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
-import { motion, useMotionValue, useAnimation, type PanInfo } from 'framer-motion';
-import {
-    ArrowLeft,
-    Download,
-    Share2,
-    ChevronDown,
-    X,
-    Plus,
->>>>>>> local-v1/main
     Minus,
     Lock,
     ChevronLeft,
