@@ -205,7 +205,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
 
                     <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
                         <div className="flex justify-between items-center mb-3">
-                            <span className="bg-transparent text-gray-500 text-[10px] font-semibold tracking-wider px-3 py-1 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-[100px] xs:max-w-none block">
+                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[10px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-[100px] xs:max-w-none block">
                                 {post.category}
                             </span>
                             <span

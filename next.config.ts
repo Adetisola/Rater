@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { hostname: 'images.unsplash.com' },
+      { hostname: 'plus.unsplash.com' },
+      { hostname: 'image.pollinations.ai' },
       { hostname: 'i.pravatar.cc' },
       { hostname: 'api.dicebear.com' },
       { hostname: 'img.icons8.com' },

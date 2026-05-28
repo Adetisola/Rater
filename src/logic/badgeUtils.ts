@@ -15,8 +15,16 @@ const MAX_TOP_RATED_BADGES = 3;
 function hasAllStructuredReviews(post: Post, reviews: Review[]): boolean {
   const modeConfig = getReviewMode(post.category);
   return reviews.every(review => {
-    return modeConfig.criteria.every(c => {
+    const hasCurrentMode = modeConfig.criteria.every(c => {
       const val = review[c.dbKey];
+      return typeof val === 'number' && val >= 1 && val <= 5;
+    });
+    
+    if (hasCurrentMode) return true;
+
+    // Fallback for legacy mock data which universally uses clarity, purpose, aesthetics
+    return ['clarity', 'purpose', 'aesthetics'].every(key => {
+      const val = review[key as keyof Review];
       return typeof val === 'number' && val >= 1 && val <= 5;
     });
   });

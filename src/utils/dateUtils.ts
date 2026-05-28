@@ -12,17 +12,17 @@ export function formatTimestamp(date: string | Date, currentNow?: number | Date)
   }
 
   if (diffInSeconds < 60) {
-    return `${diffInSeconds}s ago`;
+    return `${diffInSeconds}s`;
   }
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
+    return `${diffInMinutes}min`;
   }
 
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
-    return `${diffInHours}h ago`;
+    return `${diffInHours}h`;
   }
 
   const diffInDays = Math.floor(diffInHours / 24);
@@ -31,7 +31,12 @@ export function formatTimestamp(date: string | Date, currentNow?: number | Date)
   }
 
   if (diffInDays < 7) {
-    return `${diffInDays} days ago`;
+    return `${diffInDays}d`;
+  }
+
+  if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7);
+    return `${weeks}w`;
   }
 
   // Formatting for older dates

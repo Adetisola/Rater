@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { generateUsernameFromName } from '../utils/usernameUtils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AtSign, ChevronLeft, Loader2, CheckCircle2, UserRound, Pencil, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { AtSign, ChevronLeft, Loader2, CheckCircle2, UserRound, Eye, EyeOff, Sparkles, Trash2, Camera } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 /**
@@ -76,6 +76,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
   // Avatar Image Upload State
   const [avatarUploadState, setAvatarUploadState] = useState<'idle' | 'uploading' | 'error' | 'success'>('idle');
+  const [avatarErrorMsg, setAvatarErrorMsg] = useState<string | null>(null);
 
   // Lock body scroll when overlay is open (stand-alone mode only)
   useEffect(() => {
@@ -92,12 +93,14 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         setAvatarUploadState('error');
-        setTimeout(() => setAvatarUploadState('idle'), 3000);
+        setAvatarErrorMsg('Image must be under 5MB');
+        setTimeout(() => { setAvatarUploadState('idle'); setAvatarErrorMsg(null); }, 3000);
         if (fileInputRef.current) fileInputRef.current.value = '';
         return;
       }
 
       setAvatarUploadState('uploading');
+      setAvatarErrorMsg(null);
 
       try {
         await new Promise(resolve => setTimeout(resolve, 800)); // Simulate latency
@@ -110,7 +113,8 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
         reader.readAsDataURL(file);
       } catch (err) {
         setAvatarUploadState('error');
-        setTimeout(() => setAvatarUploadState('idle'), 3000);
+        setAvatarErrorMsg('Failed to upload image');
+        setTimeout(() => { setAvatarUploadState('idle'); setAvatarErrorMsg(null); }, 3000);
       }
     }
   };
@@ -118,6 +122,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
   const handleRemoveAvatar = () => {
     setAvatarPreview(null);
     setAvatarUploadState('idle');
+    setAvatarErrorMsg(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -248,34 +253,67 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             <div className="text-center mb-6 pt-2">
               <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Avatar</h2>
 
-              <div
-                className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
-                onClick={() => avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
-              >
-                {avatarUploadState === 'uploading' ? (
-                  <Loader2 className="w-8 h-8 text-[#FEC312] animate-spin" />
-                ) : avatarUploadState === 'success' ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 z-20 animate-in fade-in">
-                    <CheckCircle2 className="w-8 h-8 text-white" />
-                  </div>
-                ) : null}
+              <div className="relative w-24 h-24 mx-auto -mb-2">
+                <div
+                  className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-[#FEC312] opacity-80 cursor-wait' : avatarUploadState === 'error' ? 'border-red-400 bg-red-50' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
+                  onClick={() => !avatarPreview && avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
+                >
+                  {avatarUploadState === 'uploading' ? (
+                    <Loader2 className="w-8 h-8 text-[#FEC312] animate-spin" />
+                  ) : avatarUploadState === 'success' ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 z-20 animate-in fade-in">
+                      <CheckCircle2 className="w-8 h-8 text-white" />
+                    </div>
+                  ) : null}
 
-                {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
-                  avatarPreview ? (
-                    <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <UserRound className="w-10 h-10 text-gray-400 group-hover:text-gray-500 transition-colors" />
-                  )
-                ) : avatarPreview && avatarUploadState === 'uploading' ? (
-                  <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
-                ) : null}
+                  {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
+                    avatarPreview ? (
+                      <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserRound className={`w-10 h-10 transition-colors ${avatarUploadState === 'error' ? 'text-red-300' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                    )
+                  ) : avatarPreview && avatarUploadState === 'uploading' ? (
+                    <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
+                  ) : null}
 
-                {avatarUploadState === 'idle' && (
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                    <Pencil className="w-5 h-5 text-white" />
-                  </div>
+                  {avatarUploadState === 'idle' && !avatarPreview && (
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+                  )}
+                </div>
+
+                {avatarPreview && avatarUploadState === 'idle' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-1 right-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-black hover:scale-105 hover:shadow-lg transition-all z-20"
+                      title="Change Picture"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="absolute bottom-1 left-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-red-500 hover:text-red-600 hover:scale-105 hover:shadow-lg hover:bg-red-50 transition-all z-20"
+                      title="Remove Picture"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
                 )}
               </div>
+
+              {avatarErrorMsg ? (
+                <p className="text-[11px] font-medium text-red-500 animate-in slide-in-from-top-1 mb-2">
+                  {avatarErrorMsg}
+                </p>
+              ) : !avatarPreview && (
+                <p className="text-[11px] text-gray-400 font-medium mb-2">
+                  Upload a picture
+                </p>
+              )}
 
               <input
                 type="file"
@@ -284,27 +322,6 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 accept="image/*"
                 className="hidden"
               />
-
-              <div className="flex gap-4 justify-center items-center mt-3">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={avatarUploadState === 'uploading'}
-                  className="text-[14px] font-medium text-black tracking-wide hover:text-[#FEC312] transition-colors disabled:opacity-50"
-                >
-                  {avatarPreview ? 'Change Picture' : 'Upload a Picture'}
-                </button>
-                {avatarPreview && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveAvatar}
-                    disabled={avatarUploadState === 'uploading'}
-                    className="text-[14px] font-semibold text-red-500 tracking-wide hover:text-red-600 transition-colors disabled:opacity-50"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
             </div>
 
             <form onSubmit={handleCreateStepSubmit} className="w-full space-y-4">

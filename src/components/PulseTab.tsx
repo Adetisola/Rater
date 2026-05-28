@@ -24,9 +24,72 @@ import {
   getPulseSliderAverage,
   getPulseTimeRemaining,
 } from '../utils/pulseManager';
-import { Clock, CheckCircle2, BarChart3, Radio, SlidersHorizontal } from 'lucide-react';
+import { Clock, CheckCircle2, BarChart3, SlidersHorizontal } from 'lucide-react';
+import { Button } from "@/components/ui/Button"
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
+
+function AnimatedPulseIcon() {
+  return (
+    <div className="flex items-end justify-center gap-[3px] w-5 h-5">
+      {[1, 2, 3].map((i) => (
+        <motion.div
+          key={i}
+          className="w-1 bg-[#FEC312] rounded-full"
+          animate={{
+            height: ["40%", "100%", "40%"]
+          }}
+          transition={{
+            duration: 1.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.2
+          }}
+          style={{ height: "40%" }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function TactileSlider({ min, max, step, value, onChange }: { min: number, max: number, step: number, value: number, onChange: (val: number) => void }) {
+  const percentage = ((value - min) / (max - min)) * 100;
+
+  return (
+    <div className="relative w-full h-8 flex items-center group">
+      {/* The visible track */}
+      <div className="absolute left-0 right-0 h-1.5 bg-gray-100 rounded-full overflow-hidden transition-colors group-hover:bg-gray-200">
+        <motion.div
+          className="absolute top-0 left-0 bottom-0 bg-[#FEC312]"
+          initial={false}
+          animate={{ width: `${percentage}%` }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+        />
+      </div>
+
+      {/* The visible thumb */}
+      <motion.div
+        className="absolute w-6 h-6 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.1)] border border-gray-100 pointer-events-none flex items-center justify-center group-active:scale-110 group-active:shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-shadow duration-200"
+        initial={false}
+        animate={{ left: `calc(${percentage}% - 12px)` }}
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      >
+        <div className="w-1.5 h-1.5 rounded-full bg-[#FEC312]" />
+      </motion.div>
+
+      {/* The invisible native slider for perfect interaction */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-grab active:cursor-grabbing touch-none"
+      />
+    </div>
+  );
+}
 
 function PulseTypeIcon({ type }: { type: PulseType }) {
   const cls = "w-4 h-4";
@@ -101,19 +164,19 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
-      <div className="text-center pb-2">
-        <div className="w-10 h-10 rounded-full bg-[#FEC312]/10 flex items-center justify-center mx-auto mb-3">
-          <Radio className="w-5 h-5 text-[#FEC312]" />
+      <div className="text-center pb-2 pt-2">
+        <div className="w-12 h-12 rounded-full bg-[#FEC312]/10 flex items-center justify-center mx-auto mb-4">
+          <AnimatedPulseIcon />
         </div>
-        <h4 className="font-semibold text-base text-black">Launch a Pulse</h4>
-        <p className="text-xs text-gray-400 mt-1">Ask your audience one focused question</p>
+        <h4 className="font-semibold text-lg text-black tracking-tight">Launch a Pulse</h4>
+        <p className="text-[13px] text-gray-500 mt-1.5 font-medium">Ask your audience one focused question</p>
       </div>
 
       {/* Question */}
       <div>
-        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Question</label>
+        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Question</label>
         <input
           type="text"
           value={question}
@@ -129,7 +192,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Pulse Type Selector */}
       <div>
-        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Type</label>
+        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Format</label>
         <div className="flex gap-2">
           {(['choice', 'slider'] as PulseType[]).map(type => (
             <button
@@ -139,11 +202,10 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
                 setPulseType(type);
                 if (type === 'choice' && options.length < 2) setOptions(['', '']);
               }}
-              className={`flex-1 py-2.5 px-2 rounded-xl text-[11px] font-medium border transition-all duration-150 flex items-center justify-center gap-1.5 ${
-                pulseType === type
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
-              }`}
+              className={`flex-1 py-2.5 px-2 rounded-full text-[12px] font-medium border transition-all duration-150 flex items-center justify-center gap-2 ${pulseType === type
+                ? 'bg-[#FEC312]/10 text-black border-[#FEC312]'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                }`}
             >
               <PulseTypeIcon type={type} />
               <span className="hidden xs:inline">{PULSE_TYPE_LABELS[type]}</span>
@@ -155,16 +217,16 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Options (Choice) */}
       {pulseType !== 'slider' && (
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
+        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em]">
               Options
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox" 
-                checked={allowMultiple} 
-                onChange={(e) => setAllowMultiple(e.target.checked)} 
+              <input
+                type="checkbox"
+                checked={allowMultiple}
+                onChange={(e) => setAllowMultiple(e.target.checked)}
                 className="w-3 h-3 accent-[#FEC312] cursor-pointer"
               />
               <span className="text-[10px] font-medium text-gray-500">Allow multiple selections</span>
@@ -204,8 +266,8 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Slider Config */}
       {pulseType === 'slider' && (
-        <div>
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Scale Range</label>
+        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+          <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Scale Range</label>
           <div className="flex items-center gap-3">
             <div className="flex-1">
               <span className="text-[10px] text-gray-400 font-medium">Min</span>
@@ -232,18 +294,17 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Duration */}
       <div>
-        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Duration</label>
+        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Duration</label>
         <div className="flex flex-wrap gap-1.5">
           {(Object.keys(PULSE_DURATION_LABELS) as PulseDuration[]).map(d => (
             <button
               key={d}
               type="button"
               onClick={() => setDuration(d)}
-              className={`px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-150 ${
-                duration === d
-                  ? 'bg-[#FEC312]/10 border-[#FEC312]/40 text-black'
-                  : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
-              }`}
+              className={`px-4 py-2 rounded-full text-[12px] font-medium border transition-all duration-200 ${duration === d
+                ? 'bg-[#FEC312]/10 border-[#FEC312]/30 text-black'
+                : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
+                }`}
             >
               {PULSE_DURATION_LABELS[d]}
             </button>
@@ -252,13 +313,14 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
       </div>
 
       {/* Submit */}
-      <button
+      <Button
+        variant="outline"
         type="submit"
         disabled={!isValid() || isSubmitting}
-        className="w-full h-11 rounded-full bg-black text-white text-sm font-medium hover:bg-[#222] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+        className="w-full h-11 text-sm font-medium rounded-full transition-all"
       >
         {isSubmitting ? 'Launching…' : 'Launch Pulse'}
-      </button>
+      </Button>
     </form>
   );
 }
@@ -311,11 +373,10 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
       <div className="text-center pb-1">
         <h4 className="font-semibold text-base text-black leading-snug">{session.question}</h4>
         <div className="flex items-center justify-center gap-3 mt-2">
-          <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${
-            active
-              ? 'bg-emerald-50 text-emerald-600'
-              : 'bg-gray-100 text-gray-400'
-          }`}>
+          <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${active
+            ? 'bg-emerald-50 text-emerald-600'
+            : 'bg-gray-100 text-gray-400'
+            }`}>
             <Clock className="w-3 h-3" />
             {active ? timeRemaining : 'Expired'}
           </span>
@@ -339,7 +400,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                 onClick={() => {
                   if (!showResults && active) {
                     if (session.allow_multiple_selections) {
-                      setSelectedChoices(prev => 
+                      setSelectedChoices(prev =>
                         prev.includes(option) ? prev.filter(c => c !== option) : [...prev, option]
                       );
                     } else {
@@ -348,30 +409,28 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                   }
                 }}
                 disabled={showResults || !active}
-                className={`w-full relative overflow-hidden rounded-xl border transition-all duration-200 text-left ${
-                  showResults
-                    ? 'cursor-default border-gray-100'
-                    : isSelected
-                      ? 'border-[#FEC312] bg-[#FEC312]/5'
-                      : 'border-gray-200 hover:border-gray-300'
-                }`}
+                className={`w-full relative overflow-hidden rounded-[16px] border transition-all duration-300 text-left ${showResults
+                  ? 'cursor-default border-transparent bg-gray-50/50'
+                  : isSelected
+                    ? 'border-[#FEC312] bg-[#FEC312]/5 shadow-sm'
+                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
+                  }`}
               >
                 {/* Result bar fill */}
                 {showResults && (
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${result.percentage}%` }}
-                    transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="absolute inset-y-0 left-0 bg-[#FEC312]/8 rounded-xl"
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-y-0 left-0 bg-[#FEC312]/15 rounded-[16px]"
                   />
                 )}
 
                 <div className="relative z-10 flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     {!showResults && (
-                      <div className={`w-4 h-4 border-2 transition-all shrink-0 ${session.allow_multiple_selections ? 'rounded' : 'rounded-full'} ${
-                        isSelected ? 'border-[#FEC312] bg-[#FEC312]' : 'border-gray-300'
-                      }`}>
+                      <div className={`w-4 h-4 border-2 transition-all shrink-0 ${session.allow_multiple_selections ? 'rounded' : 'rounded-full'} ${isSelected ? 'border-[#FEC312] bg-[#FEC312]' : 'border-gray-300'
+                        }`}>
                         {isSelected && (
                           <motion.div
                             initial={{ scale: 0 }}
@@ -440,10 +499,17 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                 step={session.slider_step ?? 1}
                 value={sliderValue}
                 onChange={(e) => setSliderValue(Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer bg-gray-200 accent-[#FEC312]"
+                className="w-full h-2 rounded-full appearance-none cursor-pointer bg-gray-200 accent-[#FEC312] hidden"
                 style={{ accentColor: '#FEC312' }}
               />
-              <div className="flex justify-between text-[10px] text-gray-400 font-medium">
+              <TactileSlider
+                min={session.slider_min ?? 1}
+                max={session.slider_max ?? 10}
+                step={session.slider_step ?? 1}
+                value={sliderValue}
+                onChange={setSliderValue}
+              />
+              <div className="flex justify-between text-[11px] text-gray-400 font-semibold pt-1">
                 <span>{session.slider_min ?? 1}</span>
                 <span>{session.slider_max ?? 10}</span>
               </div>
@@ -457,7 +523,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
         <button
           onClick={handleVote}
           disabled={session.pulse_type !== 'slider' && selectedChoices.length === 0}
-          className="w-full h-11 rounded-full bg-black text-white text-sm font-medium hover:bg-[#222] disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+          className="w-full h-12 rounded-full bg-black text-white text-[14px] font-semibold hover:bg-[#222] disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-[0.98] shadow-sm mt-2"
         >
           Submit Vote
         </button>

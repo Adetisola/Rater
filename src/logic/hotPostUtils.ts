@@ -2,7 +2,7 @@ import type { Post } from '../types';
 import { calculatePostMetrics } from './mockData';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-const MIN_REVIEW_COUNT = 3;
+const MIN_REVIEW_COUNT = 5;
 
 /**
  * Computes which posts qualify for the 🔥 (hot) indicator.

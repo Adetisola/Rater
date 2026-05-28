@@ -67,7 +67,7 @@ export interface Review {
   usability?: number;
   recognition?: number;
   impact?: number;
-  attention?: number;
+  engagement?: number;
   composition?: number;
   detail?: number;
   

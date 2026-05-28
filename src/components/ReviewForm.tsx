@@ -339,10 +339,10 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
   }, [postId, isLoggedIn, userId]);
 
   // 2. Auto-Save (Debounced)
-  const currentDraftData = { 
-    ratings, 
-    comment, 
-    name 
+  const currentDraftData = {
+    ratings,
+    comment,
+    name
   };
   const debouncedDraft = useDebounce(currentDraftData, 800);
 
@@ -376,43 +376,43 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
     setIsSubmitting(true);
     // Simulate network delay
     setTimeout(() => {
-        const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
-        
-        // Trigger screen success confetti rain!
-        triggerSuccessConfetti();
-        
-        onSubmit(ratings, comment, finalName);
-        
-        // Clear drafts on success
-        deleteDraft(postId, userId);
-        deleteSnapshot(postId);
-        
-        setIsSubmitting(false);
+      const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
+
+      // Trigger screen success confetti rain!
+      triggerSuccessConfetti();
+
+      onSubmit(ratings, comment, finalName);
+
+      // Clear drafts on success
+      deleteDraft(postId, userId);
+      deleteSnapshot(postId);
+
+      setIsSubmitting(false);
     }, 800);
   };
 
   return (
     <>
       <form onSubmit={handleSubmit} className="w-full pt-2">
-        <h3 className="font-semibold text-xl mb-8 text-center">Rate this Design</h3>
-        
+        {/* <h3 className="font-semibold text-xl mb-8 text-center">Rate this Work</h3> */}
+
         <div className="space-y-4 mb-8">
           {criteria.map((c) => (
-              <div key={c.dbKey} className="flex items-center justify-between gap-1">
-                  <CriteriaLabel 
-                      label={c.label} 
-                      info={{ question: c.question, points: c.points }} 
-                      iconUrl={c.iconUrl} 
-                  />
-                  <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
-                      <StarRating 
-                          rating={ratings[c.dbKey] || 0} 
-                          onChange={(val) => setRatings(prev => ({ ...prev, [c.dbKey]: val }))} 
-                          interactive 
-                          size="lg" 
-                      />
-                  </div>
+            <div key={c.dbKey} className="flex items-center justify-between gap-1">
+              <CriteriaLabel
+                label={c.label}
+                info={{ question: c.question, points: c.points }}
+                iconUrl={c.iconUrl}
+              />
+              <div className="scale-80 xs:scale-90 min-[769px]:scale-100 origin-right transition-transform shrink-0">
+                <StarRating
+                  rating={ratings[c.dbKey] || 0}
+                  onChange={(val) => setRatings(prev => ({ ...prev, [c.dbKey]: val }))}
+                  interactive
+                  size="lg"
+                />
               </div>
+            </div>
           ))}
         </div>
 
