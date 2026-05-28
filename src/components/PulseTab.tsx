@@ -176,7 +176,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Question */}
       <div>
-        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Question</label>
+        <label className="block text-[11px] font-semibold text-gray-700 tracking-[0.08em] mb-2">Question</label>
         <input
           type="text"
           value={question}
@@ -192,7 +192,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Pulse Type Selector */}
       <div>
-        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Format</label>
+        <label className="block text-[11px] font-semibold text-gray-700 tracking-[0.08em] mb-2">Format</label>
         <div className="flex gap-2">
           {(['choice', 'slider'] as PulseType[]).map(type => (
             <button
@@ -219,7 +219,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
       {pulseType !== 'slider' && (
         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em]">
+            <label className="block text-[11px] font-semibold text-gray-700 tracking-[0.08em]">
               Options
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -294,7 +294,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
 
       {/* Duration */}
       <div>
-        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-[0.08em] mb-2">Duration</label>
+        <label className="block text-[11px] font-semibold text-gray-700 tracking-[0.08em] mb-2">Duration</label>
         <div className="flex flex-wrap gap-1.5">
           {(Object.keys(PULSE_DURATION_LABELS) as PulseDuration[]).map(d => (
             <button
@@ -412,7 +412,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                 className={`w-full relative overflow-hidden rounded-[16px] border transition-all duration-300 text-left ${showResults
                   ? 'cursor-default border-transparent bg-gray-50/50'
                   : isSelected
-                    ? 'border-[#FEC312] bg-[#FEC312]/5 shadow-sm'
+                    ? 'border-[#FEC312] bg-[#FEC312]/5'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                   }`}
               >
@@ -490,7 +490,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
           ) : (
             <>
               <div className="text-center">
-                <span className="text-2xl font-bold text-black">{sliderValue}</span>
+                <span className="text-xl font-medium text-black">{sliderValue}</span>
               </div>
               <input
                 type="range"
@@ -520,13 +520,14 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
 
       {/* Vote Button */}
       {active && !hasVoted && (
-        <button
+        <Button
           onClick={handleVote}
           disabled={session.pulse_type !== 'slider' && selectedChoices.length === 0}
-          className="w-full h-12 rounded-full bg-black text-white text-[14px] font-semibold hover:bg-[#222] disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-[0.98] shadow-sm mt-2"
+          variant="outline"
+          className="w-full h-11 text-sm font-medium rounded-full transition-all"
         >
           Submit Vote
-        </button>
+        </Button>
       )}
 
       {/* Voted confirmation */}
