@@ -14,10 +14,12 @@ interface MasonryGridProps {
   badgeMap: Record<string, BadgeType>;
   hotPostIds: Set<string>;
   isLoading?: boolean;
+  maxColumns?: number;
 }
 
-export function MasonryGrid({ posts, badgeMap, hotPostIds, isLoading }: MasonryGridProps) {
-  const columnCount = useMasonryColumns();
+export function MasonryGrid({ posts, badgeMap, hotPostIds, isLoading, maxColumns }: MasonryGridProps) {
+  const calculatedColumns = useMasonryColumns();
+  const columnCount = maxColumns ? Math.min(calculatedColumns, maxColumns) : calculatedColumns;
 
   // Distribute posts into columns
   const columns = useMemo(() => {
