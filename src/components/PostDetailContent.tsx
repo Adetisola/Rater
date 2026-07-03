@@ -2,12 +2,8 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { Review, Post, PostMetrics } from '@/types';
-// TODO(backend): Replace these mock functions with Supabase queries
-import {
-    getReviewsByPostId,
-    getReviewerDisplayName,
-    calculatePostMetrics,
-} from '../logic/mockData';
+import { reviewService } from '../services/reviewService';
+import { metricsService } from '../services/metricsService';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
@@ -238,20 +234,20 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
 
-    // 1. Initial Data Load
+    // 1. Initial Data Load from Supabase
     useEffect(() => {
         let isMounted = true;
         setIsFetchingReviews(true);
 
         const loadData = async () => {
-            const [reviews, initialMetrics] = await Promise.all([
-                getReviewsByPostId(post.id),
-                calculatePostMetrics(post.id)
+            const [reviewsRes, metricsRes] = await Promise.all([
+                reviewService.fetchReviewsByPostId(post.id),
+                metricsService.fetchPostMetrics(post.id)
             ]);
 
             if (isMounted) {
-                setDbReviews(reviews);
-                setMetrics(initialMetrics);
+                setDbReviews(reviewsRes.ok && reviewsRes.data ? reviewsRes.data : []);
+                setMetrics(metricsRes.ok && metricsRes.data ? metricsRes.data : null);
                 setIsFetchingReviews(false);
             }
         };
@@ -270,15 +266,36 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             setHasReviewed(true);
         }
 
-        return () => { isMounted = false; };
+        // Real-time metrics subscription — updates whenever any review changes
+        const unsubscribeMetrics = metricsService.subscribeToMetrics(post.id, (updatedMetrics) => {
+            if (isMounted) setMetrics(updatedMetrics);
+        });
+
+        return () => {
+            isMounted = false;
+            unsubscribeMetrics();
+        };
     }, [post.id, currentAvatar, post.avatar_id]);
 
-    // 2. Derive metrics locally when userReviews change (Optimistic UI)
+    // 2. Derive metrics optimistically when user submits a new review (before DB round-trip completes)
     useEffect(() => {
         if (userReviews.length > 0) {
-            calculatePostMetrics(post.id, userReviews).then(setMetrics);
+            const allCombined = [...userReviews, ...dbReviews];
+            const total = allCombined.length;
+            const avgScore = total > 0
+                ? Math.round(
+                    allCombined.reduce((sum, r) => sum + (r.clarity + r.purpose + r.aesthetics) / 3, 0)
+                    / total * 10
+                  ) / 10
+                : 0;
+            setMetrics({
+                post_id: post.id,
+                review_count: total,
+                average_score: avgScore,
+                rating_unlocked: total >= 3,
+            });
         }
-    }, [userReviews, post.id]);
+    }, [userReviews, dbReviews, post.id]);
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
@@ -452,6 +469,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             setRateLimitMessage(null);
         }
 
+        // Optimistic local review for instant UI feedback
         const newReview: Review = {
             id: `r_new_${Date.now()}`,
             post_id: post.id,
@@ -472,6 +490,22 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
         const updatedTimestamps = [...validTimestamps, Date.now()];
         localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
+
+        // Persist to Supabase (fire-and-forget — real-time subscription will update metrics)
+        reviewService.createReview({
+            post_id: post.id,
+            reviewer_id: currentAvatar?.id,
+            reviewer_name: currentAvatar ? undefined : reviewer_name,
+            device_id: device_id,
+            clarity: ratings.clarity,
+            purpose: ratings.purpose,
+            aesthetics: ratings.aesthetics,
+            comment: comment || undefined,
+        }).then((res) => {
+            if (!res.ok) {
+                console.error('Failed to save review to Supabase:', res.error);
+            }
+        });
     };
 
     useEffect(() => {
@@ -621,7 +655,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
                                                     loop
                                                     autoplay
-                                                    dotLottieRefCallback={(dotLottie) => {
+                                                    dotLottieRefCallback={(dotLottie: any) => {
                                                         if (dotLottie) {
                                                             dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
                                                         }
@@ -689,7 +723,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
                                                 loop
                                                 autoplay
-                                                dotLottieRefCallback={(dotLottie) => {
+                                                dotLottieRefCallback={(dotLottie: any) => {
                                                     if (dotLottie) {
                                                         dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
                                                     }
@@ -961,7 +995,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                             }
                                                         }}
                                                     >
-                                                        {getReviewerDisplayName(review)}
+                                                        {review.reviewer_id && allAvatars[review.reviewer_id]
+                                                            ? allAvatars[review.reviewer_id].name
+                                                            : (review.reviewer_name || 'Anonymous')}
                                                     </span>
                                                     {!review.reviewer_id && (
                                                         <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">

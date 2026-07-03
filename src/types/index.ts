@@ -81,6 +81,18 @@ export interface Post {
   deleted_at?: string;
   created_at: string;
   updated_at?: string;
+  post_metrics?: PostMetrics | null;
+  profiles?: {
+    id?: string;
+    username: string;
+    name: string;
+    avatar_url?: string | null;
+    bg_color?: string;
+    bio?: string | null;
+    role?: string | null;
+    social_links?: any;
+    is_blocked?: boolean;
+  } | null;
 }
 
 export interface PostMetrics {
@@ -99,3 +111,4 @@ export interface Badge {
   badge_type: BadgeType;
   awarded_at: string;
 }
+

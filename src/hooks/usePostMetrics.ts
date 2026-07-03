@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import type { PostMetrics } from '@/types';
-import { calculatePostMetrics } from '../logic/mockData';
+import { metricsService } from '../services/metricsService';
 
 /**
- * Hook to fetch metrics for a post.
- * In production, this might subscribe to a Supabase real-time channel.
+ * Hook to fetch metrics for a post with real-time updates from Supabase.
  */
 export function usePostMetrics(postId: string) {
   const [metrics, setMetrics] = useState<PostMetrics | null>(null);
@@ -17,22 +16,31 @@ export function usePostMetrics(postId: string) {
     let isMounted = true;
     setLoading(true);
 
-    calculatePostMetrics(postId)
-      .then(data => {
-        if (isMounted) {
-          setMetrics(data);
-          setLoading(false);
+    const loadMetrics = async () => {
+      const res = await metricsService.fetchPostMetrics(postId);
+      if (isMounted) {
+        if (res.ok && res.data) {
+          setMetrics(res.data);
+          setError(null);
+        } else {
+          setError(new Error(res.error || 'Failed to fetch metrics'));
         }
-      })
-      .catch(err => {
-        if (isMounted) {
-          setError(err);
-          setLoading(false);
-        }
-      });
+        setLoading(false);
+      }
+    };
+
+    loadMetrics();
+
+    // Subscribe to live metrics updates
+    const unsubscribe = metricsService.subscribeToMetrics(postId, (updatedMetrics) => {
+      if (isMounted) {
+        setMetrics(updatedMetrics);
+      }
+    });
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, [postId]);
 

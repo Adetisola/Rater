@@ -2,7 +2,7 @@
 
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
-import { calculatePostMetrics } from '../logic/mockData';
+
 import { Button } from './ui/Button';
 import { MasonryGrid } from './MasonryGrid';
 import { useBadges } from '../hooks/useBadges';
@@ -147,35 +147,27 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [targetAvatar, allPosts]);
 
-  // Async stats calculation
+  // Sync stats calculation from post_metrics
   useEffect(() => {
-    let isMounted = true;
+    let totalReviews = 0;
+    let totalScore = 0;
+    let ratedPosts = 0;
 
-    const computeStats = async () => {
-      let totalReviews = 0;
-      let totalScore = 0;
-      let ratedPosts = 0;
-
-      const metricsList = await Promise.all(avatarPosts.map(p => calculatePostMetrics(p.id)));
-
-      metricsList.forEach(metrics => {
+    avatarPosts.forEach(p => {
+      const metrics = p.post_metrics;
+      if (metrics) {
         totalReviews += metrics.review_count;
         if (metrics.rating_unlocked) {
           totalScore += metrics.average_score;
           ratedPosts++;
         }
-      });
-
-      if (isMounted) {
-        setStats({
-          totalReviews,
-          avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
-        });
       }
-    };
+    });
 
-    computeStats();
-    return () => { isMounted = false; };
+    setStats({
+      totalReviews,
+      avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
+    });
   }, [avatarPosts]);
 
   const joinedDate = useMemo(() => {

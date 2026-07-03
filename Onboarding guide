@@ -1,0 +1,370 @@
+# Rater: Developer Onboarding & Backend Architecture Guide
+
+Welcome to the **Rater** engineering team! This document serves as your complete guide to onboarding into the backend architecture, codebase patterns, and database systems of Rater.
+
+Rater is a high-performance, aesthetically curated design review platform where creatives submit their work and receive structured, multi-dimensional community feedback across three key metrics: **Clarity**, **Purpose**, and **Aesthetics**.
+
+---
+
+## 1. System Architecture Overview
+
+Rater is built on a modern **Next.js 16 (App Router)** frontend utilizing **React 19** and **Tailwind CSS 4**. The architecture is explicitly designed to decouple the client presentation layer from the data persistence layer.
+
+### The Decoupled State Flow
+
+Currently, the application runs on a client-side mock database with local storage persistence. The state layer is designed with clean boundaries, making the transition to a real backend isolated and safe.
+
+```mermaid
+graph TD
+    subgraph Frontend [Presentation & UI Layer]
+        UI[React Components & Hooks]
+        Zustand[Zustand navigationStore]
+    end
+
+    subgraph State [Application State Seam]
+        AuthCtx[AuthContext.tsx]
+        PostCtx[PostContext.tsx]
+        TimeCtx[TimeContext.tsx]
+    end
+
+    subgraph Mock [Current Mock Backend]
+        MockDB[mockData.ts]
+        LS[Browser LocalStorage]
+    end
+
+    subgraph Prod [Target Production Backend]
+        SupaAuth[Supabase Auth]
+        SupaDB[Supabase DB / PostgreSQL]
+        Cloudinary[Cloudinary Media CDN]
+    end
+
+    UI -->|1. Invokes Actions| AuthCtx
+    UI -->|1. Invokes Actions| PostCtx
+    Zustand -->|Handles Ephemeral UI State| UI
+    
+    %% Current Flow
+    AuthCtx -.->|2a. Current Mock Flow| MockDB
+    PostCtx -.->|2a. Current Mock Flow| MockDB
+    MockDB -.->|3a. Read/Write| LS
+
+    %% Target Flow
+    AuthCtx ===>|2b. Production Flow| SupaAuth
+    PostCtx ===>|2b. Production Flow| SupaDB
+    UI ===>|2c. Direct Media Upload| Cloudinary
+```
+
+### Core Architectural Principles
+1. **Context as the Boundary Seam**: The React Contexts ([AuthContext.tsx](file:///c:/Users/ADMIN/.vscode/Rater/src/context/AuthContext.tsx) and [PostContext.tsx](file:///c:/Users/ADMIN/.vscode/Rater/src/context/PostContext.tsx)) are the only entry points that communicate with the mock database layer ([mockData.ts](file:///c:/Users/ADMIN/.vscode/Rater/src/logic/mockData.ts)). UI components consume data exclusively via high-level hooks (`useAuth()`, `usePosts()`) and have no knowledge of underlying persistence. This guarantees that migrating to Supabase requires changing only these two context files; your UI components will remain unchanged.
+2. **Ephemeral vs. Persistent State**: 
+   * **Zustand** is utilized exclusively for ephemeral, high-frequency client-side UI states, such as tracking post swipe sequences ([navigationStore.ts](file:///c:/Users/ADMIN/.vscode/Rater/src/store/navigationStore.ts)) for gestures.
+   * **React Context** handles heavy, global persistent states (users, sessions, posts) that are backed by the database.
+3. **Database-Driven Metrics**: To avoid client-side race conditions and state sync problems when multiple users submit ratings, average scores are generated dynamically in the database using PostgreSQL relational **Views**.
+
+---
+
+## 2. Directory & Folder Structure
+
+Understanding the layout of the workspace will help you navigate and trace data flow effectively.
+
+```text
+src/
+├── app/                    # Next.js App Router (Routing, Layouts, SSR/CSR Pages)
+│   ├── (main)/             # Main layout-restored route group
+│   │   ├── layout.tsx      # Critical Keep-Alive layout for masonry grid scroll state
+│   │   ├── browse/         # Browse feed page controller
+│   │   ├── submit/         # Submission form wrapper
+│   │   └── post/[id]/      # Detailed single post page with reviews
+│   └── [alias]/            # Dynamic @username profile pages
+│
+├── components/             # Reusable UI component layer (flat structure)
+│   ├── ui/                 # Atomic design tokens (Buttons, Inputs, Selects)
+│   ├── PostForm.tsx        # Crucial Form handling creation & edit logic
+│   └── PostDetailContent.tsx# Heavy interactive post detail containing gesture navigation
+│
+├── context/                # State Provider Seams (The "Backend Bridges")
+│   ├── AuthContext.tsx     # Current session, login/signup, avatar profiles
+│   └── PostContext.tsx     # CRUD state, soft deletes, and overrides
+│
+├── logic/                  # Business Logic & Core Algorithms
+│   ├── mockData.ts         # The current Mock database mock engine
+│   ├── curatedSort.ts      # The platform's smart homepage sorting algorithm
+│   └── searchUtils.ts      # Client-side Fuse.js configuration
+│
+├── types/                  # Centralized TypeScript models
+│   └── index.ts            # Absolute source of truth for interfaces (Post, Avatar, Review)
+│
+└── utils/                  # Side-effect-free pure utility functions
+    ├── deviceTracking.ts   # Anonymous visitor tracking (useful for rate-limiting)
+    └── draftManager.ts     # LocalStorage auto-save helper for forms
+```
+
+### Critical Files & Modification Rules
+
+Before editing files, note their role and potential side effects:
+
+| File Name | Responsibility | Danger Level | Why & How to Modify Safely |
+| :--- | :--- | :--- | :--- |
+| `src/context/AuthContext.tsx` | Handles authentication and user profiles. | 🔥🔥🔥 **Critical** | When migrating to Supabase, replace local storage calls with `supabase.auth` session callbacks. Ensure the database `profiles` columns align exactly with the `Avatar` interface. |
+| `src/context/PostContext.tsx` | Manages post loading, creation, editing, and soft deletion. | 🔥🔥🔥 **Critical** | When hooking up Supabase, retain the optimistic updates to keep UI transitions instantaneous while performing async DB queries in the background. |
+| `src/app/(main)/layout.tsx` | Controls feed state retention across navigation transitions. | 🔥🔥 **High** | This layout preserves scroll position using a visibility-based keep-alive system. Modifying it carelessly will cause the feed page to reset scroll index to top when a user clicks "Back". |
+| `src/types/index.ts` | Domain TypeScript interfaces. | 🔥🔥🔥 **Critical** | Standardizes fields across database tables, API payloads, and UI components. Always edit this file first when planning schema updates. |
+| `src/logic/mockData.ts` | Simulated database state. | 🔥 **Low** | Read this file to understand mock schemas and business logic calculations. This file will be completely retired upon Supabase integration. |
+
+---
+
+## 3. Database Schema & Relationships (Supabase)
+
+The production PostgreSQL database in Supabase is normalized to handle scalable user actions, media associations, and structured metrics.
+
+### Entity-Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    auth_users ||--|| profiles : "syncs to (1:1)"
+    profiles ||--o{ posts : "creates (1:N)"
+    profiles ||--o{ reviews : "writes (1:N)"
+    posts ||--o{ reviews : "has (1:N)"
+    posts ||--o{ badges : "awarded (1:N)"
+    categories ||--o{ posts : "classifies (1:N)"
+
+    profiles {
+        uuid id PK "FK to auth.users"
+        text username UNIQUE
+        text email UNIQUE
+        text name
+        text role
+        text avatar_url
+        text bg_color
+        text bio
+        boolean is_blocked
+        jsonb social_links
+    }
+
+    posts {
+        uuid id PK
+        uuid avatar_id FK "References profiles.id"
+        text title
+        text description
+        text category FK "References categories.name"
+        text image_url
+        boolean is_deleted
+        timestamptz deleted_at
+    }
+
+    reviews {
+        uuid id PK
+        uuid post_id FK "References posts.id"
+        uuid reviewer_id FK "References profiles.id (Nullable)"
+        text reviewer_name "For guest ratings"
+        text device_id "For anonymous tracking"
+        integer clarity
+        integer purpose
+        integer aesthetics
+        text comment
+    }
+```
+
+### DB Triggers & Calculated Metrics
+
+#### 1. Automatic Profile Generation
+To streamline registration and avoid secondary user profile insertion scripts on the client, we deploy a database trigger in PostgreSQL. When a user registers through Supabase Auth, the following trigger syncs their information from `auth.users` to our public `profiles` table:
+
+```sql
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.profiles (id, username, email, name, bg_color)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'username', 'user_' || substring(new.id::text from 1 for 8)),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', 'New Member'),
+    '#FEC312'
+  );
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
+```
+
+#### 2. Relational Aggregate View
+To calculate metrics dynamically on the fly without running heavy JOIN operations inside our React components, we utilize a database view:
+
+```sql
+create or replace view post_metrics as
+select 
+  p.id as post_id,
+  count(r.id) as review_count,
+  coalesce(round(avg((r.clarity + r.purpose + r.aesthetics) / 3.0), 1), 0) as average_score,
+  (count(r.id) >= 3) as rating_unlocked
+from posts p
+left join reviews r on p.id = r.post_id
+group by p.id;
+```
+*Note: A post's aggregate stats remain "locked" (`rating_unlocked = false`) until a minimum of 3 ratings are collected, protecting creators from early outliers.*
+
+---
+
+## 4. Authentication Flow
+
+Rater operates a hybrid auth structure:
+1. **Registered Designers**: Full profiles, personalized dashboard, and credentials.
+2. **Anonymous Guests**: Free review submissions. Authenticated via physical browser signatures (`device_id`) to enforce soft rate-limiting and protect rating integrity.
+
+### Authentication Flow (Supabase Auth)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Designer
+    participant FE as Next.js Frontend
+    participant Auth as Supabase Auth
+    participant DB as public.profiles Table
+
+    User->>FE: Enters Email & Password
+    FE->>Auth: supabase.auth.signInWithPassword(...)
+    Auth->>Auth: Validate Credentials
+    Auth-->>FE: Return Session JWT + User metadata
+    FE->>FE: Set state (currentAvatar) via useAuth()
+    
+    rect rgb(240, 240, 240)
+        Note over Auth,DB: Async Database Trigger Sync
+        Auth->>DB: INSERT into auth.users (Trigger triggers handle_new_user)
+        DB-->>DB: Profiles table updated automatically
+    end
+    
+    FE-->>User: Grant Dashboard Access (Update UI)
+```
+
+---
+
+## 5. Supabase & Cloudinary Media Upload Strategy
+
+In standard production web applications, raw image binary files are never stored inside standard database columns to avoid table bloat and high egress costs. Instead, Rater employs a **hybrid storage pipeline**:
+1. **Images** are uploaded directly to **Cloudinary** (CDN/asset storage).
+2. **Post metadata** and the optimized **secure Cloudinary image URL** are saved inside the **Supabase Database**.
+
+### Post Creation and Image Upload Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Designer
+    participant FE as Next.js Frontend (PostForm.tsx)
+    participant Cloud as Cloudinary API
+    participant Supa as Supabase Database
+
+    User->>FE: Selects Image & Enters Metadata
+    FE->>FE: 1. Locally validate size (<5MB) and type (PNG/JPG)
+    FE->>FE: 2. Set button state to isLoading={true}
+    
+    %% Cloudinary Upload
+    Note over FE,Cloud: Phase 1: Upload Asset to CDN
+    FE->>Cloud: 3. POST raw file to Cloudinary Upload endpoint
+    Note right of FE: We can use signed uploads or an <br/>unsigned upload preset for client uploads.
+    Cloud->>Cloud: Optimize, compress, and host image
+    Cloud-->>FE: 4. Returns 200 OK with secure CDN URL <br/> (https://res.cloudinary.com/...)
+    
+    %% Supabase Save
+    Note over FE,Supa: Phase 2: Save Metadata in Database
+    FE->>Supa: 5. INSERT INTO posts {title, category, description, image_url: CDN_URL, avatar_id}
+    Supa->>Supa: Validate relationships and foreign keys
+    Supa-->>FE: 6. Returns 201 Created with saved Post row
+    
+    FE->>FE: 7. Trigger success screen and play Lottie animation
+    FE-->>User: Redirect to Feed
+```
+
+---
+
+## 6. How the Frontend Communicates with the Backend
+
+In production, the frontend handles real-time updates and listings by executing queries through the **Supabase Client Library**.
+
+### Example: Tracing Data Feed loading
+1. A user visits `/browse`.
+2. The page initializes `BrowseContent.tsx`, which queries:
+   ```typescript
+   const { posts, isLoading } = usePosts();
+   ```
+3. Inside `PostContext.tsx`, an asynchronous call triggers:
+   ```typescript
+   const fetchPosts = async () => {
+     const { data, error } = await supabase
+       .from('posts')
+       .select(`
+         *,
+         profiles (username, name, avatar_url, bg_color)
+       `)
+       .eq('is_deleted', false)
+       .order('created_at', { ascending: false });
+
+     if (data) setAllPosts(data);
+   };
+   ```
+4. Once fetched, the React state resolves, passing the records to `MasonryGrid.tsx` for responsive column rendering.
+
+---
+
+## 7. Realtime Synchronization Setup
+
+To maximize user engagement, we subscribe to database changes directly from the client. When a user is viewing a design under `/post/[id]`, review metrics should update in real-time as other users leave feedback.
+
+### Subscribing to PostgreSQL Changes
+```typescript
+useEffect(() => {
+  const channel = supabase
+    .channel(`live-post-reviews-${postId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'reviews', filter: `post_id=eq.${postId}` },
+      (payload) => {
+        // Optimistically merge reviews in context or increment review counter
+        console.log('Real-time review arrived:', payload.new);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [postId]);
+```
+
+---
+
+## 8. Best Practices, Security & Common Pitfalls
+
+### Security & Row Level Security (RLS)
+To prevent malicious actions (such as standard users modifying other users' posts via standard JavaScript console command executions), **RLS must be strictly enabled** on every database table.
+
+* **Enabling RLS**:
+  ```sql
+  alter table posts enable row level security;
+  ```
+* **Post Deletion / Update Policy**:
+  ```sql
+  create policy "Owners can update own posts"
+    on posts for update
+    using (auth.uid() = avatar_id);
+  ```
+
+### Common Pitfalls to Avoid in This Stack
+1. **Exposing Secrets**: Do NOT expose `CLOUDINARY_API_SECRET` or the `SUPABASE_SERVICE_ROLE_KEY` in frontend code. Frontend clients must ONLY use the public `SUPABASE_ANON_KEY` and unsigned Cloudinary upload presets.
+2. **Calculations in UI Render Cycles**: Avoid putting calculations (like mapping, filtering, or scoring reviews) inside heavy layout render loops. Offload calculations to database views (`post_metrics`) or memoized hooks (`useMemo`).
+3. **Not Revoking Object URLs**: When selecting files for preview in `PostForm.tsx` (using `URL.createObjectURL`), remember to revoke them using `URL.revokeObjectURL(previewUrl)` to avoid browser memory leaks.
+
+---
+
+## 9. Developer Checklist: Safe Modification Protocol
+
+When you begin writing backend integrations or adding features, always execute these checks:
+
+1. **Verify local models first**: Check that any new table column has a corresponding TypeScript type in `src/types/index.ts`.
+2. **Test Keep-Alive layout**: Ensure clicking into `/post/some-id` and returning to `/browse` keeps your masonry grid scrolled exactly where it was.
+3. **Preserve Fallbacks**: Keep the native loading skeletons and fallback placeholders intact during asynchronous transitions.
+
+Welcome to the team! If you have any questions or are ready to begin writing your first Supabase bridge, connect with a team lead or ping your pair-programming AI. Let's make Rater incredible!

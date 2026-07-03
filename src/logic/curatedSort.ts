@@ -13,7 +13,7 @@
  */
 
 import type { Post } from '../types';
-import { calculatePostMetrics } from './mockData';
+
 import { computeBadges } from './badgeUtils';
 
 const BUCKET_B_WINDOW_DAYS = 17; // Middle of 14-21 range
@@ -67,13 +67,7 @@ export async function curatedFreshnessSort(posts: Post[]): Promise<Post[]> {
   // 1. Compute badges for all posts (now async)
   const badgeMap = await computeBadges(posts);
 
-  // 2. Pre-calculate metrics for all posts (needed for Bucket B sorting)
-  // This avoids async sorting pitfalls
-  const metricsMap: Record<string, { review_count: number }> = {};
-  await Promise.all(posts.map(async post => {
-    const m = await calculatePostMetrics(post.id);
-    metricsMap[post.id] = { review_count: m.review_count };
-  }));
+
 
   // 3. Categorize into buckets
   const bucketA: Post[] = []; // Standout (Top Rated badge)
@@ -112,8 +106,8 @@ export async function curatedFreshnessSort(posts: Post[]): Promise<Post[]> {
     
     if (aDay === bDay) {
       // Slight engagement bonus (review count)
-      const aCount = metricsMap[a.id]?.review_count || 0;
-      const bCount = metricsMap[b.id]?.review_count || 0;
+      const aCount = a.post_metrics?.review_count || 0;
+      const bCount = b.post_metrics?.review_count || 0;
       return bCount - aCount;
     }
     

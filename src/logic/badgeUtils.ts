@@ -1,6 +1,7 @@
 import type { Post, Review, BadgeType } from '../types';
 export type { BadgeType };
-import { MOCK_AVATARS, getReviewsByPostId, calculatePostMetrics, MOCK_BADGES } from './mockData';
+import { supabase } from '../lib/supabaseClient';
+import { reviewService } from '../services/reviewService';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -33,9 +34,7 @@ function isPostWithinWindow(post: Post): boolean {
  * Returns true if the post's avatar is NOT blocked.
  */
 function isAvatarNotBlocked(post: Post): boolean {
-  const avatar = MOCK_AVATARS[post.avatar_id];
-  if (!avatar) return true;
-  return !avatar.is_blocked;
+  return !post.profiles?.is_blocked;
 }
 
 // ─── Eligibility ──────────────────────────────────────────────────────────────
@@ -49,14 +48,16 @@ function isAvatarNotBlocked(post: Post): boolean {
  * 5. Avatar is not blocked
  */
 async function isEligibleForBadge(post: Post): Promise<boolean> {
-  const metrics = await calculatePostMetrics(post.id);
+  const metrics = post.post_metrics;
   
+  if (!metrics) return false;
   if (!metrics.rating_unlocked) return false;
   if (metrics.review_count < MIN_REVIEWS_FOR_BADGE) return false;
   if (!isPostWithinWindow(post)) return false;
   
-  const reviews = await getReviewsByPostId(post.id);
-  if (!hasAllStructuredReviews(reviews)) return false;
+  const res = await reviewService.fetchReviewsByPostId(post.id);
+  if (!res.ok || !res.data) return false;
+  if (!hasAllStructuredReviews(res.data)) return false;
   
   if (!isAvatarNotBlocked(post)) return false;
   return true;
@@ -70,61 +71,60 @@ async function isEligibleForBadge(post: Post): Promise<boolean> {
 export async function computeBadges(posts: Post[]): Promise<Record<string, BadgeType>> {
   const finalBadges: Record<string, BadgeType> = {};
 
-  // 1. Identify current ranking-based Top 3
-  // Since we need to wait for each eligibility check, we use Promise.all
-  const eligibilityResults = await Promise.all(posts.map(post => isEligibleForBadge(post)));
-  const eligiblePosts = posts.filter((_, index) => eligibilityResults[index]);
+  try {
+    // 1. Fetch historical badges from database
+    const { data: dbBadges } = await supabase
+      .from('badges')
+      .select('*');
 
-  if (eligiblePosts.length > 0) {
-    // Rank them (async sort is tricky, so we compute all metrics first)
-    // For simplicity in mock, we sort them by resolution
-    // Note: In production, this would be a single SQL query: 
-    // SELECT * FROM posts ORDER BY average_rating DESC, review_count DESC LIMIT 3
-    
-    // 2. Rank them
-    // Pre-calculate metrics for all eligible posts to avoid async sorting hell
-    const metricsMap = await Promise.all(eligiblePosts.map(async p => ({
-        id: p.id,
-        m: await calculatePostMetrics(p.id)
-    })));
+    const historicalBadges = dbBadges || [];
 
-    const ranked = [...eligiblePosts].sort((a, b) => {
-        const mA = metricsMap.find(m => m.id === a.id)!.m;
-        const mB = metricsMap.find(m => m.id === b.id)!.m;
+    // 2. Identify current ranking-based Top 3
+    const eligibilityResults = await Promise.all(posts.map(post => isEligibleForBadge(post)));
+    const eligiblePosts = posts.filter((_, index) => eligibilityResults[index]);
+
+    if (eligiblePosts.length > 0) {
+      // 3. Rank them
+      const ranked = [...eligiblePosts].sort((a, b) => {
+        const mA = a.post_metrics!;
+        const mB = b.post_metrics!;
 
         if (mB.average_score !== mA.average_score) return mB.average_score - mA.average_score;
         if (mB.review_count !== mA.review_count) return mB.review_count - mA.review_count;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
+      });
 
-    const currentTopNIds = new Set(
+      const currentTopNIds = new Set(
         ranked.slice(0, MAX_TOP_RATED_BADGES).map(p => p.id)
-    );
+      );
 
-    // 2. Process historical badges from the store
-    MOCK_BADGES.forEach(record => {
+      // Process historical badges
+      historicalBadges.forEach(record => {
         const isStillActive = currentTopNIds.has(record.post_id);
         
         if (record.badge_type === 'top_rated_active' && !isStillActive) {
-        finalBadges[record.post_id] = 'top_rated_previous';
+          finalBadges[record.post_id] = 'top_rated_previous';
         } else {
-        finalBadges[record.post_id] = record.badge_type;
+          finalBadges[record.post_id] = record.badge_type as BadgeType;
         }
-    });
+      });
 
-    // 3. Apply active badges to current winners
-    currentTopNIds.forEach(id => {
+      // Apply active badges to current winners
+      currentTopNIds.forEach(id => {
         finalBadges[id] = 'top_rated_active';
-    });
-  } else {
-    // If no one is eligible today, historical active badges still transition to previous
-    MOCK_BADGES.forEach(record => {
+      });
+    } else {
+      // If no one is eligible today, historical active badges transition to previous
+      historicalBadges.forEach(record => {
         if (record.badge_type === 'top_rated_active') {
-             finalBadges[record.post_id] = 'top_rated_previous';
+          finalBadges[record.post_id] = 'top_rated_previous';
         } else {
-             finalBadges[record.post_id] = record.badge_type;
+          finalBadges[record.post_id] = record.badge_type as BadgeType;
         }
-    });
+      });
+    }
+  } catch (err) {
+    console.error('Error computing badges:', err);
   }
 
   return finalBadges;
@@ -133,5 +133,3 @@ export async function computeBadges(posts: Post[]): Promise<Record<string, Badge
 export function getBadgeForPost(postId: string, badgeMap: Record<string, BadgeType>): BadgeType {
   return badgeMap[postId] || null;
 }
-
-

@@ -7,8 +7,7 @@ import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
 import type { Post, Avatar } from '@/types';
-// TODO(backend): Replace mock data imports with Supabase queries
-import { MOCK_AVATARS, CATEGORIES, calculatePostMetrics } from '@/logic/mockData';
+import { CATEGORIES } from '@/logic/mockData';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { createSearchIndexes, searchPosts } from '@/logic/searchUtils';
 import { useBadges } from '@/hooks/useBadges';
@@ -29,7 +28,7 @@ export default function BrowseContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { currentAvatar } = useAuth();
+  const { currentAvatar, allAvatars } = useAuth();
   const { posts: allPosts } = usePosts();
 
 
@@ -53,14 +52,14 @@ export default function BrowseContent() {
 
   const selectedAvatar = useMemo(() => {
     if (!avatarId) return null;
-    return MOCK_AVATARS[avatarId] || null;
-  }, [avatarId]);
+    return allAvatars[avatarId] || null;
+  }, [avatarId, allAvatars]);
 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
 
   // Logic dependencies
-  const searchIndexes = useMemo(() => createSearchIndexes(allPosts, MOCK_AVATARS, CATEGORIES as any), [allPosts]);
+  const searchIndexes = useMemo(() => createSearchIndexes(allPosts, allAvatars, CATEGORIES as any), [allPosts, allAvatars]);
   const { badgeMap } = useBadges(allPosts);
   const { hotPostIds } = useHotPosts(allPosts);
 
@@ -133,26 +132,18 @@ export default function BrowseContent() {
 
             // 3. Sorting & Metrics filter
             if (sortBy === 'highest_rated') {
-                const metricsMap = await Promise.all(posts.map(async p => ({
-                    id: p.id,
-                    m: await calculatePostMetrics(p.id)
-                })));
-                posts = posts.filter(p => metricsMap.find(m => m.id === p.id)?.m.rating_unlocked);
+                posts = posts.filter(p => p.post_metrics?.rating_unlocked);
                 
-                posts.sort((a,b) => {
-                    const mA = metricsMap.find(m => m.id === a.id)!.m;
-                    const mB = metricsMap.find(m => m.id === b.id)!.m;
-                    return mB.average_score - mA.average_score;
+                posts.sort((a, b) => {
+                    const scoreA = a.post_metrics?.average_score ?? 0;
+                    const scoreB = b.post_metrics?.average_score ?? 0;
+                    return scoreB - scoreA;
                 });
             } else if (sortBy === 'most_reviewed') {
-                const metricsMap = await Promise.all(posts.map(async p => ({
-                    id: p.id,
-                    m: await calculatePostMetrics(p.id)
-                })));
-                posts.sort((a,b) => {
-                    const mA = metricsMap.find(m => m.id === a.id)!.m;
-                    const mB = metricsMap.find(m => m.id === b.id)!.m;
-                    return mB.review_count - mA.review_count;
+                posts.sort((a, b) => {
+                    const countA = a.post_metrics?.review_count ?? 0;
+                    const countB = b.post_metrics?.review_count ?? 0;
+                    return countB - countA;
                 });
             } else if (sortBy === 'newest') {
                 posts.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());

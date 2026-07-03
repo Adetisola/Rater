@@ -2,10 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { Avatar } from '@/types';
-// TODO(backend): Replace MOCK_AVATARS with Supabase auth + avatars table.
-// All localStorage persistence below (rater_session_avatars, rater_mock_overrides,
-// rater_avatar_id) should be replaced with Supabase session management.
-import { MOCK_AVATARS } from '../logic/mockData';
+import { supabase } from '../lib/supabaseClient';
+import { authService } from '../services/authService';
 import { generateUsernameFromName } from '../utils/usernameUtils';
 
 interface AuthContextType {
@@ -23,134 +21,147 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentAvatar, setCurrentAvatar] = useState<Avatar | null>(null);
-  const [sessionAvatars, setSessionAvatars] = useState<Record<string, Avatar>>({});
-  const [mockOverrides, setMockOverrides] = useState<Record<string, Avatar>>({});
+  const [dbAvatars, setDbAvatars] = useState<Record<string, Avatar>>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Source of truth for designers in the app
-  const allAvatars = useMemo(() => ({
-    ...MOCK_AVATARS,
-    ...mockOverrides,
-    ...sessionAvatars
-  }), [mockOverrides, sessionAvatars]);
-
-  // Sync with LocalStorage
+  // Listen to Supabase Auth state changes
   useEffect(() => {
-    const savedSession = localStorage.getItem('rater_session_avatars');
-    const savedOverrides = localStorage.getItem('rater_mock_overrides');
-    const savedAvatarId = localStorage.getItem('rater_avatar_id');
+    let isMounted = true;
 
-    if (savedSession) setSessionAvatars(JSON.parse(savedSession));
-    if (savedOverrides) setMockOverrides(JSON.parse(savedOverrides));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        // Fetch user profile from public.profiles
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (isMounted) {
+          if (profile) {
+            setCurrentAvatar(profile as Avatar);
+          } else {
+            // Fallback to user metadata if profile not created yet by trigger
+            const metadata = session.user.user_metadata;
+            setCurrentAvatar({
+              id: session.user.id,
+              username: metadata.username || 'user',
+              email: session.user.email || '',
+              name: metadata.name || 'New Member',
+              role: metadata.role || null,
+              avatar_url: metadata.avatar_url || undefined,
+              bg_color: metadata.bg_color || '#FEC312',
+              is_blocked: false,
+              passkey: '',
+              created_at: session.user.created_at,
+            });
+          }
+        }
+      } else {
+        if (isMounted) {
+          setCurrentAvatar(null);
+        }
+      }
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    });
 
-    if (savedAvatarId) {
-       // We'll let the user effect handle the actual resolution after states are set
-    }
-    setIsLoading(false);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Resolve current avatar after storage loads
+  // Fetch all profiles and subscribe to live changes
   useEffect(() => {
-    if (isLoading) return;
-    const savedAvatarId = localStorage.getItem('rater_avatar_id');
-    if (savedAvatarId && allAvatars[savedAvatarId]) {
-      setCurrentAvatar(allAvatars[savedAvatarId]);
-    }
-  }, [allAvatars, isLoading]);
+    let isMounted = true;
 
-  // Persist edits
-  useEffect(() => {
-    if (Object.keys(sessionAvatars).length > 0) {
-      localStorage.setItem('rater_session_avatars', JSON.stringify(sessionAvatars));
-    }
-    if (Object.keys(mockOverrides).length > 0) {
-      localStorage.setItem('rater_mock_overrides', JSON.stringify(mockOverrides));
-    }
-  }, [sessionAvatars, mockOverrides]);
+    const fetchAllProfiles = async () => {
+      const { data } = await supabase.from('profiles').select('*');
+      if (isMounted && data) {
+        const avatarsMap = data.reduce((acc: Record<string, Avatar>, profile: any) => {
+          acc[profile.id] = profile as Avatar;
+          return acc;
+        }, {});
+        setDbAvatars(avatarsMap);
+      }
+    };
+    
+    fetchAllProfiles();
+
+    const channel = supabase
+      .channel('live-profiles')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' },
+        (payload) => {
+          if (!isMounted) return;
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            const updated = payload.new as Avatar;
+            setDbAvatars(prev => ({
+              ...prev,
+              [updated.id]: updated
+            }));
+            
+            // Also update currentAvatar if it's the current user's profile
+            setCurrentAvatar(current => {
+              if (current && current.id === updated.id) {
+                return updated;
+              }
+              return current;
+            });
+          } else if (payload.eventType === 'DELETE') {
+            setDbAvatars(prev => {
+              const next = { ...prev };
+              delete next[(payload.old as any).id];
+              return next;
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const login = useCallback(async (identifier: string, passkey: string): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
+    const res = await authService.signIn(identifier, passkey);
+    return res.ok;
+  }, []);
 
-    // Normalize: strip @, extract from profile URLs, trim, lowercase
-    let normalized = identifier.trim().toLowerCase();
-    
-    // Handle pasted profile URLs (e.g. "rater.app/@timmycodes")
-    const urlMatch = normalized.match(/\/@([a-z0-9_]+)/);
-    if (urlMatch) {
-      normalized = urlMatch[1];
-    } else {
-      // Strip leading @
-      normalized = normalized.replace(/^@/, '');
-    }
-
-    // Lookup by username OR email
-    const avatar = Object.values(allAvatars).find(
-      a => (a.username.toLowerCase() === normalized || a.email?.toLowerCase() === normalized) && a.passkey === passkey
-    );
-
-    if (avatar) {
-      if (avatar.is_blocked) return false;
-      setCurrentAvatar(avatar);
-      localStorage.setItem('rater_avatar_id', avatar.id);
-      return true;
-    }
-    return false;
-  }, [allAvatars]);
-
-  const signup = useCallback(async (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string): Promise<{ ok: boolean; error?: string }> => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const existingUsernames = Object.values(allAvatars).map(a => a.username.toLowerCase());
-    const existingEmails = Object.values(allAvatars).map(a => a.email?.toLowerCase()).filter(Boolean);
-    
-    const normalizedEmail = email.trim().toLowerCase();
-
-    if (existingEmails.includes(normalizedEmail)) {
-      return { ok: false, error: 'Email already in use' };
-    }
-
-    // Use provided username or generate one based on name.
-    // If a provided username is already taken (race condition), use the utility to generate a unique variant.
+  const signup = useCallback(async (
+    name: string,
+    email: string,
+    passkey: string,
+    avatar_url?: string,
+    username?: string,
+    role?: string
+  ): Promise<{ ok: boolean; error?: string }> => {
+    const existingUsernames = Object.values(dbAvatars).map(a => a.username.toLowerCase());
     let finalUsername = username?.trim() || generateUsernameFromName(name, existingUsernames);
     if (username && existingUsernames.includes(finalUsername.toLowerCase())) {
-        finalUsername = generateUsernameFromName(finalUsername, existingUsernames);
+      finalUsername = generateUsernameFromName(finalUsername, existingUsernames);
     }
 
-    const newId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-    
-    const newAvatar: Avatar = {
-      id: newId,
-      username: finalUsername,
-      email: normalizedEmail,
-      name: name.trim(),
-      role: role || null,
-      passkey,
-      avatar_url,
-      bg_color: ['#FEC312', '#7C3BED', '#3B82F6', '#10B981', '#F59E0B'][Math.floor(Math.random() * 5)],
-      is_blocked: false,
-      created_at: new Date().toISOString(),
-      username_last_changed_at: null
-    };
-
-    setSessionAvatars(prev => ({ ...prev, [newId]: newAvatar }));
-    setCurrentAvatar(newAvatar);
-    localStorage.setItem('rater_avatar_id', newId);
+    const res = await authService.signUp(name, email, passkey, finalUsername, role, avatar_url);
+    if (!res.ok) {
+      return { ok: false, error: res.error || 'Failed to sign up.' };
+    }
     return { ok: true };
-  }, [allAvatars]);
+  }, [dbAvatars]);
 
   const checkUsernameAvailable = useCallback(async (username: string, excludeId: string): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    const normalized = username.toLowerCase().trim();
-    return !Object.values(allAvatars).some(
-      a => a.id !== excludeId && a.username.toLowerCase() === normalized
-    );
-  }, [allAvatars]);
+    return authService.checkUsernameAvailable(username, excludeId);
+  }, []);
 
   const updateProfile = useCallback(async (data: Partial<Avatar>): Promise<{ ok: true } | { ok: false; error: string }> => {
     if (!currentAvatar) return { ok: false, error: 'Not authenticated.' };
-    await new Promise(resolve => setTimeout(resolve, 500));
 
-    const updatedAvatar = { ...currentAvatar, ...data };
+    const updates: Partial<Avatar> = {};
 
     // --- Username change enforcement ---
     if (data.username !== undefined) {
@@ -158,13 +169,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const oldUsername = currentAvatar.username.toLowerCase();
 
       if (newUsername !== oldUsername) {
-        // 1. Uniqueness check (case-insensitive, server-side)
-        const isTaken = Object.values(allAvatars).some(
-          a => a.id !== currentAvatar.id && a.username.toLowerCase() === newUsername
-        );
-        if (isTaken) return { ok: false, error: 'Username already taken.' };
+        // 1. Uniqueness check
+        const isAvailable = await authService.checkUsernameAvailable(newUsername, currentAvatar.id);
+        if (!isAvailable) return { ok: false, error: 'Username already taken.' };
 
-        // 2. Cooldown enforcement (only if not a claim/skip from onboarding)
+        // 2. Cooldown enforcement
         const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
         if (currentAvatar.username_last_changed_at && currentAvatar.username_last_changed_at !== '1') {
           const lastChanged = new Date(currentAvatar.username_last_changed_at).getTime();
@@ -176,40 +185,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 3. Push old username to history
-        updatedAvatar.previous_usernames = [
+        updates.previous_usernames = [
           ...(currentAvatar.previous_usernames ?? []),
           currentAvatar.username,
         ];
-        updatedAvatar.username = newUsername;
-        // set to ISO string unless we are explicitly setting a "claim" flag value (like '1')
-        updatedAvatar.username_last_changed_at = data.username_last_changed_at || new Date().toISOString();
+        updates.username = newUsername;
+        updates.username_last_changed_at = data.username_last_changed_at || new Date().toISOString();
       }
     } else if (data.username_last_changed_at !== undefined) {
-      updatedAvatar.username_last_changed_at = data.username_last_changed_at;
+      updates.username_last_changed_at = data.username_last_changed_at;
     }
 
-    // Trim display name
     if (data.name !== undefined) {
-      updatedAvatar.name = data.name.trim().slice(0, 50);
+      updates.name = data.name.trim().slice(0, 50);
+    }
+    if (data.bio !== undefined) {
+      updates.bio = data.bio;
+    }
+    if (data.role !== undefined) {
+      updates.role = data.role;
+    }
+    if (data.avatar_url !== undefined) {
+      updates.avatar_url = data.avatar_url;
+    }
+    if (data.bg_color !== undefined) {
+      updates.bg_color = data.bg_color;
+    }
+    if (data.social_links !== undefined) {
+      updates.social_links = data.social_links;
     }
 
-    // Update local context state
-    setCurrentAvatar(updatedAvatar);
-
-    // Persist changes based on origin
-    if (updatedAvatar.id.startsWith('user_')) {
-      setSessionAvatars(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
-    } else {
-      setMockOverrides(prev => ({ ...prev, [updatedAvatar.id]: updatedAvatar }));
+    const res = await authService.updateProfile(currentAvatar.id, updates);
+    if (!res.ok) {
+      return { ok: false, error: res.error || 'Failed to update profile.' };
     }
 
     return { ok: true };
-  }, [currentAvatar, allAvatars]);
+  }, [currentAvatar]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await authService.signOut();
     setCurrentAvatar(null);
-    localStorage.removeItem('rater_avatar_id');
   }, []);
+
+  const allAvatars = useMemo(() => dbAvatars, [dbAvatars]);
 
   return (
     <AuthContext.Provider value={{ currentAvatar, allAvatars, login, signup, updateProfile, checkUsernameAvailable, logout, isLoading }}>
@@ -225,4 +244,3 @@ export function useAuth() {
   }
   return context;
 }
-

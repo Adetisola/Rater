@@ -9,7 +9,7 @@ import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '@/types';
-import { MOCK_POSTS } from '../logic/mockData';
+import { usePosts } from '../context/PostContext';
 import { useAuth } from '../context/AuthContext';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useNavigationStore } from '../store/navigationStore';
@@ -60,6 +60,7 @@ export function MobileSearchOverlay({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { currentAvatar, allAvatars } = useAuth();
+  const { posts: allPosts } = usePosts();
   
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
 
@@ -348,7 +349,7 @@ export function MobileSearchOverlay({
                   }
 
                   if (item.type === 'post') {
-                    const postObj = MOCK_POSTS.find(p => p.id === item.postId);
+                    const postObj = allPosts.find(p => p.id === item.postId);
                     if (!postObj) return null;
                     return (
                       <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">

@@ -178,7 +178,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                                 src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
                                                 loop
                                                 autoplay
-                                                dotLottieRefCallback={(dotLottie) => {
+                                                dotLottieRefCallback={(dotLottie: any) => {
                                                     if (dotLottie) {
                                                         dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
                                                     }
@@ -282,7 +282,7 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                                     src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
                                                     loop
                                                     autoplay
-                                                    dotLottieRefCallback={(dotLottie) => {
+                                                    dotLottieRefCallback={(dotLottie: any) => {
                                                         if (dotLottie) {
                                                             dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
                                                         }

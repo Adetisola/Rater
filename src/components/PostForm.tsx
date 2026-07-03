@@ -16,6 +16,8 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AmbientSuccessText } from './AmbientSuccessText';
+import { postService } from '../services/postService';
+import { cloudinaryService } from '../services/cloudinaryService';
 
 interface PostFormProps {
   initialPost?: Post | null;
@@ -247,30 +249,48 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     setIsSubmitting(true);
 
     try {
+      let imageUrl = imagePreview || '';
+      
+      // Upload image to Cloudinary if a new file is uploaded
+      if (image) {
+        const uploadRes = await cloudinaryService.uploadImage(image);
+        if (!uploadRes.ok || !uploadRes.data) {
+          alert(`Image upload failed: ${uploadRes.error}`);
+          setIsSubmitting(false);
+          return;
+        }
+        imageUrl = uploadRes.data;
+      }
+
       if (isEditing && initialPost) {
         const success = await updatePost(initialPost.id, {
           title,
           category: category as Category,
           description,
-          image_url: imagePreview || initialPost.image_url // In a real app, upload image first
+          image_url: imageUrl
         });
         if (success) {
           setIsSuccess(true);
         }
       } else {
-        // Create new post
-        const newPost: Post = {
-          id: `post_${Math.random().toString(36).substr(2, 9)}`,
+        // Create new post in Supabase
+        const newPostData = {
+          id: crypto.randomUUID(),
           title,
           description,
           category: category as Category,
-          image_url: imagePreview || '',
+          image_url: imageUrl,
           avatar_id: currentAvatar.id,
-          created_at: new Date().toISOString()
         };
-        addPost(newPost);
-        localStorage.removeItem('rater_post_form_draft');
-        setIsSuccess(true);
+
+        const res = await postService.createPost(newPostData);
+        if (res.ok && res.data) {
+          addPost(res.data);
+          localStorage.removeItem('rater_post_form_draft');
+          setIsSuccess(true);
+        } else {
+          alert(`Failed to create post: ${res.error}`);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -312,7 +332,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             src="https://lottie.host/a059d513-00d2-44a4-82a1-3d15c5bad2fc/OWXtqqeGsX.lottie"
             loop={false}
             autoplay
-            dotLottieRefCallback={(instance) => {
+            dotLottieRefCallback={(instance: any) => {
               setDotLottie(instance);
             }}
           />
