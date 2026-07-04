@@ -2,6 +2,7 @@ import type { NextConfig } from 'next';
 import path from 'path';
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['10.105.116.29'],
   turbopack: {
     root: path.resolve(process.cwd()),
   },

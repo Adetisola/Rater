@@ -10,8 +10,9 @@
  * 4. Not Creator + No Session → null (tab is hidden by parent)
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
 import type { PulseSession, PulseType, PulseDuration } from '@/types';
 import { PULSE_DURATION_LABELS } from '@/types';
 import {
@@ -55,8 +56,53 @@ function AnimatedPulseIcon() {
 function TactileSlider({ min, max, step, value, onChange }: { min: number, max: number, step: number, value: number, onChange: (val: number) => void }) {
   const percentage = ((value - min) / (max - min)) * 100;
 
+  // Track dragging/hover state
+  const [isHovered, setIsHovered] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const isActive = isHovered || isDragging;
+
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const lastValRef = useRef(value);
+
+  // GSAP Inertial Physics
+  useEffect(() => {
+    const delta = value - lastValRef.current;
+    lastValRef.current = value;
+
+    if (isActive && bubbleRef.current && delta !== 0) {
+      // Sensitive tilt: highly exaggerated on small movements
+      const maxTilt = 50;
+      const rawTilt = delta * -40; // Super exaggerated tilt multiplier
+      const tilt = Math.max(-maxTilt, Math.min(maxTilt, rawTilt));
+
+      // Kill any active tweens on the bubble to prevent conflicts
+      gsap.killTweensOf(bubbleRef.current);
+
+      gsap.to(bubbleRef.current, {
+        rotate: tilt,
+        duration: 0.15,
+        overwrite: "auto",
+        onComplete: () => {
+          // Bouncy, rubber-band snap back to 0
+          gsap.to(bubbleRef.current, {
+            rotate: 0,
+            duration: 0.6,
+            ease: "elastic.out(1, 0.4)"
+          });
+        }
+      });
+    }
+  }, [value, isActive]);
+
   return (
-    <div className="relative w-full h-8 flex items-center group">
+    <div
+      className="relative w-full h-8 flex items-center group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onPointerDown={() => setIsDragging(true)}
+      onPointerUp={() => setIsDragging(false)}
+      onPointerCancel={() => setIsDragging(false)}
+    >
       {/* The visible track */}
       <div className="absolute left-0 right-0 h-1.5 bg-gray-100 rounded-full overflow-hidden transition-colors group-hover:bg-gray-200">
         <motion.div
@@ -67,14 +113,41 @@ function TactileSlider({ min, max, step, value, onChange }: { min: number, max: 
         />
       </div>
 
-      {/* The visible thumb */}
+      {/* The visible thumb and bubble container */}
       <motion.div
-        className="absolute w-6 h-6 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.1)] border border-gray-100 pointer-events-none flex items-center justify-center group-active:scale-110 group-active:shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-shadow duration-200"
+        className="absolute w-6 h-6 rounded-full flex items-center justify-center pointer-events-none z-10"
         initial={false}
         animate={{ left: `calc(${percentage}% - 12px)` }}
         transition={{ type: "spring", stiffness: 400, damping: 30 }}
       >
-        <div className="w-1.5 h-1.5 rounded-full bg-[#FEC312]" />
+        {/* The thumb */}
+        <div className="w-full h-full bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center group-active:scale-110 group-active:shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-shadow duration-200">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#FEC312]" />
+        </div>
+
+        {/* The Bubble */}
+        <AnimatePresence>
+          {isActive && (
+            <motion.div
+              ref={bubbleRef}
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 10 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              style={{ filter: 'drop-shadow(0px 4px 10px rgba(0,0,0,0.1))' }}
+              className="absolute -top-[3.25rem] flex flex-col items-center pointer-events-none origin-bottom"
+            >
+              {/* Main Bubble Body */}
+              <div className="bg-white px-3 py-1.5 rounded-[12px] flex items-center justify-center min-w-[36px]">
+                <span className="text-sm font-bold text-black leading-none">{value}</span>
+              </div>
+              {/* Seamless curved pointing tail */}
+              <svg width="14" height="7" viewBox="0 0 14 7" fill="none" className="text-white mt-[-1px]">
+                <path d="M0 0 H14 L8.5 5.5 Q 7 7 5.5 5.5 L0 0Z" fill="currentColor" />
+              </svg>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* The invisible native slider for perfect interaction */}
@@ -85,7 +158,7 @@ function TactileSlider({ min, max, step, value, onChange }: { min: number, max: 
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-grab active:cursor-grabbing touch-none"
+        className="absolute inset-0 w-full h-full opacity-0 cursor-grab active:cursor-grabbing touch-none z-20"
       />
     </div>
   );
@@ -489,9 +562,6 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
             </div>
           ) : (
             <>
-              <div className="text-center">
-                <span className="text-xl font-medium text-black">{sliderValue}</span>
-              </div>
               <input
                 type="range"
                 min={session.slider_min ?? 1}

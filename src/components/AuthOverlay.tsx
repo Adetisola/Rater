@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { LogIn, UserPlus } from 'lucide-react';
 import { AccessAvatarForm } from './AccessAvatarForm';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
+import { TermsOfServiceModal } from './TermsOfServiceModal';
 
 interface AuthOverlayProps {
   onClose: () => void;
@@ -17,6 +18,7 @@ interface AuthOverlayProps {
 
 export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redirectOnSuccess = true }: AuthOverlayProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
+  const [showTerms, setShowTerms] = useState(false);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
@@ -124,6 +126,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                   <CreateAvatarOverlay
                     isEmbedded
                     onClose={onClose}
+                    onShowTerms={() => setShowTerms(true)}
                     onCreate={async () => {
                       onClose();
                       if (redirectOnSuccess) {
@@ -138,7 +141,21 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
             )}
           </AnimatePresence>
         </div>
+
+        {/* Footer Link */}
+        {activeTab === 'login' && (
+          <div className="p-4 text-center border-t border-gray-100 shrink-0">
+            <button 
+              onClick={() => setShowTerms(true)} 
+              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-wider font-medium"
+            >
+              Terms of Service
+            </button>
+          </div>
+        )}
       </div>
+      
+      <TermsOfServiceModal isOpen={showTerms} onClose={() => setShowTerms(false)} />
     </div>,
     document.body
   );

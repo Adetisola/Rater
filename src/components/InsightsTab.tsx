@@ -17,7 +17,7 @@ import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
 import type { Review, Category } from '@/types';
-import { TrendingUp, TrendingDown, Sparkles, MessageCircle, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Sparkles, MessageCircle, RefreshCw, Loader2, AlertCircle, Info } from 'lucide-react';
 import { getReviewMode } from '@/config/reviewModes';
 import { getCachedInsight, setCachedInsight, type CachedInsight } from '@/utils/insightCache';
 import { Button } from './ui/Button';
@@ -31,6 +31,7 @@ interface CriterionInsight {
   icon: React.ReactNode;
   average: number;
   sentiment: 'positive' | 'neutral' | 'needs_work';
+  info: { question: string, points: string[] };
 }
 
 function analyzeCriteria(reviews: Review[], category?: Category): {
@@ -67,6 +68,7 @@ function analyzeCriteria(reviews: Review[], category?: Category): {
       icon: <img src={c.iconUrl} alt={`${c.label} icon`} className="w-6 h-6 object-contain" />,
       average: avg,
       sentiment: getSentiment(avg),
+      info: { question: c.question, points: c.points },
     };
   });
 
@@ -87,6 +89,63 @@ function analyzeCriteria(reviews: Review[], category?: Category): {
     : 0;
 
   return { criteria, overallAverage };
+}
+
+function InsightCriterionLabel({ children, info }: { children: React.ReactNode, info: { question: string, points: string[] } }) {
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsTooltipVisible(prev => !prev);
+  };
+
+  useEffect(() => {
+    if (!isTooltipVisible) return;
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsTooltipVisible(false);
+      }
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }, 10);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isTooltipVisible]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative group cursor-help w-full"
+      onClick={handleTap}
+    >
+      {children}
+
+      {/* Tooltip */}
+      <div className={`absolute bottom-full left-0 min-[769px]:left-0 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+        ${isTooltipVisible
+          ? 'opacity-100 visible translate-y-0'
+          : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
+        }`}
+      >
+        <p className="font-semibold mb-2.5 leading-relaxed whitespace-normal">{info.question}</p>
+        <ul className="space-y-1.5 text-gray-700">
+          {info.points.map(point => (
+            <li key={point} className="flex items-start gap-2 whitespace-normal text-left">
+              <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+              <span className="flex-1">{point}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
 }
 
 // ─── LLM Synthesis Hook ─────────────────────────────────────────────────────
@@ -391,31 +450,33 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
       {/* Per-Criterion Breakdown */}
       <div className="space-y-2.5">
         {criteria.map((c) => (
-          <div key={c.label} className="flex items-center gap-3">
-            <div className="w-8 flex items-center justify-center shrink-0">
-              {c.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-medium text-black">{c.label}</span>
-                <span className="text-sm font-semibold text-black tabular-nums">{c.average}</span>
+          <InsightCriterionLabel key={c.label} info={c.info}>
+            <div className="flex items-center gap-3 w-full">
+              <div className="w-8 flex items-center justify-center shrink-0">
+                {c.icon}
               </div>
-              {/* Progress bar */}
-              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${(c.average / 5) * 100}%` }}
-                  transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className={`h-full rounded-full ${c.sentiment === 'positive'
-                    ? 'bg-emerald-400'
-                    : c.sentiment === 'needs_work'
-                      ? 'bg-amber-400'
-                      : 'bg-gray-300'
-                    }`}
-                />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-black">{c.label}</span>
+                  <span className="text-sm font-semibold text-black tabular-nums">{c.average}</span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(c.average / 5) * 100}%` }}
+                    transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    className={`h-full rounded-full ${c.sentiment === 'positive'
+                      ? 'bg-emerald-400'
+                      : c.sentiment === 'needs_work'
+                        ? 'bg-amber-400'
+                        : 'bg-gray-300'
+                      }`}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </InsightCriterionLabel>
         ))}
       </div>
 
@@ -515,12 +576,31 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                   </div>
                 )}
 
-                {/* Model indicator */}
-                {model && (
-                  <p className="text-[10px] text-gray-400 text-right pt-2 pb-1">
-                    Powered by {model}
-                  </p>
-                )}
+                {/* Footer info: Sources & Model indicator */}
+                <div className="flex justify-between items-center pt-2 pb-1 relative">
+                  <div className="group flex items-center">
+                    <button
+                      type="button"
+                      className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
+                    >
+                      <Info className="w-3 h-3" />
+                      Sources
+                    </button>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-0 mb-3 w-52 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
+                      <p className="leading-relaxed">
+                        Synthesized from <strong className="font-semibold">{reviews.length}</strong> user reviews, analyzing ratings and written feedback.
+                      </p>
+                    </div>
+                  </div>
+
+                  {model && (
+                    <p className="text-[10px] text-gray-400">
+                      Powered by {model}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Bottom fade mask */}

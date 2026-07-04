@@ -21,6 +21,7 @@ interface CreateAvatarOverlayProps {
   isEmbedded?: boolean;
   prefillName?: string;
   onLogin?: () => void;
+  onShowTerms?: () => void;
 }
 
 /**
@@ -40,12 +41,13 @@ function validateDisplayName(name: string): string | null {
  * Handles image upload with simulated latency, passkey validation, unique username claiming, 
  * and role selection. It integrates with AuthContext for the final signup step.
  */
-export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin }: CreateAvatarOverlayProps) {
+export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin, onShowTerms }: CreateAvatarOverlayProps) {
   const [name, setName] = useState(prefillName || '');
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
   const [email, setEmail] = useState('');
   const [showPasskey, setShowPasskey] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -447,9 +449,22 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
               </div>
 
+              <div className="flex items-center gap-2.5 pt-2 px-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#FEC312] focus:ring-[#FEC312] accent-[#FEC312] cursor-pointer"
+                />
+                <label htmlFor="terms" className="text-[13px] text-gray-500 cursor-pointer select-none">
+                  I agree to the <button type="button" onClick={(e) => { e.preventDefault(); onShowTerms?.(); }} className="font-semibold text-gray-700 hover:text-black hover:underline focus:outline-none">Terms of Service</button>
+                </label>
+              </div>
+
               <div className="pt-4 flex items-center justify-center gap-6 w-full">
                 <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
-                <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
+                <Button variant='outline' type="submit" disabled={!termsAccepted || !validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
                   Continue
                 </Button>
               </div>
