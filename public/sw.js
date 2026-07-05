@@ -1,10 +1,12 @@
-const CACHE_NAME = 'rater-cache-v1';
+const CACHE_NAME = 'rater-cache-v2';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/icons/logo-rater-hover.svg',
-  '/icons/logo-rater.svg'
+  '/icons/rater-logo-black-bg.svg',
+  '/icons/rater-logo-transparent-bg-stroked.svg',
+  '/icons/rater-logo-white-bg-stroked.svg',
+  '/icons/rater-logo-white-bg.svg'
 ];
 
 self.addEventListener('install', (event) => {

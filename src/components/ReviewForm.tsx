@@ -85,7 +85,7 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
 
       {/* Tooltip - visible on hover (desktop) or tap (mobile) */}
       {/* On mobile: left-aligned to prevent overflow. On desktop: centered */}
-      <div className={`absolute bottom-full left-0 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+      <div className={`absolute bottom-full left-0 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
         ${isTooltipVisible
           ? 'opacity-100 visible translate-y-0'
           : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
@@ -434,7 +434,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
                     }}
                     onFocus={() => setIsNameFocused(true)}
                     onBlur={() => setIsNameFocused(false)}
-                    className={`h-12 rounded-xl transition-all focus-visible:border-[#FEC312] ${showNameError ? 'border-red-500 bg-red-50/30' : ''
+                    className={`h-12 rounded-xl transition-all focus-visible:border-primary ${showNameError ? 'border-red-500 bg-red-50/30' : ''
                       }`}
                   />
                   {showNameError && (
@@ -461,7 +461,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
                 }
               }}
               maxLength={200}
-              className="min-h-[120px] rounded-xl resize-none p-4 pb-8 focus-visible:border-[#FEC312]"
+              className="min-h-[120px] rounded-xl resize-none p-4 pb-8 focus-visible:border-primary"
             />
             <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${comment.length >= 200 ? 'text-red-500' : 'text-gray-400'
               }`}>
@@ -480,7 +480,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
           disabled={!isComplete || isSubmitting}
           isLoading={isSubmitting}
         >
-          <div className="relative w-[3.5rem] h-[1.3em] overflow-hidden flex justify-center items-center pointer-events-none select-none">
+          <div className="relative w-14 h-[1.3em] overflow-hidden flex justify-center items-center pointer-events-none select-none">
             {['R', 'a', 't', 'e'].map((char, index) => (
               <span
                 key={index}

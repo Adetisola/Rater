@@ -36,7 +36,7 @@ function AnimatedPulseIcon() {
       {[1, 2, 3].map((i) => (
         <motion.div
           key={i}
-          className="w-1 bg-[#FEC312] rounded-full"
+          className="w-1 bg-primary rounded-full"
           animate={{
             height: ["40%", "100%", "40%"]
           }}
@@ -106,7 +106,7 @@ function TactileSlider({ min, max, step, value, onChange }: { min: number, max: 
       {/* The visible track */}
       <div className="absolute left-0 right-0 h-1.5 bg-gray-100 rounded-full overflow-hidden transition-colors group-hover:bg-gray-200">
         <motion.div
-          className="absolute top-0 left-0 bottom-0 bg-[#FEC312]"
+          className="absolute top-0 left-0 bottom-0 bg-primary"
           initial={false}
           animate={{ width: `${percentage}%` }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
@@ -122,7 +122,7 @@ function TactileSlider({ min, max, step, value, onChange }: { min: number, max: 
       >
         {/* The thumb */}
         <div className="w-full h-full bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center group-active:scale-110 group-active:shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-shadow duration-200">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#FEC312]" />
+          <div className="w-1.5 h-1.5 rounded-full bg-primary" />
         </div>
 
         {/* The Bubble */}
@@ -135,14 +135,14 @@ function TactileSlider({ min, max, step, value, onChange }: { min: number, max: 
               exit={{ opacity: 0, scale: 0.8, y: 10 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
               style={{ filter: 'drop-shadow(0px 4px 10px rgba(0,0,0,0.1))' }}
-              className="absolute -top-[3.25rem] flex flex-col items-center pointer-events-none origin-bottom"
+              className="absolute -top-13 flex flex-col items-center pointer-events-none origin-bottom"
             >
               {/* Main Bubble Body */}
               <div className="bg-white px-3 py-1.5 rounded-[12px] flex items-center justify-center min-w-[36px]">
                 <span className="text-sm font-bold text-black leading-none">{value}</span>
               </div>
               {/* Seamless curved pointing tail */}
-              <svg width="14" height="7" viewBox="0 0 14 7" fill="none" className="text-white mt-[-1px]">
+              <svg width="14" height="7" viewBox="0 0 14 7" fill="none" className="text-white -mt-px">
                 <path d="M0 0 H14 L8.5 5.5 Q 7 7 5.5 5.5 L0 0Z" fill="currentColor" />
               </svg>
             </motion.div>
@@ -240,7 +240,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
       <div className="text-center pb-2 pt-2">
-        <div className="w-12 h-12 rounded-full bg-[#FEC312]/10 flex items-center justify-center mx-auto mb-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <AnimatedPulseIcon />
         </div>
         <h4 className="font-semibold text-lg text-black tracking-tight">Launch a Pulse</h4>
@@ -256,7 +256,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
           onChange={(e) => setQuestion(e.target.value)}
           placeholder="What do you think about..."
           maxLength={120}
-          className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm text-black placeholder:text-gray-300 focus:outline-none focus:border-[#FEC312] transition-colors bg-white"
+          className="w-full h-11 px-4 rounded-xl border border-gray-200 text-sm text-black placeholder:text-gray-300 focus:outline-none focus:border-primary transition-colors bg-white"
         />
         <div className="text-right mt-1">
           <span className={`text-[10px] font-medium ${question.length >= 120 ? 'text-red-400' : 'text-gray-300'}`}>{question.length}/120</span>
@@ -276,7 +276,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
                 if (type === 'choice' && options.length < 2) setOptions(['', '']);
               }}
               className={`flex-1 py-2.5 px-2 rounded-full text-[12px] font-medium border transition-all duration-150 flex items-center justify-center gap-2 ${pulseType === type
-                ? 'bg-[#FEC312]/10 text-black border-[#FEC312]'
+                ? 'bg-primary/10 text-black border-primary'
                 : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                 }`}
             >
@@ -300,7 +300,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
                 type="checkbox"
                 checked={allowMultiple}
                 onChange={(e) => setAllowMultiple(e.target.checked)}
-                className="w-3 h-3 accent-[#FEC312] cursor-pointer"
+                className="w-3 h-3 accent-primary cursor-pointer"
               />
               <span className="text-[10px] font-medium text-gray-500">Allow multiple selections</span>
             </label>
@@ -317,7 +317,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
                   onChange={(e) => updateOption(i, e.target.value)}
                   placeholder={`Option ${String.fromCharCode(65 + i)}`}
                   maxLength={60}
-                  className="flex-1 h-10 px-3 rounded-xl border border-gray-200 text-sm text-black placeholder:text-gray-300 focus:outline-none focus:border-[#FEC312] transition-colors"
+                  className="flex-1 h-10 px-3 rounded-xl border border-gray-200 text-sm text-black placeholder:text-gray-300 focus:outline-none focus:border-primary transition-colors"
                 />
                 {options.length > 2 && (
                   <button type="button" onClick={() => removeOption(i)} className="text-gray-300 hover:text-red-400 transition-colors text-lg leading-none">×</button>
@@ -348,7 +348,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
                 type="number"
                 value={sliderMin}
                 onChange={(e) => setSliderMin(Number(e.target.value))}
-                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-black focus:outline-none focus:border-[#FEC312] transition-colors"
+                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-black focus:outline-none focus:border-primary transition-colors"
               />
             </div>
             <span className="text-gray-300 mt-4">→</span>
@@ -358,7 +358,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
                 type="number"
                 value={sliderMax}
                 onChange={(e) => setSliderMax(Number(e.target.value))}
-                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-black focus:outline-none focus:border-[#FEC312] transition-colors"
+                className="w-full h-10 px-3 rounded-xl border border-gray-200 text-sm text-black focus:outline-none focus:border-primary transition-colors"
               />
             </div>
           </div>
@@ -375,7 +375,7 @@ function PulseCreatorForm({ postId, creatorId, onCreated }: {
               type="button"
               onClick={() => setDuration(d)}
               className={`px-4 py-2 rounded-full text-[12px] font-medium border transition-all duration-200 ${duration === d
-                ? 'bg-[#FEC312]/10 border-[#FEC312]/30 text-black'
+                ? 'bg-primary/10 border-primary/30 text-black'
                 : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
                 }`}
             >
@@ -485,7 +485,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                 className={`w-full relative overflow-hidden rounded-[16px] border transition-all duration-300 text-left ${showResults
                   ? 'cursor-default border-transparent bg-gray-50/50'
                   : isSelected
-                    ? 'border-[#FEC312] bg-[#FEC312]/5'
+                    ? 'border-primary bg-primary/5'
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50'
                   }`}
               >
@@ -495,14 +495,14 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                     initial={{ width: 0 }}
                     animate={{ width: `${result.percentage}%` }}
                     transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-y-0 left-0 bg-[#FEC312]/15 rounded-[16px]"
+                    className="absolute inset-y-0 left-0 bg-primary/15 rounded-[16px]"
                   />
                 )}
 
                 <div className="relative z-10 flex items-center justify-between px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     {!showResults && (
-                      <div className={`w-4 h-4 border-2 transition-all shrink-0 ${session.allow_multiple_selections ? 'rounded' : 'rounded-full'} ${isSelected ? 'border-[#FEC312] bg-[#FEC312]' : 'border-gray-300'
+                      <div className={`w-4 h-4 border-2 transition-all shrink-0 ${session.allow_multiple_selections ? 'rounded' : 'rounded-full'} ${isSelected ? 'border-primary bg-primary' : 'border-gray-300'
                         }`}>
                         {isSelected && (
                           <motion.div
@@ -552,7 +552,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                         initial={{ height: 0 }}
                         animate={{ height: `${Math.max(pct * 0.6, 2)}px` }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="w-5 rounded-t bg-[#FEC312]/60"
+                        className="w-5 rounded-t bg-primary/60"
                       />
                       <span className="text-[9px] text-gray-400 font-medium">{value}</span>
                     </div>
@@ -569,7 +569,7 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
                 step={session.slider_step ?? 1}
                 value={sliderValue}
                 onChange={(e) => setSliderValue(Number(e.target.value))}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer bg-gray-200 accent-[#FEC312] hidden"
+                className="w-full h-2 rounded-full appearance-none cursor-pointer bg-gray-200 accent-primary hidden"
                 style={{ accentColor: '#FEC312' }}
               />
               <TactileSlider

@@ -28,7 +28,7 @@ import { AmbientLoadingText } from './AmbientLoadingText';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
-import { MoreLikeThisSection } from './MoreLikeThisSection';
+import { RelatedSection } from './RelatedSection';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 
@@ -660,7 +660,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     <div
                                         className="relative group/prevrated cursor-help"
                                     >
-                                        <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#FEC312] border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
+                                        <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
                                             <span className="opacity-70">🏆</span> Prev Top Rated
                                         </span>
                                         <div className="absolute bottom-full left-0 mb-3 w-64 p-4 bg-white border-2 border-gray-100 text-black text-[12px] rounded-2xl shadow-2xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/prevrated:opacity-100 group-hover/prevrated:visible group-hover/prevrated:translate-y-0 transition-all duration-200 hidden md:block z-50">
@@ -714,7 +714,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
                                 </span>
 
-                                <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+                                <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
                             ${isReviewCountTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'}`}
                                 >
                                     <p className="leading-relaxed text-center">
@@ -731,7 +731,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 {isExpanded && post.description.length > 100 && (
                                     <button
                                         onClick={() => setIsExpanded(false)}
-                                        className="font-semibold text-gray-800 hover:text-[#FEC312] transition-colors ml-1"
+                                        className="font-semibold text-gray-800 hover:text-primary transition-colors ml-1"
                                     >
                                         Show less
                                     </button>
@@ -740,7 +740,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             {!isExpanded && post.description.length > 100 && (
                                 <button
                                     onClick={() => setIsExpanded(true)}
-                                    className="font-semibold text-gray-800 hover:text-[#FEC312] transition-colors"
+                                    className="font-semibold text-gray-800 hover:text-primary transition-colors"
                                 >
                                     Read more
                                 </button>
@@ -754,7 +754,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 scroll={false}
                                 className="flex items-center gap-3 group/author"
                             >
-                                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all flex items-center justify-center">
+                                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center">
                                     {avatar?.avatar_url ? (
                                         <img
                                             src={avatar.avatar_url}
@@ -771,7 +771,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     )}
                                 </div>
                                 <div className="text-left flex flex-col min-w-0">
-                                    <span className="block text-sm font-semibold text-black group-hover/author:text-[#FEC312] transition-colors truncate">{avatar?.name || 'Unknown'}</span>
+                                    <span className="block text-sm font-semibold text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
                                     <span className="block text-[10px] text-gray-400 font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
                                 </div>
                             </Link>
@@ -781,7 +781,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     <div className="relative group/lock cursor-help flex items-center gap-1.5 pl-2">
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
                                         <Lock className="w-4 h-4 text-gray-400 group-hover/lock:text-gray-500 transition-colors" />
-                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
+                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
                                             <p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>
                                         </div>
                                     </div>
@@ -852,7 +852,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     {tab.label}
                                                     {(tab.key === 'pulse' || tab.key === 'insights') && (
                                                         <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider leading-none mt-px ${activeTab === tab.key
-                                                            ? 'bg-[#FEC312]/20 text-[#D9A000]'
+                                                            ? 'bg-primary/20 text-[#D9A000]'
                                                             : 'bg-gray-100 text-gray-500'
                                                             }`}>
                                                             Beta
@@ -862,7 +862,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     {activeTab === tab.key && (
                                                         <motion.div
                                                             layoutId="review-tab-underline"
-                                                            className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#FEC312] rounded-full"
+                                                            className="absolute bottom-0 left-3 right-3 h-[2px] bg-primary rounded-full"
                                                             transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
                                                         />
                                                     )}
@@ -989,7 +989,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     type="button"
                                     onClick={() => setSortBy(option)}
                                     className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all duration-200 ${sortBy === option
-                                        ? "bg-[#FEC312]/10 border-[#FEC312]/40 text-black"
+                                        ? "bg-primary/10 border-primary/40 text-black"
                                         : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
                                         }`}
                                 >
@@ -1008,8 +1008,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 animate={{ opacity: 1, y: 0 }}
                                 className="py-20 px-8 text-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200"
                             >
-                                <div className="w-16 h-16 bg-[#FEC312]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <Plus className="w-8 h-8 text-[#FEC312]" />
+                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Plus className="w-8 h-8 text-primary" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-black mb-2">Be the first to rate this design</h3>
                                 <p className="text-gray-500 max-w-xs mx-auto text-[15px] leading-relaxed">
@@ -1045,7 +1045,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     <div className="flex-1">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div
-                                                className={`w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-0 transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:ring-1 ring-[#FEC312]' : ''}`}
+                                                className={`w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-0 transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:ring-1 ring-primary' : ''}`}
                                                 onClick={(e) => {
                                                     if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                         e.stopPropagation();
@@ -1076,7 +1076,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span
-                                                        className={`font-medium text-base text-black truncate max-w-[150px] xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-[#FEC312]' : ''}`}
+                                                        className={`font-medium text-base text-black truncate max-w-[150px] xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
                                                         onClick={(e) => {
                                                             if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                                 e.stopPropagation();
@@ -1159,7 +1159,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </div>
 
                 {/* RELATED DESIGNS SECTION */}
-                <MoreLikeThisSection currentPost={post} />
+                <RelatedSection currentPost={post} />
             </div>
 
             {/* Fullscreen Image Overlay */}

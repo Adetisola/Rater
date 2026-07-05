@@ -128,7 +128,7 @@ function InsightCriterionLabel({ children, info }: { children: React.ReactNode, 
       {children}
 
       {/* Tooltip */}
-      <div className={`absolute bottom-full left-0 min-[769px]:left-0 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
+      <div className={`absolute bottom-full left-0 min-[769px]:left-0 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
         ${isTooltipVisible
           ? 'opacity-100 visible translate-y-0'
           : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
@@ -325,7 +325,7 @@ function LoadingTextAnimation() {
       ref={textRef}
       className="text-[13px] font-medium min-w-[150px] inline-block"
       style={{
-        backgroundImage: 'linear-gradient(to right, #fec312, #ff4f6d, #c400d2, #7c3bed, #fec312)',
+        backgroundImage: 'linear-gradient(to right, var(--color-primary, #fec312), #ff4f6d, #c400d2, #7c3bed, var(--color-primary, #fec312))',
         backgroundSize: '200% auto',
         WebkitBackgroundClip: 'text',
         backgroundClip: 'text',
@@ -588,7 +588,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                     </button>
                     
                     {/* Tooltip */}
-                    <div className="absolute bottom-full left-0 mb-3 w-52 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
+                    <div className="absolute bottom-full left-0 mb-3 w-52 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
                       <p className="leading-relaxed">
                         Synthesized from <strong className="font-semibold">{reviews.length}</strong> user reviews, analyzing ratings and written feedback.
                       </p>
@@ -605,7 +605,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
 
               {/* Bottom fade mask */}
               <div
-                className={`absolute bottom-0 left-0 right-2 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute bottom-0 left-0 right-2 h-8 bg-linear-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
               />
             </motion.div>
           )}
@@ -619,7 +619,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
               exit={{ opacity: 0 }}
               className="py-12 text-center"
             >
-              <Loader2 className="w-6 h-6 text-[#FEC312] animate-spin mx-auto mb-4" />
+              <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto mb-4" />
               <LoadingTextAnimation />
             </motion.div>
           )}

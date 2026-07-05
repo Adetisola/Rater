@@ -11,13 +11,13 @@ import type { Post } from '@/types';
 import { cn } from '../lib/utils';
 import { Grid, User } from 'lucide-react';
 
-interface MoreLikeThisSectionProps {
+interface RelatedSectionProps {
   currentPost: Post;
 }
 
 type TabType = 'related' | 'creator';
 
-export function MoreLikeThisSection({ currentPost }: MoreLikeThisSectionProps) {
+export function RelatedSection({ currentPost }: RelatedSectionProps) {
   const { posts } = usePosts();
   const { allAvatars } = useAuth();
 
@@ -97,7 +97,7 @@ export function MoreLikeThisSection({ currentPost }: MoreLikeThisSectionProps) {
             )}
           >
             <Grid className="w-4 h-4" />
-            More Like This
+            Related
           </button>
           <button
             onClick={() => setActiveTab('creator')}
@@ -115,7 +115,7 @@ export function MoreLikeThisSection({ currentPost }: MoreLikeThisSectionProps) {
       ) : hasRelated ? (
         // Only category posts exist: Render static "More Like This" header
         <h2 className="text-xl font-semibold text-black mb-8 px-2 xs:px-2 md:px-4 select-none">
-          More Like This
+          Related
         </h2>
       ) : (
         // Only creator posts exist: Render static "More from Creator" header
