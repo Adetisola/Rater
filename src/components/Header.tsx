@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
 import { SearchResults } from './SearchResults';
+import { Tooltip } from './ui/Tooltip';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
 import type { Post, Avatar, Category } from '@/types';
@@ -69,7 +70,7 @@ export function Header({
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
 
-  const { currentAvatar } = useAuth();
+  const { currentProfile } = useAuth();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -148,8 +149,8 @@ export function Header({
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
     } else {
-      const href = currentAvatar && avatar.id === currentAvatar.id
-        ? `/@${currentAvatar.username}`
+      const href = currentProfile && avatar.id === currentProfile.id
+        ? `/@${currentProfile.username}`
         : `/@${avatar.username}`;
       window.dispatchEvent(new Event('app-navigation-start'));
       router.push(href, { scroll: false });
@@ -218,7 +219,7 @@ export function Header({
       <div className={`relative max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center gap-2 sm:gap-3 md:gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
 
         <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
-          {(!currentAvatar || hideControls) ? (
+          {(!currentProfile || hideControls) ? (
             <Link
               href="/browse"
               scroll={false}
@@ -230,18 +231,18 @@ export function Header({
             </Link>
           ) : (
             <Link
-              href={`/@${currentAvatar.username}`}
+              href={`/@${currentProfile.username}`}
               scroll={false}
               className="block shrink-0 transition-all hover:scale-105 active:scale-95"
             >
               <div
                 className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden"
-                style={{ backgroundColor: currentAvatar.bg_color }}
+                style={{ backgroundColor: currentProfile.bg_color }}
               >
-                {currentAvatar.avatar_url ? (
-                  <img src={currentAvatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
+                {currentProfile.avatar_url ? (
+                  <img src={currentProfile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  currentAvatar.name.charAt(0).toUpperCase()
+                  currentProfile.name.charAt(0).toUpperCase()
                 )}
               </div>
             </Link>
@@ -250,7 +251,7 @@ export function Header({
 
         {!hideControls && (
           <div className="shrink-0 invisible pointer-events-none" aria-hidden="true">
-            {(!currentAvatar) ? (
+            {(!currentProfile) ? (
               <div className="w-[44px] h-[44px] sm:w-12 sm:h-12" />
             ) : (
               <div className="w-10 h-10 rounded-full" />
@@ -265,7 +266,7 @@ export function Header({
                 <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 z-10 transition-opacity pointer-events-none ${isSearching ? 'opacity-20' : 'opacity-40 group-focus-within:opacity-100'}`} />
 
                 <div
-                  className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-[#FEC312] bg-white flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-[#FEC312]/10"
+                  className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-primary bg-white flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-primary/10"
                   onClick={() => searchInputRef.current?.focus()}
                 >
                   {selectedCategories.map(cat => (
@@ -321,21 +322,22 @@ export function Header({
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-0.5">
                   <AnimatePresence>
                     {searchQuery && (
-                      <motion.button
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSearchChange('');
-                          onSearchSubmit?.('');
-                          searchInputRef.current?.focus();
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
-                        title="Clear search"
-                      >
-                        <X size={16} strokeWidth={2.5} />
-                      </motion.button>
+                      <Tooltip content="Clear search" position="bottom">
+                        <motion.button
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSearchChange('');
+                            onSearchSubmit?.('');
+                            searchInputRef.current?.focus();
+                          }}
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                        >
+                          <X size={16} strokeWidth={2.5} />
+                        </motion.button>
+                      </Tooltip>
                     )}
                   </AnimatePresence>
 
@@ -390,19 +392,19 @@ export function Header({
             <motion.button
               layoutId="mobile-search-circle"
               onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
-              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-[#FEC312] bg-white hover:bg-[#FEC312] transition-all shrink-0 group overflow-hidden"
+              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-primary bg-white hover:bg-primary transition-all shrink-0 group overflow-hidden"
               style={{ borderRadius: 9999 }}
             >
               <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
             </motion.button>
 
             <div className="flex items-center gap-2">
-              {currentAvatar ? null : (
+              {currentProfile ? null : (
                 <div className="flex items-center gap-2">
                   <Button
                     variant='outline'
                     onClick={() => { setAuthTab('login'); setShowAuthOverlay(true); }}
-                    className="hidden sm:flex items-center justify-center h-12 px-6 rounded-full font-medium text-[17px] text-black hover:bg-[#FEC312] hover:text-white transition-all"
+                    className="hidden sm:flex items-center justify-center h-12 px-6 rounded-full font-medium text-[17px] text-black hover:bg-primary hover:text-white transition-all"
                   >
                     Login
                   </Button>
@@ -416,7 +418,7 @@ export function Header({
                 </div>
               )}
 
-              {currentAvatar && (
+              {currentProfile && (
                 <div className="relative ml-1 sm:ml-2 flex xs:hidden min-[769px]:flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -442,7 +444,7 @@ export function Header({
             <motion.button
               layoutId="tablet-search-pill"
               onClick={() => onMobileSearchOpen?.('tablet-search-pill')}
-              className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-[#FEC312] bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
+              className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
               style={{ borderRadius: 9999 }}
             >
               <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
@@ -461,7 +463,7 @@ export function Header({
                 </div>
               </div>
             </motion.button>
-            {currentAvatar && (
+            {currentProfile && (
               <Button
                 variant="outline"
                 onClick={onPostClick}

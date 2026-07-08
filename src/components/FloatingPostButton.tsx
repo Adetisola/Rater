@@ -7,21 +7,21 @@ import { useRouter, usePathname, useParams } from 'next/navigation';
 import { cn } from '../lib/utils';
 
 export function FloatingPostButton() {
-  const { currentAvatar } = useAuth();
+  const { currentProfile } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
 
   // Only show on profile pages (/@username) for logged in users
   const isProfilePage = pathname.startsWith('/@');
-  if (!currentAvatar || !isProfilePage) return null;
+  if (!currentProfile || !isProfilePage) return null;
 
   // Only show the post button on OUR OWN profile
   if (params.alias) {
       const routeAlias = decodeURIComponent(params.alias as string);
       if (routeAlias.startsWith('@')) {
           const routeUsername = routeAlias.slice(1).toLowerCase();
-          if (routeUsername !== currentAvatar.username.toLowerCase()) return null;
+          if (routeUsername !== currentProfile.username.toLowerCase()) return null;
       }
   }
 

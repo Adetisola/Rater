@@ -1,12 +1,12 @@
 "use client";
 
 import { SubmitPage } from "@/components/SubmitPage";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function AppSubmitPage() {
   return (
-    <>
-
+    <ProtectedRoute>
       <main className="flex-1 w-full pt-2">
         <AnimatePresence mode="wait">
             <motion.div 
@@ -21,6 +21,6 @@ export default function AppSubmitPage() {
             </motion.div>
         </AnimatePresence>
       </main>
-    </>
+    </ProtectedRoute>
   );
 }

@@ -1,5 +1,4 @@
 import type { Post } from '../types';
-import { calculatePostMetrics } from './mockData';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const MIN_REVIEW_COUNT = 5;
@@ -19,16 +18,10 @@ const MIN_REVIEW_COUNT = 5;
 export async function computeHotPosts(posts: Post[]): Promise<Set<string>> {
   const now = Date.now();
 
-  // Map posts to their metrics (parallel fetching)
-  const postsWithMetrics = await Promise.all(posts.map(async post => ({
-    post,
-    metrics: await calculatePostMetrics(post.id)
-  })));
-
   // 1. Filter to posts from the last 7 days with ≥3 reviews
-  const recentEligible = postsWithMetrics.filter(({ post, metrics }) => {
+  const recentEligible = posts.filter(post => {
     const postAge = now - new Date(post.created_at).getTime();
-    return postAge <= SEVEN_DAYS_MS && metrics.review_count >= MIN_REVIEW_COUNT;
+    return postAge <= SEVEN_DAYS_MS && (post.review_count || 0) >= MIN_REVIEW_COUNT;
   });
 
   if (recentEligible.length === 0) {
@@ -37,7 +30,7 @@ export async function computeHotPosts(posts: Post[]): Promise<Set<string>> {
 
   // 2. Sort by review_count DESC
   const sorted = [...recentEligible].sort(
-    (a, b) => b.metrics.review_count - a.metrics.review_count
+    (a, b) => (b.review_count || 0) - (a.review_count || 0)
   );
 
   // 3. Top 10% threshold (at least 1 post)
@@ -46,7 +39,7 @@ export async function computeHotPosts(posts: Post[]): Promise<Set<string>> {
   // 4. Mark the top slice as hot
   const hotSet = new Set<string>();
   for (let i = 0; i < top10Count; i++) {
-    hotSet.add(sorted[i].post.id);
+    hotSet.add(sorted[i].id);
   }
 
   return hotSet;

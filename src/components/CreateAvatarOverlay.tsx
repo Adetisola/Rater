@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { Tooltip } from './ui/Tooltip';
 import { validatePasskey, getStrengthColor, getStrengthLabel } from '../utils/passkeyValidation';
 import { useAuth } from '../context/AuthContext';
 import { generateUsernameFromName } from '../utils/usernameUtils';
@@ -21,7 +22,7 @@ interface CreateAvatarOverlayProps {
   isEmbedded?: boolean;
   prefillName?: string;
   onLogin?: () => void;
-  onShowTerms?: () => void;
+  onShowLegal?: (title: string, url: string) => void;
 }
 
 /**
@@ -41,13 +42,12 @@ function validateDisplayName(name: string): string | null {
  * Handles image upload with simulated latency, passkey validation, unique username claiming, 
  * and role selection. It integrates with AuthContext for the final signup step.
  */
-export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin, onShowTerms }: CreateAvatarOverlayProps) {
+export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin, onShowLegal }: CreateAvatarOverlayProps) {
   const [name, setName] = useState(prefillName || '');
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
   const [email, setEmail] = useState('');
   const [showPasskey, setShowPasskey] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,6 +61,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
   // Name State
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [signupError, setSignupError] = useState<string | null>(null);
 
   const validateEmailFormat = (email: string) => {
     const trimmed = email.trim();
@@ -69,12 +70,12 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     return null;
   };
 
-  const { signup, allAvatars, checkUsernameAvailable } = useAuth();
+  const { signup, profileMap, checkUsernameAvailable } = useAuth();
 
   const generatedUsernamePreview = useMemo(() => {
     if (!name.trim()) return 'username';
-    return generateUsernameFromName(name, Object.values(allAvatars).map(a => a.username));
-  }, [name, allAvatars]);
+    return generateUsernameFromName(name, Object.values(profileMap).map(a => a.username));
+  }, [name, profileMap]);
 
   // Avatar Image Upload State
   const [avatarUploadState, setAvatarUploadState] = useState<'idle' | 'uploading' | 'error' | 'success'>('idle');
@@ -190,32 +191,47 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     if (!role) return;
 
     setIsSubmitting(true);
+    setSignupError(null);
     const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput, role);
 
     if (result.ok) {
       onCreate(name, passkey, email);
     } else {
       setIsSubmitting(false);
-      if (result.error === 'Email already in use') {
+      // Supabase's default message for duplicate email is often "User already registered"
+      if (result.error?.toLowerCase() === 'user already registered' || result.error === 'Email already in use') {
         setDirection(-1);
         setStep('create');
-        setEmailError(result.error);
+        setEmailError('Email already in use');
+      } else if (result.error === 'Username is already taken.') {
+        setDirection(-1);
+        setStep('username');
+        setSignupError(result.error);
+      } else {
+        setSignupError(result.error || 'Failed to complete setup. Please try again.');
       }
     }
   };
 
   const handleSkipRole = async () => {
     setIsSubmitting(true);
+    setSignupError(null);
     const result = await signup(name, email, passkey, avatarPreview || undefined, usernameInput, undefined);
 
     if (result.ok) {
       onCreate(name, passkey, email);
     } else {
       setIsSubmitting(false);
-      if (result.error === 'Email already in use') {
+      if (result.error?.toLowerCase() === 'user already registered' || result.error === 'Email already in use') {
         setDirection(-1);
         setStep('create');
-        setEmailError(result.error);
+        setEmailError('Email already in use');
+      } else if (result.error === 'Username is already taken.') {
+        setDirection(-1);
+        setStep('username');
+        setSignupError(result.error);
+      } else {
+        setSignupError(result.error || 'Failed to complete setup. Please try again.');
       }
     }
   };
@@ -287,22 +303,24 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
                 {avatarPreview && avatarUploadState === 'idle' && (
                   <>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-1 right-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-black hover:scale-105 hover:shadow-lg transition-all z-20"
-                      title="Change Picture"
-                    >
-                      <Camera className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleRemoveAvatar}
-                      className="absolute bottom-1 left-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-red-500 hover:text-red-600 hover:scale-105 hover:shadow-lg hover:bg-red-50 transition-all z-20"
-                      title="Remove Picture"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <Tooltip content="Change Picture" position="top">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-1 right-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-black hover:scale-105 hover:shadow-lg transition-all z-20"
+                      >
+                        <Camera className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="Remove Picture" position="top">
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="absolute bottom-1 left-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-red-500 hover:text-red-600 hover:scale-105 hover:shadow-lg hover:bg-red-50 transition-all z-20"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </Tooltip>
                   </>
                 )}
               </div>
@@ -449,24 +467,21 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
               </div>
 
-              <div className="flex items-center gap-2.5 pt-2 px-2">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={termsAccepted}
-                  onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer"
-                />
-                <label htmlFor="terms" className="text-[13px] text-gray-500 cursor-pointer select-none">
-                  I agree to the <button type="button" onClick={(e) => { e.preventDefault(); onShowTerms?.(); }} className="font-semibold text-gray-700 hover:text-black hover:underline focus:outline-none">Terms of Service</button>
-                </label>
-              </div>
-
-              <div className="pt-4 flex items-center justify-center gap-6 w-full">
-                <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
-                <Button variant='outline' type="submit" disabled={!termsAccepted || !validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
-                  Continue
-                </Button>
+              <div className="pt-4 flex flex-col items-center justify-center gap-4 w-full">
+                <div className="flex items-center justify-center gap-6 w-full">
+                  <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
+                  <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
+                    Continue
+                  </Button>
+                </div>
+                <div className="px-2">
+                  <p className="text-[11px] text-center text-gray-400">
+                    By creating a profile, you agree to our{' '}
+                    <button type="button" onClick={(e) => { e.preventDefault(); onShowLegal?.('Terms of Service', '/legal/Rater Terms of Service.md'); }} className="font-semibold text-gray-500 hover:text-black transition-colors">Terms of Service</button>{' '}
+                    and acknowledge our{' '}
+                    <button type="button" onClick={(e) => { e.preventDefault(); onShowLegal?.('Privacy Policy', '/legal/Rater Privacy Policy.md'); }} className="font-semibold text-gray-500 hover:text-black transition-colors">Privacy Policy</button>.
+                  </p>
+                </div>
               </div>
               {onLogin && (
                 <div className="text-center pt-2">
@@ -625,6 +640,11 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               </div>
 
               <div className="flex flex-col gap-3 pt-4">
+                {signupError && (
+                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 mb-2">
+                    {signupError}
+                  </div>
+                )}
                 <Button
                   variant='outline'
                   onClick={handleRoleSubmit}

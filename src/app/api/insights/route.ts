@@ -51,7 +51,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
       'X-Title': 'Rater Insights',
     },
     body: JSON.stringify({
-      model: 'openrouter/free',
+      model: 'meta-llama/llama-3.1-8b-instruct:free',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
       max_tokens: 1024,
@@ -133,47 +133,94 @@ COMMENTS TO CLASSIFY:
 ${reviewsWithComments.map(r => `ID: "${r.id}"\nCOMMENT: "${r.comment}"`).join('\n\n')}
 `;
 
-  try {
-    let responseText = '';
+  let lastError: any;
+  let geminiDown = false;
+  
+  for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      if (geminiKey && geminiKey !== 'your_api_key_here') {
-        responseText = await callGemini('gemini-2.5-flash-lite', prompt, geminiKey);
-      } else {
-        throw new Error("No valid Gemini API key provided.");
+      let responseText = '';
+      try {
+        if (!geminiDown && geminiKey && geminiKey !== 'your_api_key_here') {
+          responseText = await callGemini('gemini-2.5-flash-lite', prompt, geminiKey);
+        } else {
+          throw new Error("No valid Gemini API key provided or Gemini is marked as down.");
+        }
+      } catch (err: any) {
+        if (err.message && (err.message.includes('fetch failed') || err.message.includes('Timeout') || err.message.includes('503'))) {
+            geminiDown = true;
+        }
+        if (attempt === 1) console.warn('[Classifier] Gemini failed, falling back to OpenRouter...', err);
+        if (openrouterKey && openrouterKey !== 'your_api_key_here') {
+          // OpenRouter uses deepseek-chat or google/gemini-2.5-flash-lite
+          responseText = await callOpenRouter(prompt, openrouterKey);
+        } else {
+          throw new Error("No OpenRouter API key available for fallback.");
+        }
       }
-    } catch (err) {
-      console.warn('[Classifier] Gemini failed, falling back to OpenRouter...', err);
-      if (openrouterKey && openrouterKey !== 'your_api_key_here') {
-        // OpenRouter uses deepseek-chat or google/gemini-2.5-flash-lite
-        responseText = await callOpenRouter(prompt, openrouterKey);
+
+      let textToParse = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      
+      const arrayMatch = textToParse.match(/\[[\s\S]*\]/);
+      if (arrayMatch) {
+        textToParse = arrayMatch[0];
       } else {
-        throw new Error("No OpenRouter API key available for fallback.");
+        // Fallback: If no array brackets were found, try extracting from the first '{' to the last '}'
+        // and wrap it in array brackets. This catches LLMs that forget the surrounding '[' ']' 
+        // but still output valid objects (e.g. {...}, {...}) while ignoring conversational filler.
+        const objectMatch = textToParse.match(/\{[\s\S]*\}/);
+        if (objectMatch) {
+          textToParse = `[${objectMatch[0]}]`;
+        }
       }
-    }
+      
+      let parsedData = JSON.parse(textToParse);
 
-    let textToParse = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const jsonMatch = textToParse.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      textToParse = jsonMatch[0];
-    }
-    const classifications: ClassifyResult[] = JSON.parse(textToParse);
+      // Handle case where LLM wraps the array in an object (e.g. { "classifications": [...] })
+      if (!Array.isArray(parsedData) && typeof parsedData === 'object' && parsedData !== null) {
+        const arrayVal = Object.values(parsedData).find(v => Array.isArray(v));
+        if (arrayVal) {
+          parsedData = arrayVal;
+        } else {
+          // It's a single object, wrap it in an array
+          parsedData = [parsedData];
+        }
+      }
 
-    return reviews.map(r => {
-      const cls = classifications.find(c => c.review_id === r.id);
-      return {
-        review: r,
-        classification: cls?.classification || 'off_topic',
-        confidence: cls?.confidence ?? 1.0,
-        signal_strength: cls?.signal_strength ?? 0.0,
-      };
-    });
-  } catch (error) {
-    console.error('[Classifier] Completely Failed:', error);
-    // We throw the error so the main catch block can return a 500 status.
-    // This allows the frontend to show the "Network dey stress" error state,
-    // rather than falling back to a false "Not enough feedback" state.
-    throw new Error('Classifier failed due to network or timeout issues.');
+      if (!Array.isArray(parsedData)) {
+        throw new Error("Parsed data could not be resolved to an array");
+      }
+
+      const classifications: ClassifyResult[] = parsedData;
+
+      // Ensure the schema actually matches our expectations so we don't silently fail
+      if (classifications.length > 0 && !classifications.some(c => c.review_id && c.classification)) {
+        throw new Error("JSON parsed successfully but is missing 'review_id' and 'classification' keys");
+      }
+
+      return reviews.map(r => {
+        // Fallback to matching by index if LLM completely butchered the review_id
+        const cls = classifications.find(c => c.review_id === r.id) || 
+                   (classifications.length === reviews.length ? classifications[reviews.indexOf(r)] : null);
+                   
+        return {
+          review: r,
+          classification: cls?.classification || 'off_topic',
+          confidence: cls?.confidence ?? 1.0,
+          signal_strength: cls?.signal_strength ?? 0.0,
+        };
+      });
+    } catch (error) {
+      console.warn(`[Classifier] Attempt ${attempt} failed:`, error instanceof Error ? error.message : String(error));
+      lastError = error;
+      // Let it loop to retry
+    }
   }
+
+  console.error('[Classifier] Completely Failed after 3 attempts:', lastError);
+  // We throw the error so the main catch block can return a 500 status.
+  // This allows the frontend to show the "Network dey stress" error state,
+  // rather than falling back to a false "Not enough feedback" state.
+  throw new Error('Classifier failed due to network, timeout, or parsing issues.');
 }
 
 // ─── Synthesis Layer ─────────────────────────────────────────────────────────
@@ -377,14 +424,15 @@ export async function POST(request: NextRequest) {
 
     // 3. Orchestrator: Analysis Mode Determination
     const totalComments = signals.commentCount;
-    const relevantCommentCount = scoredReviews.filter(r => r.classification === 'relevant').length;
+    const relevantCommentCount = scoredReviews.filter(r => r.classification === 'relevant' || r.classification === 'partially_relevant').length;
     const lowSignalCount = scoredReviews.filter(r => r.classification === 'low_signal').length;
 
     let analysisMode: AnalysisMode = 'insufficient';
 
     const hasMeaningfulRatings = signals.reviewCount >= 3 && signals.scoreTrends.some(s => s.average >= 4.2 || s.average <= 2.8);
 
-    if (relevantCommentCount >= 2 && (relevantCommentCount / totalComments) >= 0.35) {
+    // Loosened threshold: if there is at least 1 relevant/partially_relevant comment and it makes up a decent chunk of total feedback
+    if (relevantCommentCount >= 1 && (relevantCommentCount / totalComments) >= 0.25) {
       analysisMode = 'comment_supported';
     } else if (lowSignalCount >= 2 && (lowSignalCount / totalComments) >= 0.4) {
       analysisMode = 'low_signal';

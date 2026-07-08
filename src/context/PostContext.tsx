@@ -2,21 +2,27 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { Post } from '@/types';
-// TODO(backend): Replace MOCK_POSTS and updatePost with Supabase queries.
-// All localStorage persistence below (rater_post_overrides, rater_deleted_posts,
-// rater_session_posts) should be replaced with real database operations.
-import { MOCK_POSTS, updatePost as dbUpdatePost } from '../logic/mockData';
+import {
+  getFeedPosts,
+  createPost as dbCreatePost,
+  updatePost as dbUpdatePost,
+  softDeletePost as dbSoftDeletePost,
+  hardDeletePost as dbHardDeletePost,
+} from '@/lib/posts';
+import { useAuth } from './AuthContext';
+import { supabase } from '@/lib/supabase/client';
 
 interface PostContextType {
   posts: Post[];
-  allPosts: Post[];
+  allPosts: Post[]; // Exposed for backwards compatibility in components expecting allPosts
   editingPost: Post | null;
   setEditingPost: (post: Post | null) => void;
   updatePost: (postId: string, updates: Partial<Post>) => Promise<boolean>;
+  optimisticUpdateMetrics: (postId: string, metrics: Partial<Post>) => void;
   deletePost: (postId: string) => Promise<boolean>;
   undoDelete: (postId: string) => Promise<boolean>;
   hardDeletePost: (postId: string) => Promise<boolean>;
-  addPost: (post: Post) => void;
+  addPost: (post: Omit<Post, 'id' | 'created_at'>) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -26,174 +32,190 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const { currentProfile } = useAuth();
 
-  // Load from localStorage on mount
+  // Load posts from the data layer on mount
   useEffect(() => {
-    const savedOverrides = localStorage.getItem('rater_post_overrides');
-    const deletedPosts = localStorage.getItem('rater_deleted_posts');
-    const sessionPosts = localStorage.getItem('rater_session_posts');
+    let mounted = true;
     
-    let currentPosts = [...MOCK_POSTS];
+    getFeedPosts().then(feedPosts => {
+      if (mounted) {
+        setAllPosts(feedPosts);
+        setIsLoading(false);
+      }
+    });
     
-    // 1. Deletions are handled below via is_deleted flag (step 4)
-    // Posts remain in allPosts so visiblePosts can filter them,
-    // and undo can restore them even after refresh.
-    
-    // 2. Handle Overrides (Edits)
-    if (savedOverrides) {
-      const overrides = JSON.parse(savedOverrides);
-      currentPosts = currentPosts.map(p => overrides[p.id] ? { ...p, ...overrides[p.id] } : p);
-    }
+    return () => { mounted = false; };
+  }, []);
 
-    // 3. Handle Session Posts (New ones)
-    if (sessionPosts) {
-      const newPosts = JSON.parse(sessionPosts);
-      currentPosts = [...newPosts, ...currentPosts];
-    }
+  // Supabase Realtime synchronization for post metrics
+  useEffect(() => {
+    const channel = supabase.channel('public:posts')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'posts' },
+        (payload) => {
+          const newPostData = payload.new as Post;
+          setAllPosts(prev => prev.map(p => {
+            if (p.id === newPostData.id) {
+              // Reconcile and overwrite specifically metrics fields to correct any optimistic drift
+              return {
+                ...p,
+                review_count: newPostData.review_count,
+                average_score: newPostData.average_score,
+                criteria_scores: newPostData.criteria_scores,
+                updated_at: newPostData.updated_at
+              };
+            }
+            return p;
+          }));
+        }
+      )
+      .subscribe();
 
-    // 4. Apply is_deleted flag to soft-deleted posts
-    const deletedIds = deletedPosts ? JSON.parse(deletedPosts) : [];
-    currentPosts = currentPosts.map(p => deletedIds.includes(p.id) ? { ...p, is_deleted: true, deleted_at: new Date().toISOString() } : p);
-    
-    setAllPosts(currentPosts);
-    setIsLoading(false);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const updatePost = useCallback(async (postId: string, updates: Partial<Post>) => {
-    try {
-      const updated_at = new Date().toISOString();
-      const finalUpdates = { ...updates, updated_at };
-      
-      // Simulate API call
-      await dbUpdatePost(postId, finalUpdates);
-      
-      // Optimistic update
-      setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, ...finalUpdates } : p));
-      
-      // Persist to localStorage
-      const savedOverrides = JSON.parse(localStorage.getItem('rater_post_overrides') || '{}');
-      savedOverrides[postId] = { ...(savedOverrides[postId] || {}), ...finalUpdates };
-      localStorage.setItem('rater_post_overrides', JSON.stringify(savedOverrides));
+    if (!currentProfile) return false;
+    
+    const updated_at = new Date().toISOString();
+    const finalUpdates = { ...updates, updated_at };
 
-      // Also update session posts if it's there
-      const sessionPosts = JSON.parse(localStorage.getItem('rater_session_posts') || '[]');
-      const sessionIndex = sessionPosts.findIndex((p: Post) => p.id === postId);
-      if (sessionIndex !== -1) {
-        sessionPosts[sessionIndex] = { ...sessionPosts[sessionIndex], ...finalUpdates };
-        localStorage.setItem('rater_session_posts', JSON.stringify(sessionPosts));
-      }
-      
+    // 1. Snapshot previous state of the targeted post
+    const previousPost = allPosts.find(p => p.id === postId);
+    if (!previousPost) return false;
+
+    // 2. Optimistic update
+    setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, ...finalUpdates } : p));
+
+    try {
+      const result = await dbUpdatePost(postId, finalUpdates, currentProfile.id);
+      if (!result.ok) throw new Error(result.error);
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Optimistic update failed, rolling back:', err);
+      // 3. Precise rollback
+      setAllPosts(prev => prev.map(p => p.id === postId ? previousPost : p));
       return false;
     }
+  }, [currentProfile, allPosts]);
+
+  const optimisticUpdateMetrics = useCallback((postId: string, metrics: Partial<Post>) => {
+    setAllPosts(prev => prev.map(p => 
+      p.id === postId ? { ...p, ...metrics } : p
+    ));
   }, []);
 
   const deletePost = useCallback(async (postId: string) => {
+    if (!currentProfile) return false;
+
+    const previousPost = allPosts.find(p => p.id === postId);
+    if (!previousPost) return false;
+
+    // Optimistic update
+    setAllPosts(prev => prev.map(p => 
+      p.id === postId ? { ...p, is_deleted: true, deleted_at: new Date().toISOString() } : p
+    ));
+
     try {
-      const deleted_at = new Date().toISOString();
-      const updates = { is_deleted: true, deleted_at };
-      
-      // Simulate API call (Soft Delete)
-      await dbUpdatePost(postId, updates);
-      
-      // Optimistic update
-      setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, ...updates } : p));
-      
-      // Persist to localStorage (Deleted list)
-      const deletedPosts = JSON.parse(localStorage.getItem('rater_deleted_posts') || '[]');
-      if (!deletedPosts.includes(postId)) {
-        deletedPosts.push(postId);
-        localStorage.setItem('rater_deleted_posts', JSON.stringify(deletedPosts));
-      }
-      
+      const result = await dbSoftDeletePost(postId, currentProfile.id);
+      if (!result.ok) throw new Error(result.error);
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Optimistic delete failed, rolling back:', err);
+      setAllPosts(prev => prev.map(p => p.id === postId ? previousPost : p));
       return false;
     }
-  }, []);
+  }, [currentProfile, allPosts]);
 
   const undoDelete = useCallback(async (postId: string) => {
+    if (!currentProfile) return false;
+
+    const previousPost = allPosts.find(p => p.id === postId);
+    if (!previousPost) return false;
+
+    // Optimistic update
+    setAllPosts(prev => prev.map(p => 
+      p.id === postId ? { ...p, is_deleted: false, deleted_at: undefined } : p
+    ));
+
     try {
-      const updates = { is_deleted: false, deleted_at: undefined };
-      
-      // Simulate API call
-      await dbUpdatePost(postId, updates);
-      
-      // Optimistic update
-      setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, ...updates } : p));
-      
-      // Remove from localStorage (Deleted list)
-      let deletedPosts = JSON.parse(localStorage.getItem('rater_deleted_posts') || '[]');
-      deletedPosts = deletedPosts.filter((id: string) => id !== postId);
-      localStorage.setItem('rater_deleted_posts', JSON.stringify(deletedPosts));
-      
+      const result = await dbUpdatePost(postId, { is_deleted: false, deleted_at: undefined }, currentProfile.id);
+      if (!result.ok) throw new Error(result.error);
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Optimistic undo failed, rolling back:', err);
+      setAllPosts(prev => prev.map(p => p.id === postId ? previousPost : p));
       return false;
     }
-  }, []);
+  }, [currentProfile, allPosts]);
 
-  // Hard delete is reserved for future backend cleanup (not triggered in UI)
   const hardDeletePost = useCallback(async (postId: string) => {
-    try {
-      const { hardDeletePost: dbHardDeletePost } = await import('../logic/mockData');
-      
-      // Simulate API call
-      await dbHardDeletePost(postId);
-      
-      // Permanent removal from state
-      setAllPosts(prev => prev.filter(p => p.id !== postId));
-      
-      // Remove from all localStorage locations
-      const deletedPosts = JSON.parse(localStorage.getItem('rater_deleted_posts') || '[]');
-      localStorage.setItem('rater_deleted_posts', JSON.stringify(deletedPosts.filter((id: string) => id !== postId)));
-      
-      const savedOverrides = JSON.parse(localStorage.getItem('rater_post_overrides') || '{}');
-      if (savedOverrides[postId]) {
-        delete savedOverrides[postId];
-        localStorage.setItem('rater_post_overrides', JSON.stringify(savedOverrides));
-      }
+    if (!currentProfile) return false;
 
-      let sessionPosts = JSON.parse(localStorage.getItem('rater_session_posts') || '[]');
-      sessionPosts = sessionPosts.filter((p: Post) => p.id !== postId);
-      localStorage.setItem('rater_session_posts', JSON.stringify(sessionPosts));
-      
+    const previousPost = allPosts.find(p => p.id === postId);
+    if (!previousPost) return false;
+
+    // Optimistic update
+    setAllPosts(prev => prev.filter(p => p.id !== postId));
+
+    try {
+      const result = await dbHardDeletePost(postId, currentProfile.id);
+      if (!result.ok) throw new Error(result.error);
       return true;
     } catch (err) {
-      console.error(err);
+      console.error('Optimistic hard delete failed, rolling back:', err);
+      setAllPosts(prev => [previousPost, ...prev]);
+      return false;
+    }
+  }, [currentProfile, allPosts]);
+
+  const addPost = useCallback(async (postPayload: Omit<Post, 'id' | 'created_at'>) => {
+    // Generate a temporary ID for the optimistic UI
+    const tempId = `temp_${Date.now()}`;
+    const optimisticPost: Post = {
+      ...postPayload,
+      id: tempId,
+      created_at: new Date().toISOString(),
+    };
+
+    // Optimistic update
+    setAllPosts(prev => [optimisticPost, ...prev]);
+
+    try {
+      const newPost = await dbCreatePost(postPayload);
+      // Replace optimistic post with real server post
+      setAllPosts(prev => prev.map(p => p.id === tempId ? newPost : p));
+      return true;
+    } catch (err) {
+      console.error('Optimistic create failed, rolling back:', err);
+      // Rollback newly inserted optimistic post
+      setAllPosts(prev => prev.filter(p => p.id !== tempId));
       return false;
     }
   }, []);
 
-  const addPost = useCallback((post: Post) => {
-    setAllPosts(prev => [post, ...prev]);
-    
-    // Persist to session posts
-    const sessionPosts = JSON.parse(localStorage.getItem('rater_session_posts') || '[]');
-    localStorage.setItem('rater_session_posts', JSON.stringify([post, ...sessionPosts]));
-  }, []);
-
-  const visiblePosts = useMemo(() => allPosts.filter(p => !p.is_deleted), [allPosts]);
-
-  const contextValue = useMemo(() => ({
-    posts: visiblePosts,
-    allPosts, // For internal use like Undo
-    editingPost,
-    setEditingPost,
-    updatePost,
-    deletePost,
-    undoDelete,
-    hardDeletePost,
-    addPost,
-    isLoading
-  }), [visiblePosts, allPosts, editingPost, updatePost, deletePost, undoDelete, hardDeletePost, addPost, isLoading]);
+  // posts is filtered for deleted ones to be safe
+  const activePosts = useMemo(() => allPosts.filter(p => !p.is_deleted), [allPosts]);
 
   return (
-    <PostContext.Provider value={contextValue}>
+    <PostContext.Provider value={{ 
+      posts: activePosts, 
+      allPosts, 
+      editingPost, 
+      setEditingPost, 
+      updatePost,
+      optimisticUpdateMetrics,
+      deletePost, 
+      undoDelete, 
+      hardDeletePost,
+      addPost,
+      isLoading
+    }}>
       {children}
     </PostContext.Provider>
   );

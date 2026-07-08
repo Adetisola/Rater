@@ -1,9 +1,9 @@
 "use client";
 
-import { use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
-import { useEffect } from 'react';
+import type { Avatar } from '../../types';
 import { ProfileView } from '../../components/ProfileView';
 import { FloatingPostButton } from '../../components/FloatingPostButton';
 import { Footer } from '../../components/Footer';
@@ -13,7 +13,7 @@ import { RESERVED_ROUTES } from '../../lib/constants';
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
-  const { allAvatars, isLoading } = useAuth();
+  const { profileMap, isLoading } = useAuth();
   const router = useRouter();
 
   // Decode just in case
@@ -31,29 +31,55 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
     notFound();
   }
 
-  // 1. Find by current username
-  const targetAvatar = Object.values(allAvatars).find(
-    a => a.username.toLowerCase() === slug
-  );
-
-  // 2. If not found, search previous_usernames for a redirect
-  const redirectAvatar = !targetAvatar
-    ? Object.values(allAvatars).find(
-        a => a.previous_usernames?.some(prev => prev.toLowerCase() === slug)
-      )
-    : null;
+  const [targetAvatar, setTargetAvatar] = useState<Avatar | null | undefined>(undefined);
+  const [redirectAvatar, setRedirectAvatar] = useState<Avatar | null>(null);
 
   useEffect(() => {
-    if (!targetAvatar && redirectAvatar) {
+    let mounted = true;
+
+    async function fetchProfile() {
+      // 1. Find by current username
+      const { getProfileByUsername } = await import('../../lib/profiles');
+      const profile = await getProfileByUsername(slug);
+      
+      if (profile && mounted) {
+        setTargetAvatar(profile);
+        return;
+      }
+      
+      // 2. If not found, search previous_usernames for a redirect
+      const { supabase } = await import('../../lib/supabase/client');
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .contains('previous_usernames', [slug])
+        .single();
+        
+      if (data && mounted) {
+        setTargetAvatar(null);
+        setRedirectAvatar(data as Avatar);
+      } else if (mounted) {
+        setTargetAvatar(null);
+      }
+    }
+
+    fetchProfile();
+    
+    return () => { mounted = false; };
+  }, [slug]);
+
+  useEffect(() => {
+    if (targetAvatar === null && redirectAvatar) {
       // Redirect old username slugs to current premium URL
       router.replace(`/@${redirectAvatar.username}`);
     }
   }, [targetAvatar, redirectAvatar, router]);
 
-  if (isLoading) {
+  // Handle both auth context loading and our profile fetch loading
+  if (isLoading || targetAvatar === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-10 h-10 border-4 border-[#FEC312] border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

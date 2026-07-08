@@ -2,12 +2,8 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { Review, Post, PostMetrics } from '@/types';
-// TODO(backend): Replace these mock functions with Supabase queries
-import {
-    getReviewsByPostId,
-    getReviewerDisplayName,
-    calculatePostMetrics,
-} from '../logic/mockData';
+import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview } from '@/lib/reviews';
+import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
@@ -20,6 +16,7 @@ import { sharePost } from '../lib/postActions';
 import { ReviewForm } from './ReviewForm';
 import { getReviewMode } from '../config/reviewModes';
 import { Button } from './ui/Button';
+import { Tooltip } from './ui/Tooltip';
 import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
@@ -173,8 +170,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
-    const { currentAvatar, allAvatars } = useAuth();
-    const { posts } = usePosts();
+    const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuth() as any;
+    const { posts, optimisticUpdateMetrics } = usePosts();
     const now = useNow();
     const router = useRouter();
 
@@ -188,6 +185,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     // UI State
     const [hasReviewed, setHasReviewed] = useState(false);
+    const headerOpacity = 1;
     const isFreshReviewRef = useRef(false);
     const successStarRef = useRef<SVGPathElement>(null);
     const successCheckRef = useRef<SVGPathElement>(null);
@@ -303,10 +301,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
-    const [isReviewCountTooltipVisible, setIsReviewCountTooltipVisible] = useState(false);
-    const reviewCountTooltipRef = useRef<HTMLDivElement>(null);
-    const [isTopRatedTooltipVisible, setIsTopRatedTooltipVisible] = useState(false);
-    const topRatedTooltipRef = useRef<HTMLDivElement>(null);
 
     const ZOOM_IN_SCALE = 2.5;
 
@@ -470,14 +464,21 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         const newReview = {
             id: `r_new_${Date.now()}`,
             post_id: post.id,
-            ...ratings,
+            ratings: ratings,
             comment,
             reviewer_id: currentAvatar?.id,
-            reviewer_name: currentAvatar ? undefined : reviewer_name,
+            reviewer_name: currentAvatar ? currentAvatar.name : reviewer_name,
             created_at: new Date().toISOString(),
             device_id: device_id
         } as Review;
 
+        // Snapshot state for rollback
+        const previousReviews = [...userReviews];
+        const previousHasReviewed = hasReviewed;
+        const previousTimestamps = localStorage.getItem(RATE_LIMIT_KEY);
+        const previousMetrics = metrics;
+
+        // Apply Optimistic State
         isFreshReviewRef.current = true;
         setUserReviews([newReview, ...userReviews]);
         setHasReviewed(true);
@@ -485,32 +486,39 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
         const updatedTimestamps = [...validTimestamps, Date.now()];
         localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
+
+        // Optimistically calculate new metrics and push to global context
+        try {
+            const newEstimatedMetrics = await calculatePostMetrics(post.id, [newReview, ...userReviews]);
+            optimisticUpdateMetrics(post.id, {
+                review_count: newEstimatedMetrics.review_count,
+                average_score: newEstimatedMetrics.average_score,
+                criteria_scores: newEstimatedMetrics.criteria_scores,
+            });
+
+            // Submit the review to the database
+            const result = await submitReview(newReview);
+            if (!result.ok) {
+                throw new Error(result.error);
+            }
+        } catch (err) {
+            console.error('Failed to submit review:', err);
+            // Rollback State
+            setUserReviews(previousReviews);
+            setHasReviewed(previousHasReviewed);
+            if (previousTimestamps) {
+                localStorage.setItem(RATE_LIMIT_KEY, previousTimestamps);
+            }
+            if (previousMetrics) {
+                optimisticUpdateMetrics(post.id, {
+                    review_count: previousMetrics.review_count,
+                    average_score: previousMetrics.average_score,
+                    criteria_scores: previousMetrics.criteria_scores,
+                });
+            }
+            alert('Failed to submit review. Please try again.');
+        }
     };
-
-    useEffect(() => {
-        if (!isReviewCountTooltipVisible && !isTopRatedTooltipVisible) return;
-
-        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-            const target = e.target as Node;
-            if (isReviewCountTooltipVisible && reviewCountTooltipRef.current && !reviewCountTooltipRef.current.contains(target)) {
-                setIsReviewCountTooltipVisible(false);
-            }
-            if (isTopRatedTooltipVisible && topRatedTooltipRef.current && !topRatedTooltipRef.current.contains(target)) {
-                setIsTopRatedTooltipVisible(false);
-            }
-        };
-
-        const timer = setTimeout(() => {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.addEventListener('touchstart', handleClickOutside);
-        }, 10);
-
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('touchstart', handleClickOutside);
-        };
-    }, [isReviewCountTooltipVisible, isTopRatedTooltipVisible]);
 
     const handleLoadMore = () => {
         setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
@@ -530,6 +538,21 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                 {/* HEADER: Back Button & Navigation Controls */}
                 <div className="mb-8 flex items-center justify-between sticky top-0 bg-transparent pt-8 pb-2 z-50">
+                    {/* Gradient Blur Background Layer */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '-32px',
+                            bottom: '-10px',
+                            left: '-24px',
+                            right: '-24px',
+                            opacity: headerOpacity,
+                            background: 'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 85%, rgba(255, 255, 255, 0) 100%)',
+                            zIndex: -1,
+                            pointerEvents: 'none',
+                            transition: 'opacity 0.1s ease-out'
+                        }}
+                    ></div>
                     <Button
                         variant="secondary"
                         onClick={handleClose}
@@ -616,58 +639,32 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 <span className="text-[10px] font-semibold tracking-wider bg-transparent text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">
                                     {post.category}
                                 </span>
-                                {badge === 'top_rated_active' && (
-                                    <div
-                                        ref={topRatedTooltipRef}
-                                        className="relative group/toprated cursor-help"
-                                        onClick={() => setIsTopRatedTooltipVisible(!isTopRatedTooltipVisible)}
+                                {badge && (
+                                    <Tooltip
+                                        content={<p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>}
+                                        position="top"
+                                        align="center"
+                                        width="w-48"
+                                        contentStyle={{
+                                            background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
+                                            border: '2px solid transparent'
+                                        }}
                                     >
-                                        <span
-                                            className="text-[10px] font-bold uppercase tracking-wider text-black px-2.5 py-1 rounded-full flex items-center gap-1 border-2 border-transparent"
-                                            style={{
-                                                background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
-                                            }}
-                                        >
-                                            <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
-                                                {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
-                                                <DotLottieReact
-                                                    src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
-                                                    loop
-                                                    autoplay
-                                                    dotLottieRefCallback={(dotLottie) => {
-                                                        if (dotLottie) {
-                                                            dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
-                                                        }
-                                                    }}
-                                                    className="relative z-10 w-full h-full"
-                                                />
-                                            </div>
-                                            Top Rated
-                                        </span>
-
-                                        <div
-                                            className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-transparent text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-                                    ${isTopRatedTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'}`}
-                                            style={{
-                                                background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
-                                            }}
-                                        >
-                                            <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
+                                        <div className="w-8 h-8 -ml-1 -mt-2 -mb-2 relative flex items-center justify-center shrink-0 cursor-help">
+                                            {!topRatedLottieLoaded && <span className="absolute text-[18px]">👑</span>}
+                                            <DotLottieReact
+                                                src="https://lottie.host/8cd7b508-3ab9-467f-94d7-01306a72439a/yAtd4qYmXv.lottie"
+                                                loop
+                                                autoplay
+                                                dotLottieRefCallback={(dotLottie) => {
+                                                    if (dotLottie) {
+                                                        dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
+                                                    }
+                                                }}
+                                                className="relative z-10 w-full h-full"
+                                            />
                                         </div>
-                                    </div>
-                                )}
-                                {badge === 'top_rated_previous' && (
-                                    <div
-                                        className="relative group/prevrated cursor-help"
-                                    >
-                                        <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-primary border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
-                                            <span className="opacity-70">🏆</span> Prev Top Rated
-                                        </span>
-                                        <div className="absolute bottom-full left-0 mb-3 w-64 p-4 bg-white border-2 border-gray-100 text-black text-[12px] rounded-2xl shadow-2xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/prevrated:opacity-100 group-hover/prevrated:visible group-hover/prevrated:translate-y-0 transition-all duration-200 hidden md:block z-50">
-                                            <p className="leading-relaxed text-center font-medium">This design was among the top rated in a previous period</p>
-                                            <div className="absolute top-full left-6 border-8 border-transparent border-t-white" />
-                                        </div>
-                                    </div>
+                                    </Tooltip>
                                 )}
                             </div>
                             <span
@@ -689,12 +686,18 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             <h1 className="text-lg xs:text-xl font-semibold text-black leading-tight">
                                 {post.title}
                             </h1>
-                            <div
-                                ref={reviewCountTooltipRef}
-                                className="relative group/tooltip cursor-help shrink-0"
-                                onClick={() => setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible)}
+                            <Tooltip
+                                content={
+                                    <p className="leading-relaxed text-center">
+                                        {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
+                                    </p>
+                                }
+                                position="top"
+                                align="end"
+                                width="w-[calc(100vw-3rem)] xs:w-64"
+                                triggerClassName="relative inline-flex items-center shrink-0"
                             >
-                                <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap">
+                                <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
                                     {isHot && (
                                         <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                             {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -713,15 +716,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     )}
                                     {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
                                 </span>
-
-                                <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-                            ${isReviewCountTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'}`}
-                                >
-                                    <p className="leading-relaxed text-center">
-                                        {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
-                                    </p>
-                                </div>
-                            </div>
+                            </Tooltip>
                         </div>
 
                         {/* 4. Description */}
@@ -818,7 +813,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                     {/* RIGHT COLUMN: Tabbed Rate / Pulse / Insights Hub */}
                     <div className="md:col-span-5 relative">
-                        <div className="sticky top-8">
+                        <div className="sticky top-24">
                             {rateLimitMessage && (
                                 <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-[24px] text-amber-700 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
                                     <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">⏳</div>
@@ -1021,7 +1016,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             let sum = 0;
                             let count = 0;
                             modeConfig.criteria.forEach(c => {
-                                const val = review[c.dbKey as keyof Review];
+                                const val = review.ratings?.[c.dbKey];
                                 if (typeof val === 'number') {
                                     sum += val;
                                     count++;
@@ -1124,7 +1119,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 {modeConfig.criteria.map(c => (
                                                     <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
                                                         <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
-                                                        {review[c.dbKey as keyof Review] || '-'}
+                                                        {review.ratings?.[c.dbKey] || '-'}
                                                     </div>
                                                 ))}
                                             </div>

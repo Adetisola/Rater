@@ -19,9 +19,9 @@ type TabType = 'related' | 'creator';
 
 export function RelatedSection({ currentPost }: RelatedSectionProps) {
   const { posts } = usePosts();
-  const { allAvatars } = useAuth();
+  const { profileMap } = useAuth();
 
-  const creator = allAvatars[currentPost.avatar_id];
+  const creator = profileMap[currentPost.avatar_id];
   const creatorName = creator?.name || 'Creator';
 
   // 1. Compute Category-based related posts (Tab 1)

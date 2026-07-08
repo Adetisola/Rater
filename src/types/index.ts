@@ -60,31 +60,40 @@ export interface Review {
   reviewer_id?: string;
   reviewer_name?: string;
   device_id?: string;
-  clarity?: number;
-  purpose?: number;
-  aesthetics?: number;
-  // Contextual Fields
-  usability?: number;
-  recognition?: number;
-  impact?: number;
-  engagement?: number;
-  composition?: number;
-  detail?: number;
-  
+  ratings: Record<string, number>;
+
   comment?: string;
   created_at: string;
   updated_at?: string;
 }
 
-// ─── Posts ─────────────────────────────────────────────────────────────────────
+// ─── Media & Posts ─────────────────────────────────────────────────────────────
+
+export interface MediaAsset {
+  id: string;
+  type: 'image' | 'video'; // Future-proofing
+  url: string;
+  public_id: string;
+  width: number;
+  height: number;
+  aspect_ratio: number;
+  format: string;
+  bytes: number;
+  alt?: string;
+  order: number;
+}
 
 export interface Post {
   id: string;
   title: string;
   description: string;
   category: Category;
-  image_url: string;
+  image_url: string; // Kept for backwards-compatibility during migration
+  media?: MediaAsset[]; // The new robust media architecture
   avatar_id: string;
+  review_count?: number;
+  average_score?: number;
+  criteria_scores?: Record<string, number>;
   is_deleted?: boolean;
   deleted_at?: string;
   created_at: string;
@@ -96,11 +105,17 @@ export interface PostMetrics {
   average_score: number;
   review_count: number;
   rating_unlocked: boolean;
+  /**
+   * Per-criterion average scores.
+   * Phase 1: undefined (computed locally).
+   * Milestone 4: populated by a Supabase SQL view or RPC.
+   */
+  criteria_scores?: Record<string, number>;
 }
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
-export type BadgeType = 'top_rated_active' | 'top_rated_previous';
+export type BadgeType = 'top_rated_active';
 
 export interface Badge {
   post_id: string;
@@ -154,4 +169,25 @@ export interface PulseSession {
   created_at: string;           // ISO timestamp
   expires_at: string;           // ISO timestamp
   votes: PulseVote[];
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export interface Notification {
+  id: string;
+  avatar_id: string;
+  type: 'new_review' | 'badge_awarded' | 'pulse_vote' | 'system';
+  post_id?: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+// ─── Insight Output ───────────────────────────────────────────────────────────
+
+export interface InsightOutput {
+  summary: string | null;
+  strengths: string[];
+  areasToImprove: string[];
+  meetsThreshold: boolean;
 }

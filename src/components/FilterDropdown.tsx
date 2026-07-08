@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import { ChevronDown, Check, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
-import { CATEGORIES } from '../logic/mockData';
+import { CATEGORIES } from '@/constants/categories';
 import { ListFilter, Search } from 'lucide-react';
 
 export interface FilterState {
@@ -91,7 +91,7 @@ export function FilterDropdown({
 
       {/* Expanded Container */}
       <div className={cn(
-        "absolute bg-white rounded-4xl border-2 border-[#FEC312] z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden shadow-2xl",
+        "absolute bg-white rounded-4xl border-2 border-primary z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden shadow-2xl",
         className
       )}>
 
@@ -144,7 +144,7 @@ export function FilterDropdown({
           {/* Active Filter Toggle */}
           <button
             onClick={onClose}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-[#FEC312] text-white hover:bg-[#eeb40e] transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white hover:bg-[#eeb40e] transition-colors"
           >
             <ListFilter className="h-5 w-5" />
           </button>
@@ -161,7 +161,7 @@ export function FilterDropdown({
             <div className="relative">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className="w-48 py-2 px-4 bg-transparent border border-[#EBEBEB] rounded-full flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-[#FEC312]/10"
+                className="w-48 py-2 px-4 bg-transparent border border-surface rounded-full flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-primary/10"
               >
                 <span className="text-sm font-medium text-black">{getSortLabel(sortBy)}</span>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
@@ -180,7 +180,7 @@ export function FilterDropdown({
                       className="w-full text-left px-4 py-2.5 text-sm font-medium text-black hover:bg-gray-50 flex items-center justify-between transition-colors"
                     >
                       {label}
-                      {sortBy === key && <Check className="w-4 h-4 text-[#FEC312]" strokeWidth={2.5} />}
+                      {sortBy === key && <Check className="w-4 h-4 text-primary" strokeWidth={2.5} />}
                     </button>
                   ))}
                 </div>
@@ -201,7 +201,7 @@ export function FilterDropdown({
                     className={cn(
                       "group pl-1.5 pr-2.5 py-2 rounded-full border text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                       isSelected
-                        ? "bg-[#FEC312]/10 border-[#FEC312]/40 text-black"
+                        ? "bg-primary/10 border-primary/40 text-black"
                         : "bg-white border-gray-100 text-gray-600 hover:border-gray-200 hover:text-black"
                     )}
                   >
@@ -209,7 +209,7 @@ export function FilterDropdown({
                     <div className={cn(
                       "w-5 h-5 rounded-md flex items-center justify-center transition-all duration-200",
                       isSelected
-                        ? "bg-[#FEC312]"
+                        ? "bg-primary"
                         : "border-[1.5px] border-[#E0E0E0]"
                     )}>
                       {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
@@ -239,7 +239,7 @@ export function FilterDropdown({
               Reset
             </Button>
             <Button
-              className="rounded-full px-5 bg-white border-2 border-[#FEC312] text-black font-semibold hover:bg-[#FEC312] hover:text-white transition-all duration-300 shadow-none border-solid"
+              className="rounded-full px-5 bg-white border-2 border-primary text-black font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-none border-solid"
               onClick={onClose}
             >
               Apply

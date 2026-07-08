@@ -23,6 +23,8 @@ import { getCachedInsight, setCachedInsight, type CachedInsight } from '@/utils/
 import { Button } from './ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { AuthOverlay } from './AuthOverlay';
+import { LegalModal } from './LegalModal';
+import { Tooltip } from './ui/Tooltip';
 
 // ─── Criterion Score Analysis ────────────────────────────────────────────────
 
@@ -55,8 +57,8 @@ function analyzeCriteria(reviews: Review[], category?: Category): {
     let sum = 0;
     let count = 0;
     for (const r of reviews) {
-      if (r[c.dbKey] != null) {
-        sum += r[c.dbKey] as number;
+      if (r.ratings?.[c.dbKey] != null) {
+        sum += r.ratings[c.dbKey] as number;
         count++;
       }
     }
@@ -77,7 +79,7 @@ function analyzeCriteria(reviews: Review[], category?: Category): {
       let sum = 0;
       let count = 0;
       activeCriteria.forEach(c => {
-        const val = review[c.dbKey as keyof Review];
+        const val = review.ratings?.[c.dbKey];
         if (typeof val === 'number' && val > 0) {
           sum += val;
           count++;
@@ -92,59 +94,27 @@ function analyzeCriteria(reviews: Review[], category?: Category): {
 }
 
 function InsightCriterionLabel({ children, info }: { children: React.ReactNode, info: { question: string, points: string[] } }) {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsTooltipVisible(prev => !prev);
-  };
-
-  useEffect(() => {
-    if (!isTooltipVisible) return;
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsTooltipVisible(false);
-      }
-    };
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }, 10);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isTooltipVisible]);
-
   return (
-    <div
-      ref={containerRef}
-      className="relative group cursor-help w-full"
-      onClick={handleTap}
+    <Tooltip
+      triggerClassName="group relative flex items-center cursor-help w-full"
+      width="w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64"
+      contentClassName="p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl"
+      content={
+        <>
+          <p className="font-semibold mb-2.5 leading-relaxed whitespace-normal">{info.question}</p>
+          <ul className="space-y-1.5 text-gray-700">
+            {info.points.map(point => (
+              <li key={point} className="flex items-start gap-2 whitespace-normal text-left">
+                <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+                <span className="flex-1">{point}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      }
     >
       {children}
-
-      {/* Tooltip */}
-      <div className={`absolute bottom-full left-0 min-[769px]:left-0 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-        ${isTooltipVisible
-          ? 'opacity-100 visible translate-y-0'
-          : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
-        }`}
-      >
-        <p className="font-semibold mb-2.5 leading-relaxed whitespace-normal">{info.question}</p>
-        <ul className="space-y-1.5 text-gray-700">
-          {info.points.map(point => (
-            <li key={point} className="flex items-start gap-2 whitespace-normal text-left">
-              <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
-              <span className="flex-1">{point}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    </Tooltip>
   );
 }
 
@@ -385,8 +355,13 @@ interface InsightsTabProps {
 }
 
 export function InsightsTab({ reviews, postCategory, postTitle, postDescription, postId }: InsightsTabProps) {
-  const { currentAvatar } = useAuth();
+  const { currentProfile } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
+    isOpen: false,
+    title: '',
+    docUrl: ''
+  });
 
   const { criteria, overallAverage } = useMemo(
     () => analyzeCriteria(reviews, postCategory),
@@ -482,7 +457,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
 
       {/* ── Synthesis Section ─────────────────────────────────────────── */}
 
-      {!currentAvatar ? (
+      {!currentProfile ? (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -575,38 +550,52 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                     </div>
                   </div>
                 )}
+              </div>
 
-                {/* Footer info: Sources & Model indicator */}
-                <div className="flex justify-between items-center pt-2 pb-1 relative">
-                  <div className="group flex items-center">
-                    <button
-                      type="button"
-                      className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5"
-                    >
-                      <Info className="w-3 h-3" />
-                      Sources
-                    </button>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-0 mb-3 w-52 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 transition-all duration-200">
+              {/* Bottom fade mask for scrollable area */}
+              <div
+                className={`absolute bottom-[36px] left-0 right-2 h-8 bg-linear-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
+              />
+
+              {/* Footer info: Sources & Model indicator (Outside scroll area to prevent tooltip clipping) */}
+              <div className="flex justify-between items-center pt-3 pb-1 border-t border-gray-50 mt-1">
+                <Tooltip
+                  width="w-64"
+                  gapClass="pb-1"
+                  content={
+                    <>
                       <p className="leading-relaxed">
                         Synthesized from <strong className="font-semibold">{reviews.length}</strong> user reviews, analyzing ratings and written feedback.
                       </p>
-                    </div>
-                  </div>
+                      <p className="text-[10px] text-gray-500 leading-relaxed border-t border-gray-100 pt-2 mt-2">
+                        AI-generated insights may be imperfect. Learn more in the{' '}
+                        <button 
+                          type="button"
+                          onClick={() => setLegalModal({ isOpen: true, title: 'AI & Insights Policy', docUrl: '/legal/Rater AI & Insights Policy.md' })}
+                          className="font-semibold text-gray-600 hover:text-black transition-colors"
+                        >
+                          AI &amp; Insights Policy
+                        </button>.
+                      </p>
+                    </>
+                  }
+                >
+                  <button
+                    type="button"
+                    className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5 py-1 pr-4"
+                  >
+                    <Info className="w-3 h-3" />
+                    Sources
+                  </button>
+                </Tooltip>
 
-                  {model && (
-                    <p className="text-[10px] text-gray-400">
-                      Powered by {model}
-                    </p>
-                  )}
-                </div>
+                {model && (
+                  <p className="text-[10px] text-gray-400">
+                    Powered by {model}
+                  </p>
+                )}
               </div>
 
-              {/* Bottom fade mask */}
-              <div
-                className={`absolute bottom-0 left-0 right-2 h-8 bg-linear-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
-              />
             </motion.div>
           )}
 
@@ -689,6 +678,12 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
       )}
 
       {showAuthOverlay && <AuthOverlay initialTab="signup" redirectOnSuccess={false} onClose={() => setShowAuthOverlay(false)} />}
+      <LegalModal
+        isOpen={legalModal.isOpen}
+        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
+        title={legalModal.title}
+        docUrl={legalModal.docUrl}
+      />
     </motion.div>
   );
 }

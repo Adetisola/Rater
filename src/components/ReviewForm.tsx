@@ -8,6 +8,7 @@ import { StarRating } from './ui/StarRating';
 import { Input } from './ui/Input';
 import { useGuestEngagementPrompt } from '../hooks/useGuestEngagementPrompt';
 import { GuestSignupPrompt } from './GuestSignupPrompt';
+import { Tooltip } from './ui/Tooltip';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -21,14 +22,14 @@ import {
   getGuestSessionId
 } from '../utils/draftManager';
 import { useDebounce } from '../hooks/useDebounce';
-import type { Category, Review } from '../types';
+import type { Category } from '../types';
 import { getReviewMode } from '../config/reviewModes';
 
 /**
  * Props for the ReviewForm component.
  */
 interface ReviewFormProps {
-  onSubmit: (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewerName: string) => void | Promise<void>;
+  onSubmit: (ratings: Record<string, number>, comment: string, reviewerName: string) => void | Promise<void>;
   initialName?: string;
   isLoggedIn?: boolean;
   postId: string;
@@ -37,44 +38,25 @@ interface ReviewFormProps {
 }
 
 function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { question: string, points: string[] }, iconUrl?: string }) {
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
-  // Handle tap to toggle tooltip
-  const handleTap = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsTooltipVisible(prev => !prev);
-  };
-
-  // Close tooltip when clicking outside
-  React.useEffect(() => {
-    if (!isTooltipVisible) return;
-
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsTooltipVisible(false);
-      }
-    };
-
-    // Small delay to prevent immediate close on the same tap
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }, 10);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isTooltipVisible]);
-
   return (
-    <div
-      ref={containerRef}
-      className="relative group cursor-help flex items-center"
-      onClick={handleTap}
+    <Tooltip
+      triggerClassName="group relative flex items-center cursor-help"
+      alignClassName="left-0 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2"
+      width="w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64"
+      contentClassName="p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl"
+      content={
+        <>
+          <p className="font-semibold mb-2.5 leading-relaxed">{info.question}</p>
+          <ul className="space-y-1.5 text-gray-700">
+            {info.points.map(point => (
+              <li key={point} className="flex items-start gap-2">
+                <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+                {point}
+              </li>
+            ))}
+          </ul>
+        </>
+      }
     >
       <div className="flex items-center gap-2 border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black select-none">
         {iconUrl && <img src={iconUrl} alt={`${label} icon`} className="w-5 h-5 object-contain" />}
@@ -82,26 +64,7 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
           {label}
         </span>
       </div>
-
-      {/* Tooltip - visible on hover (desktop) or tap (mobile) */}
-      {/* On mobile: left-aligned to prevent overflow. On desktop: centered */}
-      <div className={`absolute bottom-full left-0 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2 mb-3 w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64 p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-        ${isTooltipVisible
-          ? 'opacity-100 visible translate-y-0'
-          : 'opacity-0 invisible translate-y-2 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:translate-y-0'
-        }`}
-      >
-        <p className="font-semibold mb-2.5 leading-relaxed">{info.question}</p>
-        <ul className="space-y-1.5 text-gray-700">
-          {info.points.map(point => (
-            <li key={point} className="flex items-start gap-2">
-              <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
-              {point}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+    </Tooltip>
   );
 }
 
@@ -115,7 +78,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
   const modeConfig = getReviewMode(postCategory);
   const criteria = modeConfig.criteria;
 
-  const [ratings, setRatings] = useState<Partial<Record<keyof import('../types').Review, number>>>({});
+  const [ratings, setRatings] = useState<Record<string, number>>({});
   const [comment, setComment] = useState('');
   const [name, setName] = useState(initialName || '');
   const [isSubmitting, setIsSubmitting] = useState(false);

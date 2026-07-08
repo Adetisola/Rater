@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/Button';
+import { LegalModal } from './LegalModal';
 
 interface ReportPostOverlayProps {
   onClose: () => void;
@@ -25,10 +26,19 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
+    isOpen: false,
+    title: '',
+    docUrl: ''
+  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const openLegal = (title: string, docUrl: string) => {
+    setLegalModal({ isOpen: true, title, docUrl });
+  };
 
   const handleSubmit = () => {
     if (reason === 'Select') return;
@@ -76,14 +86,14 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                     <button 
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-left flex items-center justify-between text-sm font-medium hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312]"
+                        className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-left flex items-center justify-between text-sm font-medium hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     >
                         <span className={reason === 'Select' ? 'text-gray-400' : 'text-black'}>{reason}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
                     
                     {isDropdownOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#FEC312] rounded-xl shadow-lg z-20 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-primary rounded-xl shadow-lg z-20 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                             {REPORT_REASONS.map((r) => (
                                 <button
                                     key={r}
@@ -108,7 +118,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
                             maxLength={120}
-                            className="w-full h-32 bg-white border border-gray-200 rounded-xl p-4 pb-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#FEC312]/20 focus:border-[#FEC312] resize-none"
+                            className="w-full h-32 bg-white border border-gray-200 rounded-xl p-4 pb-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                             placeholder=""
                         />
                         <div className="absolute bottom-3 right-4 text-xs font-medium text-gray-400">
@@ -118,6 +128,12 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 </div>
 
                 {/* Actions */}
+                <div className="mb-6">
+                    <p className="text-[12px] text-gray-500 text-center leading-relaxed">
+                        Reports are reviewed according to our{' '}
+                        <button type="button" onClick={() => openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md')} className="font-semibold text-gray-600 hover:text-black transition-colors">Community Guidelines</button>.
+                    </p>
+                </div>
                 <div className="flex items-center justify-center gap-4">
                     <Button 
                         variant="ghost"
@@ -138,7 +154,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
             </>
         ) : (
             <div className="text-center py-8 animate-in fade-in zoom-in-95 duration-300">
-                 <div className="w-20 h-20 bg-[#FEC312]/20 text-[#FEC312] rounded-full flex items-center justify-center mx-auto mb-6">
+                 <div className="w-20 h-20 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
                     <ShieldCheck className="w-10 h-10" />
                  </div>
                  <h2 className="text-2xl font-bold text-black mb-2">Report Submitted</h2>
@@ -152,6 +168,13 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
         )}
 
       </div>
+      
+      <LegalModal
+        isOpen={legalModal.isOpen}
+        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
+        title={legalModal.title}
+        docUrl={legalModal.docUrl}
+      />
     </div>,
     document.body
   );

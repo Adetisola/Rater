@@ -1,9 +1,9 @@
-import type { Category, Review } from '../types';
+import type { Category } from '../types';
 
 export type ReviewMode = 'INTERFACE' | 'BRAND' | 'MARKETING' | 'VISUAL_CRAFT';
 
 export interface CriterionConfig {
-  dbKey: keyof Review;
+  dbKey: string;
   label: string;
   question: string;
   points: string[];

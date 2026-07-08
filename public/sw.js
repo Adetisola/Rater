@@ -1,5 +1,6 @@
-const CACHE_NAME = 'rater-cache-v2';
+const CACHE_NAME = 'rater-cache-v3';
 const STATIC_ASSETS = [
+  '/offline',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -42,10 +43,7 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request).catch(() => {
         return caches.match(event.request).then((response) => {
           if (response) return response;
-          // Return offline fallback if we had one, but we don't right now
-          return new Response('Connection looks unstable. Go buy Data.', {
-            headers: { 'Content-Type': 'text/html' }
-          });
+          return caches.match('/offline');
         });
       })
     );

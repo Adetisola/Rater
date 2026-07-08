@@ -2,8 +2,9 @@
 
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
-import { calculatePostMetrics } from '../logic/mockData';
+import { getPostMetrics } from '@/lib/metrics';
 import { Button } from './ui/Button';
+import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
 import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
@@ -86,7 +87,7 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId }: ProfileViewProps) {
-  const { currentAvatar: me, allAvatars, logout, updateProfile, checkUsernameAvailable } = useAuth();
+  const { currentProfile: me, profileMap, logout, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
   const { posts: allPosts } = usePosts();
@@ -118,7 +119,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const roleInputRef = useRef<HTMLInputElement>(null);
 
   // Find the avatar to display
-  const targetAvatar = allAvatars[avatarId];
+  const targetAvatar = profileMap[avatarId];
 
   // Username validation hook (wired to checkUsernameAvailable from AuthContext)
   const memoizedCheckAvailability = useCallback(
@@ -156,7 +157,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       let totalScore = 0;
       let ratedPosts = 0;
 
-      const metricsList = await Promise.all(avatarPosts.map(p => calculatePostMetrics(p.id)));
+      const metricsList = await Promise.all(avatarPosts.map(p => getPostMetrics(p.id)));
 
       metricsList.forEach(metrics => {
         totalReviews += metrics.review_count;
@@ -405,21 +406,23 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
               >
                 {!isConfirmingRemove ? (
                   <>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-2 rounded-full bg-white/20 hover:bg-[#FEC312] text-white transition-all transform hover:scale-110"
-                      title="Change Avatar"
-                    >
-                      <Camera className="w-5 h-5" />
-                    </button>
-                    {targetAvatar.avatar_url && (
+                    <Tooltip content="Change Avatar" position="top">
                       <button
-                        onClick={handleAvatarRemove}
-                        className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
-                        title="Remove Avatar"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 rounded-full bg-white/20 hover:bg-primary text-white transition-all transform hover:scale-110"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Camera className="w-5 h-5" />
                       </button>
+                    </Tooltip>
+                    {targetAvatar.avatar_url && (
+                      <Tooltip content="Remove Avatar" position="top">
+                        <button
+                          onClick={handleAvatarRemove}
+                          className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </Tooltip>
                     )}
                   </>
                 ) : (
@@ -430,20 +433,22 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   >
                     <span className="text-[10px] text-white font-bold uppercase tracking-tighter">Are you sure?</span>
                     <div className="flex gap-2">
-                      <button
-                        onClick={handleAvatarRemove}
-                        className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
-                        title="Yes, remove"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
-                        className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
-                        title="Cancel"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <Tooltip content="Yes, remove" position="top">
+                        <button
+                          onClick={handleAvatarRemove}
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content="Cancel" position="top">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </motion.div>
                 )}
@@ -587,7 +592,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                         <button
                           key={s}
                           onClick={() => handleUsernameChange(s)}
-                          className="text-xs px-2.5 py-1 rounded-full bg-gray-100 hover:bg-[#FEC312]/20 hover:text-[#b38a00] border border-gray-200 transition-all font-medium text-gray-600"
+                          className="text-xs px-2.5 py-1 rounded-full bg-gray-100 hover:bg-primary/20 hover:text-[#b38a00] border border-gray-200 transition-all font-medium text-gray-600"
                         >
                           @{s}
                         </button>
@@ -611,7 +616,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     {isMe && editState === 'idle' && (
                       <button
                         onClick={() => startEditing()}
-                        className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
+                        className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-primary"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -649,7 +654,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 ) : (
                   <button
                     onClick={() => startEditing('role')}
-                    className="text-[16px] font-base text-gray-400 hover:text-[#FEC312] transition-colors focus:outline-none"
+                    className="text-[16px] font-base text-gray-400 hover:text-primary transition-colors focus:outline-none"
                   >
                     Tell us your creative role
                   </button>
@@ -723,7 +728,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 ) : (
                   <button
                     onClick={() => startEditing('bio')}
-                    className="text-gray-500 hover:text-[#FEC312] transition-colors"
+                    className="text-gray-500 hover:text-primary transition-colors"
                   >
                     Say a little about yourself...
                   </button>
@@ -756,7 +761,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                       checked={editShowEmail}
                       onChange={(e) => setEditShowEmail(e.target.checked)}
                       disabled={editState === 'saving'}
-                      className="w-4 h-4 rounded-sm border-gray-300 text-[#FEC312] focus:ring-[#FEC312] cursor-pointer"
+                      className="w-4 h-4 rounded-sm border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span className="text-[13px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Show email on profile</span>
                   </label>
@@ -923,17 +928,17 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="py-24 text-center bg-white rounded-[24px] border-2 border-[#FEC312] border-dashed shadow-xl shadow-[#FEC312]/5 max-w-2xl mx-auto px-8"
+            className="py-24 text-center bg-white rounded-[24px] border-2 border-primary border-dashed shadow-xl shadow-primary/5 max-w-2xl mx-auto px-8"
           >
             <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />
+              <Heart className="w-10 h-10 text-primary fill-primary" />
             </div>
             <h3 className="text-3xl font-semibold mb-4 text-black">Coming Soon!</h3>
             <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
               You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
             </p>
             <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-gray-100 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#FEC312] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Development in Progress</span>
             </div>
           </motion.div>

@@ -39,7 +39,7 @@ export function PostActionsMenu({
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { currentAvatar } = useAuth();
+  const { currentProfile } = useAuth();
   const { setEditingPost } = usePosts();
   const menuRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
@@ -65,7 +65,7 @@ export function PostActionsMenu({
     };
   }, [isOpen]);
 
-  const isOwner = currentAvatar?.id === post.avatar_id;
+  const isOwner = currentProfile?.id === post.avatar_id;
 
   useEffect(() => {
     setMounted(true);

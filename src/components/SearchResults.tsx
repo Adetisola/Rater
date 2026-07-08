@@ -53,7 +53,7 @@ export function SearchResults({
     ? recentItems.length > 0 
     : (results.avatars.length > 0 || results.posts.length > 0 || results.categories.length > 0);
   
-  const { allAvatars } = useAuth();
+  const { profileMap } = useAuth();
   const { posts: allPosts } = usePosts();
   
   const [mounted, setMounted] = useState(false);
@@ -138,7 +138,7 @@ export function SearchResults({
                 }
 
                 if (item.type === 'avatar') {
-                  const avatar = allAvatars[item.avatarId];
+                  const avatar = profileMap[item.avatarId];
                   if (!avatar) return null;
                   return (
                     <div key={`rec-av-${item.avatarId}`} className="flex items-center group flex-nowrap">

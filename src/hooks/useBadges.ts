@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Post, BadgeType } from '@/types';
-import { computeBadges } from '../logic/badgeUtils';
+import { getActiveBadges } from '@/lib/badges';
 
 export function useBadges(posts: Post[]) {
   const [badgeMap, setBadgeMap] = useState<Record<string, BadgeType>>({});
@@ -10,7 +10,7 @@ export function useBadges(posts: Post[]) {
 
   useEffect(() => {
     let isMounted = true;
-    computeBadges(posts).then(map => {
+    getActiveBadges(posts).then(map => {
       if (isMounted) {
         setBadgeMap(map);
         setLoading(false);
