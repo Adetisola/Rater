@@ -13,7 +13,7 @@ import { RESERVED_ROUTES } from '../../lib/constants';
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
-  const { profileMap, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const router = useRouter();
 
   // Decode just in case
