@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
 import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview } from '@/lib/reviews';
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
@@ -26,6 +27,7 @@ import { useBadges } from '../hooks/useBadges';
 import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
 import { RelatedSection } from './RelatedSection';
+import { MediaCarousel } from './MediaCarousel';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 
@@ -286,14 +288,42 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+    const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
     const [zoomScale, setZoomScale] = useState(1);
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
+
+    const displayMedia = useMemo(() => {
+        return post.media && post.media.length > 0 ? post.media : [{
+            id: post.id,
+            type: 'image' as const,
+            url: post.image_url,
+            public_id: '',
+            width: 1200,
+            height: 800,
+            aspect_ratio: 1.5,
+            format: 'jpg',
+            bytes: 0,
+            alt: post.title,
+            order: 0
+        }];
+    }, [post]);
 
     useEffect(() => {
         if (onDisableSwipe) {
             onDisableSwipe(isImageFullscreen || isReportOpen || isShareOpen);
         }
     }, [isImageFullscreen, isReportOpen, isShareOpen, onDisableSwipe]);
+
+    useEffect(() => {
+        if (isImageFullscreen || isReportOpen || isShareOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isImageFullscreen, isReportOpen, isShareOpen]);
 
     const imgRef = useRef<HTMLImageElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -593,8 +623,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                         {/* 1. Image Preview */}
                         <div
-                            className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-auto xs:aspect-video'} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                            className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-4/5 xs:aspect-video'} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
                             onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
+                            onPointerDownCapture={(e) => {
+                                // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
+                                e.stopPropagation();
+                            }}
                         >
                             {imageError ? (
                                 <ImageFallback
@@ -605,19 +639,24 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     onErrorChange={(err) => setImageError(err)}
                                 />
                             ) : (
-                                <>
-                                    <img
-                                        src={post.image_url}
-                                        alt={post.title}
-                                        className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500"
-                                        onError={() => setImageError(true)}
+                                <div className="w-full h-full relative">
+                                    <MediaCarousel
+                                        media={displayMedia}
+                                        variant="detail"
+                                        className="w-full h-full"
+                                        imageClassName="w-full h-full object-cover transition-transform duration-500"
+                                        onErrorChange={(err) => setImageError(err)}
+                                        onImageClick={(index) => {
+                                            setFullscreenImageIndex(index);
+                                            if (!imageError) setIsImageFullscreen(true);
+                                        }}
                                     />
-                                    <div className="absolute inset-0 bg-transparent opacity-0 group-hover:opacity-100 duration-300 flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-transparent opacity-0 group-hover:opacity-100 duration-300 flex items-center justify-center pointer-events-none z-10">
                                         <span className="text-black font-semibold text-sm bg-white/80 px-4 py-2 rounded-full backdrop-blur-md">
                                             View Full Image
                                         </span>
                                     </div>
-                                </>
+                                </div>
                             )}
 
 
@@ -650,19 +689,28 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             border: '2px solid transparent'
                                         }}
                                     >
-                                        <div className="w-8 h-8 -ml-1 -mt-2 -mb-2 relative flex items-center justify-center shrink-0 cursor-help">
-                                            {!topRatedLottieLoaded && <span className="absolute text-[18px]">👑</span>}
-                                            <DotLottieReact
-                                                src="https://lottie.host/8cd7b508-3ab9-467f-94d7-01306a72439a/yAtd4qYmXv.lottie"
-                                                loop
-                                                autoplay
-                                                dotLottieRefCallback={(dotLottie) => {
-                                                    if (dotLottie) {
-                                                        dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
-                                                    }
-                                                }}
-                                                className="relative z-10 w-full h-full"
-                                            />
+                                        <div 
+                                            className="text-black text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 cursor-help"
+                                            style={{
+                                                background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
+                                                border: '2px solid transparent'
+                                            }}
+                                        >
+                                            <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
+                                                {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
+                                                <DotLottieReact
+                                                    src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
+                                                    loop
+                                                    autoplay
+                                                    dotLottieRefCallback={(dotLottie) => {
+                                                        if (dotLottie) {
+                                                            dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
+                                                        }
+                                                    }}
+                                                    className="relative z-10 w-full h-full"
+                                                />
+                                            </div>
+                                            <span>Top Rated</span>
                                         </div>
                                     </Tooltip>
                                 )}
@@ -1140,6 +1188,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         })}
                     </div>
 
+
                     {hasMoreReviews && (
                         <div className="flex justify-center mt-8">
                             <Button variant='ghost' onClick={handleLoadMore} className="group relative px-8 py-3.5 bg-transparent text-sm font-medium transition-all duration-200 flex items-center gap-2">
@@ -1158,11 +1207,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             </div>
 
             {/* Fullscreen Image Overlay */}
-            {isImageFullscreen && (
+            {isImageFullscreen && typeof document !== 'undefined' && createPortal(
                 <div
                     ref={containerRef}
-                    className="fixed inset-0 z-60 flex items-center justify-center p-4 overflow-hidden"
-                    onPointerDown={(e) => {
+                    className="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-hidden"
+                    onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setIsImageFullscreen(false);
                             setZoomScale(1);
@@ -1176,16 +1225,17 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         </button>
                         <button onClick={async (e) => {
                             e.stopPropagation();
+                            const currentUrl = displayMedia[fullscreenImageIndex]?.url || post.image_url;
                             try {
-                                const response = await fetch(post.image_url);
+                                const response = await fetch(currentUrl);
                                 const blob = await response.blob();
                                 const url = window.URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
-                                link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
+                                link.download = `${post.title.replace(/\s+/g, '_')}_${fullscreenImageIndex + 1}.jpg`;
                                 document.body.appendChild(link); link.click();
                                 document.body.removeChild(link); window.URL.revokeObjectURL(url);
-                            } catch (err) { window.open(post.image_url, '_blank'); }
+                            } catch (err) { window.open(currentUrl, '_blank'); }
                         }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Download className="w-5 h-5 text-black" /></button>
                         <button onClick={async (e) => {
                             e.stopPropagation();
@@ -1199,7 +1249,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     </div>
                     <motion.img
                         ref={imgRef}
-                        src={post.image_url}
+                        src={displayMedia[fullscreenImageIndex]?.url || post.image_url}
                         className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
                         style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
                         whileDrag={{ cursor: 'grabbing' }}
@@ -1217,7 +1267,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             else { lastTapRef.current = now; }
                         }}
                     />
-                </div>
+                </div>,
+                document.body
             )}
         </motion.div>
     );

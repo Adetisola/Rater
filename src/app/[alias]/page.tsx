@@ -53,7 +53,8 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
         .from('profiles')
         .select('*')
         .contains('previous_usernames', [slug])
-        .single();
+        .limit(1)
+        .maybeSingle();
         
       if (data && mounted) {
         setTargetAvatar(null);

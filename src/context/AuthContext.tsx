@@ -58,7 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setCurrentProfile(null);
-        clearProfileCache();
+        // We intentionally don't call clearProfileCache() here anymore.
+        // It holds public profiles for the feed. If we clear it, the feed shows 'unknown' avatars!
       } else if (session?.user?.id) {
         const profile = await getProfileById(session.user.id);
         if (profile) setCurrentProfile(profile);
@@ -170,7 +171,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    supabase.auth.signOut();
+    supabase.auth.signOut().catch(error => {
+      console.warn("Signout network error (can be ignored):", error);
+    });
   }, []);
 
   return (

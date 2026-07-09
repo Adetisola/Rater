@@ -35,12 +35,12 @@ export function populateProfileCache(profiles: Avatar[]) {
 /**
  * Fetch a single profile by ID.
  * Priority: 
- * 1. Memory Cache
+ * 1. Memory Cache (only if complete)
  * 2. Supabase `profiles` table
  * 3. `MOCK_AVATARS` fallback (for legacy mock posts referencing 'alex', 'sam')
  */
 export async function getProfileById(id: string): Promise<Avatar | null> {
-  if (profileCache[id]) return profileCache[id];
+  if (profileCache[id] && profileCache[id].created_at) return profileCache[id];
 
   // Check Supabase
   const { data, error } = await supabase
@@ -51,9 +51,10 @@ export async function getProfileById(id: string): Promise<Avatar | null> {
 
   if (!error && data) {
     const profile = data as Avatar;
-    profileCache[id] = profile;
-    profileByUsernameCache[profile.username.toLowerCase()] = profile;
-    return profile;
+    // Merge with any existing partial data just in case
+    profileCache[id] = { ...profileCache[id], ...profile };
+    profileByUsernameCache[profile.username.toLowerCase()] = profileCache[id];
+    return profileCache[id];
   }
 
   // Fallback to legacy mock avatars
@@ -61,6 +62,9 @@ export async function getProfileById(id: string): Promise<Avatar | null> {
     profileCache[id] = MOCK_AVATARS[id];
     return MOCK_AVATARS[id];
   }
+
+  // If we only have a partial profile, return that as a last resort
+  if (profileCache[id]) return profileCache[id];
 
   return null;
 }
@@ -71,7 +75,7 @@ export async function getProfileById(id: string): Promise<Avatar | null> {
 export async function getProfileByUsername(username: string): Promise<Avatar | null> {
   const normalized = normalizeUsername(username);
   
-  if (profileByUsernameCache[normalized]) {
+  if (profileByUsernameCache[normalized] && profileByUsernameCache[normalized].created_at) {
     return profileByUsernameCache[normalized];
   }
 
@@ -80,13 +84,14 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
     .from('profiles')
     .select('*')
     .eq('username', normalized)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (!error && data) {
     const profile = data as Avatar;
-    profileCache[profile.id] = profile;
-    profileByUsernameCache[normalized] = profile;
-    return profile;
+    profileCache[profile.id] = { ...profileCache[profile.id], ...profile };
+    profileByUsernameCache[normalized] = profileCache[profile.id];
+    return profileCache[profile.id];
   }
 
   // Fallback to legacy mock avatars
@@ -96,6 +101,9 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
     profileByUsernameCache[normalized] = mockFallback;
     return mockFallback;
   }
+
+  // If we only have a partial profile, return that as a last resort
+  if (profileByUsernameCache[normalized]) return profileByUsernameCache[normalized];
 
   return null;
 }
@@ -162,10 +170,10 @@ export async function checkUsernameAvailable(
     query = query.neq('id', excludeId);
   }
 
-  const { data, error } = await query;
+  const { data } = await query.limit(1).maybeSingle();
   
-  // If there's no error and data length is 0, username is available
-  return !error && (!data || data.length === 0);
+  // If there's no error and data is null, username is available
+  return !data;
 }
 
 // ─── Writes ───────────────────────────────────────────────────────────────────

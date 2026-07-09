@@ -63,15 +63,23 @@ export function MediaCarousel({
     if (!el) return;
     
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const index = Number(entry.target.getAttribute('data-index'));
-          if (!isNaN(index)) setCurrentIndex(index);
-        }
-      });
+      // Filter out elements that don't have a width yet (initial mount)
+      const visibleEntries = entries.filter(entry => 
+        entry.isIntersecting && entry.boundingClientRect.width > 0
+      );
+      
+      if (visibleEntries.length > 0) {
+        // Find the one with the highest intersection ratio
+        const mostVisible = visibleEntries.reduce((prev, current) => 
+          prev.intersectionRatio > current.intersectionRatio ? prev : current
+        );
+        
+        const index = Number(mostVisible.target.getAttribute('data-index'));
+        if (!isNaN(index)) setCurrentIndex(index);
+      }
     }, {
       root: el,
-      threshold: 0.6
+      threshold: 0.5
     });
 
     const children = Array.from(el.children);
