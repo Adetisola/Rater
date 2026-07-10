@@ -1,6 +1,5 @@
 import type { Post, Review, BadgeType } from '../types';
 export type { BadgeType };
-import { getReviewsByPostId } from '@/lib/reviews';
 import { getReviewMode } from '../config/reviewModes';
 import { MAX_TOP_RATED_BADGES, MIN_REVIEWS_FOR_BADGE, BADGE_WINDOW_DAYS } from '@/constants/badges';
 
@@ -39,25 +38,13 @@ function isPostWithinWindow(post: Post): boolean {
 // ─── Eligibility ──────────────────────────────────────────────────────────────
 
 /**
- * A post is eligible for Top Rated if ALL of the following are true:
- * 1. Rating is unlocked (review_count >= 3)
- * 2. review_count >= MIN_REVIEWS_FOR_BADGE
- * 3. Post was created within the badge window
- * 4. All reviews have valid structured ratings
- *
- * NOTE: Blocked avatar enforcement removed from client-side badge logic.
- * TODO(supabase): enforce via RLS policy — blocked avatars' posts will be
- * excluded from queries before they reach this function.
+ * Returns true if the post meets initial criteria for a badge without checking reviews.
  */
-async function isEligibleForBadge(post: Post): Promise<boolean> {
+function meetsInitialBadgeCriteria(post: Post): boolean {
   const isUnlocked = (post.review_count || 0) >= 3;
   if (!isUnlocked) return false;
   if ((post.review_count || 0) < MIN_REVIEWS_FOR_BADGE) return false;
   if (!isPostWithinWindow(post)) return false;
-
-  const reviews = await getReviewsByPostId(post.id);
-  if (!hasAllStructuredReviews(post, reviews)) return false;
-
   return true;
 }
 
@@ -72,8 +59,47 @@ async function isEligibleForBadge(post: Post): Promise<boolean> {
 export async function computeBadges(posts: Post[]): Promise<Record<string, BadgeType>> {
   const finalBadges: Record<string, BadgeType> = {};
 
-  const eligibilityResults = await Promise.all(posts.map(post => isEligibleForBadge(post)));
-  const eligiblePosts = posts.filter((_, i) => eligibilityResults[i]);
+  const candidatePosts = posts.filter(meetsInitialBadgeCriteria);
+  if (candidatePosts.length === 0) return finalBadges;
+
+  // Batch fetch reviews for all candidate posts
+  const postIds = candidatePosts.map(p => p.id);
+  
+  // Dynamic import or utilize a client reference to avoid cyclic deps if necessary
+  const { supabase } = await import('@/lib/supabase/client');
+  // Select the actual flat columns from the DB (the 'ratings' field is a synthetic
+  // mapping done in reviews.ts — it does not exist as a DB column)
+  const RATING_COLS = 'post_id, aesthetics, clarity, purpose, usability, recognition, impact, engagement, composition, detail';
+  const { data: reviewsData, error } = await supabase
+    .from('reviews')
+    .select(RATING_COLS)
+    .in('post_id', postIds);
+
+  if (error) {
+    console.error('Error fetching reviews for badges', error);
+    return finalBadges;
+  }
+
+  // Rebuild the ratings map the same way reviews.ts does
+  const ALLOWED_RATINGS = ['aesthetics', 'clarity', 'purpose', 'usability', 'recognition', 'impact', 'engagement', 'composition', 'detail'];
+  // Group reviews by post_id, building synthetic Review objects
+  const reviewsByPostId: Record<string, any[]> = {};
+  reviewsData?.forEach((row: any) => {
+    const ratings: Record<string, number> = {};
+    ALLOWED_RATINGS.forEach(key => {
+      if (row[key] !== null && row[key] !== undefined) {
+        ratings[key] = row[key];
+      }
+    });
+    const review = { post_id: row.post_id, ratings };
+    if (!reviewsByPostId[row.post_id]) reviewsByPostId[row.post_id] = [];
+    reviewsByPostId[row.post_id].push(review);
+  });
+
+  const eligiblePosts = candidatePosts.filter(post => {
+    const reviewsForPost = (reviewsByPostId[post.id] || []) as Review[];
+    return hasAllStructuredReviews(post, reviewsForPost);
+  });
 
   if (eligiblePosts.length === 0) return finalBadges;
 

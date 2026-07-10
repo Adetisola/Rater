@@ -1,13 +1,12 @@
 "use client";
 
 import { useAuth } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
 import { getPostMetrics } from '@/lib/metrics';
+import { getProfilePosts } from '@/lib/posts';
+import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
-import { useBadges } from '../hooks/useBadges';
-import { useHotPosts } from '../hooks/useHotPosts';
 import { LogOut, Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -22,7 +21,7 @@ import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
-import { AmbientSuccessText } from './AmbientSuccessText';
+import { showToast } from './GlobalOverlays';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -90,13 +89,14 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const { currentProfile: me, profileMap, logout, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
-  const { posts: allPosts } = usePosts();
+
+  const [avatarPostIds, setAvatarPostIds] = useState<string[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   // Edit State
   type EditState = 'idle' | 'editing' | 'saving' | 'error';
   const [editState, setEditState] = useState<EditState>('idle');
   const [saveError, setSaveError] = useState<string>('');
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const [editRole, setEditRole] = useState('');
   const [editBio, setEditBio] = useState('');
@@ -137,16 +137,24 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     checkAvailability: memoizedCheckAvailability,
   });
 
-  // External Metadata (Badges, Hot Status)
-  const { badgeMap } = useBadges(allPosts);
-  const { hotPostIds } = useHotPosts(allPosts);
+  // Fetch Profile Posts
+  useEffect(() => {
+    let mounted = true;
+    setIsLoadingPosts(true);
+    getProfilePosts(avatarId, { limit: 100 }).then(posts => {
+      if (mounted) {
+        usePostStore.getState().addOrUpdatePosts(posts);
+        setAvatarPostIds(posts.map(p => p.id));
+        setIsLoadingPosts(false);
+      }
+    });
+    return () => { mounted = false; };
+  }, [avatarId]);
 
   const avatarPosts = useMemo(() => {
-    if (!targetAvatar) return [];
-    return allPosts
-      .filter(p => p.avatar_id === targetAvatar.id)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [targetAvatar, allPosts]);
+    const posts = avatarPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
+    return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [avatarPostIds]);
 
   // Async stats calculation
   useEffect(() => {
@@ -246,8 +254,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
     if (result.ok) {
       setEditState('idle');
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 2500);
+      showToast("Profile updated successfully", "success");
       // Reroute to new username slug if it changed
       if (usernameChanged) {
         router.replace(`/@${editUsername.toLowerCase().trim()}`);
@@ -261,7 +268,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) return alert("Image too large (Max 5MB)");
+      if (file.size > 5 * 1024 * 1024) return showToast("Image too large (Max 5MB)", "error");
       const reader = new FileReader();
       reader.onloadend = () => updateProfile({ avatar_url: reader.result as string });
       reader.readAsDataURL(file);
@@ -294,20 +301,6 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-2 xs:px-6 pt-1 pb-16 md:pt-4 md:pb-24 w-full min-h-[60vh] relative">
-      {/* SUCCESS TOAST */}
-      <AnimatePresence>
-        {showSuccessToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#111111] text-white px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 pointer-events-none"
-          >
-            <Check className="w-4 h-4 text-green-400" />
-            <AmbientSuccessText className="text-sm font-medium tracking-wide" />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* HEADER: Back Button */}
       <div className="mb-4 md:mb-8">
@@ -902,10 +895,10 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           >
             {avatarPosts.length > 0 ? (
               <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
-                <MasonryGrid
-                  posts={avatarPosts}
-                  badgeMap={badgeMap}
-                  hotPostIds={hotPostIds}
+                <MasonryGrid 
+                  postIds={avatarPostIds} 
+                  isLoading={isLoadingPosts}
+                  maxColumns={3}
                 />
               </div>
             ) : (

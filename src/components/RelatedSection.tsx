@@ -2,10 +2,8 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { usePosts } from '../context/PostContext';
 import { useAuth } from '../context/AuthContext';
-import { useBadges } from '../hooks/useBadges';
-import { useHotPosts } from '../hooks/useHotPosts';
+import { usePostStore } from '../store/postStore';
 import { MasonryGrid } from './MasonryGrid';
 import type { Post } from '@/types';
 import { cn } from '../lib/utils';
@@ -18,7 +16,8 @@ interface RelatedSectionProps {
 type TabType = 'related' | 'creator';
 
 export function RelatedSection({ currentPost }: RelatedSectionProps) {
-  const { posts } = usePosts();
+  const allPostsObj = usePostStore(state => state.posts);
+  const posts = useMemo(() => Object.values(allPostsObj), [allPostsObj]);
   const { profileMap } = useAuth();
 
   const creator = profileMap[currentPost.avatar_id];
@@ -72,9 +71,7 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
   // Determine active posts for the selected view
   const activePosts = activeTab === 'related' ? relatedPosts : creatorPosts;
 
-  // Compute badges and hot status map globally based on all available posts
-  const { badgeMap } = useBadges(posts);
-  const { hotPostIds } = useHotPosts(posts);
+
 
   return (
     <motion.div
@@ -134,9 +131,7 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
           transition={{ duration: 0.2, ease: "easeInOut" }}
         >
           <MasonryGrid
-            posts={activePosts}
-            badgeMap={badgeMap}
-            hotPostIds={hotPostIds}
+            postIds={activePosts.map(p => p.id)}
             maxColumns={4}
           />
         </motion.div>

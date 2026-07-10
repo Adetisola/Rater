@@ -28,15 +28,13 @@ export {
 /**
  * Invalidate (clear) the cached insight for a post.
  * Called when new reviews are submitted or a post is updated.
- *
- * TODO(milestone-5): supabase.from('insight_cache').delete().eq('post_id', postId)
  */
-export function invalidateInsights(postId: string): void {
-  if (typeof window === 'undefined') return;
-  const key = `rater-insights-${postId}`;
+export async function invalidateInsights(postId: string): Promise<void> {
+  const { supabase } = await import('@/lib/supabase/client');
+  if (!supabase) return;
   try {
-    localStorage.removeItem(key);
+    await supabase.from('insight_cache').delete().eq('post_id', postId);
   } catch {
-    // localStorage unavailable — fail silently
+    // Fail silently
   }
 }

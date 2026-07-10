@@ -135,18 +135,23 @@ function useInsightSynthesis(
 
   // Check cache on mount
   useEffect(() => {
-    const cached = getCachedInsight(postId, reviews.length);
-    if (cached) {
-      setResult(cached);
-      setModel(cached.model || '');
-      setState('done');
+    let mounted = true;
+    async function checkCache() {
+      const cached = await getCachedInsight(postId, reviews.length);
+      if (cached && mounted) {
+        setResult(cached);
+        setModel(cached.model || '');
+        setState('done');
+      }
     }
+    checkCache();
+    return () => { mounted = false; };
   }, [postId, reviews.length]);
 
   const generate = useCallback(async (forceRefresh = false) => {
     // Check cache first (unless forcing refresh)
     if (!forceRefresh) {
-      const cached = getCachedInsight(postId, reviews.length);
+      const cached = await getCachedInsight(postId, reviews.length);
       if (cached) {
         setResult(cached);
         setState('done');
@@ -199,21 +204,18 @@ function useInsightSynthesis(
         break;
       }
 
-      if (!data) {
-        throw lastError || new Error('No response after retries');
-      }
-
+      if (!data) throw lastError || new Error('Failed after retries');
       // Validate response
       if (!data.summary || !Array.isArray(data.strengths) || !Array.isArray(data.areasToImprove)) {
         throw new Error('Invalid response shape');
       }
 
+      await setCachedInsight(postId, data, reviews.length);
       setResult(data);
       setModel(data.model || '');
-      setCachedInsight(postId, data, reviews.length);
       setState('done');
-    } catch (error) {
-      console.error('[InsightsTab] LLM synthesis failed:', error);
+    } catch (err) {
+      console.error('Insight generation failed:', err);
       setState('error');
     }
   }, [reviews, postId, postCategory, postTitle, postDescription]);

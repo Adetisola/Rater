@@ -11,11 +11,10 @@ import { CATEGORIES } from '@/constants/categories';
 
 import { buildSearchIndexes, searchPosts } from '@/lib/algolia/search';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
-import { useBadges } from '@/hooks/useBadges';
-import { useHotPosts } from '@/hooks/useHotPosts';
 import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { usePosts } from '@/context/PostContext';
+import { getFeedPosts } from '@/lib/posts';
+import { usePostStore } from '@/store/postStore';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -30,7 +29,55 @@ export default function BrowseContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { currentProfile, profileMap } = useAuth();
-  const { posts: allPosts } = usePosts();
+  
+  // Data State
+  const [feedPostIds, setFeedPostIds] = useState<string[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingPage, setIsFetchingPage] = useState(true);
+
+  // Initial Fetch
+  useEffect(() => {
+    let mounted = true;
+    setIsFetchingPage(true);
+    getFeedPosts({ limit: 20 }).then(newPosts => {
+      if (mounted) {
+        usePostStore.getState().addOrUpdatePosts(newPosts);
+        setFeedPostIds(newPosts.map(p => p.id));
+        setHasMore(newPosts.length === 20);
+        setIsFetchingPage(false);
+      }
+    }).catch(err => {
+      console.error('Initial fetch failed:', err);
+      if (mounted) {
+        setIsFetchingPage(false);
+      }
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  const handleLoadMore = async () => {
+    if (isFetchingPage || !hasMore || feedPostIds.length === 0) return;
+    setIsFetchingPage(true);
+    
+    // Use the created_at of the last fetched post as cursor
+    const lastPostId = feedPostIds[feedPostIds.length - 1];
+    const lastPost = usePostStore.getState().posts[lastPostId];
+    const cursor = lastPost ? lastPost.created_at : undefined;
+
+    try {
+      const newPosts = await getFeedPosts({ limit: 20, cursor });
+      usePostStore.getState().addOrUpdatePosts(newPosts);
+      setFeedPostIds(prev => {
+        const newIds = newPosts.map(p => p.id).filter(id => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
+      setHasMore(newPosts.length === 20);
+    } catch (err) {
+      console.error('Load more failed:', err);
+    } finally {
+      setIsFetchingPage(false);
+    }
+  };
 
 
   // Read URL params
@@ -43,7 +90,7 @@ export default function BrowseContent() {
   const [searchQuery, setSearchQuery] = useState(urlQuery);
 
   // Results state
-  const [sortedPosts, setSortedPosts] = useState<Post[]>([]);
+  const [sortedPostIds, setSortedPostIds] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(true);
 
   // Handle search submission (only on Enter)
@@ -60,9 +107,11 @@ export default function BrowseContent() {
   const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
 
   // Logic dependencies
-  const searchIndexes = useMemo(() => buildSearchIndexes(allPosts, profileMap, CATEGORIES), [allPosts, profileMap]);
-  const { badgeMap } = useBadges(allPosts);
-  const { hotPostIds } = useHotPosts(allPosts);
+  const postsSearchSignature = feedPostIds.join(',');
+  const searchIndexes = useMemo(() => {
+    const loadedPosts = feedPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
+    return buildSearchIndexes(loadedPosts, profileMap, CATEGORIES);
+  }, [postsSearchSignature, profileMap]);
 
   const updateUrl = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -115,15 +164,16 @@ export default function BrowseContent() {
         try {
             setIsProcessing(true);
             let posts: Post[];
+            const loadedPosts = feedPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
 
             // 1. Initial filter (Avatar or Search)
             if (selectedAvatar) {
-                posts = allPosts.filter(post => post.avatar_id === selectedAvatar.id);
+                posts = loadedPosts.filter(post => post.avatar_id === selectedAvatar.id);
             } else if (urlQuery.trim().length >= 2) {
                 const results = await searchPosts(searchIndexes, urlQuery, 100);
                 posts = results.map(r => r.post);
             } else {
-                posts = [...allPosts];
+                posts = [...loadedPosts];
             }
 
             // 2. Category filter
@@ -153,12 +203,12 @@ export default function BrowseContent() {
             }
 
             if (isMounted) {
-                setSortedPosts(finalPosts);
+                setSortedPostIds(finalPosts.map(p => p.id));
             }
         } catch (error) {
             console.error('Failed to process posts:', error);
             if (isMounted) {
-                setSortedPosts([]);
+                setSortedPostIds([]);
             }
         } finally {
             if (isMounted) {
@@ -169,7 +219,7 @@ export default function BrowseContent() {
 
     processPosts();
     return () => { isMounted = false; };
-  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, allPosts]);
+  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds]);
 
   return (
     <>
@@ -310,9 +360,9 @@ export default function BrowseContent() {
                     </div>
                     <span className="text-sm text-gray-400">
                       {isProcessing ? 'Searching...' : (
-                        sortedPosts.length === 0
+                        sortedPostIds.length === 0
                           ? 'Nothing here yet'
-                          : `${sortedPosts.length} post${sortedPosts.length === 1 ? '' : 's'} found`
+                          : `${sortedPostIds.length} post${sortedPostIds.length === 1 ? '' : 's'} found`
                       )}
                     </span>
                   </div>
@@ -320,22 +370,32 @@ export default function BrowseContent() {
               )}
 
               <MasonryGrid 
-                posts={sortedPosts} 
-                badgeMap={badgeMap}
-                hotPostIds={hotPostIds}
-                isLoading={isProcessing}
+                postIds={sortedPostIds} 
+                isLoading={isProcessing || isFetchingPage}
               />
 
               {!isProcessing && (
                 <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
-                    <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
-                        {sortedPosts.length > 0 
-                          ? "You've reached the end of the feed"
-                          : sortedPosts.length === 0 && urlQuery.trim() 
-                            ? "Everybody still dey create"
-                            : "Nothing here yet"}
-                    </p>
+                    {hasMore ? (
+                        <button 
+                            onClick={handleLoadMore}
+                            disabled={isFetchingPage}
+                            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-full transition-colors disabled:opacity-50"
+                        >
+                            {isFetchingPage ? 'Loading...' : 'Load More'}
+                        </button>
+                    ) : (
+                        <>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
+                            <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
+                                {sortedPostIds.length > 0 
+                                ? "You've reached the end of the feed"
+                                : sortedPostIds.length === 0 && urlQuery.trim() 
+                                    ? "Everybody still dey create"
+                                    : "Nothing here yet"}
+                            </p>
+                        </>
+                    )}
                 </div>
               )}
             </motion.div>

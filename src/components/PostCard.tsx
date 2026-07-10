@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import type { Post, BadgeType } from '@/types';
+import { useState } from 'react';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { usePostStore } from '../store/postStore';
 import Link from 'next/link';
 import { ImageFallback } from './ImageFallback';
 import { MediaCarousel } from './MediaCarousel';
@@ -19,15 +19,9 @@ import { Tooltip } from './ui/Tooltip';
  * Props for the PostCard component.
  */
 interface PostCardProps {
-    /** The post object containing details like title, image, and metadata */
-    post: Post;
-    /** Optional badge to display on the card (e.g., 'top_rated_active') */
-    badge?: BadgeType;
-    /** Whether the post is currently "hot" based on recent engagement */
-    isHot?: boolean;
+    postId: string;
     /** Whether to show a skeleton loading state instead of the actual card content */
     isLoading?: boolean;
-    /** Optional click handler for when the card is pressed */
     onClick?: () => void;
 }
 
@@ -36,10 +30,12 @@ interface PostCardProps {
  * Includes image loading fallbacks, interactive hover states, metadata, 
  * and Lottie animations for badges (Hot, Top Rated).
  */
-export function PostCard({ post, badge, isHot = false, isLoading: parentLoading = false, onClick }: PostCardProps) {
+export function PostCard({ postId, isLoading: parentLoading = false, onClick }: PostCardProps) {
+    const post = usePostStore(state => state.posts[postId]);
+    const badge = usePostStore(state => state.badgeMap[postId]);
+    const isHot = usePostStore(state => state.hotPostIds.has(postId));
     const [imageLoaded, setImageLoaded] = useState(false);
     const [hasError, setHasError] = useState(false);
-    const [retryCount, setRetryCount] = useState(0);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
 
@@ -55,38 +51,11 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
     const router = useRouter();
     const now = useNow();
 
-    useEffect(() => {
-        if (retryCount === 0) {
-            setImageLoaded(false);
-            setHasError(false);
-        }
 
-        if (!post.image_url || post.image_url.trim() === '') {
-            setHasError(true);
-            setImageLoaded(true);
-            return;
-        }
 
-        const img = new Image();
-        img.src = post.image_url;
-        img.onload = () => {
-            setImageLoaded(true);
-            setHasError(false);
-        };
-        img.onerror = () => {
-            if (retryCount >= 2) {
-                setHasError(true);
-                setImageLoaded(true);
-            } else {
-                const timer = setTimeout(() => {
-                    setRetryCount(prev => prev + 1);
-                }, 2000);
-                return () => clearTimeout(timer);
-            }
-        };
-    }, [post.image_url, retryCount, post.id]);
+    const showSkeleton = parentLoading || metricsLoading;
 
-    const showSkeleton = parentLoading || metricsLoading || (!imageLoaded && !hasError);
+    if (!post) return null;
 
     if (showSkeleton) {
         return (

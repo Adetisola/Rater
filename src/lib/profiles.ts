@@ -23,10 +23,11 @@ const profileByUsernameCache: Record<string, Avatar> = (globalThis as any).__pro
 const usernameToEmailCache: Record<string, string> = (globalThis as any).__usernameToEmailCache || {};
 (globalThis as any).__usernameToEmailCache = usernameToEmailCache;
 
-export function populateProfileCache(profiles: Avatar[]) {
+export function populateProfileCache(profiles: Partial<Avatar>[]) {
   profiles.forEach(p => {
-    profileCache[p.id] = p;
-    profileByUsernameCache[p.username.toLowerCase()] = p;
+    if (!p.id || !p.username) return;
+    profileCache[p.id] = { ...profileCache[p.id], ...(p as Avatar) };
+    profileByUsernameCache[p.username.toLowerCase()] = { ...profileByUsernameCache[p.username.toLowerCase()], ...(p as Avatar) };
   });
 }
 

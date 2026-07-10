@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
+import { usePostStore } from '../store/postStore';
 import type { RecentItemData } from '../hooks/useRecentSearches';
 
 import Link from 'next/link';
@@ -54,7 +54,7 @@ export function SearchResults({
     : (results.avatars.length > 0 || results.posts.length > 0 || results.categories.length > 0);
   
   const { profileMap } = useAuth();
-  const { posts: allPosts } = usePosts();
+  const allPosts = usePostStore(state => state.posts);
   
   const [mounted, setMounted] = useState(false);
 
@@ -151,7 +151,7 @@ export function SearchResults({
                 }
 
                 if (item.type === 'post') {
-                  const postObj = allPosts.find(p => p.id === item.postId);
+                  const postObj = allPosts[item.postId];
                   if (!postObj) return null;
                   return (
                     <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">
@@ -370,8 +370,8 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Icon */}
-      <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">
-        <span className="text-[#FEC312] text-sm">📁</span>
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <span className="text-primary text-sm">📁</span>
       </div>
       
       {/* Category Name */}
@@ -395,7 +395,7 @@ function HighlightedText({ segments }: HighlightedTextProps) {
         segment.isMatch ? (
           <mark 
             key={index} 
-            className="bg-[#FEC312]/30 text-inherit rounded-sm px-0.5"
+            className="bg-primary/30 text-inherit rounded-sm px-0.5"
           >
             {segment.text}
           </mark>

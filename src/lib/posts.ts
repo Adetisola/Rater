@@ -95,71 +95,7 @@ export async function getProfilePosts(avatarId: string, { limit = 20, cursor }: 
   });
 }
 
-/**
- * Fetch posts ordered by review count descending (Hot sort).
- * In Milestone 3, we simply fetch recent posts. Complex metrics sorting requires
- * joining with reviews or a materialized view which is implemented in future milestones.
- */
-export async function getTrendingPosts({ limit = 20, cursor }: { limit?: number; cursor?: string } = {}): Promise<Post[]> {
-  let query = supabase
-    .from('posts')
-    .select('*, profiles(id, username, name, avatar_url, bg_color)')
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
-    .limit(limit);
 
-  if (cursor) {
-    query = query.lt('created_at', cursor);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching trending posts:', error);
-    return [];
-  }
-  
-  const profilesToCache = data.map((row: any) => row.profiles).filter(Boolean);
-  if (profilesToCache.length > 0) populateProfileCache(profilesToCache);
-  
-  return data.map((row: any) => {
-    const { profiles, ...post } = row;
-    return post as Post;
-  });
-}
-
-/**
- * Fetch posts ordered by average rating descending (Top Rated sort).
- */
-export async function getTopRatedPosts({ limit = 20, cursor }: { limit?: number; cursor?: string } = {}): Promise<Post[]> {
-  let query = supabase
-    .from('posts')
-    .select('*, profiles(id, username, name, avatar_url, bg_color)')
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (cursor) {
-    query = query.lt('created_at', cursor);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error('Error fetching top rated posts:', error);
-    return [];
-  }
-  
-  const profilesToCache = data.map((row: any) => row.profiles).filter(Boolean);
-  if (profilesToCache.length > 0) populateProfileCache(profilesToCache);
-  
-  return data.map((row: any) => {
-    const { profiles, ...post } = row;
-    return post as Post;
-  });
-}
-
-// ─── Writes ───────────────────────────────────────────────────────────────────
 
 /**
  * Create a new post.

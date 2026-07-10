@@ -7,7 +7,7 @@ import { Trash2, X } from 'lucide-react';
 import { usePosts } from '../context/PostContext';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { showUndoToast } from './GlobalOverlays';
+import { showUndoToast, showToast } from './GlobalOverlays';
 
 /**
  * Props for the DeletePostOverlay component.
@@ -58,7 +58,7 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
       showUndoToast(postId);
     } else {
       setIsDeleting(false);
-      alert("Failed to delete post.");
+      showToast("Failed to delete post.", "error");
     }
   };
 

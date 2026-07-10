@@ -8,6 +8,7 @@ import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
+import { usePostStore } from '../store/postStore';
 import { useNow } from '../context/TimeContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -23,13 +24,12 @@ import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { AmbientLoadingText } from './AmbientLoadingText';
-import { useBadges } from '../hooks/useBadges';
-import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
 import { RelatedSection } from './RelatedSection';
 import { MediaCarousel } from './MediaCarousel';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
+import { showToast } from './GlobalOverlays';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
@@ -73,12 +73,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    const { posts } = usePosts();
+    const posts = usePostStore(state => state.posts);
     const nextPostId = useNavigationStore(state => state.getNextPostId(post.id));
     const prevPostId = useNavigationStore(state => state.getPrevPostId(post.id));
 
-    const nextPost = useMemo(() => posts.find(p => p.id === nextPostId), [nextPostId, posts]);
-    const prevPost = useMemo(() => posts.find(p => p.id === prevPostId), [prevPostId, posts]);
+    const nextPost = useMemo(() => nextPostId ? posts[nextPostId] : null, [nextPostId, posts]);
+    const prevPost = useMemo(() => prevPostId ? posts[prevPostId] : null, [prevPostId, posts]);
 
     const router = useRouter();
     const pageX = useMotionValue(0);
@@ -172,8 +172,11 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
+    const { optimisticUpdateMetrics } = usePosts();
+    const badgeMap = usePostStore(state => state.badgeMap);
+    const hotPostIds = usePostStore(state => state.hotPostIds);
+    const posts = usePostStore(state => state.posts);
     const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuth() as any;
-    const { posts, optimisticUpdateMetrics } = usePosts();
     const now = useNow();
     const router = useRouter();
 
@@ -183,7 +186,13 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const modeConfig = getReviewMode(post.category);
     const [dbReviews, setDbReviews] = useState<Review[]>([]);
     const [userReviews, setUserReviews] = useState<Review[]>([]);
-    const [metrics, setMetrics] = useState<PostMetrics | null>(null);
+    const [metrics, setMetrics] = useState<PostMetrics>({
+        post_id: post.id,
+        review_count: post.review_count || 0,
+        average_score: post.average_score || 0,
+        rating_unlocked: (post.review_count || 0) >= 3,
+        criteria_scores: post.criteria_scores || {},
+    });
 
     // UI State
     const [hasReviewed, setHasReviewed] = useState(false);
@@ -233,8 +242,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [imageError, setImageError] = useState(false);
 
     // External Metadata (Badges, Hot Status)
-    const { badgeMap } = useBadges(posts);
-    const { hotPostIds } = useHotPosts(posts);
     const badge = badgeMap[post.id];
     const isHot = hotPostIds.has(post.id);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
@@ -246,14 +253,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         setIsFetchingReviews(true);
 
         const loadData = async () => {
-            const [reviews, initialMetrics] = await Promise.all([
-                getReviewsByPostId(post.id),
-                calculatePostMetrics(post.id)
-            ]);
+            const reviews = await getReviewsByPostId(post.id);
 
             if (isMounted) {
                 setDbReviews(reviews);
-                setMetrics(initialMetrics);
                 setIsFetchingReviews(false);
             }
         };
@@ -415,11 +418,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     // Preload adjacent images
     useEffect(() => {
         if (nextPostId) {
-            const p = posts.find(p => p.id === nextPostId);
+            const p = posts[nextPostId];
             if (p?.image_url) new Image().src = p.image_url;
         }
         if (prevPostId) {
-            const p = posts.find(p => p.id === prevPostId);
+            const p = posts[prevPostId];
             if (p?.image_url) new Image().src = p.image_url;
         }
     }, [nextPostId, prevPostId, posts]);
@@ -477,7 +480,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         );
 
         if (hasDuplicate || hasReviewedPost(post.id)) {
-            alert("You've already reviewed this post.");
+            showToast("You've already reviewed this post.", "error");
             return;
         }
 
@@ -546,7 +549,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     criteria_scores: previousMetrics.criteria_scores,
                 });
             }
-            alert('Failed to submit review. Please try again.');
+            showToast('Failed to submit review. Please try again.', "error");
         }
     };
 

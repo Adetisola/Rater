@@ -7,6 +7,7 @@
 
 import type { Review } from '@/types';
 import { supabase } from './supabase/client';
+import { populateProfileCache } from './profiles';
 
 // ─── Reads ────────────────────────────────────────────────────────────────────
 
@@ -16,7 +17,7 @@ import { supabase } from './supabase/client';
 export async function getReviewsByPostId(postId: string): Promise<Review[]> {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, profiles(*)')
+    .select('*, profiles(id, username, name, avatar_url)')
     .eq('post_id', postId)
     .order('created_at', { ascending: false });
 
@@ -26,7 +27,6 @@ export async function getReviewsByPostId(postId: string): Promise<Review[]> {
   }
 
   // Cache the reviewer profiles so they appear correctly in the UI
-  const { populateProfileCache } = require('./profiles');
   const profilesToCache = data.map((row: any) => row.profiles).filter(Boolean);
   if (profilesToCache.length > 0) populateProfileCache(profilesToCache);
 

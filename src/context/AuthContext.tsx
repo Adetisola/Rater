@@ -13,6 +13,7 @@ import {
 } from '@/lib/profiles';
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
+import { MOCK_AVATARS } from '@/logic/mockData';
 
 interface AuthContextType {
   currentProfile: Avatar | null;
@@ -162,7 +163,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        get: (_target, prop) => {
          if (typeof prop === 'string') {
             if (profileCache[prop]) return profileCache[prop];
-            const { MOCK_AVATARS } = require('@/logic/mockData');
             return MOCK_AVATARS[prop];
          }
          return undefined;

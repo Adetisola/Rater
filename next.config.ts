@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
       { hostname: 'img.icons8.com' },
       { hostname: 'lottie.host' },
     ],
-    unoptimized: true,
   },
   experimental: {
     staleTimes: {

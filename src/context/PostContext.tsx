@@ -1,9 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { Post } from '@/types';
 import {
-  getFeedPosts,
   createPost as dbCreatePost,
   updatePost as dbUpdatePost,
   softDeletePost as dbSoftDeletePost,
@@ -11,10 +10,11 @@ import {
 } from '@/lib/posts';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/lib/supabase/client';
+import { getActiveBadges } from '@/lib/badges';
+import { computeHotPosts } from '@/logic/hotPostUtils';
+import { usePostStore } from '../store/postStore';
 
 interface PostContextType {
-  posts: Post[];
-  allPosts: Post[]; // Exposed for backwards compatibility in components expecting allPosts
   editingPost: Post | null;
   setEditingPost: (post: Post | null) => void;
   updatePost: (postId: string, updates: Partial<Post>) => Promise<boolean>;
@@ -23,31 +23,13 @@ interface PostContextType {
   undoDelete: (postId: string) => Promise<boolean>;
   hardDeletePost: (postId: string) => Promise<boolean>;
   addPost: (post: Omit<Post, 'id' | 'created_at'>) => Promise<boolean>;
-  isLoading: boolean;
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
 export function PostProvider({ children }: { children: React.ReactNode }) {
-  const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
   const { currentProfile } = useAuth();
-
-  // Load posts from the data layer on mount
-  useEffect(() => {
-    let mounted = true;
-    
-    getFeedPosts().then(feedPosts => {
-      if (mounted) {
-        setAllPosts(feedPosts);
-        setIsLoading(false);
-      }
-    });
-    
-    return () => { mounted = false; };
-  }, []);
 
   // Supabase Realtime synchronization for post metrics
   useEffect(() => {
@@ -57,19 +39,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
         { event: 'UPDATE', schema: 'public', table: 'posts' },
         (payload) => {
           const newPostData = payload.new as Post;
-          setAllPosts(prev => prev.map(p => {
-            if (p.id === newPostData.id) {
-              // Reconcile and overwrite specifically metrics fields to correct any optimistic drift
-              return {
-                ...p,
-                review_count: newPostData.review_count,
-                average_score: newPostData.average_score,
-                criteria_scores: newPostData.criteria_scores,
-                updated_at: newPostData.updated_at
-              };
-            }
-            return p;
-          }));
+          usePostStore.getState().updatePostMetrics(newPostData.id, {
+            review_count: newPostData.review_count,
+            average_score: newPostData.average_score,
+            criteria_scores: newPostData.criteria_scores,
+            updated_at: newPostData.updated_at
+          });
         }
       )
       .subscribe();
@@ -86,11 +61,11 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
     const finalUpdates = { ...updates, updated_at };
 
     // 1. Snapshot previous state of the targeted post
-    const previousPost = allPosts.find(p => p.id === postId);
+    const previousPost = usePostStore.getState().posts[postId];
     if (!previousPost) return false;
 
     // 2. Optimistic update
-    setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, ...finalUpdates } : p));
+    usePostStore.getState().updatePost(postId, finalUpdates);
 
     try {
       const result = await dbUpdatePost(postId, finalUpdates, currentProfile.id);
@@ -99,27 +74,23 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('Optimistic update failed, rolling back:', err);
       // 3. Precise rollback
-      setAllPosts(prev => prev.map(p => p.id === postId ? previousPost : p));
+      usePostStore.getState().updatePost(postId, previousPost);
       return false;
     }
-  }, [currentProfile, allPosts]);
+  }, [currentProfile]);
 
   const optimisticUpdateMetrics = useCallback((postId: string, metrics: Partial<Post>) => {
-    setAllPosts(prev => prev.map(p => 
-      p.id === postId ? { ...p, ...metrics } : p
-    ));
+    usePostStore.getState().updatePostMetrics(postId, metrics);
   }, []);
 
   const deletePost = useCallback(async (postId: string) => {
     if (!currentProfile) return false;
 
-    const previousPost = allPosts.find(p => p.id === postId);
+    const previousPost = usePostStore.getState().posts[postId];
     if (!previousPost) return false;
 
     // Optimistic update
-    setAllPosts(prev => prev.map(p => 
-      p.id === postId ? { ...p, is_deleted: true, deleted_at: new Date().toISOString() } : p
-    ));
+    usePostStore.getState().updatePost(postId, { is_deleted: true, deleted_at: new Date().toISOString() });
 
     try {
       const result = await dbSoftDeletePost(postId, currentProfile.id);
@@ -127,21 +98,19 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error('Optimistic delete failed, rolling back:', err);
-      setAllPosts(prev => prev.map(p => p.id === postId ? previousPost : p));
+      usePostStore.getState().updatePost(postId, previousPost);
       return false;
     }
-  }, [currentProfile, allPosts]);
+  }, [currentProfile]);
 
   const undoDelete = useCallback(async (postId: string) => {
     if (!currentProfile) return false;
 
-    const previousPost = allPosts.find(p => p.id === postId);
+    const previousPost = usePostStore.getState().posts[postId];
     if (!previousPost) return false;
 
     // Optimistic update
-    setAllPosts(prev => prev.map(p => 
-      p.id === postId ? { ...p, is_deleted: false, deleted_at: undefined } : p
-    ));
+    usePostStore.getState().updatePost(postId, { is_deleted: false, deleted_at: undefined });
 
     try {
       const result = await dbUpdatePost(postId, { is_deleted: false, deleted_at: undefined }, currentProfile.id);
@@ -149,19 +118,19 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error('Optimistic undo failed, rolling back:', err);
-      setAllPosts(prev => prev.map(p => p.id === postId ? previousPost : p));
+      usePostStore.getState().updatePost(postId, previousPost);
       return false;
     }
-  }, [currentProfile, allPosts]);
+  }, [currentProfile]);
 
   const hardDeletePost = useCallback(async (postId: string) => {
     if (!currentProfile) return false;
 
-    const previousPost = allPosts.find(p => p.id === postId);
+    const previousPost = usePostStore.getState().posts[postId];
     if (!previousPost) return false;
 
     // Optimistic update
-    setAllPosts(prev => prev.filter(p => p.id !== postId));
+    usePostStore.getState().deletePost(postId);
 
     try {
       const result = await dbHardDeletePost(postId, currentProfile.id);
@@ -169,10 +138,10 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       return true;
     } catch (err) {
       console.error('Optimistic hard delete failed, rolling back:', err);
-      setAllPosts(prev => [previousPost, ...prev]);
+      usePostStore.getState().addOrUpdatePosts([previousPost]);
       return false;
     }
-  }, [currentProfile, allPosts]);
+  }, [currentProfile]);
 
   const addPost = useCallback(async (postPayload: Omit<Post, 'id' | 'created_at'>) => {
     // Generate a temporary ID for the optimistic UI
@@ -184,28 +153,42 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
     };
 
     // Optimistic update
-    setAllPosts(prev => [optimisticPost, ...prev]);
+    usePostStore.getState().addOrUpdatePosts([optimisticPost]);
 
     try {
       const newPost = await dbCreatePost(postPayload);
       // Replace optimistic post with real server post
-      setAllPosts(prev => prev.map(p => p.id === tempId ? newPost : p));
+      usePostStore.getState().deletePost(tempId);
+      usePostStore.getState().addOrUpdatePosts([newPost]);
       return true;
     } catch (err) {
       console.error('Optimistic create failed, rolling back:', err);
       // Rollback newly inserted optimistic post
-      setAllPosts(prev => prev.filter(p => p.id !== tempId));
+      usePostStore.getState().deletePost(tempId);
       return false;
     }
   }, []);
 
-  // posts is filtered for deleted ones to be safe
-  const activePosts = useMemo(() => allPosts.filter(p => !p.is_deleted), [allPosts]);
+  // Compute badges outside the render cycle
+  useEffect(() => {
+    const unsub = usePostStore.subscribe((state, prevState) => {
+      // Very naive check: if any post changed, re-run badges
+      if (state.posts !== prevState.posts) {
+        const activePosts = Object.values(state.posts).filter(p => !p.is_deleted);
+        Promise.all([
+          getActiveBadges(activePosts),
+          computeHotPosts(activePosts)
+        ]).then(([bMap, hSet]) => {
+          usePostStore.getState().setBadges(bMap);
+          usePostStore.getState().setHotPosts(hSet);
+        });
+      }
+    });
+    return unsub;
+  }, []);
 
   return (
     <PostContext.Provider value={{ 
-      posts: activePosts, 
-      allPosts, 
       editingPost, 
       setEditingPost, 
       updatePost,
@@ -213,8 +196,7 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       deletePost, 
       undoDelete, 
       hardDeletePost,
-      addPost,
-      isLoading
+      addPost
     }}>
       {children}
     </PostContext.Provider>

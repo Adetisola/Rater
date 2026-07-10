@@ -10,7 +10,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '@/lib/algolia/search';
 import type { Post, Avatar, Category } from '@/types';
 import { useAuth } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
+import { usePostStore } from '../store/postStore';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useNavigationStore } from '../store/navigationStore';
 import { Search } from 'lucide-react';
@@ -60,7 +60,7 @@ export function MobileSearchOverlay({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { currentProfile, profileMap } = useAuth();
-  const { posts: allPosts } = usePosts();
+  const allPosts = usePostStore(state => state.posts);
   
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
 
@@ -349,7 +349,7 @@ export function MobileSearchOverlay({
                   }
 
                   if (item.type === 'post') {
-                    const postObj = allPosts.find((p: Post) => p.id === item.postId);
+                    const postObj = allPosts[item.postId];
                     if (!postObj) return null;
                     return (
                       <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">

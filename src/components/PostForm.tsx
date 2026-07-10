@@ -16,6 +16,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AmbientSuccessText } from './AmbientSuccessText';
+import { showToast } from './GlobalOverlays';
 
 interface PostFormProps {
   initialPost?: Post | null;
@@ -326,7 +327,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     if (!currentProfile) return;
 
     if (!title.trim() || !categoryInputValue.trim()) {
-      alert("Title and Category are required.");
+      showToast("Title and Category are required.", "error");
       return;
     }
 
@@ -337,7 +338,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     setCategoryError(false);
 
     if (mediaFiles.length === 0 && mediaPreviews.length === 0) {
-      alert("At least one image is required.");
+      showToast("At least one image is required.", "error");
       return;
     }
 
@@ -417,7 +418,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Upload failed. Please check your connection.");
+      showToast(err.message || "Upload failed. Please check your connection.", "error");
       // Background Cleanup for orphaned newly uploaded media
       if (newlyUploadedAssets.length > 0) {
         import('@/lib/cloudinary/uploads').then(({ deleteMedia }) => {

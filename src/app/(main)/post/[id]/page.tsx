@@ -1,24 +1,43 @@
 "use client";
 
-import { usePosts } from "@/context/PostContext";
+import { useEffect, useState } from "react";
 import { PostDetailContent } from "@/components/PostDetailContent";
 import { notFound, useParams } from "next/navigation";
+import { usePostStore } from "@/store/postStore";
+import { getPost } from "@/lib/posts";
 
 export default function PostDetailPage() {
   const { id } = useParams() as { id: string };
-  const { allPosts, isLoading } = usePosts();
-  
-  const post = allPosts.find((p) => p.id === id);
+  const post = usePostStore((state) => state.posts[id]);
+  const [isLoading, setIsLoading] = useState(!post);
+  const [notFoundState, setNotFoundState] = useState(false);
+
+  useEffect(() => {
+    if (!post && !notFoundState) {
+      let mounted = true;
+      setIsLoading(true);
+      getPost(id).then((fetchedPost) => {
+        if (!mounted) return;
+        if (fetchedPost) {
+          usePostStore.getState().addOrUpdatePosts([fetchedPost]);
+        } else {
+          setNotFoundState(true);
+        }
+        setIsLoading(false);
+      });
+      return () => { mounted = false; };
+    }
+  }, [id, post, notFoundState]);
 
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-[#FEC312] border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  if (!post) {
+  if (notFoundState || (!isLoading && !post)) {
     notFound();
   }
 
@@ -31,7 +50,7 @@ export default function PostDetailPage() {
         </p>
         <button 
           onClick={() => window.history.back()}
-          className="px-8 py-3 bg-[#FEC312] text-black font-bold rounded-full hover:bg-[#FFD342] transition-all"
+          className="px-8 py-3 bg-primary text-black font-bold rounded-full hover:bg-[#FFD342] transition-all"
         >
           Go Back
         </button>
