@@ -34,7 +34,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const post = usePostStore(state => state.posts[postId]);
     const badge = usePostStore(state => state.badgeMap[postId]);
     const isHot = usePostStore(state => state.hotPostIds.has(postId));
-    const [imageLoaded, setImageLoaded] = useState(false);
+
     const [hasError, setHasError] = useState(false);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
@@ -136,7 +136,6 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         className="w-full h-auto object-cover transition-transform duration-500 block"
                                         fallbackClassName={`w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}
                                         onErrorChange={(err) => setHasError(err)}
-                                        onLoadChange={(loaded) => setImageLoaded(loaded)}
                                     />
                                 </div>
                             ) : (
@@ -146,7 +145,6 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                     className="w-full h-auto block"
                                     imageClassName="w-full h-auto object-cover transition-transform duration-500 block"
                                     onErrorChange={(err) => setHasError(err)}
-                                    onLoadChange={(loaded) => setImageLoaded(loaded)}
                                 />
                             )}
 
