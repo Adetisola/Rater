@@ -4,11 +4,12 @@
  * This is the ONLY file the rest of the application imports search from.
  * Callers never know whether Fuse.js or Algolia is the active engine.
  *
- * Phase 1: internally uses Fuse.js (local search) for mock-data continuity.
- * Milestone 6: swap internals to Algolia — no consumer changes required.
+ * It uses Algolia as the primary engine for posts and profiles,
+ * with seamless fallback to Fuse.js local search if Algolia is unavailable.
  */
 
 import type { Post, Avatar, Category } from '@/types';
+import { algoliaClient } from './client';
 import {
   createSearchIndexes,
   searchAll as fuseSearchAll,
@@ -19,53 +20,141 @@ import {
   type AvatarSearchResult,
 } from '@/logic/searchUtils';
 
-// Re-export types so consumers don't import from searchUtils directly.
 export type { SearchIndexes, SectionedSearchResults, PostSearchResult, AvatarSearchResult };
 
-/**
- * Build the search indexes from the current posts and avatars.
- * Phase 1: creates Fuse.js indexes.
- * Milestone 6: returns Algolia index references instead.
- */
 export function buildSearchIndexes(
   posts: Post[],
   avatars: Record<string, Avatar>,
   categories: Category[]
 ): SearchIndexes {
-  // TODO(milestone-6): return Algolia index references, no local indexing needed
+  // We still build Fuse.js indexes for the seamless fallback
+  // and for searching the static categories list.
   return createSearchIndexes(posts, avatars, categories);
 }
 
-/**
- * Search across all content types (posts, avatars, categories).
- */
 export async function searchAll(
   indexes: SearchIndexes,
   query: string,
   limits?: { avatars: number; posts: number; categories: number }
 ): Promise<SectionedSearchResults> {
-  // TODO(milestone-6): algoliaClient.multipleQueries([posts, profiles, categories])
-  return fuseSearchAll(indexes, query, limits);
+  const defaultLimits = { avatars: 3, posts: 5, categories: 3, ...limits };
+
+  if (algoliaClient && query.trim().length > 0) {
+    try {
+      const profilesPromise = algoliaClient.search({
+        requests: [
+          {
+            indexName: 'profiles',
+            query,
+            hitsPerPage: defaultLimits.avatars,
+          }
+        ]
+      });
+
+      const postsPromise = algoliaClient.search({
+        requests: [
+          {
+            indexName: 'posts',
+            query,
+            hitsPerPage: defaultLimits.posts,
+          }
+        ]
+      });
+
+      const [profilesSettled, postsSettled] = await Promise.allSettled([
+        profilesPromise,
+        postsPromise
+      ]);
+
+      let profilesResult: any = null;
+      let postsResult: any = null;
+
+      if (profilesSettled.status === 'fulfilled') {
+        profilesResult = profilesSettled.value.results[0];
+      } else {
+        console.warn('[Algolia] Profiles search failed (likely missing index)', profilesSettled.reason);
+      }
+
+      if (postsSettled.status === 'fulfilled') {
+        postsResult = postsSettled.value.results[0];
+      } else {
+        throw postsSettled.reason; // If posts fail, we fallback to local fuse entirely
+      }
+
+      // For categories, since they are static and small, we can just use the local fuse index.
+      const fuseResults = await fuseSearchAll(indexes, query, defaultLimits);
+
+      return {
+        avatars: (profilesResult?.hits || []).map((hit: any) => ({
+          avatar: hit as Avatar,
+          score: 1 // Algolia handles internal scoring
+        })),
+        posts: (postsResult?.hits || []).map((hit: any) => ({
+          post: hit as Post,
+          score: 1,
+          matches: undefined
+        })),
+        categories: fuseResults.categories // Categories remain local
+      };
+    } catch (e) {
+      console.warn('[Algolia] Search failed, falling back to local Fuse.js', e);
+    }
+  }
+
+  // Fallback to local search
+  return await fuseSearchAll(indexes, query, limits);
 }
 
-/**
- * Search posts only.
- */
 export async function searchPosts(
   indexes: SearchIndexes,
   query: string,
   limit?: number
 ): Promise<PostSearchResult[]> {
-  // TODO(milestone-6): postsIndex.search(query, { hitsPerPage: limit })
+  if (algoliaClient && query.trim().length > 0) {
+    try {
+      const { results } = await algoliaClient.search({
+        requests: [
+          {
+            indexName: 'posts',
+            query,
+            hitsPerPage: limit || 10,
+          }
+        ]
+      });
+      const postsResult = results[0] as any;
+      
+      return (postsResult?.hits || []).map((hit: any) => ({
+        post: hit as Post,
+        score: 1,
+        matches: undefined
+      }));
+    } catch (e) {
+      console.warn('[Algolia] Post search failed, falling back to local Fuse.js', e);
+    }
+  }
+
   return fuseSearchPosts(indexes, query, limit);
 }
 
-/**
- * Autocomplete / query suggestions.
- * Phase 1: returns empty — autocomplete requires Algolia.
- */
 export async function autocomplete(query: string): Promise<string[]> {
-  // TODO(milestone-6): algoliaClient.initIndex('posts_query_suggestions').search(query)
-  void query;
+  if (algoliaClient && query.trim().length > 0) {
+    try {
+      // Instead of relying on a Query Suggestions index (which needs search history),
+      // we query the actual posts index directly to auto-suggest real post titles!
+      const { results } = await algoliaClient.search({
+        requests: [
+          {
+            indexName: 'posts',
+            query,
+            hitsPerPage: 5,
+          }
+        ]
+      });
+      const postsResult = results[0] as any;
+      return (postsResult?.hits || []).map((hit: any) => hit.title);
+    } catch (e) {
+      console.warn('[Algolia] Autocomplete failed', e);
+    }
+  }
   return [];
 }

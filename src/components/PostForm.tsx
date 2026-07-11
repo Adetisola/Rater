@@ -144,13 +144,21 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   const hasChanges = useMemo(() => {
     if (!initialPost) return true;
+    
+    // Check if media changed (added, deleted, or reordered)
+    const originalMediaUrls = initialPost.media?.map(m => m.url) || [initialPost.image_url];
+    const mediaChanged = 
+      mediaPreviews.length !== originalMediaUrls.length ||
+      mediaPreviews.some((url, i) => url !== originalMediaUrls[i]);
+
     return (
       title !== initialPost.title ||
       category !== initialPost.category ||
       description !== (initialPost.description || '') ||
-      mediaFiles.length > 0
+      mediaFiles.length > 0 ||
+      mediaChanged
     );
-  }, [initialPost, title, category, description, mediaFiles]);
+  }, [initialPost, title, category, description, mediaFiles, mediaPreviews]);
 
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -605,7 +613,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   </div>
 
                   {/* Horizontal Thumbnail Row */}
-                  {!isEditMode && mediaPreviews.length > 1 && (
+                  {mediaPreviews.length > 1 && (
                     <div className="w-full bg-white px-3 pt-2.5 text-[9px] text-gray-400 font-semibold tracking-wider select-none border-t border-gray-100 flex items-center gap-1.5">
                       <span>Drag to reorder</span>
                       <span>•</span>
@@ -616,13 +624,13 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
                       "w-full bg-white p-2 flex gap-2 overflow-x-auto shrink-0 relative z-20",
-                      (!isEditMode && mediaPreviews.length > 1) ? "" : "border-t border-gray-100"
+                      (mediaPreviews.length > 1) ? "" : "border-t border-gray-100"
                     )}
                   >
                     {mediaPreviews.map((preview, idx) => (
                       <div
                         key={preview}
-                        draggable={!isEditMode}
+                        draggable={true}
                         onDragStart={(e) => handleDragStartThumbnail(e, idx)}
                         onDragOver={(e) => handleDragOverThumbnail(e, idx)}
                         onDragEnd={handleDragEndThumbnail}
@@ -636,16 +644,16 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         )}
                       >
                         <img src={preview} alt="" className="w-full h-full object-cover" />
-                        {!isEditMode && (
+                        {mediaPreviews.length > 1 && (
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); removeMedia(idx); }}
-                            className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] opacity-0 group-hover/thumb:opacity-100 transition-opacity z-30"
+                            className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] opacity-100 md:opacity-0 md:group-hover/thumb:opacity-100 transition-opacity z-30"
                           >
                             ×
                           </button>
                         )}
-                        {!isEditMode && idx === 0 && (
+                        {idx === 0 && (
                           <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-sm text-[8px] font-bold text-white text-center py-0.5 uppercase tracking-wider z-20 pointer-events-none">
                             Cover
                           </div>

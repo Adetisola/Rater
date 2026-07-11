@@ -18,13 +18,7 @@ function hasAllStructuredReviews(post: Post, reviews: Review[]): boolean {
       return typeof val === 'number' && val >= 1 && val <= 5;
     });
 
-    if (hasCurrentMode) return true;
-
-    // Fallback for legacy mock data that universally uses clarity, purpose, aesthetics
-    return ['clarity', 'purpose', 'aesthetics'].every(key => {
-      const val = review.ratings?.[key];
-      return typeof val === 'number' && val >= 1 && val <= 5;
-    });
+    return hasCurrentMode;
   });
 }
 

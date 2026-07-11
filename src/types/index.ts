@@ -98,6 +98,7 @@ export interface Post {
   deleted_at?: string;
   created_at: string;
   updated_at?: string;
+  edited_at?: string;
 }
 
 export interface PostMetrics {

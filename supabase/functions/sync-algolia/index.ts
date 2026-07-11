@@ -1,62 +1,104 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-// We use the REST API of Algolia in edge functions to keep it lightweight, 
-// or you can import algoliasearch if you have a build step for deno.
+import { algoliasearch } from 'npm:algoliasearch@5.55.1';
 
-const ALGOLIA_APP_ID = Deno.env.get('NEXT_PUBLIC_ALGOLIA_APP_ID') || '';
-const ALGOLIA_ADMIN_KEY = Deno.env.get('ALGOLIA_ADMIN_KEY') || '';
+// Edge function to sync Supabase database events to Algolia
+// Called via Database Webhooks
 
-interface WebhookPayload {
-  type: 'INSERT' | 'UPDATE' | 'DELETE';
-  table: string;
-  record: any;
-  old_record: any;
-}
+const cleanEnv = (val: string | undefined) => (val || '').replace(/^"|"$/g, '');
+
+const appId = cleanEnv(Deno.env.get('ALGOLIA_APP_ID'));
+const writeKey = cleanEnv(Deno.env.get('ALGOLIA_WRITE_KEY'));
+const webhookSecret = cleanEnv(Deno.env.get('WEBHOOK_SECRET'));
+
+const client = (appId && writeKey) ? algoliasearch(appId, writeKey) : null;
 
 serve(async (req) => {
+  if (!client) {
+    return new Response(JSON.stringify({ error: 'Algolia keys not configured' }), { status: 500 });
+  }
+
   try {
-    const payload: WebhookPayload = await req.json();
-
-    let indexName = '';
-    if (payload.table === 'posts') {
-      indexName = 'rater_posts';
-    } else if (payload.table === 'avatars') {
-      indexName = 'rater_avatars';
-    } else {
-      return new Response("Table not tracked for search", { status: 200 });
-    }
-
-    const algoliaUrl = `https://${ALGOLIA_APP_ID}.algolia.net/1/indexes/${indexName}/${payload.record?.id || payload.old_record?.id}`;
+    const payload = await req.json();
+    const { type, table, record, old_record } = payload;
     
-    const headers = {
-      'X-Algolia-Application-Id': ALGOLIA_APP_ID,
-      'X-Algolia-API-Key': ALGOLIA_ADMIN_KEY,
-      'Content-Type': 'application/json'
-    };
-
-    if (payload.type === 'DELETE') {
-      await fetch(algoliaUrl, { method: 'DELETE', headers });
-    } else {
-      // Create Algolia Object (add objectID)
-      const algoliaObject = {
-        ...payload.record,
-        objectID: payload.record.id
-      };
-      
-      await fetch(algoliaUrl, { 
-        method: 'PUT', 
-        headers, 
-        body: JSON.stringify(algoliaObject) 
-      });
+    // Authorization: Verify webhook secret manually because we deployed with --no-verify-jwt
+    const authHeader = req.headers.get('Authorization');
+    
+    if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+      console.error(`Auth mismatch. Received: ${authHeader}, Expected: Bearer ${webhookSecret}`);
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 200,
-    });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    if (table === 'posts') {
+      const indexName = 'posts';
+      
+      if (type === 'INSERT' || type === 'UPDATE') {
+        if (record.is_deleted) {
+          await client.deleteObject({
+            indexName,
+            objectID: record.id
+          });
+          return new Response(JSON.stringify({ message: 'Post removed (soft deleted)' }), { status: 200 });
+        }
+        
+        const algoliaObject = {
+          objectID: record.id,
+          title: record.title,
+          description: record.description,
+          category: record.category,
+          avatar_id: record.avatar_id,
+          image_url: record.image_url,
+          created_at: record.created_at,
+          review_count: record.review_count,
+          average_score: record.average_score,
+        };
+        
+        await client.saveObject({
+          indexName,
+          body: algoliaObject
+        });
+        
+        return new Response(JSON.stringify({ message: 'Post synced successfully' }), { status: 200 });
+      } else if (type === 'DELETE') {
+        await client.deleteObject({
+          indexName,
+          objectID: old_record.id
+        });
+        return new Response(JSON.stringify({ message: 'Post deleted successfully' }), { status: 200 });
+      }
+    }
+
+    if (table === 'profiles') {
+      const indexName = 'profiles';
+      
+      if (type === 'INSERT' || type === 'UPDATE') {
+        const algoliaObject = {
+          objectID: record.id,
+          username: record.username,
+          name: record.name,
+          bio: record.bio,
+          avatar_url: record.avatar_url,
+          bg_color: record.bg_color,
+          role: record.role
+        };
+        
+        await client.saveObject({
+          indexName,
+          body: algoliaObject
+        });
+        return new Response(JSON.stringify({ message: 'Profile synced successfully' }), { status: 200 });
+      } else if (type === 'DELETE') {
+        await client.deleteObject({
+          indexName,
+          objectID: old_record.id
+        });
+        return new Response(JSON.stringify({ message: 'Profile deleted successfully' }), { status: 200 });
+      }
+    }
+
+    return new Response(JSON.stringify({ message: 'Ignored unsupported table or event type' }), { status: 200 });
+  } catch (error) {
+    console.error('Error syncing to Algolia:', error);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 });

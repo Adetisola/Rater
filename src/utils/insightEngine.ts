@@ -571,13 +571,13 @@ export function synthesizeInsights(
   const modeConfig = getReviewMode(category);
 
   // Analyze
-  const mockScoredReviews: ScoredReview[] = comments.map(c => ({
+  const baselineScoredReviews: ScoredReview[] = comments.map(c => ({
     review: { comment: c } as any,
     classification: 'relevant',
     confidence: 1,
     signal_strength: 1,
   }));
-  const themeMatches = clusterComments(mockScoredReviews);
+  const themeMatches = clusterComments(baselineScoredReviews);
   const scoreTrends = analyzeScoreTrends(reviews, modeConfig);
 
   // Synthesize

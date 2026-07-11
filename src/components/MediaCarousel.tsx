@@ -57,36 +57,15 @@ export function MediaCarousel({
     );
   }
 
-  // Handle intersection observer to update current index based on scroll
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    const observer = new IntersectionObserver((entries) => {
-      // Filter out elements that don't have a width yet (initial mount)
-      const visibleEntries = entries.filter(entry => 
-        entry.isIntersecting && entry.boundingClientRect.width > 0
-      );
-      
-      if (visibleEntries.length > 0) {
-        // Find the one with the highest intersection ratio
-        const mostVisible = visibleEntries.reduce((prev, current) => 
-          prev.intersectionRatio > current.intersectionRatio ? prev : current
-        );
-        
-        const index = Number(mostVisible.target.getAttribute('data-index'));
-        if (!isNaN(index)) setCurrentIndex(index);
-      }
-    }, {
-      root: el,
-      threshold: 0.5
-    });
-
-    const children = Array.from(el.children);
-    children.forEach(child => observer.observe(child));
-
-    return () => observer.disconnect();
-  }, [media.length]);
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const width = el.clientWidth;
+    if (width === 0) return;
+    const index = Math.round(el.scrollLeft / width);
+    if (index !== currentIndex && index >= 0 && index < media.length) {
+      setCurrentIndex(index);
+    }
+  }, [currentIndex, media.length]);
 
   // Sync from external index
   useEffect(() => {
@@ -169,6 +148,7 @@ export function MediaCarousel({
       {/* Scroll Container - Native snap for mobile, hidden scrollbar */}
       <div 
         ref={scrollRef}
+        onScroll={handleScroll}
         className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >

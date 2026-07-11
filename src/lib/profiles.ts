@@ -2,11 +2,10 @@
  * Profiles Domain Service
  *
  * All profile operations go through this file.
- * Handles the transition from mock data to Supabase Profiles.
+ * Handles operations for Supabase Profiles.
  */
 
 import type { Avatar } from '@/types';
-import { MOCK_AVATARS } from '@/logic/mockData';
 import { supabase } from './supabase/client';
 import { normalizeUsername } from '@/utils/validation';
 
@@ -35,10 +34,8 @@ export function populateProfileCache(profiles: Partial<Avatar>[]) {
 
 /**
  * Fetch a single profile by ID.
- * Priority: 
  * 1. Memory Cache (only if complete)
  * 2. Supabase `profiles` table
- * 3. `MOCK_AVATARS` fallback (for legacy mock posts referencing 'alex', 'sam')
  */
 export async function getProfileById(id: string): Promise<Avatar | null> {
   if (profileCache[id] && profileCache[id].created_at) return profileCache[id];
@@ -56,12 +53,6 @@ export async function getProfileById(id: string): Promise<Avatar | null> {
     profileCache[id] = { ...profileCache[id], ...profile };
     profileByUsernameCache[profile.username.toLowerCase()] = profileCache[id];
     return profileCache[id];
-  }
-
-  // Fallback to legacy mock avatars
-  if (MOCK_AVATARS[id]) {
-    profileCache[id] = MOCK_AVATARS[id];
-    return MOCK_AVATARS[id];
   }
 
   // If we only have a partial profile, return that as a last resort
@@ -93,14 +84,6 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
     profileCache[profile.id] = { ...profileCache[profile.id], ...profile };
     profileByUsernameCache[normalized] = profileCache[profile.id];
     return profileCache[profile.id];
-  }
-
-  // Fallback to legacy mock avatars
-  const mockFallback = Object.values(MOCK_AVATARS).find(a => a.username.toLowerCase() === normalized);
-  if (mockFallback) {
-    profileCache[mockFallback.id] = mockFallback;
-    profileByUsernameCache[normalized] = mockFallback;
-    return mockFallback;
   }
 
   // If we only have a partial profile, return that as a last resort
@@ -159,12 +142,6 @@ export async function checkUsernameAvailable(
   excludeId?: string
 ): Promise<boolean> {
   const normalized = normalizeUsername(username);
-
-  // Check legacy mock users first to prevent conflicts during transition phase
-  const mockConflict = Object.values(MOCK_AVATARS).some(
-    a => a.username.toLowerCase() === normalized && a.id !== excludeId
-  );
-  if (mockConflict) return false;
 
   let query = supabase.from('profiles').select('id').eq('username', normalized);
   if (excludeId) {

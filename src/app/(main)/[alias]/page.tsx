@@ -2,12 +2,12 @@
 
 import { use, useEffect, useState } from 'react';
 import { notFound, useRouter } from 'next/navigation';
-import { useAuth } from '../../context/AuthContext';
-import type { Avatar } from '../../types';
-import { ProfileView } from '../../components/ProfileView';
-import { FloatingPostButton } from '../../components/FloatingPostButton';
-import { Footer } from '../../components/Footer';
-import { RESERVED_ROUTES } from '../../lib/constants';
+import { useAuth } from '../../../context/AuthContext';
+import type { Avatar } from '../../../types';
+import { ProfileView } from '../../../components/ProfileView';
+import { FloatingPostButton } from '../../../components/FloatingPostButton';
+import { Footer } from '../../../components/Footer';
+import { RESERVED_ROUTES } from '../../../lib/constants';
 
 
 
@@ -39,7 +39,7 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
 
     async function fetchProfile() {
       // 1. Find by current username
-      const { getProfileByUsername } = await import('../../lib/profiles');
+      const { getProfileByUsername } = await import('../../../lib/profiles');
       const profile = await getProfileByUsername(slug);
       
       if (profile && mounted) {
@@ -48,7 +48,7 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
       }
       
       // 2. If not found, search previous_usernames for a redirect
-      const { supabase } = await import('../../lib/supabase/client');
+      const { supabase } = await import('../../../lib/supabase/client');
       const { data } = await supabase
         .from('profiles')
         .select('*')

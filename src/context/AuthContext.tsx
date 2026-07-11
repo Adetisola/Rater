@@ -13,7 +13,6 @@ import {
 } from '@/lib/profiles';
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
-import { MOCK_AVATARS } from '@/logic/mockData';
 
 interface AuthContextType {
   currentProfile: Avatar | null;
@@ -157,13 +156,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, [currentProfile]);
 
-  // Provide a proxy for profileMap so UI can read from cache / mock fallbacks synchronously
+  // Provide a proxy for profileMap so UI can read from cache synchronously
   const safeProfileMap = useMemo(() => {
      return new Proxy({}, {
        get: (_target, prop) => {
          if (typeof prop === 'string') {
-            if (profileCache[prop]) return profileCache[prop];
-            return MOCK_AVATARS[prop];
+            return profileCache[prop] || undefined;
          }
          return undefined;
        }

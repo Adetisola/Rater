@@ -57,19 +57,20 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
   const updatePost = useCallback(async (postId: string, updates: Partial<Post>) => {
     if (!currentProfile) return false;
     
-    const updated_at = new Date().toISOString();
-    const finalUpdates = { ...updates, updated_at };
-
     // 1. Snapshot previous state of the targeted post
     const previousPost = usePostStore.getState().posts[postId];
     if (!previousPost) return false;
 
     // 2. Optimistic update
-    usePostStore.getState().updatePost(postId, finalUpdates);
+    usePostStore.getState().updatePost(postId, updates);
 
     try {
-      const result = await dbUpdatePost(postId, finalUpdates, currentProfile.id);
+      const result = await dbUpdatePost(postId, updates, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
+      
+      // Update with the definitive server state to pick up database triggers (e.g. edited_at)
+      usePostStore.getState().updatePost(postId, result.post);
+      
       return true;
     } catch (err) {
       console.error('Optimistic update failed, rolling back:', err);

@@ -21,7 +21,6 @@ export interface ResponsiveImageSet {
 
 /**
  * Generate a responsive image set from a Cloudinary public_id.
- * Phase 1: returns the publicId as-is (already a valid URL in mock phase).
  */
 export function generateResponsiveUrls(publicId: string): ResponsiveImageSet {
   // TODO(milestone-3): Build Cloudinary URLs at 400, 800, 1200, 1600px breakpoints

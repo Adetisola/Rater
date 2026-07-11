@@ -72,8 +72,7 @@ src/
 │   ├── useDebounce.ts       # Input debouncing
 │   └── ...                  # 12 hooks total
 │
-├── logic/                  # Business logic & mock database
-│   ├── mockData.ts          # Mock DB: avatars, posts, reviews, metrics
+├── logic/                  # Business logic
 │   ├── badgeUtils.ts        # Badge computation logic
 │   ├── curatedSort.ts       # Curated feed sorting algorithm
 │   ├── hotPostUtils.ts      # Hot post scoring

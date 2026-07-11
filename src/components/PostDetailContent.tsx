@@ -723,7 +723,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 title={getFullTimestamp(post.created_at)}
                             >
                                 {formatTimestamp(post.created_at, now)}
-                                {post.updated_at && new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() && (
+                                {post.edited_at && (
                                     <>
                                         <span className="mx-1">•</span>
                                         <span>Edited</span>
@@ -1077,8 +1077,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                             const timeLabel = formatTimestamp(review.created_at, now);
                             const fullTime = getFullTimestamp(review.created_at);
-                            const isReviewEdited = review.updated_at &&
-                                new Date(review.updated_at).getTime() > new Date(review.created_at).getTime();
 
                             return (
                                 <motion.div
@@ -1086,9 +1084,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     initial={{ opacity: 0, y: 16 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.35, ease: "easeOut" }}
-                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col xs:flex-row xs:items-center justify-between gap-4 xs:gap-8"
+                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4"
                                 >
-                                    <div className="flex-1">
+                                    <div className="w-full">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div
                                                 className={`w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-0 transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:ring-1 ring-primary' : ''}`}
@@ -1140,9 +1138,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     <div className="flex gap-0.5">
-                                                        {[1, 2, 3, 4, 5].map(i => (
-                                                            <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
-                                                        ))}
+                                                        <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
                                                     </div>
                                                     <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
                                                         {ratingAvg.toFixed(1)}
@@ -1154,18 +1150,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 title={fullTime}
                                             >
                                                 {timeLabel}
-                                                {isReviewEdited && (
-                                                    <>
-                                                        <span className="mx-1">•</span>
-                                                        <span>Edited</span>
-                                                    </>
-                                                )}
                                             </span>
                                         </div>
 
                                         {review.comment && <p className="text-sm text-black leading-relaxed mb-4">{review.comment}</p>}
 
-                                        <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
+                                        <div className="flex items-center gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100 mt-2">
                                             <div className="flex flex-wrap gap-3 xs:gap-4">
                                                 {modeConfig.criteria.map(c => (
                                                     <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
@@ -1174,17 +1164,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     </div>
                                                 ))}
                                             </div>
-
-
-                                            <div className="text-right shrink-0 xs:hidden">
-                                                <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                                <div className="text-lg font-semibold md:font-bold text-black">{ratingAvg.toFixed(1)}/5.0</div>
-                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="hidden xs:block text-right shrink-0">
-                                        <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                        <div className="text-xl font-semibold text-black">{ratingAvg.toFixed(1)}/5.0</div>
                                     </div>
                                 </motion.div>
                             );

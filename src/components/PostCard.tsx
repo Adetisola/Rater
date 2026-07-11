@@ -100,8 +100,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const isTopRated = badge === 'top_rated_active';
     const avatar = profileMap[post.avatar_id];
 
-    const isEdited = post.updated_at &&
-        new Date(post.updated_at).getTime() > new Date(post.created_at).getTime();
+    const isEdited = !!post.edited_at;
 
     return (
         <Link
