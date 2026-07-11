@@ -1,6 +1,6 @@
 export const RESERVED_USERNAMES = [
   'admin', 'support', 'settings', 'explore', 'browse', 'submit',
-  'login', 'signup', 'post', 'api', 'insights', 'rater', 'null', 'undefined', 'home'
+  'login', 'signup', 'post', 'api', 'insights', 'null', 'undefined', 'home'
 ];
 
 /**
