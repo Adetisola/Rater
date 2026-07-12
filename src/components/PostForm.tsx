@@ -486,7 +486,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         <div className="text-gray-500 max-w-md mx-auto leading-relaxed">
           {isEditing
             ? <AmbientSuccessText />
-            : <p>Your design is live! Redirecting you to the recent feed to see your post...</p>}
+            : <p>Your design is live! Redirecting you to the main feed to see your post...</p>}
         </div>
       </div>
     );

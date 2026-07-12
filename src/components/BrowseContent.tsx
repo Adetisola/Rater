@@ -31,7 +31,10 @@ export default function BrowseContent() {
   const { currentProfile, profileMap } = useAuth();
   
   // Data State
-  const [feedPostIds, setFeedPostIds] = useState<string[]>([]);
+  const [feedPostIds, setFeedPostIds] = useState<string[]>(() => {
+    const recentId = usePostStore.getState().newlyUploadedPostId;
+    return recentId ? [recentId] : [];
+  });
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingPage, setIsFetchingPage] = useState(true);
 
@@ -42,9 +45,20 @@ export default function BrowseContent() {
     getFeedPosts({ limit: 20 }).then(newPosts => {
       if (mounted) {
         usePostStore.getState().addOrUpdatePosts(newPosts);
-        setFeedPostIds(newPosts.map(p => p.id));
+        let ids = newPosts.map(p => p.id);
+        
+        const recentUpload = usePostStore.getState().newlyUploadedPostId;
+        if (recentUpload && !ids.includes(recentUpload)) {
+          ids = [recentUpload, ...ids];
+        }
+        
+        setFeedPostIds(ids);
         setHasMore(newPosts.length === 20);
         setIsFetchingPage(false);
+        
+        if (recentUpload) {
+          usePostStore.getState().setNewlyUploadedPostId(null);
+        }
       }
     }).catch(err => {
       console.error('Initial fetch failed:', err);
@@ -377,13 +391,15 @@ export default function BrowseContent() {
               {!isProcessing && (
                 <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
                     {hasMore ? (
-                        <button 
-                            onClick={handleLoadMore}
-                            disabled={isFetchingPage}
-                            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-full transition-colors disabled:opacity-50"
-                        >
-                            {isFetchingPage ? 'Loading...' : 'Load More'}
-                        </button>
+                        !isFetchingPage && (
+                            <button 
+                                onClick={handleLoadMore}
+                                disabled={isFetchingPage}
+                                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-full transition-colors disabled:opacity-50"
+                            >
+                                Load More
+                            </button>
+                        )
                     ) : (
                         <>
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />

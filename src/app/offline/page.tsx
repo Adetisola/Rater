@@ -1,26 +1,53 @@
-import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
-import { Footer } from '@/components/Footer'
+"use client";
+
+import { Button } from '@/components/ui/Button';
+import { Footer } from '@/components/Footer';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useState } from 'react';
 
 export default function Offline() {
+  const [lottieLoaded, setLottieLoaded] = useState(false);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#ffffff' }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1rem', textAlign: 'center' }}>
-        <div style={{ width: '4rem', height: '4rem', backgroundColor: '#f3f4f6', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto' }}>
-            <svg style={{ width: '2rem', height: '2rem', color: '#9ca3af' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636a9 9 0 00-12.728 0M15.536 8.464a5 5 0 00-7.072 0M12 13a2 2 0 100 4 2 2 0 000-4z" />
-                <line x1="3" y1="3" x2="21" y2="21" strokeWidth={2} strokeLinecap="round" />
-            </svg>
+    <div className="flex flex-col min-h-screen bg-white">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 text-center animate-in fade-in zoom-in duration-500">
+        
+        {/* Visual Graphic */}
+        <div className="w-48 h-48 mb-6 relative flex items-center justify-center">
+          {!lottieLoaded && (
+            <div className="absolute inset-0 bg-gray-100 rounded-full animate-pulse" />
+          )}
+          <DotLottieReact
+            src="https://lottie.host/5eaf9040-adfb-420e-b4fe-c6dfb3981581/sNznGaVOKa.lottie"
+            autoplay
+            loop
+            dotLottieRefCallback={(dotLottie) => {
+              if (dotLottie) {
+                dotLottie.addEventListener('load', () => setLottieLoaded(true));
+              }
+            }}
+          />
         </div>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem', color: '#000000' }}>You are offline</h2>
-        <p style={{ fontSize: '1.125rem', color: '#6b7280', marginBottom: '2rem', maxWidth: '24rem', margin: '0 auto 2rem auto' }}>Connection looks unstable. Check your network or go buy Data 😂</p>
-        <Link href="/" scroll={false}>
-          <Button variant="primary" style={{ height: '3rem', padding: '0 2rem', fontSize: '1.125rem', borderRadius: '9999px', backgroundColor: '#FEC312', color: '#ffffff', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
-            Try Again
-          </Button>
-        </Link>
+
+        {/* Text Content */}
+        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-black tracking-tight">
+          You are offline
+        </h2>
+        <p className="text-lg text-gray-500 mb-8 max-w-sm mx-auto">
+          Connection looks unstable. Check your network or go buy Data 😂
+        </p>
+
+        {/* Action Button */}
+        <Button 
+          variant="primary" 
+          onClick={() => window.location.reload()}
+          className="h-12 px-8 text-lg rounded-full shadow-lg hover:scale-105 transition-transform"
+        >
+          Try Again
+        </Button>
+
       </div>
       <Footer />
     </div>
-  )
+  );
 }

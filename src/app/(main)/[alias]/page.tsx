@@ -5,8 +5,6 @@ import { notFound, useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import type { Avatar } from '../../../types';
 import { ProfileView } from '../../../components/ProfileView';
-import { FloatingPostButton } from '../../../components/FloatingPostButton';
-import { Footer } from '../../../components/Footer';
 import { RESERVED_ROUTES } from '../../../lib/constants';
 
 
@@ -103,9 +101,6 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
       <div className="flex-1 w-full pt-4">
         <ProfileView avatarId={targetAvatar.id} />
       </div>
-
-      <Footer />
-      <FloatingPostButton />
     </div>
   );
 }

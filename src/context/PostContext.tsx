@@ -161,6 +161,7 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       // Replace optimistic post with real server post
       usePostStore.getState().deletePost(tempId);
       usePostStore.getState().addOrUpdatePosts([newPost]);
+      usePostStore.getState().setNewlyUploadedPostId(newPost.id);
       return true;
     } catch (err) {
       console.error('Optimistic create failed, rolling back:', err);

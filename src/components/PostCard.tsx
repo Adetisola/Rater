@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { usePostStore } from '../store/postStore';
 import Link from 'next/link';
 import { ImageFallback } from './ImageFallback';
 import { MediaCarousel } from './MediaCarousel';
+import { generateResponsiveUrls } from '@/lib/cloudinary/transforms';
 
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -43,9 +45,9 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     
     // Derive metrics directly from the post object (which is kept fresh by PostContext Realtime)
     const metrics = {
-        review_count: post.review_count || 0,
-        average_score: post.average_score || 0,
-        rating_unlocked: (post.review_count || 0) >= 3,
+        review_count: post?.review_count || 0,
+        average_score: post?.average_score || 0,
+        rating_unlocked: (post?.review_count || 0) >= 3,
     };
     const metricsLoading = false;
     const router = useRouter();
@@ -54,8 +56,6 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
 
     const showSkeleton = parentLoading || metricsLoading;
-
-    if (!post) return null;
 
     if (showSkeleton) {
         return (
@@ -97,18 +97,36 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
         );
     }
 
+    const optimizedFallback = useMemo(() => {
+        const mediaData = post?.media?.[0];
+        if (mediaData?.public_id) {
+            return generateResponsiveUrls(mediaData.public_id);
+        }
+        return null;
+    }, [post?.media]);
+
+    if (!post) return null;
+
     const isTopRated = badge === 'top_rated_active';
     const avatar = profileMap[post.avatar_id];
 
     const isEdited = !!post.edited_at;
 
     return (
-        <Link
-            href={`/post/${post.id}`}
-            scroll={false}
-            className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
-            onClick={onClick}
-        >
+        <AnimatePresence>
+            {!post.is_deleted && (
+                <motion.div
+                    layout
+                    initial={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9, height: 0, overflow: 'hidden', marginBottom: 0 }}
+                    transition={{ duration: 0.25 }}
+                >
+                    <Link
+                        href={`/post/${post.id}`}
+                        scroll={false}
+                        className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
+                        onClick={onClick}
+                    >
             <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
                 {!hasError && (
                     <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -130,7 +148,10 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             {hasError ? (
                                 <div className="w-full aspect-4/3">
                                     <ImageFallback
-                                        src={post.image_url}
+                                        src={optimizedFallback ? optimizedFallback.src : post.image_url}
+                                        srcSet={optimizedFallback?.srcSet}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        placeholderSrc={optimizedFallback?.placeholder}
                                         alt={post.title}
                                         className="w-full h-auto object-cover transition-transform duration-500 block"
                                         fallbackClassName={`w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}
@@ -332,5 +353,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                 </div>
             </div>
         </Link>
+    </motion.div>
+            )}
+        </AnimatePresence>
     );
 }

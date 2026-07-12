@@ -7,6 +7,7 @@ interface PostState {
   // Computed values that we want to cache globally
   badgeMap: Record<string, BadgeType>;
   hotPostIds: Set<string>;
+  newlyUploadedPostId: string | null;
   
   // Actions
   addOrUpdatePosts: (newPosts: Post[]) => void;
@@ -16,12 +17,14 @@ interface PostState {
   
   setBadges: (badgeMap: Record<string, BadgeType>) => void;
   setHotPosts: (hotPostIds: Set<string>) => void;
+  setNewlyUploadedPostId: (id: string | null) => void;
 }
 
 export const usePostStore = create<PostState>((set) => ({
   posts: {},
   badgeMap: {},
   hotPostIds: new Set(),
+  newlyUploadedPostId: null,
 
   addOrUpdatePosts: (newPosts) => set((state) => {
     const nextPosts = { ...state.posts };
@@ -58,11 +61,12 @@ export const usePostStore = create<PostState>((set) => ({
   }),
 
   deletePost: (postId) => set((state) => {
-    const nextPosts = { ...state.posts };
-    delete nextPosts[postId];
-    return { posts: nextPosts };
+    const next = { ...state.posts };
+    delete next[postId];
+    return { posts: next };
   }),
 
   setBadges: (badgeMap) => set({ badgeMap }),
-  setHotPosts: (hotPostIds) => set({ hotPostIds })
+  setHotPosts: (hotPostIds) => set({ hotPostIds }),
+  setNewlyUploadedPostId: (id) => set({ newlyUploadedPostId: id }),
 }));
