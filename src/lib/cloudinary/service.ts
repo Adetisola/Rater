@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from 'cloudinary';
-import type { UploadApiResponse } from 'cloudinary';
 import type { MediaAsset } from '@/types';
 
 // Initialize cloudinary with environment variables
@@ -10,28 +9,44 @@ cloudinary.config({
 });
 
 export async function uploadAsset(
-  fileDataUri: string,
+  buffer: Buffer,
   folder: string,
   ownerId: string
 ): Promise<MediaAsset> {
-  const result: UploadApiResponse = await cloudinary.uploader.upload(fileDataUri, {
-    folder,
-    context: `owner=${ownerId}|post=draft`,
-    resource_type: 'auto',
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        context: `owner=${ownerId}|post=draft`,
+        resource_type: 'auto',
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        if (!result) {
+          reject(new Error("Upload result is undefined"));
+          return;
+        }
+        
+        resolve({
+          id: crypto.randomUUID(),
+          type: result.resource_type === 'video' ? 'video' : 'image',
+          url: result.secure_url,
+          public_id: result.public_id,
+          width: result.width,
+          height: result.height,
+          aspect_ratio: result.width / result.height,
+          format: result.format,
+          bytes: result.bytes,
+          order: 0,
+        });
+      }
+    );
+    
+    uploadStream.end(buffer);
   });
-
-  return {
-    id: crypto.randomUUID(),
-    type: result.resource_type === 'video' ? 'video' : 'image',
-    url: result.secure_url,
-    public_id: result.public_id,
-    width: result.width,
-    height: result.height,
-    aspect_ratio: result.width / result.height,
-    format: result.format,
-    bytes: result.bytes,
-    order: 0,
-  };
 }
 
 export async function deleteAsset(publicId: string): Promise<boolean> {

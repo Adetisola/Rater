@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { usePostStore } from '../store/postStore';
@@ -113,16 +113,20 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const isEdited = !!post.edited_at;
 
     return (
-        <AnimatePresence>
-            {!post.is_deleted && (
-                <motion.div
-                    layout
-                    initial={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, height: 0, overflow: 'hidden', marginBottom: 0 }}
-                    transition={{ duration: 0.25 }}
-                >
-                    <Link
-                        href={`/post/${post.id}`}
+        <motion.div
+            layout
+            initial={{ opacity: 1, scale: 1, height: 'auto' }}
+            animate={
+                post.is_deleted 
+                ? { opacity: 0, scale: 0.9, height: 0, overflow: 'hidden', margin: 0, padding: 0 } 
+                : { opacity: 1, scale: 1, height: 'auto' }
+            }
+            transition={{ duration: 0.3 }}
+            className={post.is_deleted ? 'pointer-events-none' : ''}
+            style={{ originY: 0.5 }}
+        >
+            <Link
+                href={`/post/${post.id}`}
                         scroll={false}
                         className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
                         onClick={onClick}
@@ -354,7 +358,5 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
             </div>
         </Link>
     </motion.div>
-            )}
-        </AnimatePresence>
     );
 }
