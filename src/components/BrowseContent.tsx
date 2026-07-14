@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Header } from '@/components/Header';
@@ -28,18 +28,47 @@ export default function BrowseContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { currentProfile, profileMap } = useAuth();
+  const { currentProfile, profileMap, isLoading } = useAuth();
   
   // Data State
-  const [feedPostIds, setFeedPostIds] = useState<string[]>(() => {
+  const [localRecentUpload, setLocalRecentUpload] = useState<string | null>(
+    usePostStore.getState().newlyUploadedPostId
+  );
+  
+  // Sync from store in case Next.js router cache restores the component without remounting
+  useEffect(() => {
     const recentId = usePostStore.getState().newlyUploadedPostId;
-    return recentId ? [recentId] : [];
+    if (recentId && recentId !== localRecentUpload) {
+      setLocalRecentUpload(recentId);
+    }
+    const unsub = usePostStore.subscribe((state) => {
+      if (state.newlyUploadedPostId && state.newlyUploadedPostId !== localRecentUpload) {
+        setLocalRecentUpload(state.newlyUploadedPostId);
+      }
+    });
+    return unsub;
+  }, [localRecentUpload]);
+  
+  const [feedPostIds, setFeedPostIds] = useState<string[]>(() => {
+    return localRecentUpload ? [localRecentUpload] : [];
   });
+  
+  // Also sync feedPostIds if localRecentUpload changes later due to cache restore
+  useEffect(() => {
+    if (localRecentUpload && !feedPostIds.includes(localRecentUpload)) {
+      setFeedPostIds(prev => [localRecentUpload, ...prev]);
+    }
+  }, [localRecentUpload, feedPostIds]);
+
   const [hasMore, setHasMore] = useState(true);
   const [isFetchingPage, setIsFetchingPage] = useState(true);
+  const hasFetchedRef = useRef(false);
 
   // Initial Fetch
   useEffect(() => {
+    if (isLoading || hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    
     let mounted = true;
     setIsFetchingPage(true);
     getFeedPosts({ limit: 20 }).then(newPosts => {
@@ -47,16 +76,15 @@ export default function BrowseContent() {
         usePostStore.getState().addOrUpdatePosts(newPosts);
         let ids = newPosts.map(p => p.id);
         
-        const recentUpload = usePostStore.getState().newlyUploadedPostId;
-        if (recentUpload && !ids.includes(recentUpload)) {
-          ids = [recentUpload, ...ids];
+        if (localRecentUpload && !ids.includes(localRecentUpload)) {
+          ids = [localRecentUpload, ...ids];
         }
         
         setFeedPostIds(ids);
         setHasMore(newPosts.length === 20);
         setIsFetchingPage(false);
         
-        if (recentUpload) {
+        if (usePostStore.getState().newlyUploadedPostId) {
           usePostStore.getState().setNewlyUploadedPostId(null);
         }
       }
@@ -67,7 +95,7 @@ export default function BrowseContent() {
       }
     });
     return () => { mounted = false; };
-  }, []);
+  }, [isLoading, localRecentUpload]);
 
   const handleLoadMore = async () => {
     if (isFetchingPage || !hasMore || feedPostIds.length === 0) return;
@@ -214,6 +242,23 @@ export default function BrowseContent() {
             let finalPosts = posts;
             if (sortBy === 'balanced' && urlQuery.trim().length < 2) {
                 finalPosts = await curatedFreshnessSort(posts);
+            }
+
+            // --- INSTANT INJECTION OVERRIDE ---
+            if (localRecentUpload) {
+                const recentPostIndex = finalPosts.findIndex(p => p.id === localRecentUpload);
+                if (recentPostIndex > -1) {
+                    const recentPost = finalPosts[recentPostIndex];
+                    finalPosts.splice(recentPostIndex, 1);
+                    finalPosts.unshift(recentPost);
+                } else {
+                    const post = usePostStore.getState().posts[localRecentUpload];
+                    // Only inject if there are no strict filters active that it failed, 
+                    // or just inject it anyway to guarantee visibility
+                    if (post && !selectedAvatar && selectedCategories.length === 0) {
+                        finalPosts.unshift(post);
+                    }
+                }
             }
 
             if (isMounted) {
@@ -383,10 +428,18 @@ export default function BrowseContent() {
                 </div>
               )}
 
-              <MasonryGrid 
-                postIds={sortedPostIds} 
-                isLoading={isProcessing || isFetchingPage}
-              />
+              {(() => {
+                let finalPostIds = sortedPostIds;
+                if (localRecentUpload && !selectedAvatar && selectedCategories.length === 0) {
+                  finalPostIds = [localRecentUpload, ...sortedPostIds.filter(id => id !== localRecentUpload)];
+                }
+                return (
+                  <MasonryGrid 
+                    postIds={finalPostIds} 
+                    isLoading={isProcessing || isFetchingPage}
+                  />
+                );
+              })()}
 
               {!isProcessing && (
                 <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">

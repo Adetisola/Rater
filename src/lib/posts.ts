@@ -29,7 +29,7 @@ export async function getFeedPosts({ limit = 20, cursor }: { limit?: number; cur
   const { data, error } = await query;
 
   if (error) {
-    console.error('Error fetching feed posts:', error);
+    console.error('Error fetching feed posts:', error.message, error.details, error.hint, error);
     return [];
   }
   
