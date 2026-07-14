@@ -37,6 +37,16 @@ export function isValidEmailFormat(email: string): boolean {
 }
 
 /**
+ * Validates passkey rules.
+ */
+export function validatePasskey(passkey: string): string | null {
+  if (passkey.length < 8) {
+    return 'Passkey must be at least 8 characters long.';
+  }
+  return null;
+}
+
+/**
  * Comprehensive pre-flight check for signup.
  * Returns an error string if invalid, or null if valid.
  */
@@ -59,8 +69,9 @@ export function validateSignupInput(
     return 'Please enter a valid email address.';
   }
 
-  if (passkey.length < 8) {
-    return 'Passkey must be at least 8 characters long.';
+  const passkeyError = validatePasskey(passkey);
+  if (passkeyError) {
+    return passkeyError;
   }
 
   return null; // Valid

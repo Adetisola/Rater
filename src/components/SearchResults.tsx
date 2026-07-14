@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePostStore } from '../store/postStore';
 import type { RecentItemData } from '../hooks/useRecentSearches';
 
+import { UserAvatar } from './UserAvatar';
 import Link from 'next/link';
 
 /**
@@ -255,13 +256,6 @@ interface AvatarResultItemProps {
  * Renders an individual avatar search result with their picture/initials, name, and role.
  */
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
-  const initials = avatar.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
     <div
       onMouseDown={(e) => {
@@ -272,16 +266,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Avatar */}
-      <div 
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-        style={{ backgroundColor: avatar.bg_color }}
-      >
-        {avatar.avatar_url ? (
-          <img src={avatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-        ) : (
-          initials
-        )}
-      </div>
+      <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
       
       {/* Name */}
       <div className="flex-1 min-w-0">

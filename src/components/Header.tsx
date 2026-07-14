@@ -17,6 +17,7 @@ import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useAmbientPlaceholder } from '../hooks/useAmbientPlaceholder';
 import { AmbientPlaceholder } from './AmbientPlaceholder';
 import { AuthOverlay } from './AuthOverlay';
+import { UserMenu } from './UserMenu';
 
 /**
  * Props for the Header component.
@@ -230,22 +231,7 @@ export function Header({
               <img src="/icons/rater-logo-black-bg.svg" alt="Rater Logo Hover" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
             </Link>
           ) : (
-            <Link
-              href={`/@${currentProfile.username}`}
-              scroll={false}
-              className="block shrink-0 transition-all hover:scale-105 active:scale-95"
-            >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden"
-                style={{ backgroundColor: currentProfile.bg_color }}
-              >
-                {currentProfile.avatar_url ? (
-                  <img src={currentProfile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-                ) : (
-                  currentProfile.name.charAt(0).toUpperCase()
-                )}
-              </div>
-            </Link>
+            <UserMenu />
           )}
         </div>
 

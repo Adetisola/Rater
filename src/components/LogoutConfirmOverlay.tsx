@@ -47,7 +47,7 @@ export function LogoutConfirmOverlay({ onClose, onConfirm }: LogoutConfirmOverla
 
         <h2 className="text-2xl font-semibold mb-3 text-black">Confirm Logout</h2>
         <p className="text-gray-500 mb-8 leading-relaxed">
-            Are you sure you want to log out? You'll need your passkey to sign back in.
+            Are you sure you want to log out? You'll need to sign back in to continue using your account.
         </p>
 
         <div className="flex flex-col gap-3">

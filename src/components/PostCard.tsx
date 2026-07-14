@@ -16,6 +16,7 @@ import { PostActionsMenu } from './PostActionsMenu';
 import { useNow } from '../context/TimeContext';
 import { Lock } from 'lucide-react';
 import { Tooltip } from './ui/Tooltip';
+import { UserAvatar } from './UserAvatar';
 
 /**
  * Props for the PostCard component.
@@ -251,22 +252,11 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                 }
                             }}
                         >
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0 flex items-center justify-center">
-                                {avatar?.avatar_url ? (
-                                    <img
-                                        src={avatar.avatar_url}
-                                        alt="Avatar"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div
-                                        className="w-full h-full flex items-center justify-center text-[10px] md:text-xs text-white font-bold"
-                                        style={{ backgroundColor: avatar?.bg_color || '#cccccc' }}
-                                    >
-                                        {(avatar?.name || 'Unknown').substring(0, 1).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
+                            <UserAvatar 
+                                avatarUrl={avatar?.avatar_url} 
+                                className="w-5 h-5 md:w-6 md:h-6 ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0" 
+                                iconClassName="w-3/4 h-3/4"
+                            />
                             <div className="flex-1 min-w-0 truncate text-black group-hover/card:text-white transition-colors">
                                 <span className="text-xs font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-primary transition-colors">
                                     {avatar?.name || 'Unknown'}

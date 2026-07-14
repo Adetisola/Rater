@@ -20,9 +20,11 @@ interface AuthContextType {
   login: (identifier: string, passkey: string) => Promise<boolean>;
   signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string) => Promise<{ ok: boolean; error?: string }>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
-  checkUsernameAvailable: (username: string, excludeId: string) => Promise<boolean>;
+  loginWithGoogle: () => Promise<void>;
+  connectGoogle: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
+  checkUsernameAvailable: (username: string, excludeAvatarId?: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -119,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           username: finalUsername,
           role: role || 'user',
           bg_color: '#FEC312',
+          onboarding_completed: true,
           // Do not put avatar_url here, it's a huge base64 string that breaks JWT size limits
         }
       }
@@ -168,6 +171,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
      });
   }, []);
 
+  const loginWithGoogle = useCallback(async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+  }, []);
+
+  const connectGoogle = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return { ok: false, error: "No email associated with current account." };
+
+    const { error } = await supabase.auth.linkIdentity({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/settings`,
+        queryParams: {
+          login_hint: user.email
+        }
+      }
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  }, []);
+
   const logout = useCallback(() => {
     supabase.auth.signOut().catch(error => {
       console.warn("Signout network error (can be ignored):", error);
@@ -181,7 +210,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       login, 
       signup, 
       updateProfile, 
-      checkUsernameAvailable: dbCheckUsername, 
+      checkUsernameAvailable: dbCheckUsername,
+      loginWithGoogle,
+      connectGoogle,
       logout, 
       isLoading 
     }}>

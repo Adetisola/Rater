@@ -19,6 +19,7 @@ import { ReviewForm } from './ReviewForm';
 import { getReviewMode } from '../config/reviewModes';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
+import { UserAvatar } from './UserAvatar';
 import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { SharePostOverlay } from './SharePostOverlay';
@@ -800,22 +801,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 scroll={false}
                                 className="flex items-center gap-3 group/author"
                             >
-                                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center">
-                                    {avatar?.avatar_url ? (
-                                        <img
-                                            src={avatar.avatar_url}
-                                            className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300"
-                                            alt="Avatar"
-                                        />
-                                    ) : (
-                                        <div
-                                            className="w-full h-full flex items-center justify-center text-sm text-white font-bold"
-                                            style={{ backgroundColor: avatar?.bg_color || '#cccccc' }}
-                                        >
-                                            {(avatar?.name || 'Unknown').substring(0, 1).toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
+                                <UserAvatar 
+                                    avatarUrl={avatar?.avatar_url} 
+                                    className="w-10 h-10 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
+                                />
                                 <div className="text-left flex flex-col min-w-0">
                                     <span className="block text-sm font-semibold text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
                                     <span className="block text-[10px] text-gray-400 font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
@@ -1089,7 +1078,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     <div className="w-full">
                                         <div className="flex items-center gap-3 mb-3">
                                             <div
-                                                className={`w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-0 transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:ring-1 ring-primary' : ''}`}
+                                                className={`transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer' : ''}`}
                                                 onClick={(e) => {
                                                     if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                         e.stopPropagation();
@@ -1098,23 +1087,17 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 }}
                                             >
                                                 {review.reviewer_id && allAvatars[review.reviewer_id] ? (
-                                                    allAvatars[review.reviewer_id].avatar_url ? (
-                                                        <img src={allAvatars[review.reviewer_id].avatar_url} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div
-                                                            className="w-full h-full flex items-center justify-center text-xs text-white font-bold"
-                                                            style={{ backgroundColor: allAvatars[review.reviewer_id].bg_color || '#cccccc' }}
-                                                        >
-                                                            {allAvatars[review.reviewer_id].name.substring(0, 1).toUpperCase()}
-                                                        </div>
-                                                    )
+                                                    <UserAvatar 
+                                                        avatarUrl={allAvatars[review.reviewer_id].avatar_url} 
+                                                        className="w-8 h-8 hover:ring-1 ring-primary transition-all"
+                                                        iconClassName="w-3/4 h-3/4"
+                                                    />
                                                 ) : (
-                                                    <div
-                                                        className="w-full h-full flex items-center justify-center text-xs text-white font-bold"
-                                                        style={{ backgroundColor: '#cccccc' }}
-                                                    >
-                                                        {(review.reviewer_name || 'Anonymous').substring(0, 1).toUpperCase()}
-                                                    </div>
+                                                    <UserAvatar 
+                                                        avatarUrl={null} 
+                                                        className="w-8 h-8"
+                                                        iconClassName="w-3/4 h-3/4"
+                                                    />
                                                 )}
                                             </div>
                                             <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">

@@ -108,7 +108,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                className="w-full flex flex-col items-center h-full justify-center"
+                className="w-full flex flex-col items-center my-auto py-2"
               >
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-medium text-black mb-1">Welcome Back</h2>

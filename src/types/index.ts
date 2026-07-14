@@ -41,7 +41,8 @@ export interface Avatar {
   name: string;                      // Display name (flexible)
   role: string | null;               // public-facing identity label (nullable)
   avatar_url?: string;
-  bg_color: string;
+  readonly bg_color?: string;
+  is_admin?: boolean;
   bio?: string;
   is_blocked: boolean;
   passkey: string;
@@ -50,6 +51,7 @@ export interface Avatar {
   username_last_changed_at?: string | null;    // ISO timestamp of last username change
   previous_usernames?: string[];      // Ordered list of past usernames (oldest first)
   social_links?: SocialLink[];
+  onboarding_completed?: boolean;
 }
 
 // ─── Reviews ──────────────────────────────────────────────────────────────────
@@ -193,3 +195,11 @@ export interface InsightOutput {
   areasToImprove: string[];
   meetsThreshold: boolean;
 }
+
+// ─── Feedback ───────────────────────────────────────────────────────────────
+
+import type { Database } from './supabase';
+
+export type FeedbackRequest = Database['public']['Views']['feedback_requests_with_stats']['Row'];
+export type FeedbackComment = Database['public']['Tables']['feedback_comments']['Row'];
+export type FeedbackVote = Database['public']['Tables']['feedback_votes']['Row'];

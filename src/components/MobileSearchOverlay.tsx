@@ -14,6 +14,7 @@ import { usePostStore } from '../store/postStore';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useNavigationStore } from '../store/navigationStore';
 import { Search } from 'lucide-react';
+import { UserAvatar } from './UserAvatar';
 
 // Maps internal sort keys → display labels for active filter pills
 const SORT_OPTION_LABELS: Record<string, string> = {
@@ -467,23 +468,12 @@ interface AvatarResultItemProps {
 }
 
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
-  const initials = avatar.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
-
   return (
     <div
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
-      <div 
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-        style={{ backgroundColor: avatar.bg_color }}
-      >
-        {avatar.avatar_url ? (
-          <img src={avatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-        ) : (
-          initials
-        )}
-      </div>
+      <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
       <div className="flex-1 min-w-0">
         <span className="font-bold text-sm text-black">{avatar.name}</span>
         <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>

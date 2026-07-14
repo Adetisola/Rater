@@ -69,9 +69,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "Enter a valid email";
     return null;
   };
-
-  const { signup, profileMap, checkUsernameAvailable, loginWithGoogle } = useAuth();
-
+  const { signup, checkUsernameAvailable, loginWithGoogle } = useAuth();
   const [generatedUsernamePreview, setGeneratedUsernamePreview] = useState('username');
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
 
@@ -307,7 +305,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 rounded-xl flex items-center justify-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full h-12 rounded-xl flex items-center justify-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-primary hover:text-black transition-colors"
                   onClick={loginWithGoogle}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">

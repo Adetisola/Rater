@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { RESERVED_ROUTES } from '../lib/constants';
+import { RESERVED_ROUTES, RESERVED_PREFIXES } from '../lib/constants';
 
 /**
  * Represents the possible states of a username validation request.
@@ -54,7 +54,7 @@ function generateSuggestions(base: string): string[] {
     `${safeBase}_`,                        // timmy_
     `the_${safeBase}`,                      // the_timmy
     `${safeBase}_vibe`                      // timmy_vibe
-  ].filter(s => /^[a-z0-9_]{3,20}$/.test(s));
+  ].filter(s => /^[a-z0-9_]{3,20}$/.test(s) && !RESERVED_PREFIXES.some(prefix => s.startsWith(prefix)));
 }
 
 /**
@@ -109,6 +109,16 @@ export function useUsernameValidation({
         else if (value.length < 3) message = 'At least 3 characters required.';
         else if (value.length > 20) message = 'Maximum 20 characters.';
         setResult({ status: 'invalid_format', message, suggestions: [] });
+        return;
+      }
+
+      // Reserved prefixes check (synchronous)
+      if (RESERVED_PREFIXES.some(prefix => normalized.startsWith(prefix))) {
+        setResult({
+          status: 'taken',
+          message: 'This username prefix is reserved.',
+          suggestions: generateSuggestions(normalized.replace(/^([a-z]+_)/, '') || 'user')
+        });
         return;
       }
 

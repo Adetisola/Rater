@@ -6,6 +6,7 @@ import { Button } from './ui/Button';
 import { Check, FileUp, Lock, CloudUpload, ArrowLeft } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
+import { UserAvatar } from './UserAvatar';
 import { Textarea } from './ui/Textarea';
 import type { Post, Category } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
@@ -533,16 +534,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           scroll={false}
           className="block shrink-0 transition-all hover:scale-105 active:scale-95 self-start sm:self-center"
         >
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 overflow-hidden shadow-sm"
-            style={{ backgroundColor: currentProfile.bg_color }}
-          >
-            {currentProfile.avatar_url ? (
-              <img src={currentProfile.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-            ) : (
-              currentProfile.name.charAt(0).toUpperCase()
-            )}
-          </div>
+          <UserAvatar avatarUrl={currentProfile.avatar_url} className="w-10 h-10 shadow-sm" />
         </Link>
       </div>
 

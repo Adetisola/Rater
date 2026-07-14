@@ -7,13 +7,13 @@ import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
-import { LogOut, Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
+import { UserMenu } from './UserMenu';
 import { useRouter } from 'next/navigation';
-import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode } from 'lucide-react';
-import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
+import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode, User } from 'lucide-react';
 import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -86,7 +86,7 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId }: ProfileViewProps) {
-  const { currentProfile: me, profileMap, logout, updateProfile, checkUsernameAvailable } = useAuth();
+  const { currentProfile: me, profileMap, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
 
@@ -102,7 +102,6 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const [editBio, setEditBio] = useState('');
   const [editName, setEditName] = useState('');
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
   const [showFullscreenAvatar, setShowFullscreenAvatar] = useState(false);
 
@@ -302,8 +301,8 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   return (
     <div className="max-w-6xl mx-auto px-2 xs:px-6 pt-1 pb-16 md:pt-4 md:pb-24 w-full min-h-[60vh] relative">
 
-      {/* HEADER: Back Button */}
-      <div className="mb-4 md:mb-8">
+      {/* HEADER: Back Button & Mobile Menu */}
+      <div className="mb-4 md:mb-8 flex justify-between items-center">
         <Button
           variant="secondary"
           onClick={() => router.back()}
@@ -312,6 +311,12 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           <ArrowLeft className="w-5 h-5 text-black" />
           Back
         </Button>
+
+        {isMe && (
+          <div className="md:hidden">
+            <UserMenu variant="profile" align="right" />
+          </div>
+        )}
       </div>
 
       {isMe && (
@@ -341,13 +346,6 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   <QrCode className="w-5 h-5" />
                   <span className="font-medium text-[15px]">Share Profile</span>
                 </button>
-                <button
-                  onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
-                  className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="font-medium text-[15px]">Logout</span>
-                </button>
               </div>
             </>
           )}
@@ -371,8 +369,10 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
         <div className="relative group shrink-0 flex flex-col items-center">
           <div
-            className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all shadow-sm relative"
-            style={{ backgroundColor: targetAvatar.bg_color }}
+            className={cn(
+              "w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden transition-all shadow-sm relative",
+              !targetAvatar.avatar_url && "bg-gray-100 border border-gray-200/50"
+            )}
           >
             {targetAvatar.avatar_url ? (
               <button
@@ -387,9 +387,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 />
               </button>
             ) : (
-              <span className="animate-in fade-in duration-300">
-                {targetAvatar.name.charAt(0).toUpperCase()}
-              </span>
+              <User className="w-1/2 h-1/2 text-gray-400" strokeWidth={2.5} />
             )}
 
             {isMe && (
@@ -845,10 +843,9 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             Share Profile
           </Button>
           {isMe && (
-            <Button variant="ghost" className="h-11 rounded-full px-5 flex items-center gap-2 hover:bg-[#ff4848] hover:text-white transition-all text-gray-500 font-semibold" onClick={() => setShowLogoutConfirm(true)}>
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
+            <div className="flex justify-end">
+              <UserMenu variant="profile" align="right" />
+            </div>
           )}
         </div>
       </div>
@@ -939,16 +936,6 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       </AnimatePresence>
 
       {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}
-      {showLogoutConfirm && (
-        <LogoutConfirmOverlay
-          onClose={() => setShowLogoutConfirm(false)}
-          onConfirm={() => {
-            logout();
-            setShowLogoutConfirm(false);
-            router.push('/browse', { scroll: false });
-          }}
-        />
-      )}
       {showQrCode && targetAvatar && (
         <QRCodeOverlay
           isOpen={showQrCode}
