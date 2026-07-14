@@ -162,11 +162,12 @@ export function useUsernameValidation({
 
   const handleChange = useCallback(
     (value: string) => {
-      setInput(value);
-      latestInput.current = value;
+      const lowercasedValue = value.toLowerCase();
+      setInput(lowercasedValue);
+      latestInput.current = lowercasedValue;
 
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => validate(value), debounceMs);
+      debounceTimer.current = setTimeout(() => validate(lowercasedValue), debounceMs);
     },
     [validate, debounceMs]
   );

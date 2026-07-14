@@ -1,3 +1,5 @@
+import { RESERVED_ROUTES } from '../lib/constants';
+
 /**
  * Normalizes a name string for use as a base username.
  * - Lowercase
@@ -33,17 +35,69 @@ export function generateUsernameFromName(name: string, existingUsernames: string
 
   const existingNormalized = existingUsernames.map(u => u.toLowerCase());
 
-  if (!existingNormalized.includes(base)) {
+  if (!existingNormalized.includes(base) && !RESERVED_ROUTES.has(base)) {
     return base;
   }
 
-  // Handle collision with incrementing suffix
-  let counter = 1;
-  let candidate = `${base}_${counter}`;
+  // Handle collision with incrementing suffix (e.g. daniel2)
+  let counter = 2;
+  let candidate = `${base}${counter}`;
   
-  while (existingNormalized.includes(candidate)) {
+  while (existingNormalized.includes(candidate) || RESERVED_ROUTES.has(candidate)) {
     counter++;
-    candidate = `${base}_${counter}`;
+    candidate = `${base}${counter}`;
+  }
+
+  return candidate;
+}
+
+// Local cache for async availability checks to avoid duplicate queries
+const availabilityCache = new Map<string, boolean>();
+
+/**
+ * Asynchronously generates an available username by checking against reserved routes and the database.
+ */
+export async function generateAvailableUsernameAsync(
+  name: string,
+  checkAvailability: (username: string) => Promise<boolean>,
+  abortSignal?: AbortSignal
+): Promise<string> {
+  let base = normalizeNameForUsername(name);
+  
+  if (!base || base.length < 3) {
+    return 'username'; // default placeholder if name is too short or invalid
+  }
+  
+  if (base.length > 15) {
+    base = base.slice(0, 15).replace(/_$/, '');
+  }
+
+  const checkIsAvailable = async (candidate: string) => {
+    if (RESERVED_ROUTES.has(candidate)) return false;
+    if (availabilityCache.has(candidate)) return availabilityCache.get(candidate);
+    
+    try {
+      const isFree = await checkAvailability(candidate);
+      availabilityCache.set(candidate, isFree);
+      return isFree;
+    } catch (e) {
+      // In case of error, default to unavailable to be safe
+      return false;
+    }
+  };
+
+  let isAvailable = await checkIsAvailable(base);
+  if (abortSignal?.aborted) return base;
+
+  if (isAvailable) return base;
+
+  let counter = 2;
+  let candidate = `${base}${counter}`;
+  
+  while (!(await checkIsAvailable(candidate))) {
+    if (abortSignal?.aborted) return candidate;
+    counter++;
+    candidate = `${base}${counter}`;
   }
 
   return candidate;
