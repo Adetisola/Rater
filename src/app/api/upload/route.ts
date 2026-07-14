@@ -36,14 +36,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unsupported file format' }, { status: 400 });
     }
 
-    // 4. Convert File to Data URI for Cloudinary Node SDK
+    // 4. Convert File to Buffer for Cloudinary upload_stream
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const dataUri = `data:${file.type};base64,${buffer.toString('base64')}`;
 
     // 5. Upload via Cloudinary Service
     const folder = `rater/posts/${user.id}`;
-    const mediaAsset = await uploadAsset(dataUri, folder, user.id);
+    const mediaAsset = await uploadAsset(buffer, folder, user.id);
 
     return NextResponse.json({ success: true, asset: mediaAsset }, { status: 200 });
   } catch (error: any) {
