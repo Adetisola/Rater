@@ -77,11 +77,15 @@ export default function CompleteProfilePage() {
     }
   }, [currentProfile, isAuthLoading, hasGeneratedUsername]);
 
-  // Trigger validation when input changes
+  // Trigger validation when input changes with debounce
   useEffect(() => {
-    if (usernameInput) {
+    if (!usernameInput) return;
+    
+    const timer = setTimeout(() => {
       validate(usernameInput);
-    }
+    }, 400); // 400ms debounce
+    
+    return () => clearTimeout(timer);
   }, [usernameInput, validate]);
 
   const handleUsernameChange = (value: string) => {

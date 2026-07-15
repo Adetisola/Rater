@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Header } from '@/components/Header';
@@ -24,11 +24,13 @@ const SORT_LABELS: Record<string, string> = {
 };
 
 
-export default function BrowseContent() {
+const EMPTY_ARRAY: Post[] = [];
+
+export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialPosts?: Post[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { currentProfile, profileMap, isLoading } = useAuth();
+  const { currentProfile, profileMap } = useAuth();
   
   // Data State
   const [localRecentUpload, setLocalRecentUpload] = useState<string | null>(
@@ -49,8 +51,18 @@ export default function BrowseContent() {
     return unsub;
   }, [localRecentUpload]);
   
+  const fetchLimit = 20;
+  const initialHasMore = initialPosts.length > fetchLimit;
+  const displayPosts = useMemo(() => {
+    return initialHasMore ? initialPosts.slice(0, fetchLimit) : initialPosts;
+  }, [initialPosts, initialHasMore]);
+  
   const [feedPostIds, setFeedPostIds] = useState<string[]>(() => {
-    return localRecentUpload ? [localRecentUpload] : [];
+    let ids = displayPosts.map(p => p.id);
+    if (localRecentUpload && !ids.includes(localRecentUpload)) {
+      ids = [localRecentUpload, ...ids];
+    }
+    return ids.length > 0 ? ids : (localRecentUpload ? [localRecentUpload] : []);
   });
   
   // Also sync feedPostIds if localRecentUpload changes later due to cache restore
@@ -60,28 +72,37 @@ export default function BrowseContent() {
     }
   }, [localRecentUpload, feedPostIds]);
 
-  const [hasMore, setHasMore] = useState(true);
-  const [isFetchingPage, setIsFetchingPage] = useState(true);
-  const hasFetchedRef = useRef(false);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isFetchingPage, setIsFetchingPage] = useState(displayPosts.length === 0);
 
-  // Initial Fetch
+  // Hydrate Zustand store on mount (client-side)
   useEffect(() => {
-    if (isLoading || hasFetchedRef.current) return;
-    hasFetchedRef.current = true;
+    if (displayPosts.length > 0) {
+      usePostStore.getState().addOrUpdatePosts(displayPosts);
+    }
+  }, [displayPosts]);
+
+  // Client-side fallback fetch (only if SSR didn't provide posts)
+  useEffect(() => {
+    if (initialPosts.length > 0) return; // Handled by SSR
     
     let mounted = true;
     setIsFetchingPage(true);
-    getFeedPosts({ limit: 20 }).then(newPosts => {
+    
+    getFeedPosts({ limit: 21 }).then(newPosts => {
       if (mounted) {
-        usePostStore.getState().addOrUpdatePosts(newPosts);
-        let ids = newPosts.map(p => p.id);
+        const hasMorePosts = newPosts.length === 21;
+        const actualPosts = hasMorePosts ? newPosts.slice(0, 20) : newPosts;
+        
+        usePostStore.getState().addOrUpdatePosts(actualPosts);
+        let ids = actualPosts.map(p => p.id);
         
         if (localRecentUpload && !ids.includes(localRecentUpload)) {
           ids = [localRecentUpload, ...ids];
         }
         
         setFeedPostIds(ids);
-        setHasMore(newPosts.length === 20);
+        setHasMore(hasMorePosts);
         setIsFetchingPage(false);
         
         if (usePostStore.getState().newlyUploadedPostId) {
@@ -94,10 +115,13 @@ export default function BrowseContent() {
         setIsFetchingPage(false);
       }
     });
-    return () => { mounted = false; };
-  }, [isLoading, localRecentUpload]);
+    return () => { 
+      mounted = false; 
+    };
+  }, [localRecentUpload, initialPosts]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
+    // ... logic remains the same
     if (isFetchingPage || !hasMore || feedPostIds.length === 0) return;
     setIsFetchingPage(true);
     
@@ -107,25 +131,46 @@ export default function BrowseContent() {
     const cursor = lastPost ? lastPost.created_at : undefined;
 
     try {
-      const newPosts = await getFeedPosts({ limit: 20, cursor });
-      usePostStore.getState().addOrUpdatePosts(newPosts);
+      const fetchLimit = 20;
+      const newPosts = await getFeedPosts({ limit: fetchLimit + 1, cursor });
+      
+      const hasMorePosts = newPosts.length > fetchLimit;
+      const actualNewPosts = hasMorePosts ? newPosts.slice(0, fetchLimit) : newPosts;
+      
+      usePostStore.getState().addOrUpdatePosts(actualNewPosts);
       setFeedPostIds(prev => {
-        const newIds = newPosts.map(p => p.id).filter(id => !prev.includes(id));
+        const newIds = actualNewPosts.map(p => p.id).filter(id => !prev.includes(id));
         return [...prev, ...newIds];
       });
-      setHasMore(newPosts.length === 20);
+      setHasMore(hasMorePosts);
     } catch (err) {
       console.error('Load more failed:', err);
     } finally {
       setIsFetchingPage(false);
     }
-  };
+  }, [isFetchingPage, hasMore, feedPostIds]);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const bottomRef = useCallback((node: HTMLDivElement | null) => {
+    if (isFetchingPage) return;
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    if (node) {
+      observerRef.current = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasMore) {
+          handleLoadMore();
+        }
+      }, { rootMargin: '400px' });
+      observerRef.current.observe(node);
+    }
+  }, [isFetchingPage, hasMore, handleLoadMore]);
 
 
   // Read URL params
   const urlQuery = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'balanced';
-  const selectedCategories = useMemo(() => searchParams.getAll('cat'), [searchParams]);
+  const catString = searchParams.getAll('cat').join(',');
+  const selectedCategories = useMemo(() => catString ? catString.split(',') : [], [catString]);
   const avatarId = searchParams.get('avatar');
 
   // Local state for fast typing in search
@@ -241,7 +286,7 @@ export default function BrowseContent() {
             // 4. Balanced Curated Sort
             let finalPosts = posts;
             if (sortBy === 'balanced' && urlQuery.trim().length < 2) {
-                finalPosts = await curatedFreshnessSort(posts);
+                finalPosts = curatedFreshnessSort(posts);
             }
 
             // --- INSTANT INJECTION OVERRIDE ---
@@ -418,7 +463,7 @@ export default function BrowseContent() {
                       </button>
                     </div>
                     <span className="text-sm text-gray-400">
-                      {isProcessing ? 'Searching...' : (
+                      {(isProcessing || isFetchingPage) ? 'Searching...' : (
                         sortedPostIds.length === 0
                           ? 'Nothing here yet'
                           : `${sortedPostIds.length} post${sortedPostIds.length === 1 ? '' : 's'} found`
@@ -441,18 +486,10 @@ export default function BrowseContent() {
                 );
               })()}
 
-              {!isProcessing && (
+              {(!isProcessing && !isFetchingPage) && (
                 <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
                     {hasMore ? (
-                        !isFetchingPage && (
-                            <button 
-                                onClick={handleLoadMore}
-                                disabled={isFetchingPage}
-                                className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-black font-semibold rounded-full transition-colors disabled:opacity-50"
-                            >
-                                Load More
-                            </button>
-                        )
+                        <div ref={bottomRef} className="h-10 w-full" />
                     ) : (
                         <>
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />

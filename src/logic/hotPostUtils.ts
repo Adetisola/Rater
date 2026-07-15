@@ -8,7 +8,7 @@ const MIN_REVIEW_COUNT = 5;
  *
  * Logic:
  * 1. Only consider posts created within the last 7 days
- * 2. Only consider posts with review_count ≥ 3
+ * 2. Only consider posts with review_count ≥ 5
  * 3. From that pool, mark the top 10% (by review_count DESC) as hot
  *
  * This is NOT a badge. It is purely informational metadata.

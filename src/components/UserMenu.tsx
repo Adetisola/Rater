@@ -4,20 +4,23 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown } from 'lucide-react';
+import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2 } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
+import { QRCodeOverlay } from './QRCodeOverlay';
 
 interface UserMenuProps {
   trigger?: React.ReactNode;
   align?: 'left' | 'right';
   variant?: 'nav' | 'profile';
+  onEditProfile?: () => void;
 }
 
-export function UserMenu({ trigger, align = 'left', variant = 'nav' }: UserMenuProps = {}) {
+export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfile }: UserMenuProps = {}) {
   const { currentProfile, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,8 +63,8 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav' }: UserMenuP
         </div>
       ) : (
         <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer">
-          <button className="block shrink-0 transition-all hover:scale-105 active:scale-95 focus:outline-none">
-            <UserAvatar avatarUrl={currentProfile.avatar_url} className="w-10 h-10 shadow-sm" />
+          <button className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center transition-all">
+            <MoreHorizontal className="w-5 h-5 text-black" />
           </button>
         </div>
       )}
@@ -83,41 +86,74 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav' }: UserMenuP
             )}
             
             <div className="p-2 flex flex-col gap-1">
-              <Link
-                href={`/@${currentProfile.username}`}
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
-              >
-                <User size={18} className="text-gray-400" />
-                Profile
-              </Link>
+              {onEditProfile ? (
+                <button
+                  onClick={() => { setIsOpen(false); onEditProfile(); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+                >
+                  <Edit2 size={18} className="text-gray-400" />
+                  Edit your Profile
+                </button>
+              ) : (
+                <Link
+                  href={`/@${currentProfile.username}?edit=true`}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+                >
+                  <Edit2 size={18} className="text-gray-400" />
+                  Edit your Profile
+                </Link>
+              )}
               
-              <Link
-                href="/settings"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
-              >
-                <Settings size={18} className="text-gray-400" />
-                Settings
-              </Link>
+              {variant !== 'profile' && (
+                <Link
+                  href={`/@${currentProfile.username}`}
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+                >
+                  <User size={18} className="text-gray-400" />
+                  Profile
+                </Link>
+              )}
               
-              <Link
-                href="/feedback"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+              <button
+                onClick={() => { setIsOpen(false); setShowQrCode(true); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
               >
-                <MessageSquarePlus size={18} className="text-gray-400" />
-                Feedback
-              </Link>
+                <QrCode size={18} className="text-gray-400" />
+                Share Profile
+              </button>
               
-              <Link
-                href="/legal/terms"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
-              >
-                <Scale size={18} className="text-gray-400" />
-                Legal
-              </Link>
+              {process.env.NODE_ENV === 'development' && (
+                <>
+                  <Link
+                    href="/settings"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+                  >
+                    <Settings size={18} className="text-gray-400" />
+                    Settings
+                  </Link>
+                  
+                  <Link
+                    href="/feedback"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+                  >
+                    <MessageSquarePlus size={18} className="text-gray-400" />
+                    Feedback
+                  </Link>
+                  
+                  <Link
+                    href="/legal/terms"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+                  >
+                    <Scale size={18} className="text-gray-400" />
+                    Legal
+                  </Link>
+                </>
+              )}
               
               {currentProfile.is_admin && (
                 <Link
@@ -154,6 +190,15 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav' }: UserMenuP
             setShowLogoutConfirm(false);
             logout();
           }}
+        />
+      )}
+
+      {showQrCode && (
+        <QRCodeOverlay
+          isOpen={showQrCode}
+          onClose={() => setShowQrCode(false)}
+          username={currentProfile.username}
+          avatarUrl={currentProfile.avatar_url}
         />
       )}
     </div>

@@ -52,9 +52,15 @@ function AuthCallbackContent() {
         }
 
         // 4. If profile exists, check if onboarding is completed
-        if (!profile.onboarding_completed) {
+        const hasValidUsername = profile.username && !profile.username.startsWith('user_') && !profile.username.startsWith('temp_');
+        
+        if (!profile.onboarding_completed && !hasValidUsername) {
           if (mounted) router.replace('/auth/complete-profile');
         } else {
+          // Auto-heal legacy accounts that have a username but missing the completed flag
+          if (!profile.onboarding_completed && hasValidUsername) {
+             await persistProfileUpdate(user.id, { onboarding_completed: true });
+          }
           if (mounted) router.replace('/browse');
         }
 

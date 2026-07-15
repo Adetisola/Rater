@@ -5,7 +5,6 @@ import { notFound, useRouter } from 'next/navigation';
 import { useAuth } from '../../../context/AuthContext';
 import type { Avatar } from '../../../types';
 import { ProfileView } from '../../../components/ProfileView';
-import { RESERVED_ROUTES } from '../../../lib/constants';
 
 
 
@@ -23,11 +22,6 @@ export default function PremiumAvatarPage({ params }: { params: Promise<{ alias:
   }
 
   const slug = decodedAlias.slice(1).toLowerCase();
-
-  // Guard: reject reserved route names used as usernames
-  if (RESERVED_ROUTES.has(slug)) {
-    notFound();
-  }
 
   const [targetAvatar, setTargetAvatar] = useState<Avatar | null | undefined>(undefined);
   const [redirectAvatar, setRedirectAvatar] = useState<Avatar | null>(null);

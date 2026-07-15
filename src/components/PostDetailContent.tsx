@@ -67,6 +67,12 @@ interface PostDetailOverlayProps {
  */
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     const [isMobile, setIsMobile] = useState(false);
+
+    // Hydrate the store with the server-provided post data
+    useEffect(() => {
+        usePostStore.getState().addOrUpdatePosts([post]);
+    }, [post]);
+
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -558,7 +564,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
     };
 
-    const avatar = allAvatars[post.avatar_id];
+    const avatar = allAvatars[post.avatar_id] || post.author;
 
     return (
         <motion.div
@@ -627,7 +633,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                         {/* 1. Image Preview */}
                         <div
-                            className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-4/5 xs:aspect-video'} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                            className={`group relative w-full ${imageError ? 'aspect-video' : ''} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
                             onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
                             onPointerDownCapture={(e) => {
                                 // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
@@ -638,17 +644,17 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 <ImageFallback
                                     src={post.image_url}
                                     alt={post.title}
-                                    className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500"
+                                    className="w-full h-auto transition-transform duration-500"
                                     fallbackClassName="w-full h-full rounded-[24px]"
                                     onErrorChange={(err) => setImageError(err)}
                                 />
                             ) : (
-                                <div className="w-full h-full relative">
+                                <div className="w-full relative">
                                     <MediaCarousel
                                         media={displayMedia}
                                         variant="detail"
-                                        className="w-full h-full"
-                                        imageClassName="w-full h-full object-cover transition-transform duration-500"
+                                        className="w-full"
+                                        imageClassName="w-full h-auto transition-transform duration-500"
                                         onErrorChange={(err) => setImageError(err)}
                                         onImageClick={(index) => {
                                             setFullscreenImageIndex(index);
@@ -1186,7 +1192,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 >
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-none" />
                     <div className="absolute bottom-6 left-6 md:top-4 md:right-4 md:bottom-auto md:left-auto flex md:flex-col flex-row gap-4 z-50 pointer-events-auto">
-                        <button className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex" onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); setZoomScale(1); }}>
+                        <button className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95" onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); setZoomScale(1); }}>
                             <X className="w-6 h-6" />
                         </button>
                         <button onClick={async (e) => {

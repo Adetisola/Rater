@@ -173,20 +173,27 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
 
   // Compute badges outside the render cycle
   useEffect(() => {
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const unsub = usePostStore.subscribe((state, prevState) => {
       // Very naive check: if any post changed, re-run badges
       if (state.posts !== prevState.posts) {
-        const activePosts = Object.values(state.posts).filter(p => !p.is_deleted);
-        Promise.all([
-          getActiveBadges(activePosts),
-          computeHotPosts(activePosts)
-        ]).then(([bMap, hSet]) => {
-          usePostStore.getState().setBadges(bMap);
-          usePostStore.getState().setHotPosts(hSet);
-        });
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          const activePosts = Object.values(usePostStore.getState().posts).filter(p => !p.is_deleted);
+          Promise.all([
+            getActiveBadges(activePosts),
+            computeHotPosts(activePosts)
+          ]).then(([bMap, hSet]) => {
+            usePostStore.getState().setBadges(bMap);
+            usePostStore.getState().setHotPosts(hSet);
+          });
+        }, 600);
       }
     });
-    return unsub;
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      unsub();
+    };
   }, []);
 
   return (

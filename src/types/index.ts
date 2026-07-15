@@ -93,6 +93,7 @@ export interface Post {
   image_url: string; // Kept for backwards-compatibility during migration
   media?: MediaAsset[]; // The new robust media architecture
   avatar_id: string;
+  author?: Avatar; // Populated from DB joins so client doesn't hydration-mismatch
   review_count?: number;
   average_score?: number;
   criteria_scores?: Record<string, number>;

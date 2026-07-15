@@ -90,10 +90,19 @@ export function useUsernameValidation({
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestInput = useRef(input);
+  const checkAvailabilityRef = useRef(checkAvailability);
+
+  // Keep ref synced with the latest function without triggering re-renders
+  useEffect(() => {
+    checkAvailabilityRef.current = checkAvailability;
+  }, [checkAvailability]);
 
   const validate = useCallback(
     async (value: string) => {
       const normalized = value.toLowerCase().trim();
+      
+      // Always track the latest validation request to prevent stale async responses
+      latestInput.current = normalized;
 
       // Unchanged  
       if (normalized === currentUsername.toLowerCase()) {
@@ -151,7 +160,7 @@ export function useUsernameValidation({
       // Async uniqueness check
       setResult({ status: 'checking', message: 'Checking availability...', suggestions: [] });
       try {
-        const isAvailable = await checkAvailability(normalized);
+        const isAvailable = await checkAvailabilityRef.current(normalized);
         // Guard stale async response
         if (latestInput.current.toLowerCase().trim() !== normalized) return;
         if (isAvailable) {
@@ -167,7 +176,7 @@ export function useUsernameValidation({
         setResult({ status: 'idle', message: 'Could not check availability.', suggestions: [] });
       }
     },
-    [currentUsername, username_last_changed_at, checkAvailability]
+    [currentUsername, username_last_changed_at]
   );
 
   const handleChange = useCallback(

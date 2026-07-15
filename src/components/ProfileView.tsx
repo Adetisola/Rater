@@ -7,12 +7,12 @@ import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
-import { Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Grid, Heart, ArrowLeft } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { UserMenu } from './UserMenu';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode, User } from 'lucide-react';
 import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -101,7 +101,6 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const [editRole, setEditRole] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editName, setEditName] = useState('');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
   const [showFullscreenAvatar, setShowFullscreenAvatar] = useState(false);
 
@@ -214,6 +213,16 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     }, 50);
   };
 
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (isMe && editState === 'idle' && searchParams?.get('edit') === 'true') {
+      startEditing();
+      const url = new URL(window.location.href);
+      url.searchParams.delete('edit');
+      window.history.replaceState({}, '', url);
+    }
+  }, [isMe, editState, searchParams]);
+
   const handleCancel = () => {
     setSaveError('');
     setEditState('idle');
@@ -314,43 +323,10 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
         {isMe && (
           <div className="md:hidden">
-            <UserMenu variant="profile" align="right" />
+            <UserMenu variant="profile" align="right" onEditProfile={startEditing} />
           </div>
         )}
       </div>
-
-      {isMe && (
-        <div className="md:hidden absolute top-8 right-4 z-40">
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-50 transition-all shadow-sm active:scale-95"
-          >
-            <MoreHorizontal className="w-6 h-6 text-black" />
-          </button>
-
-          {showMobileMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
-              <div className="absolute top-13 right-0 w-53 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <button
-                  onClick={() => { startEditing(); setShowMobileMenu(false); }}
-                  className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
-                >
-                  <Edit2 className="w-5 h-5" />
-                  <span className="font-medium text-[15px]">Edit Avatar Profile</span>
-                </button>
-                <button
-                  onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}
-                  className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
-                >
-                  <QrCode className="w-5 h-5" />
-                  <span className="font-medium text-[15px]">Share Profile</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Share Button for Mobile (Non-Owners) */}
       {!isMe && (
@@ -834,14 +810,16 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         </div>
 
         <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
-          <Button
-            variant="ghost"
-            className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
-            onClick={() => setShowQrCode(true)}
-          >
-            <QrCode className="w-4 h-4" />
-            Share Profile
-          </Button>
+          {!isMe && (
+            <Button
+              variant="ghost"
+              className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
+              onClick={() => setShowQrCode(true)}
+            >
+              <QrCode className="w-4 h-4" />
+              Share Profile
+            </Button>
+          )}
           {isMe && (
             <div className="flex justify-end">
               <UserMenu variant="profile" align="right" />

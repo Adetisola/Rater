@@ -203,19 +203,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const contextValue = useMemo(() => ({ 
+    currentProfile, 
+    profileMap: safeProfileMap, 
+    login, 
+    signup, 
+    updateProfile, 
+    checkUsernameAvailable: dbCheckUsername,
+    loginWithGoogle,
+    connectGoogle,
+    logout, 
+    isLoading 
+  }), [
+    currentProfile,
+    safeProfileMap,
+    login,
+    signup,
+    updateProfile,
+    loginWithGoogle,
+    connectGoogle,
+    logout,
+    isLoading
+  ]);
+
   return (
-    <AuthContext.Provider value={{ 
-      currentProfile, 
-      profileMap: safeProfileMap, 
-      login, 
-      signup, 
-      updateProfile, 
-      checkUsernameAvailable: dbCheckUsername,
-      loginWithGoogle,
-      connectGoogle,
-      logout, 
-      isLoading 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -14,7 +14,7 @@ import { populateProfileCache } from './profiles';
 /**
  * Fetch the base feed posts (without localStorage session overlays).
  */
-export async function getFeedPosts({ limit = 20, cursor }: { limit?: number; cursor?: string } = {}): Promise<Post[]> {
+export async function getFeedPosts({ limit = 20, cursor, isRetry = false }: { limit?: number; cursor?: string; isRetry?: boolean } = {}): Promise<Post[]> {
   let query = supabase
     .from('posts')
     .select('*, profiles(id, username, name, avatar_url, bg_color)')
@@ -29,6 +29,19 @@ export async function getFeedPosts({ limit = 20, cursor }: { limit?: number; cur
   const { data, error } = await query;
 
   if (error) {
+    if (error.message?.toLowerCase().includes('jwt') && error.message?.toLowerCase().includes('expired')) {
+      if (!isRetry) {
+        console.warn('JWT expired during getFeedPosts, retrying in 1s...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return getFeedPosts({ limit, cursor, isRetry: true });
+      } else {
+        console.warn('JWT expired during getFeedPosts retry, forcing sign out...');
+        if (typeof window !== 'undefined') {
+          await supabase.auth.signOut();
+          window.location.reload();
+        }
+      }
+    }
     console.error('Error fetching feed posts:', error.message, error.details, error.hint, error);
     return [];
   }
@@ -38,14 +51,14 @@ export async function getFeedPosts({ limit = 20, cursor }: { limit?: number; cur
   
   return data.map((row: any) => {
     const { profiles, ...post } = row;
-    return post as Post;
+    return { ...post, author: profiles } as Post;
   });
 }
 
 /**
  * Fetch a single post by ID.
  */
-export async function getPost(postId: string): Promise<Post | null> {
+export async function getPost(postId: string, isRetry = false): Promise<Post | null> {
   const { data, error } = await supabase
     .from('posts')
     .select('*, profiles(id, username, name, avatar_url, bg_color)')
@@ -53,6 +66,19 @@ export async function getPost(postId: string): Promise<Post | null> {
     .single();
 
   if (error) {
+    if (error.message?.toLowerCase().includes('jwt') && error.message?.toLowerCase().includes('expired')) {
+      if (!isRetry) {
+        console.warn(`JWT expired during getPost(${postId}), retrying in 1s...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return getPost(postId, true);
+      } else {
+        console.warn(`JWT expired during getPost(${postId}) retry, forcing sign out...`);
+        if (typeof window !== 'undefined') {
+          await supabase.auth.signOut();
+          window.location.reload();
+        }
+      }
+    }
     console.error(`Error fetching post ${postId}:`, error);
     return null;
   }
@@ -60,7 +86,7 @@ export async function getPost(postId: string): Promise<Post | null> {
   if (data.profiles) populateProfileCache([data.profiles]);
   
   const { profiles, ...post } = data as any;
-  return post as Post;
+  return { ...post, author: profiles } as Post;
 }
 
 /**
@@ -91,7 +117,7 @@ export async function getProfilePosts(avatarId: string, { limit = 20, cursor }: 
   
   return data.map((row: any) => {
     const { profiles, ...post } = row;
-    return post as Post;
+    return { ...post, author: profiles } as Post;
   });
 }
 
