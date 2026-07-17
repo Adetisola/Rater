@@ -4,36 +4,50 @@ import { uploadAsset } from '@/lib/cloudinary/service';
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
 
+/**
+ * Always returns JSON — never HTML error pages.
+ * This prevents the "Unexpected token 'R'" client-side parse error.
+ */
+function jsonError(message: string, status: number) {
+  return NextResponse.json({ error: message }, { status });
+}
+
 export async function POST(req: NextRequest) {
   try {
     // 1. Authenticate Request
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonError('Unauthorized', 401);
     }
     const token = authHeader.split(' ')[1];
     
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonError('Unauthorized', 401);
     }
 
     // 2. Parse FormData
-    const formData = await req.formData();
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return jsonError('Invalid request body', 400);
+    }
+
     const file = formData.get('file') as File | null;
     
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+      return jsonError('No file provided', 400);
     }
 
     // 3. Server-side Validation
     if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 8MB' }, { status: 400 });
+      return jsonError('File size exceeds 8MB limit', 400);
     }
 
     if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      return NextResponse.json({ error: 'Unsupported file format' }, { status: 400 });
+      return jsonError('Unsupported file format. Only images and videos are accepted.', 400);
     }
 
     // 4. Convert File to Buffer for Cloudinary upload_stream
@@ -46,8 +60,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, asset: mediaAsset }, { status: 200 });
   } catch (error: any) {
-    console.error('API /upload error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    console.error('API /upload POST error:', error);
+    // NEVER return a raw error.message directly — it may contain internal info.
+    // Inspect the error to give an appropriate HTTP status.
+    const msg = error?.message ?? '';
+    if (msg.includes('too large') || msg.includes('size')) {
+      return jsonError('File too large (max 8MB)', 400);
+    }
+    return jsonError('An internal error occurred. Please try again.', 500);
   }
 }
 
@@ -55,26 +75,25 @@ export async function DELETE(req: NextRequest) {
   try {
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonError('Unauthorized', 401);
     }
     const token = authHeader.split(' ')[1];
     
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return jsonError('Unauthorized', 401);
     }
 
     const { searchParams } = new URL(req.url);
     const publicId = searchParams.get('public_id');
     
     if (!publicId) {
-      return NextResponse.json({ error: 'Missing public_id' }, { status: 400 });
+      return jsonError('Missing public_id', 400);
     }
 
     // Security check: ensure the user owns the asset being deleted
-    // Cloudinary folders are 'rater/posts/{userId}/...'
     if (!publicId.startsWith(`rater/posts/${user.id}/`)) {
-      return NextResponse.json({ error: 'Forbidden: You do not own this asset' }, { status: 403 });
+      return jsonError('Forbidden: You do not own this asset', 403);
     }
 
     const { deleteAsset } = await import('@/lib/cloudinary/service');
@@ -83,10 +102,10 @@ export async function DELETE(req: NextRequest) {
     if (success) {
       return NextResponse.json({ success: true }, { status: 200 });
     } else {
-      return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 });
+      return jsonError('Failed to delete asset', 500);
     }
   } catch (error: any) {
     console.error('API /upload DELETE error:', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return jsonError('An internal error occurred.', 500);
   }
 }

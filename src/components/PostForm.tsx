@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
-import { Check, FileUp, Lock, CloudUpload, ArrowLeft } from 'lucide-react';
+import { Check, FileUp, Lock, CloudUpload, ArrowLeft, Loader2, RotateCcw } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
 import { Textarea } from './ui/Textarea';
 import type { Post, Category } from '@/types';
+import type { UploadProgressEvent } from '@/lib/cloudinary/uploads';
 import { CATEGORIES } from '@/constants/categories';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
@@ -75,6 +76,13 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dotLottie, setDotLottie] = useState<any>(null);
+
+  // UPLOAD PROGRESS STATE
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressEvent | null>(null);
+  const [inlineUploadError, setInlineUploadError] = useState<string | null>(null);
+
+  // Duplicate submission guard — prevents double-tap / double-click
+  const isSubmitLockedRef = useRef(false);
 
   // Trigger onSuccess only after Lottie plays once or fallback timeout
   useEffect(() => {
@@ -332,68 +340,93 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!currentProfile) return;
+
+    // Duplicate-submission guard
+    if (isSubmitLockedRef.current) return;
+    isSubmitLockedRef.current = true;
 
     if (!title.trim() || !categoryInputValue.trim()) {
       showToast("Title and Category are required.", "error");
+      isSubmitLockedRef.current = false;
       return;
     }
 
     if (!category || !CATEGORIES.includes(category as Category)) {
       setCategoryError(true);
+      isSubmitLockedRef.current = false;
       return;
     }
     setCategoryError(false);
 
     if (mediaFiles.length === 0 && mediaPreviews.length === 0) {
       showToast("At least one image is required.", "error");
+      isSubmitLockedRef.current = false;
       return;
     }
 
     setIsSubmitting(true);
+    setInlineUploadError(null);
+    setUploadProgress({ total: mediaFiles.length || 1, completed: 0, percent: 0, stage: 'preparing' });
+
     let newlyUploadedAssets: import('@/types').MediaAsset[] = [];
     try {
-      // 1. Upload new media files
-      // We will keep a map of the final assets.
       const finalAssets: import('@/types').MediaAsset[] = [];
       let fileIndex = 0;
-      
+
       const { uploadMedia } = await import('@/lib/cloudinary/uploads');
+
+      // Count how many blob files need uploading for accurate progress
+      const blobCount = mediaPreviews.filter(p => p.startsWith('blob:')).length;
+      let blobsUploaded = 0;
 
       for (let i = 0; i < mediaPreviews.length; i++) {
         const previewUrl = mediaPreviews[i];
         if (previewUrl.startsWith('blob:')) {
-           const file = mediaFiles[fileIndex];
-           if (file) {
-             const result = await uploadMedia(file);
-             result.order = i;
-             finalAssets.push(result);
-             newlyUploadedAssets.push(result);
-           }
-           fileIndex++;
+          const file = mediaFiles[fileIndex];
+          if (file) {
+            setUploadProgress({
+              total: blobCount,
+              completed: blobsUploaded,
+              percent: Math.round((blobsUploaded / blobCount) * 85),
+              stage: 'uploading',
+            });
+            const result = await uploadMedia(file);
+            result.order = i;
+            finalAssets.push(result);
+            newlyUploadedAssets.push(result);
+            blobsUploaded++;
+            setUploadProgress({
+              total: blobCount,
+              completed: blobsUploaded,
+              percent: Math.round((blobsUploaded / blobCount) * 85),
+              stage: blobsUploaded === blobCount ? 'saving' : 'uploading',
+            });
+          }
+          fileIndex++;
         } else {
-           // It's an existing image. Find it in initialPost.
-           const existing = initialPost?.media?.find(m => m.url === previewUrl);
-           if (existing) {
-             finalAssets.push({ ...existing, order: i });
-           } else {
-             // Fallback for backwards compatibility if media array didn't exist
-             finalAssets.push({
-               id: crypto.randomUUID(),
-               type: 'image',
-               url: previewUrl,
-               public_id: '',
-               width: 800,
-               height: 600,
-               aspect_ratio: 800 / 600,
-               format: 'jpg',
-               bytes: 0,
-               order: i
-             });
-           }
+          const existing = initialPost?.media?.find(m => m.url === previewUrl);
+          if (existing) {
+            finalAssets.push({ ...existing, order: i });
+          } else {
+            finalAssets.push({
+              id: crypto.randomUUID(),
+              type: 'image',
+              url: previewUrl,
+              public_id: '',
+              width: 800,
+              height: 600,
+              aspect_ratio: 800 / 600,
+              format: 'jpg',
+              bytes: 0,
+              order: i
+            });
+          }
         }
       }
+
+      setUploadProgress(prev => prev ? { ...prev, percent: 90, stage: 'saving' } : null);
 
       if (isEditing && initialPost) {
         const success = await updatePost(initialPost.id, {
@@ -404,9 +437,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           media: finalAssets
         });
         if (success) {
+          setUploadProgress(prev => prev ? { ...prev, percent: 100, stage: 'publishing' } : null);
           setIsSuccess(true);
         } else {
-          throw new Error("Failed to update post in database");
+          throw new Error("Failed to update your post. Please try again.");
         }
       } else {
         const newPost = {
@@ -417,31 +451,37 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           media: finalAssets,
           avatar_id: currentProfile.id
         };
+        setUploadProgress(prev => prev ? { ...prev, percent: 95, stage: 'publishing' } : null);
         const success = await addPost(newPost);
         if (success) {
           localStorage.removeItem('rater_post_form_draft');
+          setUploadProgress(prev => prev ? { ...prev, percent: 100, stage: 'publishing' } : null);
           setIsSuccess(true);
         } else {
-          throw new Error("Failed to save post to database");
+          throw new Error("Failed to save your post. Please try again.");
         }
       }
     } catch (err: any) {
-      console.error(err);
-      showToast(err.message || "Upload failed. Please check your connection.", "error");
-      // Background Cleanup for orphaned newly uploaded media
+      console.error('[PostForm] handleSubmit error:', err);
+      const errorMsg = err.message || 'Upload failed. Please check your connection and try again.';
+      setInlineUploadError(errorMsg);
+      setUploadProgress(null);
+      // Background cleanup of any orphaned Cloudinary assets
       if (newlyUploadedAssets.length > 0) {
         import('@/lib/cloudinary/uploads').then(({ deleteMedia }) => {
           newlyUploadedAssets.forEach(asset => {
-             if (asset.public_id) {
-                deleteMedia(asset.public_id).catch(e => console.error('Cleanup failed:', e));
-             }
+            if (asset.public_id) {
+              deleteMedia(asset.public_id).catch(e => console.error('Cleanup failed:', e));
+            }
           });
         });
       }
     } finally {
       setIsSubmitting(false);
+      isSubmitLockedRef.current = false;
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProfile, title, categoryInputValue, category, mediaPreviews, mediaFiles, isEditing, initialPost, description, addPost, updatePost]);
 
   if (!currentProfile) {
     return (
@@ -883,15 +923,86 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             </div>
 
             <div className="flex flex-col gap-3">
-              <Button
-                className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all"
-                variant="outline"
+              {/* Inline error with retry */}
+              <AnimatePresence>
+                {inlineUploadError && !isSubmitting && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex flex-col gap-2"
+                  >
+                    <p className="text-sm text-red-700 font-medium leading-snug">{inlineUploadError}</p>
+                    <button
+                      onClick={() => { setInlineUploadError(null); handleSubmit(); }}
+                      className="flex items-center gap-1.5 text-sm font-semibold text-red-700 hover:text-red-900 transition-colors w-fit"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      Try again
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Animated progress Post button */}
+              <button
                 disabled={!title || (mediaFiles.length === 0 && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
                 onClick={handleSubmit}
-                isLoading={isSubmitting}
+                className={cn(
+                  "group relative min-w-[160px] h-12 rounded-full text-lg font-medium transition-colors overflow-hidden border-2 border-primary",
+                  "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                  !isSubmitting && "hover:bg-primary"
+                )}
               >
-                {isEditing ? "Update Post" : "Post"}
-              </Button>
+                {/* Fill layer */}
+                {isSubmitting && uploadProgress && (
+                  <motion.span
+                    className="absolute inset-0 bg-primary origin-left"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: uploadProgress.percent / 100 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    style={{ transformOrigin: 'left' }}
+                  />
+                )}
+                {/* Shimmer on fill */}
+                {isSubmitting && (
+                  <span
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'shimmer-sweep 1.6s ease-in-out infinite',
+                    }}
+                  />
+                )}
+                {/* Label */}
+                <span
+                  className={cn(
+                    "relative z-10 flex items-center justify-center gap-2 transition-colors",
+                    isSubmitting && uploadProgress && uploadProgress.percent > 50
+                      ? 'text-white'
+                      : 'text-black group-hover:text-white group-disabled:!text-black'
+                  )}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-[15px]">
+                        {uploadProgress?.stage === 'preparing' && 'Preparing...'}
+                        {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
+                          ? `Uploading ${uploadProgress.completed + 1} of ${uploadProgress.total}...`
+                          : uploadProgress?.stage === 'uploading' ? 'Uploading...' : null
+                        }
+                        {uploadProgress?.stage === 'saving' && 'Saving...'}
+                        {uploadProgress?.stage === 'publishing' && 'Publishing...'}
+                      </span>
+                    </>
+                  ) : (
+                    isEditing ? 'Update Post' : 'Post'
+                  )}
+                </span>
+              </button>
+
               {isEditing && (
                 <Button
                   variant="ghost"
@@ -909,26 +1020,99 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         )}
 
         {isOverlay && (
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100">
-            <Button
-              variant="ghost"
-              className="h-12 px-8 rounded-full text-gray-500 font-medium"
-              onClick={() => {
-                if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
-                onCancel?.();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              className="min-w-[160px] h-12 rounded-full text-lg font-medium transition-all"
-              variant="outline"
-              disabled={!title || (mediaFiles.length === 0 && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
-              onClick={handleSubmit}
-              isLoading={isSubmitting}
-            >
-              {isEditing ? "Update Post" : "Post"}
-            </Button>
+          <div className="flex flex-col gap-3 pt-6 border-t border-gray-100">
+            {/* Inline error with retry */}
+            <AnimatePresence>
+              {inlineUploadError && !isSubmitting && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex flex-col gap-2"
+                >
+                  <p className="text-sm text-red-700 font-medium leading-snug">{inlineUploadError}</p>
+                  <button
+                    onClick={() => { setInlineUploadError(null); handleSubmit(); }}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-red-700 hover:text-red-900 transition-colors w-fit"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Try again
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex items-center justify-end gap-3">
+              <Button
+                variant="ghost"
+                className="h-12 px-8 rounded-full text-gray-500 font-medium"
+                onClick={() => {
+                  if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
+                  onCancel?.();
+                }}
+              >
+                Cancel
+              </Button>
+
+              {/* Animated progress Post button */}
+              <button
+                disabled={!title || (mediaFiles.length === 0 && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
+                onClick={handleSubmit}
+                className={cn(
+                  "group relative min-w-[160px] h-12 rounded-full text-lg font-medium overflow-hidden border-2 border-primary transition-colors",
+                  "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                  !isSubmitting && "hover:bg-primary"
+                )}
+              >
+                {/* Fill layer */}
+                {isSubmitting && uploadProgress && (
+                  <motion.span
+                    className="absolute inset-0 bg-primary origin-left"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: uploadProgress.percent / 100 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    style={{ transformOrigin: 'left' }}
+                  />
+                )}
+                {/* Shimmer on fill */}
+                {isSubmitting && (
+                  <span
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'shimmer-sweep 1.6s ease-in-out infinite',
+                    }}
+                  />
+                )}
+                {/* Label */}
+                <span
+                  className={cn(
+                    "relative z-10 flex items-center justify-center gap-2 transition-colors",
+                    isSubmitting && uploadProgress && uploadProgress.percent > 50
+                      ? 'text-white'
+                      : 'text-black group-hover:text-white group-disabled:!text-black'
+                  )}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-[15px]">
+                        {uploadProgress?.stage === 'preparing' && 'Preparing...'}
+                        {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
+                          ? `Uploading ${uploadProgress.completed + 1} of ${uploadProgress.total}...`
+                          : uploadProgress?.stage === 'uploading' ? 'Uploading...' : null
+                        }
+                        {uploadProgress?.stage === 'saving' && 'Saving...'}
+                        {uploadProgress?.stage === 'publishing' && 'Publishing...'}
+                      </span>
+                    </>
+                  ) : (
+                    isEditing ? 'Update Post' : 'Post'
+                  )}
+                </span>
+              </button>
+            </div>
           </div>
         )}
       </div>
