@@ -72,11 +72,11 @@ export function StatusFooter() {
             <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 text-[13px] md:text-[14px] text-black font-medium">
               <span>©2026</span>
               <span className="text-gray-300">•</span>
-              <button onClick={() => openLegal('Terms of Service', '/legal/Rater Terms of Service.md')} className="hover:text-primary transition-colors">Terms</button>
+              <a href="/legal/Rater Terms of Service.md" onClick={(e) => { e.preventDefault(); openLegal('Terms of Service', '/legal/Rater Terms of Service.md'); }} className="hover:text-primary transition-colors">Terms</a>
               <span className="text-gray-300">•</span>
-              <button onClick={() => openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md')} className="hover:text-primary transition-colors">Privacy</button>
+              <a href="/legal/Rater Privacy Policy.md" onClick={(e) => { e.preventDefault(); openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md'); }} className="hover:text-primary transition-colors">Privacy</a>
               <span className="text-gray-300">•</span>
-              <button onClick={() => openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md')} className="hover:text-primary transition-colors">Guidelines</button>
+              <a href="/legal/Rater Community Guidelines.md" onClick={(e) => { e.preventDefault(); openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md'); }} className="hover:text-primary transition-colors">Guidelines</a>
             </div>
           </div>
 

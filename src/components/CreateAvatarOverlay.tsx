@@ -318,9 +318,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 </Button>
 
                 <div className="relative flex items-center py-4">
-                  <div className="flex-grow border-t border-gray-100"></div>
-                  <span className="flex-shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
-                  <div className="flex-grow border-t border-gray-100"></div>
+                  <div className="grow border-t border-gray-100"></div>
+                  <span className="shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
+                  <div className="grow border-t border-gray-100"></div>
                 </div>
               </div>
 
@@ -586,14 +586,14 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             <div className="w-full space-y-6 px-1">
               <div className="relative group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400 pointer-events-none group-focus-within:text-black">
-                  <span className="text-[13px] font-medium tracking-tight">rater-web.vercel.app/@</span>
+                  <span className="text-[13px] font-medium tracking-tight">raterapp.site/@</span>
                 </div>
                 <Input
                   autoFocus
                   value={usernameInput}
                   onChange={(e) => handleUsernameChange(e.target.value)}
                   className={cn(
-                    "h-12 pl-[170px] pr-4 text-base font-normal rounded-xl border transition-all outline-none",
+                    "h-12 pl-[115px] pr-4 text-base font-normal rounded-xl border transition-all outline-none",
                     validationResult.status === 'valid' && "border-green-400 focus-visible:border-green-400 bg-green-50/10",
                     validationResult.status === 'taken' && "border-red-400 focus-visible:border-red-400 bg-red-50/10",
                     (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-300 focus-visible:border-primary"

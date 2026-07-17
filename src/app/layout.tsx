@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Rater — Judgment is built, not found",
     description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
-    url: "https://rater-web.vercel.app",
+    url: "https://raterapp.site",
     siteName: "Rater",
     images: [
       {
-        url: "https://rater-web.vercel.app/og-image.png",
+        url: "https://raterapp.site/og-image.png",
         width: 1200,
         height: 630,
       },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Rater — Judgment is built, not found",
     description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
-    images: ["https://rater-web.vercel.app/og-image.png"],
+    images: ["https://raterapp.site/og-image.png"],
   },
 };
 

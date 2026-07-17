@@ -192,6 +192,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               style={{ willChange: 'transform, opacity' }}
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-black text-center leading-tight tracking-tight px-4 w-full"
             >
+              <span className="sr-only">Rater: </span>
               <span className="block sm:inline">Judgment is built, </span>
               <span className="block sm:inline">
                 not{' '}
@@ -206,15 +207,15 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             </motion.h1>
 
             {/* Subheadline */}
-            <motion.p 
+            <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               style={{ willChange: 'transform, opacity' }}
-              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0"
+              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0 font-normal"
             >
-              Rater helps designers train their eye by actively evaluating real design work.
-            </motion.p>
+              Rater is an application that helps designers train their eye by actively observing and evaluating real design work.
+            </motion.h2>
 
             {/* CTA Buttons */}
             <motion.div 

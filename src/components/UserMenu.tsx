@@ -76,7 +76,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-3 w-[240px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[100]`}
+            className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-3 w-[240px] bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-100`}
           >
             {variant === 'nav' && (
               <div className="p-3 border-b border-gray-100">
