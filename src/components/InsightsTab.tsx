@@ -23,6 +23,7 @@ import { getCachedInsight, setCachedInsight, type CachedInsight } from '@/utils/
 import { Button } from './ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { AuthOverlay } from './AuthOverlay';
+import { supabase } from '@/lib/supabase/client';
 import { LegalModal } from './LegalModal';
 import { Tooltip } from './ui/Tooltip';
 
@@ -179,9 +180,14 @@ function useInsightSynthesis(
           await new Promise(r => setTimeout(r, attempt * 3000));
         }
 
+        const { data: { session } } = await supabase.auth.getSession();
+
         const response = await fetch('/api/insights', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { 'Authorization': `Bearer ${session?.access_token}` } : {})
+          },
           body: JSON.stringify({
             reviews,
             postCategory,

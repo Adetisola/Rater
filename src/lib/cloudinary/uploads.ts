@@ -1,6 +1,5 @@
 import type { MediaAsset } from '@/types';
 import { supabase } from '../supabase/client';
-import { compressImage } from '../image/compress';
 import { uploadDirectToCloudinary } from './directUpload';
 
 // ─── Error Classification ──────────────────────────────────────────────────────
@@ -89,51 +88,40 @@ export async function uploadMedia(file: File, onProgress?: (percent: number) => 
 }
 
 /**
- * Upload multiple media files in sequence, handling compression, tracking progress, and individual retries.
+ * Upload multiple media files using controlled concurrency (max 3 at a time).
+ * Uses Promise.allSettled to ensure a single failure doesn't abort the entire batch.
+ * Files passed here should already be compressed by the caller.
  */
 export async function uploadMediaBatch(
   files: File[],
-  onProgress?: UploadProgressCallback
-): Promise<MediaAsset[]> {
-  const results: MediaAsset[] = [];
-
-  onProgress?.({ total: files.length, completed: 0, percent: 0, stage: 'preparing' });
+  onFileProgress?: (fileIndex: number, percent: number) => void
+): Promise<PromiseSettledResult<MediaAsset>[]> {
+  const CONCURRENCY_LIMIT = 3;
+  const results: PromiseSettledResult<MediaAsset>[] = new Array(files.length);
+  const executing = new Set<Promise<void>>();
 
   for (let i = 0; i < files.length; i++) {
-    // Stage: Compressing
-    onProgress?.({
-      total: files.length,
-      completed: i,
-      percent: Math.round((i / files.length) * 85),
-      stage: 'compressing',
+    const p = Promise.resolve().then(async () => {
+      try {
+        const asset = await uploadMedia(files[i], (percent) => {
+          onFileProgress?.(i, percent);
+        });
+        results[i] = { status: 'fulfilled', value: asset };
+      } catch (error) {
+        results[i] = { status: 'rejected', reason: error };
+      }
     });
 
-    const compressedFile = await compressImage(files[i]);
-
-    // Stage: Uploading
-    onProgress?.({
-      total: files.length,
-      completed: i,
-      percent: Math.round((i / files.length) * 85),
-      stage: 'uploading',
-    });
-
-    const asset = await uploadMedia(compressedFile, (filePercent) => {
-      // Calculate overall progress across all files (allocating 85% of total progress bar to uploads)
-      const basePercent = (i / files.length) * 85;
-      const fileContribution = (filePercent / 100) * (85 / files.length);
-      
-      onProgress?.({
-        total: files.length,
-        completed: i,
-        percent: Math.round(basePercent + fileContribution),
-        stage: 'uploading',
-      });
-    });
-
-    results.push(asset);
+    const e: Promise<void> = p.then(() => { executing.delete(e); });
+    executing.add(e);
+    if (executing.size >= CONCURRENCY_LIMIT) {
+      await Promise.race(executing);
+    }
   }
 
+  // Wait for all remaining uploads to finish
+  await Promise.all(Array.from(executing));
+  
   return results;
 }
 

@@ -96,7 +96,9 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
  * Resolves a login identifier (email or username) to an email.
  * If it's a username, it queries the DB to find the associated email.
  */
-export async function resolveIdentifierToEmail(identifier: string): Promise<string | null> {
+export async function resolveIdentifierToEmail(identifier: string, passkey?: string): Promise<string | null> {
+  if (!identifier) return null;
+
   let normalized = identifier.trim().toLowerCase();
   
   // Extract username if they typed /@username
@@ -112,26 +114,23 @@ export async function resolveIdentifierToEmail(identifier: string): Promise<stri
     return normalized;
   }
 
-  // It's a username. Check our lookup cache.
-  if (usernameToEmailCache[normalized]) {
-    return usernameToEmailCache[normalized];
+  // It's a username. We need the passkey to securely resolve it.
+  if (!passkey) {
+    return null; // Cannot securely resolve username without password
   }
 
-  // Query Supabase to find the email for this username
-  // NOTE: In production, exposing email by username might be a privacy leak if anyone can query it.
-  // For Rater's current setup, we allow it for the login flow.
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('username', normalized)
-    .single();
+  // Securely query Supabase RPC to find the email for this username
+  // The RPC verifies the password before returning the email to prevent enumeration
+  const { data, error } = await supabase.rpc('get_email_for_login', {
+    p_username: normalized,
+    p_password: passkey
+  });
 
-  if (error || !data || !data.email) {
+  if (error || !data) {
     return null;
   }
 
-  usernameToEmailCache[normalized] = data.email.toLowerCase();
-  return data.email;
+  return data;
 }
 
 /**
@@ -163,9 +162,15 @@ export async function persistProfileUpdate(
   userId: string,
   updates: Partial<Avatar>
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  // Security safeguard: Strip sensitive fields that should never be updated directly via the client
+  const safeUpdates = { ...updates };
+  delete safeUpdates.is_admin;
+  delete safeUpdates.role;
+  delete safeUpdates.is_blocked;
+
   const { error } = await supabase
     .from('profiles')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', userId);
 
   if (error) {

@@ -19,6 +19,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AmbientSuccessText } from './AmbientSuccessText';
 import { showToast } from './GlobalOverlays';
+import { compressImage } from '@/lib/image/compress';
+import { perf } from '@/utils/perf';
 
 interface PostFormProps {
   initialPost?: Post | null;
@@ -174,11 +176,29 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
+  // Compression cache keyed by file signature to avoid re-compressing
+  const compressionCacheRef = useRef<Map<string, Promise<File>>>(new Map());
+  const debounceTimersRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+
+  // Upload progress UI state
+  const [uploadingIndexes, setUploadingIndexes] = useState<Set<number>>(new Set());
+  const [imageUploadPercents, setImageUploadPercents] = useState<Record<number, number>>({});
+
+  // Helper to get file signature
+  const getFileSignature = useCallback((file: File) => {
+    return `${file.name}-${file.size}-${file.lastModified}`;
+  }, []);
+
   const validateAndAddImages = (files: FileList | File[]) => {
     setUploadError(null);
     const newFiles = [...mediaFiles];
     const newPreviews = [...mediaPreviews];
     let hasError = false;
+
+    // Start timing from initial selection if not already timing
+    if (newFiles.length === 0) {
+      perf.mark('Total Time from Selection to Post');
+    }
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -213,6 +233,24 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
       newFiles.push(file);
       newPreviews.push(URL.createObjectURL(file));
+
+      // Schedule background compression
+      const sig = getFileSignature(file);
+      if (!compressionCacheRef.current.has(sig)) {
+        if (debounceTimersRef.current.has(sig)) {
+          clearTimeout(debounceTimersRef.current.get(sig));
+        }
+        const timer = setTimeout(() => {
+          perf.mark(`Background Compress - ${file.name}`);
+          const compressionPromise = compressImage(file).then(res => {
+            perf.end(`Background Compress - ${file.name}`);
+            return res;
+          });
+          compressionCacheRef.current.set(sig, compressionPromise);
+          debounceTimersRef.current.delete(sig);
+        }, 200);
+        debounceTimersRef.current.set(sig, timer);
+      }
     }
 
     if (!hasError) setUploadError(null);
@@ -225,10 +263,23 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   const removeMedia = (index: number) => {
     const previewToRemove = mediaPreviews[index];
+    const fileToRemove = mediaFiles[index];
     
     // Revoke object URL if it's a blob to free memory
     if (previewToRemove.startsWith('blob:')) {
       URL.revokeObjectURL(previewToRemove);
+    }
+    
+    // Cancel any pending compression
+    if (fileToRemove) {
+      const sig = getFileSignature(fileToRemove);
+      if (debounceTimersRef.current.has(sig)) {
+        clearTimeout(debounceTimersRef.current.get(sig));
+        debounceTimersRef.current.delete(sig);
+      }
+      // Note: we don't necessarily delete from compressionCacheRef here, 
+      // as the promise might already be running and removing it wouldn't stop the CPU work.
+      // But clearing the timeout prevents it from starting if it hasn't yet.
     }
     
     setMediaFiles(prev => prev.filter((_, i) => i !== index));
@@ -366,6 +417,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       return;
     }
 
+    // Stop the selection timer if it was running
+    try { perf.end('Total Time from Selection to Post'); } catch (e) {}
+    perf.mark('Total Pipeline Execution');
+
     setIsSubmitting(true);
     setInlineUploadError(null);
     setUploadProgress({ total: mediaFiles.length || 1, completed: 0, percent: 0, stage: 'preparing' });
@@ -373,36 +428,19 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     let newlyUploadedAssets: import('@/types').MediaAsset[] = [];
     try {
       const finalAssets: import('@/types').MediaAsset[] = [];
-      let fileIndex = 0;
+      const { uploadMediaBatch } = await import('@/lib/cloudinary/uploads');
 
-      const { uploadMedia } = await import('@/lib/cloudinary/uploads');
-
-      // Count how many blob files need uploading for accurate progress
       const blobCount = mediaPreviews.filter(p => p.startsWith('blob:')).length;
-      let blobsUploaded = 0;
+
+      const filesToUpload: { file: File, order: number }[] = [];
+      let fileIndex = 0;
 
       for (let i = 0; i < mediaPreviews.length; i++) {
         const previewUrl = mediaPreviews[i];
         if (previewUrl.startsWith('blob:')) {
           const file = mediaFiles[fileIndex];
           if (file) {
-            setUploadProgress({
-              total: blobCount,
-              completed: blobsUploaded,
-              percent: Math.round((blobsUploaded / blobCount) * 85),
-              stage: 'uploading',
-            });
-            const result = await uploadMedia(file);
-            result.order = i;
-            finalAssets.push(result);
-            newlyUploadedAssets.push(result);
-            blobsUploaded++;
-            setUploadProgress({
-              total: blobCount,
-              completed: blobsUploaded,
-              percent: Math.round((blobsUploaded / blobCount) * 85),
-              stage: blobsUploaded === blobCount ? 'saving' : 'uploading',
-            });
+            filesToUpload.push({ file, order: i });
           }
           fileIndex++;
         } else {
@@ -426,8 +464,69 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         }
       }
 
+      if (filesToUpload.length > 0) {
+        perf.mark('Wait for Compression');
+        setUploadProgress({ total: blobCount, completed: 0, percent: 10, stage: 'compressing' });
+        
+        const compressedFiles = await Promise.all(
+          filesToUpload.map(async (item) => {
+            const sig = getFileSignature(item.file);
+            if (compressionCacheRef.current.has(sig)) {
+              return await compressionCacheRef.current.get(sig)!;
+            }
+            // Fallback
+            perf.mark(`Inline Compress - ${item.file.name}`);
+            const res = await compressImage(item.file);
+            perf.end(`Inline Compress - ${item.file.name}`);
+            return res;
+          })
+        );
+        perf.end('Wait for Compression');
+
+        perf.mark('Cloudinary Upload Batch');
+        setUploadProgress({ total: blobCount, completed: 0, percent: 20, stage: 'uploading' });
+        
+        const uploadingSet = new Set<number>();
+        filesToUpload.forEach(f => uploadingSet.add(f.order));
+        setUploadingIndexes(uploadingSet);
+
+        let overallProgress = 20;
+        const batchResults = await uploadMediaBatch(compressedFiles, (indexInBatch, percent) => {
+          const globalOrder = filesToUpload[indexInBatch].order;
+          setImageUploadPercents(prev => ({ ...prev, [globalOrder]: percent }));
+          
+          // Rough overall progress update (allocating 20% to 90% for uploading phase)
+          overallProgress = Math.min(90, overallProgress + (percent / filesToUpload.length) * 0.7);
+          setUploadProgress({ total: blobCount, completed: 0, percent: Math.round(overallProgress), stage: 'uploading' });
+        });
+        
+        setUploadingIndexes(new Set());
+        perf.end('Cloudinary Upload Batch');
+
+        let hasFailures = false;
+        batchResults.forEach((res, idx) => {
+          if (res.status === 'fulfilled') {
+            const asset = res.value;
+            asset.order = filesToUpload[idx].order;
+            finalAssets.push(asset);
+            newlyUploadedAssets.push(asset);
+          } else {
+            hasFailures = true;
+            console.error('Upload failed for image:', filesToUpload[idx].file.name, res.reason);
+          }
+        });
+
+        if (hasFailures) {
+          throw new Error('Some images failed to upload. Please try again or remove the failed images.');
+        }
+      }
+
+      // Ensure correctly ordered based on UI arrangement
+      finalAssets.sort((a, b) => a.order - b.order);
+
       setUploadProgress(prev => prev ? { ...prev, percent: 90, stage: 'saving' } : null);
 
+      perf.mark('Database Write');
       if (isEditing && initialPost) {
         const success = await updatePost(initialPost.id, {
           title,
@@ -461,6 +560,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           throw new Error("Failed to save your post. Please try again.");
         }
       }
+      perf.end('Database Write');
+      try { perf.end('Total Pipeline Execution'); } catch(e){}
     } catch (err: any) {
       console.error('[PostForm] handleSubmit error:', err);
       const errorMsg = err.message || 'Upload failed. Please check your connection and try again.';
@@ -676,7 +777,28 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         )}
                       >
                         <img src={preview} alt="" className="w-full h-full object-cover" />
-                        {mediaPreviews.length > 1 && (
+                        
+                        {/* Per-thumbnail upload progress ring */}
+                        {uploadingIndexes.has(idx) && (
+                          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-40 flex items-center justify-center">
+                            <svg className="w-8 h-8 -rotate-90 transform">
+                              <circle cx="16" cy="16" r="14" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" fill="none" />
+                              <circle 
+                                cx="16" 
+                                cy="16" 
+                                r="14" 
+                                stroke="white" 
+                                strokeWidth="2.5" 
+                                fill="none" 
+                                strokeDasharray="88"
+                                strokeDashoffset={88 - (88 * (imageUploadPercents[idx] || 0) / 100)}
+                                className="transition-all duration-300 ease-out"
+                              />
+                            </svg>
+                          </div>
+                        )}
+
+                        {mediaPreviews.length > 1 && !uploadingIndexes.has(idx) && (
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); removeMedia(idx); }}
@@ -991,8 +1113,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         {uploadProgress?.stage === 'preparing' && 'Preparing...'}
                         {uploadProgress?.stage === 'compressing' && 'Compressing...'}
                         {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
-                          ? `Uploading ${uploadProgress.completed + 1} of ${uploadProgress.total}...`
-                          : uploadProgress?.stage === 'uploading' ? 'Uploading...' : null
+                          ? `Uploading ${uploadProgress.total} items... ${uploadProgress.percent}%`
+                          : uploadProgress?.stage === 'uploading' ? `Uploading... ${uploadProgress.percent}%` : null
                         }
                         {uploadProgress?.stage === 'saving' && 'Saving...'}
                         {uploadProgress?.stage === 'publishing' && 'Publishing...'}
@@ -1102,8 +1224,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         {uploadProgress?.stage === 'preparing' && 'Preparing...'}
                         {uploadProgress?.stage === 'compressing' && 'Compressing...'}
                         {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
-                          ? `Uploading ${uploadProgress.completed + 1} of ${uploadProgress.total}...`
-                          : uploadProgress?.stage === 'uploading' ? 'Uploading...' : null
+                          ? `Uploading ${uploadProgress.total} items... ${uploadProgress.percent}%`
+                          : uploadProgress?.stage === 'uploading' ? `Uploading... ${uploadProgress.percent}%` : null
                         }
                         {uploadProgress?.stage === 'saving' && 'Saving...'}
                         {uploadProgress?.stage === 'publishing' && 'Publishing...'}

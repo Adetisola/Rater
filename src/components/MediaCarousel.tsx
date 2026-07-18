@@ -195,6 +195,7 @@ export function MediaCarousel({
 
       {/* Adaptive Navigation Pill - Bottom Right */}
       <div
+        data-no-route-loader
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

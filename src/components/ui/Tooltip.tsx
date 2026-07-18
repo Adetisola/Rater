@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from '@/lib/utils';
 
 export interface TooltipProps {
   children: React.ReactNode;
   content: React.ReactNode;
   /** Position of the tooltip relative to the trigger. Default is 'top' (above trigger). */
-  position?: 'top' | 'bottom';
+  position?: 'top' | 'bottom' | 'left' | 'right';
   /** Alignment of the tooltip. Default is 'start' (left-aligned). */
   align?: 'start' | 'center' | 'end';
-  /** Custom alignment classes, overrides the default align prop. */
+  /** Custom alignment classes, overrides the default align prop. (Ignored in Radix implementation) */
   alignClassName?: string;
   /** Width of the tooltip content box. E.g. 'w-64', 'w-48'. */
   width?: string;
@@ -18,7 +19,7 @@ export interface TooltipProps {
   contentClassName?: string;
   /** Extra inline styles for the content box itself. */
   contentStyle?: React.CSSProperties;
-  /** Gap bridging padding class. e.g., 'pb-1' if position is top. */
+  /** Gap bridging padding class. e.g., 'pb-1' if position is top. (Ignored in Radix implementation) */
   gapClass?: string;
   /** Classes for the wrapper element. */
   triggerClassName?: string;
@@ -31,75 +32,75 @@ export function Tooltip({
   content,
   position = 'top',
   align = 'start',
-  alignClassName,
   width = 'w-64',
   contentClassName = 'p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl',
-  gapClass,
   triggerClassName = 'group relative inline-flex items-center',
   disabled = false,
   contentStyle,
 }: TooltipProps) {
-  const [isMobileVisible, setIsMobileVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!isMobileVisible) return;
-    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsMobileVisible(false);
-      }
-    };
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }, 10);
     return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
     };
-  }, [isMobileVisible]);
+  }, []);
 
   if (disabled) return <>{children}</>;
 
-  const handleTap = () => {
-    setIsMobileVisible(prev => !prev);
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpen(true);
+    }, 300); // 300ms subtle entry delay
   };
 
-  const positionClasses = position === 'top' 
-    ? `bottom-full translate-y-2 ${isMobileVisible ? 'translate-y-0' : 'group-hover/tooltip:translate-y-0'}` 
-    : `top-full -translate-y-2 ${isMobileVisible ? 'translate-y-0' : 'group-hover/tooltip:translate-y-0'}`;
-
-  const alignClasses = alignClassName || (align === 'start' ? 'left-0' : align === 'end' ? 'right-0' : 'left-1/2 -translate-x-1/2');
-  
-  // Default gap bridge: pb-2 for top tooltip, pt-2 for bottom tooltip
-  const defaultGapClass = position === 'top' ? 'pb-2' : 'pt-2';
-  const effectiveGapClass = gapClass || defaultGapClass;
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 300); // 300ms subtle exit delay
+  };
 
   return (
-    <div 
-      ref={containerRef}
-      className={cn(triggerClassName, 'group/tooltip')}
-      onClick={handleTap}
-    >
-      {children}
-      
-      {/* Tooltip Wrapper */}
-      <div 
-        className={cn(
-          "absolute z-50 transition-all duration-200 delay-300 cursor-auto",
-          positionClasses,
-          alignClasses,
-          effectiveGapClass,
-          width,
-          isMobileVisible ? 'opacity-100 visible' : 'opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible'
-        )}
-        onClick={(e) => e.stopPropagation()} // prevent clicks inside the tooltip from toggling it off
-      >
-        <div className={contentClassName} style={contentStyle}>
-          {content}
-        </div>
-      </div>
-    </div>
+    <TooltipPrimitive.Provider>
+      <TooltipPrimitive.Root open={open} onOpenChange={setOpen}>
+        <TooltipPrimitive.Trigger asChild>
+          <div 
+            className={cn(triggerClassName)}
+            onClick={() => setOpen(!open)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {children}
+          </div>
+        </TooltipPrimitive.Trigger>
+        <TooltipPrimitive.Portal>
+          <TooltipPrimitive.Content
+            side={position}
+            align={align}
+            sideOffset={8}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            className={cn(
+              "z-9999",
+              "animate-in fade-in-0 duration-200 ease-out",
+              "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+              "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
+              "data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2",
+              "data-[side=bottom]:data-[state=closed]:slide-out-to-top-2 data-[side=top]:data-[state=closed]:slide-out-to-bottom-2",
+              "data-[side=left]:data-[state=closed]:slide-out-to-right-2 data-[side=right]:data-[state=closed]:slide-out-to-left-2",
+              width
+            )}
+            onPointerDownOutside={() => setOpen(false)}
+          >
+            <div className={contentClassName} style={contentStyle}>
+              {content}
+            </div>
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
+      </TooltipPrimitive.Root>
+    </TooltipPrimitive.Provider>
   );
 }

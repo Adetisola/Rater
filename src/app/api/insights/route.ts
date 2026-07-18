@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractInsightSignals } from '@/utils/insightEngine';
 import type { ScoredReview, InsightSignals } from '@/utils/insightEngine';
 import type { Review, Category } from '@/types';
-
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 // ─── Model Invocation ─────────────────────────────────────────────────────────
 
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -398,6 +399,21 @@ interface RequestBody {
 type AnalysisMode = 'comment_supported' | 'ratings_only' | 'low_signal' | 'insufficient';
 
 export async function POST(request: NextRequest) {
+  // 1. Verify the caller is authenticated
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.split(' ')[1];
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll() } }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const geminiKey = process.env.GEMINI_API_KEY || '';
   const openrouterKey = process.env.OPENROUTER_API_KEY || '';
   const hasGemini = geminiKey && geminiKey !== 'your_api_key_here';

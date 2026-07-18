@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (identifier: string, passkey: string): Promise<boolean> => {
-    const email = await resolveIdentifierToEmail(identifier);
+    const email = await resolveIdentifierToEmail(identifier, passkey);
     if (!email) return false;
 
     const { error } = await supabase.auth.signInWithPassword({
