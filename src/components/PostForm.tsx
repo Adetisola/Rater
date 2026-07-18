@@ -981,7 +981,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                     "relative z-10 flex items-center justify-center gap-2 transition-colors",
                     isSubmitting && uploadProgress && uploadProgress.percent > 50
                       ? 'text-white'
-                      : 'text-black group-hover:text-white group-disabled:!text-black'
+                      : 'text-black group-hover:text-white group-disabled:text-black!'
                   )}
                 >
                   {isSubmitting ? (
@@ -989,6 +989,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="text-[15px]">
                         {uploadProgress?.stage === 'preparing' && 'Preparing...'}
+                        {uploadProgress?.stage === 'compressing' && 'Compressing...'}
                         {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
                           ? `Uploading ${uploadProgress.completed + 1} of ${uploadProgress.total}...`
                           : uploadProgress?.stage === 'uploading' ? 'Uploading...' : null
@@ -1091,7 +1092,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                     "relative z-10 flex items-center justify-center gap-2 transition-colors",
                     isSubmitting && uploadProgress && uploadProgress.percent > 50
                       ? 'text-white'
-                      : 'text-black group-hover:text-white group-disabled:!text-black'
+                      : 'text-black group-hover:text-white group-disabled:text-black!'
                   )}
                 >
                   {isSubmitting ? (
@@ -1099,6 +1100,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="text-[15px]">
                         {uploadProgress?.stage === 'preparing' && 'Preparing...'}
+                        {uploadProgress?.stage === 'compressing' && 'Compressing...'}
                         {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
                           ? `Uploading ${uploadProgress.completed + 1} of ${uploadProgress.total}...`
                           : uploadProgress?.stage === 'uploading' ? 'Uploading...' : null
