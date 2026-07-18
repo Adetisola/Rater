@@ -30,7 +30,7 @@ export interface UsernameValidationResult {
   suggestions: string[];
 }
 
-const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
+const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
 const COOLDOWN_DAYS = 14;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
@@ -54,7 +54,7 @@ function generateSuggestions(base: string): string[] {
     `${safeBase}_`,                        // timmy_
     `the_${safeBase}`,                      // the_timmy
     `${safeBase}_vibe`                      // timmy_vibe
-  ].filter(s => /^[a-z0-9_]{3,20}$/.test(s) && !RESERVED_PREFIXES.some(prefix => s.startsWith(prefix)));
+  ].filter(s => /^[a-z0-9_.]{3,20}$/.test(s) && !RESERVED_PREFIXES.some(prefix => s.startsWith(prefix)));
 }
 
 /**
@@ -112,7 +112,7 @@ export function useUsernameValidation({
 
       // Format check first (synchronous)
       if (!USERNAME_REGEX.test(normalized)) {
-        let message = 'Username must be 3–20 characters using only a–z, 0–9, and _.';
+        let message = 'Username must be 3–20 characters using only a–z, 0–9, _, and .';
         if (value.includes(' ')) message = 'No spaces allowed.';
         else if (/[A-Z]/.test(value)) message = 'Lowercase letters only.';
         else if (value.length < 3) message = 'At least 3 characters required.';

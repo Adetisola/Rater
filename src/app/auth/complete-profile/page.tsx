@@ -90,7 +90,7 @@ export default function CompleteProfilePage() {
 
   const handleUsernameChange = (value: string) => {
     // Standardize input
-    const cleanValue = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    const cleanValue = value.toLowerCase().replace(/[^a-z0-9_.]/g, '');
     setUsernameInput(cleanValue);
   };
 

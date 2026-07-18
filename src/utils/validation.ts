@@ -15,7 +15,7 @@ export function normalizeUsername(username: string): string {
  */
 export function isValidUsernameFormat(username: string): boolean {
   // 3-20 characters, alphanumeric and underscores only
-  const regex = /^[a-z0-9_]{3,20}$/;
+  const regex = /^[a-z0-9_.]{3,20}$/;
   return regex.test(username);
 }
 
@@ -58,7 +58,7 @@ export function validateSignupInput(
   const normalizedUsername = normalizeUsername(username);
 
   if (!isValidUsernameFormat(normalizedUsername)) {
-    return 'Username must be 3-20 characters long and contain only letters, numbers, and underscores.';
+    return 'Username must be 3-20 characters long and contain only letters, numbers, underscores, and periods.';
   }
 
   if (isReservedUsername(normalizedUsername)) {

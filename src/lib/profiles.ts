@@ -100,7 +100,7 @@ export async function resolveIdentifierToEmail(identifier: string): Promise<stri
   let normalized = identifier.trim().toLowerCase();
   
   // Extract username if they typed /@username
-  const urlMatch = normalized.match(/\/@([a-z0-9_]+)/);
+  const urlMatch = normalized.match(/\/@([a-z0-9_.]+)/);
   if (urlMatch) {
     normalized = urlMatch[1];
   } else {

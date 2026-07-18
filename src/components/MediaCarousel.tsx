@@ -109,18 +109,16 @@ export function MediaCarousel({
     };
   }, []);
 
-  // Capture cover image height for thumbnail variant
+  // Capture cover image height for all variants
   const handleCoverLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    if (variant === 'thumbnail') {
-      const img = e.currentTarget;
-      setCoverHeight(img.offsetHeight);
-    }
+    const img = e.currentTarget;
+    setCoverHeight(img.offsetHeight);
     onLoadChange?.(true);
   }, [variant, onLoadChange]);
 
   // Recalculate cover height on resize
   useEffect(() => {
-    if (variant !== 'thumbnail' || !coverImgRef.current) return;
+    if (!coverImgRef.current) return;
     const observer = new ResizeObserver(() => {
       if (coverImgRef.current) {
         setCoverHeight(coverImgRef.current.offsetHeight);
@@ -142,7 +140,7 @@ export function MediaCarousel({
       className={cn("relative w-full overflow-hidden", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={variant === 'thumbnail' && coverHeight ? { height: coverHeight } : undefined}
+      style={coverHeight ? { height: coverHeight } : undefined}
     >
       
       {/* Scroll Container - Native snap for mobile, hidden scrollbar */}
@@ -180,7 +178,7 @@ export function MediaCarousel({
                 loading="lazy"
                 className={cn(
                   imageClassName,
-                  variant === 'thumbnail' ? 'w-full h-full object-cover' : undefined
+                  'w-full h-full object-cover'
                 )} 
                 onLoad={() => { if (idx === 0) onLoadChange?.(true); }}
               />
@@ -197,6 +195,10 @@ export function MediaCarousel({
 
       {/* Adaptive Navigation Pill - Bottom Right */}
       <div
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
         style={{
           position: 'absolute',
           bottom: 12,

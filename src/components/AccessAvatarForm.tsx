@@ -51,7 +51,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
   // Normalize username input: strip @, extract from URLs, trim
   const normalizeUsername = (raw: string): string => {
     const val = raw.trim().toLowerCase();
-    const urlMatch = val.match(/\/@([a-z0-9_]+)/);
+    const urlMatch = val.match(/\/@([a-z0-9_.]+)/);
     if (urlMatch) return urlMatch[1];
     return val.replace(/^@/, '');
   };
@@ -59,7 +59,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
   const isIdentifierValid = (val: string): boolean => {
     if (!val) return true; // empty is not an error, just disabled
     if (loginMode === 'username') {
-      return /^[a-z0-9_]{3,20}$/.test(val);
+      return /^[a-z0-9_.]{3,20}$/.test(val);
     } else {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
     }
@@ -138,9 +138,9 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
           </Button>
 
           <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-gray-100"></div>
-            <span className="flex-shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
-            <div className="flex-grow border-t border-gray-100"></div>
+            <div className="grow border-t border-gray-100"></div>
+            <span className="shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
+            <div className="grow border-t border-gray-100"></div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -163,7 +163,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                   setIdentifier('');
                   setError('');
                 }}
-                className="text-[11px] font-medium text-gray-400 hover:text-[#FEC312] transition-colors"
+                className="text-[11px] font-medium text-gray-400 hover:text-primary transition-colors"
               >
                 {loginMode === 'username' ? 'Use email instead' : 'Login with username'}
               </button>
@@ -178,7 +178,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                 value={identifier}
                 onChange={handleIdentifierInput}
                 className={cn(
-                  "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal transition-all duration-200",
+                  "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-normal transition-all duration-200",
                   identifier && !isIdentifierValid(loginMode === 'username' ? normalizeUsername(identifier) : identifier) && "border-red-300 focus-visible:border-red-400"
                 )}
                 disabled={isLoading}
@@ -200,7 +200,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                 placeholder="Enter your passkey"
                 value={passkey}
                 onChange={(e) => setPasskey(e.target.value)}
-                className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-[#FEC312] placeholder:text-gray-400 font-normal"
+                className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-normal"
                 disabled={isLoading}
               />
               <button
@@ -217,7 +217,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
               <button
                 type="button"
                 onClick={() => setShowForgotOverlay(true)}
-                className="text-xs font-medium text-gray-500 hover:text-[#FEC312] transition-colors"
+                className="text-xs font-medium text-gray-500 hover:text-primary transition-colors"
                 disabled={isLoading}
               >
                 Forgot passkey?
@@ -245,7 +245,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
           Don't have an avatar?{' '}
           <button
             onClick={onCreateNew}
-            className="text-black font-semibold hover:text-[#FEC312]"
+            className="text-black font-semibold hover:text-primary"
             disabled={isLoading}
           >
             Create one
