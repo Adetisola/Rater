@@ -43,7 +43,7 @@ export async function getProfileById(id: string): Promise<Avatar | null> {
   // Check Supabase
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
     .eq('id', id)
     .single();
 
@@ -74,7 +74,7 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
   // Check Supabase
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
     .eq('username', normalized)
     .limit(1)
     .maybeSingle();

@@ -45,7 +45,6 @@ export interface Avatar {
   is_admin?: boolean;
   bio?: string;
   is_blocked: boolean;
-  passkey: string;
   created_at: string;
   // Username history — for old-URL redirects and Supabase migration
   username_last_changed_at?: string | null;    // ISO timestamp of last username change

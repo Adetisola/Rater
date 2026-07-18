@@ -54,6 +54,39 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // 4.5. Server-side File Signature Validation (Magic Bytes)
+    // This prevents MIME-type spoofing where an attacker sends a malicious file (e.g. script/HTML)
+    // with a spoofed Content-Type header.
+    const mimeType = file.type;
+    let isValidSignature = false;
+
+    if (mimeType === 'image/jpeg' || mimeType === 'image/jpg') {
+      isValidSignature = buffer.length >= 3 && buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+    } else if (mimeType === 'image/png') {
+      isValidSignature = buffer.length >= 8 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+    } else if (mimeType === 'image/gif') {
+      isValidSignature = buffer.length >= 4 && buffer.toString('ascii', 0, 4) === 'GIF8';
+    } else if (mimeType === 'image/webp') {
+      isValidSignature = buffer.length >= 12 && 
+                         buffer.toString('ascii', 0, 4) === 'RIFF' && 
+                         buffer.toString('ascii', 8, 12) === 'WEBP';
+    } else if (mimeType === 'image/avif') {
+      isValidSignature = buffer.length >= 12 && 
+                         buffer.toString('ascii', 4, 8) === 'ftyp' && 
+                         buffer.toString('ascii', 8, 12) === 'avif';
+    } else if (mimeType === 'video/mp4') {
+      isValidSignature = buffer.length >= 8 && buffer.toString('ascii', 4, 8) === 'ftyp';
+    } else if (mimeType === 'video/quicktime') {
+      isValidSignature = buffer.length >= 8 && 
+                         (buffer.toString('ascii', 4, 8) === 'ftyp' || buffer.toString('ascii', 4, 8) === 'free' || buffer.toString('ascii', 4, 8) === 'mdat');
+    } else if (mimeType === 'video/webm') {
+      isValidSignature = buffer.length >= 4 && buffer[0] === 0x1A && buffer[1] === 0x45 && buffer[2] === 0xDF && buffer[3] === 0xA3;
+    }
+
+    if (!isValidSignature) {
+      return jsonError('Invalid file content. The file contents do not match its declared media format.', 400);
+    }
+
     // 5. Upload via Cloudinary Service
     const folder = `rater/posts/${user.id}`;
     const mediaAsset = await uploadAsset(buffer, folder, user.id);
