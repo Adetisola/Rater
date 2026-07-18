@@ -23,7 +23,6 @@ export const RESERVED_ROUTES = new Set([
   'post',
   'privacy',
   'profile',
-  'rater',
   'rater_official',
   'search',
   'settings',
