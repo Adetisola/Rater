@@ -36,6 +36,7 @@ function isRetryable(error: unknown): boolean {
   if (msg.includes('unauthorized') || msg.includes('401') || msg.includes('403')) return false;
   if (msg.includes('unsupported') || msg.includes('invalid') || msg.includes('400')) return false;
   if (msg.includes('too large') || msg.includes('413')) return false;
+  if (msg.includes('abort') || msg.includes('aborterror')) return false;
   
   return true;
 }
@@ -63,12 +64,12 @@ export type UploadProgressCallback = (event: UploadProgressEvent) => void;
  * Upload a single media file to Cloudinary with automatic retries.
  * Throws a user-friendly error string if all retries are exhausted.
  */
-export async function uploadMedia(file: File, onProgress?: (percent: number) => void): Promise<MediaAsset> {
+export async function uploadMedia(file: File, folder?: string, onProgress?: (percent: number) => void, signal?: AbortSignal): Promise<MediaAsset> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
     try {
-      const asset = await uploadDirectToCloudinary(file, onProgress);
+      const asset = await uploadDirectToCloudinary(file, folder, onProgress, signal);
       return asset;
     } catch (err) {
       lastError = err;
@@ -94,7 +95,9 @@ export async function uploadMedia(file: File, onProgress?: (percent: number) => 
  */
 export async function uploadMediaBatch(
   files: File[],
-  onFileProgress?: (fileIndex: number, percent: number) => void
+  folder?: string,
+  onFileProgress?: (fileIndex: number, percent: number) => void,
+  signal?: AbortSignal
 ): Promise<PromiseSettledResult<MediaAsset>[]> {
   const CONCURRENCY_LIMIT = 3;
   const results: PromiseSettledResult<MediaAsset>[] = new Array(files.length);
@@ -103,9 +106,9 @@ export async function uploadMediaBatch(
   for (let i = 0; i < files.length; i++) {
     const p = Promise.resolve().then(async () => {
       try {
-        const asset = await uploadMedia(files[i], (percent) => {
+        const asset = await uploadMedia(files[i], folder, (percent) => {
           onFileProgress?.(i, percent);
-        });
+        }, signal);
         results[i] = { status: 'fulfilled', value: asset };
       } catch (error) {
         results[i] = { status: 'rejected', reason: error };

@@ -8,6 +8,25 @@
 
 import type { SocialLink } from '../utils/socialLinksUtils';
 
+// ─── AI Tools ─────────────────────────────────────────────────────────────────
+
+export const AI_TOOLS = [
+  { id: 'chatgpt', label: 'ChatGPT' },
+  { id: 'gemini', label: 'Gemini' },
+  { id: 'claude', label: 'Claude' },
+  { id: 'google-flow', label: 'Google Flow' },
+  { id: 'midjourney', label: 'Midjourney' },
+  { id: 'stable-diffusion', label: 'Stable Diffusion' },
+  { id: 'leonardo', label: 'Leonardo AI' },
+  { id: 'flux', label: 'Flux' },
+  { id: 'ideogram', label: 'Ideogram' },
+  { id: 'dalle', label: 'DALL·E' },
+  { id: 'nano-banana', label: 'Nano Banana' },
+  { id: 'other', label: 'Other' },
+] as const;
+
+export type AiToolId = typeof AI_TOOLS[number]['id'];
+
 // ─── Categories ───────────────────────────────────────────────────────────────
 
 export type Category =
@@ -101,6 +120,9 @@ export interface Post {
   created_at: string;
   updated_at?: string;
   edited_at?: string;
+  uses_ai?: boolean;
+  ai_tool?: string | null;
+  ai_prompt?: string | null;
 }
 
 export interface PostMetrics {

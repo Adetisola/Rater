@@ -95,3 +95,41 @@ export function generateThumbnail(publicId: string, width = 200, height = 200): 
     .delivery(quality(qAuto()))
     .toURL();
 }
+
+/**
+ * Extract a Cloudinary public_id from a raw Cloudinary URL.
+ * Supports URLs with version prefixes, folders, and transformations.
+ */
+export function extractPublicId(url: string): string | null {
+  if (!url || !url.includes('cloudinary.com')) return null;
+  
+  try {
+    const parts = url.split('/upload/');
+    if (parts.length < 2) return null;
+    
+    const pathAfterUpload = parts[1];
+    const segments = pathAfterUpload.split('/');
+    
+    const versionIdx = segments.findIndex(seg => /^v\d+$/.test(seg));
+    
+    let publicIdPath = '';
+    if (versionIdx !== -1) {
+      publicIdPath = segments.slice(versionIdx + 1).join('/');
+    } else {
+      let startIdx = 0;
+      if (segments.length > 1 && (segments[0].includes('_') || segments[0].includes(','))) {
+        startIdx = 1;
+      }
+      publicIdPath = segments.slice(startIdx).join('/');
+    }
+    
+    const dotIdx = publicIdPath.lastIndexOf('.');
+    if (dotIdx !== -1) {
+      return publicIdPath.substring(0, dotIdx);
+    }
+    return publicIdPath;
+  } catch (e) {
+    console.error('Failed to extract public_id from Cloudinary URL:', url, e);
+    return null;
+  }
+}

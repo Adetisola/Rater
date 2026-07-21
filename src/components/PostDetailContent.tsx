@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
+import { AI_TOOLS } from '@/types';
 import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview } from '@/lib/reviews';
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -31,6 +32,7 @@ import { MediaCarousel } from './MediaCarousel';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 import { showToast } from './GlobalOverlays';
+import { cn } from '../lib/utils';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
@@ -43,7 +45,9 @@ import {
     Minus,
     Lock,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Copy,
+    Check
 } from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
@@ -247,6 +251,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
     const [isFetchingReviews, setIsFetchingReviews] = useState(true);
     const [imageError, setImageError] = useState(false);
+    const [isAiPromptExpanded, setIsAiPromptExpanded] = useState(false);
+    const [aiPromptCopied, setAiPromptCopied] = useState(false);
 
     // External Metadata (Badges, Hot Status)
     const badge = badgeMap[post.id];
@@ -454,7 +460,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 let sum = 0;
                 let count = 0;
                 modeConfig.criteria.forEach(c => {
-                    const val = r[c.dbKey as keyof Review];
+                    const val = r.ratings?.[c.dbKey];
                     if (typeof val === 'number') {
                         sum += val;
                         count++;
@@ -799,6 +805,78 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 </button>
                             )}
                         </div>
+
+                        {/* AI Badge & Prompt */}
+                        {post.uses_ai && (
+                            <div className="flex flex-col gap-2 py-2">
+                                <button
+                                    onClick={() => post.ai_prompt && setIsAiPromptExpanded(!isAiPromptExpanded)}
+                                    className={cn(
+                                        "inline-flex self-start items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                                        post.ai_prompt ? "cursor-pointer hover:bg-gray-50 border-gray-200" : "cursor-default border-gray-100 bg-gray-50",
+                                        isAiPromptExpanded && "bg-gray-50 border-gray-200"
+                                    )}
+                                >
+                                    <svg 
+                                        width="14" 
+                                        height="14" 
+                                        viewBox="0 0 13.97 13.97" 
+                                        fill="none" 
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-3.5 h-3.5 shrink-0"
+                                    >
+                                        <defs>
+                                            <linearGradient id="rater-star-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#fec312" />
+                                                <stop offset="33%" stopColor="#ff4f6d" />
+                                                <stop offset="66%" stopColor="#c400d2" />
+                                                <stop offset="100%" stopColor="#7c3bed" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path 
+                                            d="M13.9697 6.98486C13.9697 7.43872 13.6035 7.80695 13.1476 7.80695C11.7244 7.80695 10.3809 8.3623 9.37354 9.37354C8.3623 10.3807 7.80701 11.7223 7.80701 13.1476C7.80701 13.6014 7.44067 13.9697 6.98486 13.9697C6.52905 13.9697 6.16284 13.6034 6.16284 13.1476C6.16284 10.2035 3.76611 7.80695 0.822144 7.80695C0.370361 7.80695 0 7.44067 0 6.98486C0 6.52899 0.370361 6.16272 0.822144 6.16272C3.76611 6.16272 6.16284 3.76611 6.16284 0.822083C6.16284 0.370239 6.53296 0 6.98486 0C7.43665 0 7.80701 0.370239 7.80701 0.822083C7.81885 3.77808 10.2135 6.16272 13.1476 6.16272C13.3687 6.16272 13.5756 6.24835 13.731 6.40363C13.8842 6.55688 13.9697 6.76587 13.9697 6.98486Z" 
+                                            fill="url(#rater-star-grad)" 
+                                        />
+                                    </svg>
+                                    <span className="text-gray-700">
+                                        AI-assisted • {post.ai_tool === 'other' || !post.ai_tool 
+                                            ? 'Custom Tool' 
+                                            : AI_TOOLS.find(t => t.id === post.ai_tool)?.label || post.ai_tool}
+                                    </span>
+                                </button>
+
+                                <AnimatePresence>
+                                    {isAiPromptExpanded && post.ai_prompt && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="mt-2 bg-gray-50 border border-gray-100 rounded-[16px] p-4 relative group">
+                                                <button
+                                                    onClick={() => {
+                                                        if (post.ai_prompt) {
+                                                            navigator.clipboard.writeText(post.ai_prompt);
+                                                            setAiPromptCopied(true);
+                                                            showToast("Prompt copied to clipboard.", "success");
+                                                            setTimeout(() => setAiPromptCopied(false), 2000);
+                                                        }
+                                                    }}
+                                                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 active:scale-95"
+                                                    title="Copy Prompt"
+                                                >
+                                                    {aiPromptCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                                                </button>
+                                                <p className="text-sm font-mono text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word pr-8">
+                                                    {post.ai_prompt}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
 
                         {/* 5. Avatar & Rating */}
                         <div className="flex items-center justify-between">
@@ -1180,6 +1258,25 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
             {/* Fullscreen Image Overlay */}
             {isImageFullscreen && typeof document !== 'undefined' && createPortal(
+                <>
+                {displayMedia.length > 1 && (
+                    <div style={{ display: 'none' }}>
+                        <span ref={() => {
+                            // Inline keyboard listener setup to avoid finding the top of the component
+                            window.onkeydown = (e) => {
+                                if (!isImageFullscreen) return;
+                                if (e.key === 'ArrowRight' && fullscreenImageIndex < displayMedia.length - 1) {
+                                    setFullscreenImageIndex(prev => prev + 1);
+                                    setZoomScale(1);
+                                }
+                                if (e.key === 'ArrowLeft' && fullscreenImageIndex > 0) {
+                                    setFullscreenImageIndex(prev => prev - 1);
+                                    setZoomScale(1);
+                                }
+                            };
+                        }} />
+                    </div>
+                )}
                 <div
                     ref={containerRef}
                     className="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-hidden"
@@ -1219,6 +1316,37 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         <button onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale >= ZOOM_IN_SCALE}><Plus className="w-6 h-6 text-black" /></button>
                         <button onClick={(e) => { e.stopPropagation(); setZoomScale(1); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale <= 1}><Minus className="w-6 h-6 text-black" /></button>
                     </div>
+
+                    {/* Navigation Controls */}
+                    {displayMedia.length > 1 && (
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50 pointer-events-auto">
+                            {fullscreenImageIndex > 0 ? (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setFullscreenImageIndex(prev => prev - 1); setZoomScale(1); }}
+                                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <ChevronLeft className="w-6 h-6 text-black" />
+                                </button>
+                            ) : (
+                                <div className="w-12 h-12" />
+                            )}
+                            
+                            <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium tracking-wide">
+                                {fullscreenImageIndex + 1} / {displayMedia.length}
+                            </div>
+
+                            {fullscreenImageIndex < displayMedia.length - 1 ? (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setFullscreenImageIndex(prev => prev + 1); setZoomScale(1); }}
+                                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <ChevronRight className="w-6 h-6 text-black" />
+                                </button>
+                            ) : (
+                                <div className="w-12 h-12" />
+                            )}
+                        </div>
+                    )}
                     <motion.img
                         ref={imgRef}
                         src={displayMedia[fullscreenImageIndex]?.url || post.image_url}
@@ -1228,10 +1356,19 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: zoomScale }}
                         transition={{ duration: 0.25, ease: "easeOut" }}
-                        drag={zoomScale > 1}
-                        dragConstraints={dragConstraints}
+                        drag={zoomScale > 1 ? true : (displayMedia.length > 1 ? "x" : false)}
+                        dragConstraints={zoomScale > 1 ? dragConstraints : { left: 0, right: 0 }}
                         dragMomentum={false}
-                        dragElastic={0}
+                        dragElastic={zoomScale > 1 ? 0 : 0.5}
+                        onDragEnd={(_e, info) => {
+                            if (zoomScale === 1 && displayMedia.length > 1) {
+                                if (info.offset.x < -50 && fullscreenImageIndex < displayMedia.length - 1) {
+                                    setFullscreenImageIndex(prev => prev + 1);
+                                } else if (info.offset.x > 50 && fullscreenImageIndex > 0) {
+                                    setFullscreenImageIndex(prev => prev - 1);
+                                }
+                            }
+                        }}
                         onLoad={() => updateConstraints(zoomScale)}
                         onPointerDown={() => {
                             const now = Date.now();
@@ -1239,7 +1376,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             else { lastTapRef.current = now; }
                         }}
                     />
-                </div>,
+                </div>
+                </>,
                 document.body
             )}
         </motion.div>

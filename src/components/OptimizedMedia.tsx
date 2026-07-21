@@ -1,7 +1,7 @@
 import React, { forwardRef, useMemo } from 'react';
 import type { MediaAsset } from '@/types';
 import { cn } from '@/lib/utils';
-import { generateResponsiveUrls } from '@/lib/cloudinary/transforms';
+import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transforms';
 
 interface OptimizedMediaProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   media: MediaAsset;
@@ -51,9 +51,10 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
 
   // Memoize URL generation so we don't recalculate strings on every render
   const optimizedData = useMemo(() => {
-    if (!media.public_id) return null;
-    return generateResponsiveUrls(media.public_id);
-  }, [media.public_id]);
+    const publicId = media.public_id || (media.url ? extractPublicId(media.url) : null);
+    if (!publicId) return null;
+    return generateResponsiveUrls(publicId);
+  }, [media.public_id, media.url]);
 
   const src = optimizedData ? optimizedData.src : media.url;
   const srcSet = optimizedData ? optimizedData.srcSet : undefined;

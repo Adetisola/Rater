@@ -7,7 +7,9 @@ import type { MediaAsset } from '@/types';
  */
 export async function uploadDirectToCloudinary(
   file: File,
-  onProgress?: (percent: number) => void
+  folder?: string,
+  onProgress?: (percent: number) => void,
+  signal?: AbortSignal
 ): Promise<MediaAsset> {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -20,9 +22,23 @@ export async function uploadDirectToCloudinary(
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', uploadPreset);
+  if (folder) {
+    formData.append('folder', folder);
+  }
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
+    
+    if (signal) {
+      if (signal.aborted) {
+        return reject(new Error('AbortError'));
+      }
+      signal.addEventListener('abort', () => {
+        xhr.abort();
+        reject(new Error('AbortError'));
+      });
+    }
+
     xhr.open('POST', url);
 
     if (onProgress) {

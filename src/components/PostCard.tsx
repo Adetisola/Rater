@@ -8,7 +8,7 @@ import { usePostStore } from '../store/postStore';
 import Link from 'next/link';
 import { ImageFallback } from './ImageFallback';
 import { MediaCarousel } from './MediaCarousel';
-import { generateResponsiveUrls } from '@/lib/cloudinary/transforms';
+import { generateResponsiveUrls, extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
 
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -100,11 +100,21 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
     const optimizedFallback = useMemo(() => {
         const mediaData = post?.media?.[0];
-        if (mediaData?.public_id) {
-            return generateResponsiveUrls(mediaData.public_id);
+        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
+        if (publicId) {
+            return generateResponsiveUrls(publicId);
         }
         return null;
-    }, [post?.media]);
+    }, [post?.media, post?.image_url]);
+
+    const bgUrl = useMemo(() => {
+        const mediaData = post?.media?.[0];
+        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
+        if (publicId) {
+            return generateThumbnail(publicId, 400, 300);
+        }
+        return post?.image_url;
+    }, [post?.media, post?.image_url]);
 
     if (!post) return null;
 
@@ -133,11 +143,11 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         onClick={onClick}
                     >
             <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
-                {!hasError && (
+                {!hasError && bgUrl && (
                     <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                         <div
                             className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
-                            style={{ backgroundImage: `url(${post.image_url})` }}
+                            style={{ backgroundImage: `url(${bgUrl})` }}
                         />
                     </div>
                 )}

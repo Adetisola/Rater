@@ -340,6 +340,8 @@ export type Database = {
       }
       posts: {
         Row: {
+          ai_prompt: string | null
+          ai_tool: string | null
           avatar_id: string
           average_score: number | null
           category: string
@@ -356,8 +358,11 @@ export type Database = {
           review_count: number | null
           title: string
           updated_at: string | null
+          uses_ai: boolean
         }
         Insert: {
+          ai_prompt?: string | null
+          ai_tool?: string | null
           avatar_id: string
           average_score?: number | null
           category: string
@@ -374,8 +379,11 @@ export type Database = {
           review_count?: number | null
           title: string
           updated_at?: string | null
+          uses_ai?: boolean
         }
         Update: {
+          ai_prompt?: string | null
+          ai_tool?: string | null
           avatar_id?: string
           average_score?: number | null
           category?: string
@@ -392,6 +400,7 @@ export type Database = {
           review_count?: number | null
           title?: string
           updated_at?: string | null
+          uses_ai?: boolean
         }
         Relationships: [
           {
@@ -416,11 +425,12 @@ export type Database = {
           bg_color: string | null
           bio: string | null
           created_at: string | null
-          email: string
+          email: string | null
           id: string
           is_admin: boolean | null
           is_blocked: boolean | null
           name: string
+          onboarding_completed: boolean | null
           passkey: string | null
           previous_usernames: string[] | null
           role: string | null
@@ -435,11 +445,12 @@ export type Database = {
           bg_color?: string | null
           bio?: string | null
           created_at?: string | null
-          email: string
+          email?: string | null
           id: string
           is_admin?: boolean | null
           is_blocked?: boolean | null
           name: string
+          onboarding_completed?: boolean | null
           passkey?: string | null
           previous_usernames?: string[] | null
           role?: string | null
@@ -454,11 +465,12 @@ export type Database = {
           bg_color?: string | null
           bio?: string | null
           created_at?: string | null
-          email?: string
+          email?: string | null
           id?: string
           is_admin?: boolean | null
           is_blocked?: boolean | null
           name?: string
+          onboarding_completed?: boolean | null
           passkey?: string | null
           previous_usernames?: string[] | null
           role?: string | null
@@ -640,7 +652,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_email_for_login: {
+        Args: { p_password: string; p_username: string }
+        Returns: string
+      }
     }
     Enums: {
       badge_type: "top_rated_active" | "top_rated_previous"

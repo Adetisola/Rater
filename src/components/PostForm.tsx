@@ -3,12 +3,13 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
-import { Check, FileUp, Lock, CloudUpload, ArrowLeft, Loader2, RotateCcw } from 'lucide-react';
+import { Check, FileUp, Lock, CloudUpload, ArrowLeft, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
 import { Textarea } from './ui/Textarea';
 import type { Post, Category } from '@/types';
+import { AI_TOOLS } from '@/types';
 import type { UploadProgressEvent } from '@/lib/cloudinary/uploads';
 import { CATEGORIES } from '@/constants/categories';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +22,27 @@ import { AmbientSuccessText } from './AmbientSuccessText';
 import { showToast } from './GlobalOverlays';
 import { compressImage } from '@/lib/image/compress';
 import { perf } from '@/utils/perf';
+
+const lobeIconMap: Record<string, string> = {
+  chatgpt: 'openai',
+  midjourney: 'midjourney',
+  gemini: 'gemini',
+  claude: 'claude',
+  'stable-diffusion': 'stability',
+  dalle: 'dalle',
+  'nano-banana': 'nanobanana',
+  ideogram: 'ideogram'
+};
+
+function getAiToolLogo(toolId: string) {
+  const lobeId = lobeIconMap[toolId];
+  if (lobeId) {
+    const isMonoOnly = lobeId === 'openai' || lobeId === 'midjourney' || lobeId === 'ideogram';
+    const suffix = isMonoOnly ? '' : '-color';
+    return `https://unpkg.com/@lobehub/icons-static-svg@latest/icons/${lobeId}${suffix}.svg`;
+  }
+  return `/ai-tools/${toolId}.svg`;
+}
 
 interface PostFormProps {
   initialPost?: Post | null;
@@ -64,6 +86,22 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   const [description, setDescription] = useState(initialPost?.description || '');
+
+  // AI FIELDS
+  const [usesAI, setUsesAI] = useState(initialPost?.uses_ai ?? false);
+  const [aiTool, setAiTool] = useState<string>(
+    initialPost?.ai_tool 
+      ? (AI_TOOLS.some(t => t.id === initialPost.ai_tool) ? initialPost.ai_tool : 'other') 
+      : ''
+  );
+  const [customAiTool, setCustomAiTool] = useState<string>(
+    initialPost?.ai_tool && !AI_TOOLS.some(t => t.id === initialPost.ai_tool) 
+      ? initialPost.ai_tool 
+      : ''
+  );
+  const [aiPrompt, setAiPrompt] = useState(initialPost?.ai_prompt ?? '');
+  const [isAiToolDropdownOpen, setIsAiToolDropdownOpen] = useState(false);
+
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>(
     initialPost ? (initialPost.media ? initialPost.media.map(m => m.url) : [initialPost.image_url]) : []
@@ -85,6 +123,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
   // Duplicate submission guard — prevents double-tap / double-click
   const isSubmitLockedRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Trigger onSuccess only after Lottie plays once or fallback timeout
   useEffect(() => {
@@ -411,6 +450,24 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     }
     setCategoryError(false);
 
+    if (usesAI) {
+      if (!aiTool) {
+        showToast("Please select the AI tool you used.", "error");
+        isSubmitLockedRef.current = false;
+        return;
+      }
+      if (aiTool === 'other' && !customAiTool.trim()) {
+        showToast("Please specify the custom AI tool you used.", "error");
+        isSubmitLockedRef.current = false;
+        return;
+      }
+      if (aiPrompt.length > 8000) {
+        showToast("AI Prompt exceeds the 8,000 character limit.", "error");
+        isSubmitLockedRef.current = false;
+        return;
+      }
+    }
+
     if (mediaFiles.length === 0 && mediaPreviews.length === 0) {
       showToast("At least one image is required.", "error");
       isSubmitLockedRef.current = false;
@@ -491,19 +548,25 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         setUploadingIndexes(uploadingSet);
 
         let overallProgress = 20;
-        const batchResults = await uploadMediaBatch(compressedFiles, (indexInBatch, percent) => {
+        const folder = currentProfile ? `rater/posts/${currentProfile.id.trim()}` : undefined;
+        abortControllerRef.current = new AbortController();
+        const batchResults = await uploadMediaBatch(compressedFiles, folder, (indexInBatch, percent) => {
           const globalOrder = filesToUpload[indexInBatch].order;
-          setImageUploadPercents(prev => ({ ...prev, [globalOrder]: percent }));
-          
-          // Rough overall progress update (allocating 20% to 90% for uploading phase)
-          overallProgress = Math.min(90, overallProgress + (percent / filesToUpload.length) * 0.7);
-          setUploadProgress({ total: blobCount, completed: 0, percent: Math.round(overallProgress), stage: 'uploading' });
-        });
+          setImageUploadPercents(prev => {
+            const newPercents = { ...prev, [globalOrder]: percent };
+            const totalPercent = filesToUpload.reduce((sum, f) => sum + (newPercents[f.order] || 0), 0);
+            const avgPercent = totalPercent / filesToUpload.length;
+            overallProgress = 20 + (avgPercent * 0.7);
+            setUploadProgress(curr => curr ? { ...curr, percent: Math.round(overallProgress), stage: 'uploading' } : null);
+            return newPercents;
+          });
+        }, abortControllerRef.current.signal);
         
         setUploadingIndexes(new Set());
         perf.end('Cloudinary Upload Batch');
 
         let hasFailures = false;
+        let hasAbortError = false;
         batchResults.forEach((res, idx) => {
           if (res.status === 'fulfilled') {
             const asset = res.value;
@@ -512,11 +575,19 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             newlyUploadedAssets.push(asset);
           } else {
             hasFailures = true;
+            if (res.reason?.name === 'AbortError' || res.reason?.message?.toLowerCase().includes('abort')) {
+              hasAbortError = true;
+            }
             console.error('Upload failed for image:', filesToUpload[idx].file.name, res.reason);
           }
         });
 
         if (hasFailures) {
+          if (hasAbortError) {
+            const err = new Error('Upload aborted');
+            err.name = 'AbortError';
+            throw err;
+          }
           throw new Error('Some images failed to upload. Please try again or remove the failed images.');
         }
       }
@@ -533,7 +604,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           category: category as Category,
           description,
           image_url: finalAssets[0]?.url || initialPost.image_url,
-          media: finalAssets
+          media: finalAssets,
+          uses_ai: usesAI,
+          ai_tool: usesAI ? (aiTool === 'other' ? customAiTool.trim() : aiTool) : null,
+          ai_prompt: usesAI ? (aiPrompt.trim() || null) : null,
         });
         if (success) {
           setUploadProgress(prev => prev ? { ...prev, percent: 100, stage: 'publishing' } : null);
@@ -548,7 +622,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           category: category as Category,
           image_url: finalAssets[0]?.url || '',
           media: finalAssets,
-          avatar_id: currentProfile.id
+          avatar_id: currentProfile.id,
+          uses_ai: usesAI,
+          ai_tool: usesAI ? (aiTool === 'other' ? customAiTool.trim() : aiTool) : null,
+          ai_prompt: usesAI ? (aiPrompt.trim() || null) : null,
         };
         setUploadProgress(prev => prev ? { ...prev, percent: 95, stage: 'publishing' } : null);
         const success = await addPost(newPost);
@@ -565,8 +642,16 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     } catch (err: any) {
       console.error('[PostForm] handleSubmit error:', err);
       const errorMsg = err.message || 'Upload failed. Please check your connection and try again.';
-      setInlineUploadError(errorMsg);
+      
+      const isCancellation = err.name === 'AbortError' || errorMsg.toLowerCase().includes('abort');
+      
+      if (!isCancellation) {
+        setInlineUploadError(errorMsg);
+      } else {
+        setInlineUploadError(null);
+      }
       setUploadProgress(null);
+      
       // Background cleanup of any orphaned Cloudinary assets
       if (newlyUploadedAssets.length > 0) {
         import('@/lib/cloudinary/uploads').then(({ deleteMedia }) => {
@@ -642,7 +727,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={cn(
         "mx-auto",
-        isOverlay ? "w-full max-w-4xl" : "max-w-[1200px] pb-32 pt-8 px-6"
+        isOverlay ? "w-full max-w-3xl" : "max-w-[1200px] pb-32 pt-8 px-6"
       )}
     >
 
@@ -692,8 +777,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div className={cn("space-y-2 flex flex-col h-full", mediaPreviews.length > 0 && !isEditMode ? "md:col-span-3" : "")}>
             <div
               className={cn(
-                "group relative rounded-[24px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary flex-1",
-                !isEditMode ? "w-full bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-primary transition-all cursor-pointer" : "h-[180px] w-fit min-w-[200px] max-w-full bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
+                "group relative rounded-[24px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                !isEditMode ? "flex-1 w-full bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-primary transition-all cursor-pointer" : "h-[380px] w-full max-w-[500px] mx-auto bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
                 !isEditMode && mediaPreviews.length === 0 ? "aspect-video" : "",
                 isDragging && !isEditMode && "bg-[#FFF6DD] border-primary shadow-[0_0_20px_rgba(254,195,18,0.15)]"
               )}
@@ -802,9 +887,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); removeMedia(idx); }}
-                            className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] opacity-100 md:opacity-0 md:group-hover/thumb:opacity-100 transition-opacity z-30"
+                            className="absolute top-1 right-1 w-5 h-5 bg-black/50 hover:bg-red-500 rounded-full flex items-center justify-center text-white opacity-100 md:opacity-0 md:group-hover/thumb:opacity-100 transition-opacity z-30"
                           >
-                            ×
+                            <Trash2 className="w-3 h-3" />
                           </button>
                         )}
                         {idx === 0 && (
@@ -1015,6 +1100,195 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               </p>
             )}
           </div>
+
+          {/* AI PROMPT SHARING */}
+          <div className="space-y-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 13.97 13.97" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 shrink-0"
+                  >
+                    <defs>
+                      <linearGradient id="rater-star-grad-title" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#fec312" />
+                        <stop offset="33%" stopColor="#ff4f6d" />
+                        <stop offset="66%" stopColor="#c400d2" />
+                        <stop offset="100%" stopColor="#7c3bed" />
+                      </linearGradient>
+                    </defs>
+                    <path 
+                      d="M13.9697 6.98486C13.9697 7.43872 13.6035 7.80695 13.1476 7.80695C11.7244 7.80695 10.3809 8.3623 9.37354 9.37354C8.3623 10.3807 7.80701 11.7223 7.80701 13.1476C7.80701 13.6014 7.44067 13.9697 6.98486 13.9697C6.52905 13.9697 6.16284 13.6034 6.16284 13.1476C6.16284 10.2035 3.76611 7.80695 0.822144 7.80695C0.370361 7.80695 0 7.44067 0 6.98486C0 6.52899 0.370361 6.16272 0.822144 6.16272C3.76611 6.16272 6.16284 3.76611 6.16284 0.822083C6.16284 0.370239 6.53296 0 6.98486 0C7.43665 0 7.80701 0.370239 7.80701 0.822083C7.81885 3.77808 10.2135 6.16272 13.1476 6.16272C13.3687 6.16272 13.5756 6.24835 13.731 6.40363C13.8842 6.55688 13.9697 6.76587 13.9697 6.98486Z" 
+                      fill="url(#rater-star-grad-title)" 
+                    />
+                  </svg>
+                  <h3 className="font-medium text-[16px] text-black">AI Disclosure</h3>
+                </div>
+                <p className="text-sm text-gray-500 mt-0.5">Disclose if you used AI to create or assist with this work.</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={usesAI}
+                onClick={() => {
+                  const newState = !usesAI;
+                  setUsesAI(newState);
+                  if (!newState) {
+                    setAiTool('');
+                    setCustomAiTool('');
+                    setAiPrompt('');
+                  }
+                }}
+                className={cn(
+                  "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+                  usesAI ? "bg-primary" : "bg-gray-200"
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                    usesAI ? "translate-x-5" : "translate-x-0"
+                  )}
+                />
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {usesAI && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0, overflow: 'hidden' }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 24, transitionEnd: { overflow: 'visible' } }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0, overflow: 'hidden' }}
+                  className="w-full"
+                >
+                  <div className="space-y-6 pl-4 border-l-2 border-gray-100">
+                    {/* AI Tool Dropdown */}
+                    <div className="space-y-2 relative">
+                      <h3 className="font-medium text-[15px] text-black">AI Tool <span className="text-red-500">*</span></h3>
+                      <button
+                        type="button"
+                        onClick={() => setIsAiToolDropdownOpen(!isAiToolDropdownOpen)}
+                        className={cn(
+                          "w-full h-12 text-base text-left px-4 rounded-xl border focus-visible:border-primary font-medium flex items-center justify-between transition-colors bg-white",
+                          isAiToolDropdownOpen ? "border-primary" : "border-gray-200",
+                          aiTool ? "text-black" : "text-gray-400"
+                        )}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          {aiTool && (
+                            <img 
+                              src={getAiToolLogo(aiTool)} 
+                              alt={aiTool} 
+                              className="w-5 h-5 rounded-sm object-contain"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `/ai-tools/${aiTool}.svg`;
+                              }}
+                            />
+                          )}
+                          {aiTool 
+                            ? (aiTool === 'other' ? 'Other' : AI_TOOLS.find(t => t.id === aiTool)?.label || aiTool)
+                            : "Select AI tool used..."}
+                        </span>
+                        <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                          <svg width="12" height="8" viewBox="0 0 12 8" fill="none" className={cn("transition-transform duration-200", isAiToolDropdownOpen && "rotate-180")}>
+                            <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      </button>
+
+                      {isAiToolDropdownOpen && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-40"
+                            onClick={() => setIsAiToolDropdownOpen(false)}
+                          />
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                            {AI_TOOLS.map(tool => (
+                              <button
+                                key={tool.id}
+                                type="button"
+                                onClick={() => {
+                                  setAiTool(tool.id);
+                                  if (tool.id !== 'other') setCustomAiTool('');
+                                  setIsAiToolDropdownOpen(false);
+                                }}
+                                className={cn(
+                                  "px-4 py-3 cursor-pointer text-sm font-medium transition-colors flex items-center justify-between w-full text-left",
+                                  aiTool === tool.id ? "bg-primary/10" : "hover:bg-gray-50"
+                                )}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <img 
+                                    src={getAiToolLogo(tool.id)} 
+                                    alt={tool.label} 
+                                    className="w-5 h-5 rounded-sm object-contain"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = `/ai-tools/${tool.id}.svg`;
+                                    }}
+                                  />
+                                  <span>{tool.label}</span>
+                                </div>
+                                {aiTool === tool.id && <Check className="w-4 h-4 text-primary shrink-0" />}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Custom Tool Name Input */}
+                    <AnimatePresence>
+                      {aiTool === 'other' && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                          animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                          exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                          className="space-y-2 overflow-hidden"
+                        >
+                          <h3 className="font-medium text-[15px] text-black">Custom Tool Name <span className="text-red-500">*</span></h3>
+                          <Input
+                            placeholder="e.g. ComfyUI, Custom Model"
+                            value={customAiTool}
+                            onChange={(e) => setCustomAiTool(e.target.value)}
+                            className="h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium"
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* AI Prompt Textarea */}
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-[15px] text-black flex items-center justify-between">
+                        Prompt <span className="text-gray-400 font-normal text-xs">(Optional)</span>
+                      </h3>
+                      <div className="relative">
+                        <Textarea
+                          placeholder="Describe the prompt used to generate this image..."
+                          value={aiPrompt}
+                          maxLength={8000}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          className="min-h-[120px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium font-mono"
+                        />
+                        <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
+                          {aiPrompt.length.toLocaleString()} / 8,000 chars
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 pt-1">
+                        Sharing your prompt helps others learn and grow. This is completely optional.
+                      </p>
+                    </div>
+
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* RIGHT COLUMN: Onboarding & Actions */}
@@ -1126,6 +1400,21 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 </span>
               </button>
 
+              {isSubmitting && (
+                <Button
+                  variant="primary"
+                  className="bg-red-500! hover:bg-red-600! rounded-full h-12 px-6 font-medium border-0 transition-colors shadow-none"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (abortControllerRef.current) {
+                      abortControllerRef.current.abort();
+                    }
+                  }}
+                >
+                  Cancel Upload
+                </Button>
+              )}
+
               {isEditing && (
                 <Button
                   variant="ghost"
@@ -1176,6 +1465,21 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               >
                 Cancel
               </Button>
+
+              {isSubmitting && (
+                <Button
+                  variant="primary"
+                  className="bg-red-500! hover:bg-red-600! rounded-full h-12 px-6 font-medium border-0 transition-colors shadow-none"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (abortControllerRef.current) {
+                      abortControllerRef.current.abort();
+                    }
+                  }}
+                >
+                  Cancel Upload
+                </Button>
+              )}
 
               {/* Animated progress Post button */}
               <button
