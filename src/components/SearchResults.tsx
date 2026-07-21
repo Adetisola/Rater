@@ -12,6 +12,7 @@ import type { RecentItemData } from '../hooks/useRecentSearches';
 
 import { UserAvatar } from './UserAvatar';
 import Link from 'next/link';
+import { extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
 
 /**
  * Props for the SearchResults dropdown component.
@@ -310,7 +311,11 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       {/* Thumbnail */}
       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
         <img 
-          src={post.image_url} 
+          src={
+            (post.image_url && extractPublicId(post.image_url))
+              ? generateThumbnail(extractPublicId(post.image_url)!, 56, 40)
+              : post.image_url
+          } 
           alt="" 
           className="w-full h-full object-cover"
         />

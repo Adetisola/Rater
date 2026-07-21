@@ -84,13 +84,40 @@ export async function searchAll(
       // For categories, since they are static and small, we can just use the local fuse index.
       const fuseResults = await fuseSearchAll(indexes, query, defaultLimits);
 
+      const mappedAvatars = (profilesResult?.hits || [])
+        .map((hit: any) => {
+          // Enrich with local data if Algolia record is stale
+          const rawAvatar = indexes.rawAvatars?.[hit.objectID];
+          const username = hit.username || rawAvatar?.username;
+          return {
+            avatar: { ...hit, id: hit.objectID, username } as Avatar,
+            score: 1 // Algolia handles internal scoring
+          };
+        })
+        .filter((mapped: any) => {
+          if (!mapped.avatar.username) {
+            console.warn('[Algolia] Filtered malformed profile missing username even after enrichment:', mapped.avatar);
+            return false;
+          }
+          return true;
+        });
+
+      // Merge local Fuse avatars with Algolia avatars, deduplicating by ID.
+      // This guarantees that any valid creator matching locally won't be lost.
+      const avatarMap = new Map<string, any>();
+      for (const fuseHit of fuseResults.avatars) {
+        avatarMap.set(fuseHit.avatar.id, fuseHit);
+      }
+      for (const algoliaHit of mappedAvatars) {
+        avatarMap.set(algoliaHit.avatar.id, algoliaHit);
+      }
+      
+      const finalAvatars = Array.from(avatarMap.values()).slice(0, defaultLimits.avatars);
+
       return {
-        avatars: (profilesResult?.hits || []).map((hit: any) => ({
-          avatar: hit as Avatar,
-          score: 1 // Algolia handles internal scoring
-        })),
+        avatars: finalAvatars,
         posts: (postsResult?.hits || []).map((hit: any) => ({
-          post: hit as Post,
+          post: { ...hit, id: hit.objectID } as Post,
           score: 1,
           matches: undefined
         })),

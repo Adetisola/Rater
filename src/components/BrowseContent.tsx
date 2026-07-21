@@ -91,6 +91,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     
     getFeedPosts({ limit: 21 }).then(newPosts => {
       if (mounted) {
+        setIsProcessing(true); // Prevent "Nothing is here" flicker before the sort effect runs
         const hasMorePosts = newPosts.length === 21;
         const actualPosts = hasMorePosts ? newPosts.slice(0, 20) : newPosts;
         
