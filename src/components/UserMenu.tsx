@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2 } from 'lucide-react';
@@ -18,6 +19,8 @@ interface UserMenuProps {
 
 export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfile }: UserMenuProps = {}) {
   const { currentProfile, logout } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
@@ -189,6 +192,9 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
           onConfirm={() => {
             setShowLogoutConfirm(false);
             logout();
+            if (pathname?.startsWith('/@')) {
+              router.replace('/browse');
+            }
           }}
         />
       )}
