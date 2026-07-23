@@ -23,6 +23,7 @@ import { Tooltip } from './ui/Tooltip';
 import { UserAvatar } from './UserAvatar';
 import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
+import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transforms';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { AmbientLoadingText } from './AmbientLoadingText';
@@ -85,6 +86,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     }, []);
 
     const posts = usePostStore(state => state.posts);
+    const displayPost = posts[post.id] || post;
     const nextPostId = useNavigationStore(state => state.getNextPostId(post.id));
     const prevPostId = useNavigationStore(state => state.getPrevPostId(post.id));
 
@@ -121,7 +123,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     useEffect(() => {
         controls.set({ x: 0 });
         pageX.set(0);
-    }, [post.id, controls, pageX]);
+    }, [displayPost.id, controls, pageX]);
 
     useEffect(() => {
         const unsubscribe = pageX.on("change", (v) => {
@@ -140,7 +142,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     const [isSwipeDisabled, setIsSwipeDisabled] = useState(false);
 
     if (!isMobile) {
-        return <PostDetailCore post={post} onClose={onClose} />;
+        return <PostDetailCore post={displayPost} onClose={onClose} />;
     }
 
     return (
@@ -164,7 +166,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* Current Post */}
                 <div className="w-screen shrink-0 relative z-10">
-                    <PostDetailCore post={post} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
+                    <PostDetailCore post={displayPost} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
                 </div>
 
                 {/* Next Post */}
@@ -1319,7 +1321,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                     {/* Navigation Controls */}
                     {displayMedia.length > 1 && (
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50 pointer-events-auto">
+                        <div className="absolute top-12 md:top-auto md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50 pointer-events-auto">
                             {fullscreenImageIndex > 0 ? (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setFullscreenImageIndex(prev => prev - 1); setZoomScale(1); }}
@@ -1347,35 +1349,45 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             )}
                         </div>
                     )}
-                    <motion.img
-                        ref={imgRef}
-                        src={displayMedia[fullscreenImageIndex]?.url || post.image_url}
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
-                        style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
-                        whileDrag={{ cursor: 'grabbing' }}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: zoomScale }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                        drag={zoomScale > 1 ? true : (displayMedia.length > 1 ? "x" : false)}
-                        dragConstraints={zoomScale > 1 ? dragConstraints : { left: 0, right: 0 }}
-                        dragMomentum={false}
-                        dragElastic={zoomScale > 1 ? 0 : 0.5}
-                        onDragEnd={(_e, info) => {
-                            if (zoomScale === 1 && displayMedia.length > 1) {
-                                if (info.offset.x < -50 && fullscreenImageIndex < displayMedia.length - 1) {
-                                    setFullscreenImageIndex(prev => prev + 1);
-                                } else if (info.offset.x > 50 && fullscreenImageIndex > 0) {
-                                    setFullscreenImageIndex(prev => prev - 1);
+                    {(() => {
+                      const currentFullscreenItem = displayMedia[fullscreenImageIndex];
+                      const currentFullscreenRawUrl = currentFullscreenItem?.url || post.image_url;
+                      const currentFullscreenPublicId = currentFullscreenItem?.public_id || (currentFullscreenRawUrl ? extractPublicId(currentFullscreenRawUrl) : null);
+                      const fullscreenOptimizedSet = currentFullscreenPublicId ? generateResponsiveUrls(currentFullscreenPublicId) : null;
+                      return (
+                        <motion.img
+                            ref={imgRef}
+                            src={fullscreenOptimizedSet?.src || currentFullscreenRawUrl}
+                            srcSet={fullscreenOptimizedSet?.srcSet}
+                            sizes="100vw"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
+                            style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
+                            whileDrag={{ cursor: 'grabbing' }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: zoomScale }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            drag={zoomScale > 1 ? true : (displayMedia.length > 1 ? "x" : false)}
+                            dragConstraints={zoomScale > 1 ? dragConstraints : { left: 0, right: 0 }}
+                            dragMomentum={false}
+                            dragElastic={zoomScale > 1 ? 0 : 0.5}
+                            onDragEnd={(_e, info) => {
+                                if (zoomScale === 1 && displayMedia.length > 1) {
+                                    if (info.offset.x < -50 && fullscreenImageIndex < displayMedia.length - 1) {
+                                        setFullscreenImageIndex(prev => prev + 1);
+                                    } else if (info.offset.x > 50 && fullscreenImageIndex > 0) {
+                                        setFullscreenImageIndex(prev => prev - 1);
+                                    }
                                 }
-                            }
-                        }}
-                        onLoad={() => updateConstraints(zoomScale)}
-                        onPointerDown={() => {
-                            const now = Date.now();
-                            if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
-                            else { lastTapRef.current = now; }
-                        }}
-                    />
+                            }}
+                            onLoad={() => updateConstraints(zoomScale)}
+                            onPointerDown={() => {
+                                const now = Date.now();
+                                if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
+                                else { lastTapRef.current = now; }
+                            }}
+                        />
+                      );
+                    })()}
                 </div>
                 </>,
                 document.body

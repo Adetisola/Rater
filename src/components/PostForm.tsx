@@ -88,7 +88,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const [description, setDescription] = useState(initialPost?.description || '');
 
   // AI FIELDS
-  const [usesAI, setUsesAI] = useState(initialPost?.uses_ai ?? false);
+  const [usesAI, setUsesAI] = useState(
+    Boolean(initialPost?.uses_ai || initialPost?.ai_tool || initialPost?.ai_prompt)
+  );
   const [aiTool, setAiTool] = useState<string>(
     initialPost?.ai_tool 
       ? (AI_TOOLS.some(t => t.id === initialPost.ai_tool) ? initialPost.ai_tool : 'other') 
@@ -201,14 +203,26 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       mediaPreviews.length !== originalMediaUrls.length ||
       mediaPreviews.some((url, i) => url !== originalMediaUrls[i]);
 
+    const originalUsesAI = Boolean(initialPost.uses_ai || initialPost.ai_tool || initialPost.ai_prompt);
+    const originalAiTool = initialPost.ai_tool 
+      ? (AI_TOOLS.some(t => t.id === initialPost.ai_tool) ? initialPost.ai_tool : 'other') 
+      : '';
+    const originalCustomAiTool = initialPost.ai_tool && !AI_TOOLS.some(t => t.id === initialPost.ai_tool) 
+      ? initialPost.ai_tool 
+      : '';
+    
     return (
       title !== initialPost.title ||
       category !== initialPost.category ||
       description !== (initialPost.description || '') ||
       mediaFiles.length > 0 ||
-      mediaChanged
+      mediaChanged ||
+      usesAI !== originalUsesAI ||
+      (usesAI && aiTool !== originalAiTool) ||
+      (usesAI && aiTool === 'other' && customAiTool !== originalCustomAiTool) ||
+      (usesAI && aiPrompt !== (initialPost.ai_prompt || ''))
     );
-  }, [initialPost, title, category, description, mediaFiles, mediaPreviews]);
+  }, [initialPost, title, category, description, mediaFiles, mediaPreviews, usesAI, aiTool, customAiTool, aiPrompt]);
 
   const [isDragging, setIsDragging] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -667,7 +681,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       isSubmitLockedRef.current = false;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentProfile, title, categoryInputValue, category, mediaPreviews, mediaFiles, isEditing, initialPost, description, addPost, updatePost]);
+  }, [currentProfile, title, categoryInputValue, category, mediaPreviews, mediaFiles, isEditing, initialPost, description, usesAI, aiTool, customAiTool, aiPrompt, addPost, updatePost]);
 
   if (!currentProfile) {
     return (
@@ -1136,13 +1150,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 role="switch"
                 aria-checked={usesAI}
                 onClick={() => {
-                  const newState = !usesAI;
-                  setUsesAI(newState);
-                  if (!newState) {
-                    setAiTool('');
-                    setCustomAiTool('');
-                    setAiPrompt('');
-                  }
+                  setUsesAI(!usesAI);
                 }}
                 className={cn(
                   "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",

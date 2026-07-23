@@ -161,10 +161,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Provide a proxy for profileMap so UI can read from cache synchronously
   const safeProfileMap = useMemo(() => {
-     return new Proxy({}, {
-       get: (_target, prop) => {
+     return new Proxy(profileCache, {
+       get: (target, prop) => {
          if (typeof prop === 'string') {
-            return profileCache[prop] || undefined;
+            return target[prop] || undefined;
          }
          return undefined;
        }

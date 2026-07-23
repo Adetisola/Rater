@@ -15,6 +15,7 @@ import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { getFeedPosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
+import useSWR from 'swr';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -51,7 +52,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     return unsub;
   }, [localRecentUpload]);
   
-  const fetchLimit = 20;
+  const fetchLimit = 12;
   const initialHasMore = initialPosts.length > fetchLimit;
   const displayPosts = useMemo(() => {
     return initialHasMore ? initialPosts.slice(0, fetchLimit) : initialPosts;
@@ -83,43 +84,43 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   }, [displayPosts]);
 
   // Client-side fallback fetch (only if SSR didn't provide posts)
+  const { data: swrPosts, isValidating } = useSWR(
+    initialPosts.length > 0 ? null : 'feed_posts_page_1',
+    () => getFeedPosts({ limit: 13 }),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000,
+    }
+  );
+
   useEffect(() => {
-    if (initialPosts.length > 0) return; // Handled by SSR
-    
-    let mounted = true;
-    setIsFetchingPage(true);
-    
-    getFeedPosts({ limit: 21 }).then(newPosts => {
-      if (mounted) {
-        setIsProcessing(true); // Prevent "Nothing is here" flicker before the sort effect runs
-        const hasMorePosts = newPosts.length === 21;
-        const actualPosts = hasMorePosts ? newPosts.slice(0, 20) : newPosts;
-        
-        usePostStore.getState().addOrUpdatePosts(actualPosts);
-        let ids = actualPosts.map(p => p.id);
-        
-        if (localRecentUpload && !ids.includes(localRecentUpload)) {
-          ids = [localRecentUpload, ...ids];
-        }
-        
-        setFeedPostIds(ids);
-        setHasMore(hasMorePosts);
-        setIsFetchingPage(false);
-        
-        if (usePostStore.getState().newlyUploadedPostId) {
-          usePostStore.getState().setNewlyUploadedPostId(null);
-        }
+    if (initialPosts.length === 0 && isValidating && feedPostIds.length === 0) {
+      setIsFetchingPage(true);
+    }
+  }, [initialPosts.length, isValidating, feedPostIds.length]);
+
+  useEffect(() => {
+    if (swrPosts) {
+      setIsProcessing(true); // Prevent "Nothing is here" flicker before the sort effect runs
+      const hasMorePosts = swrPosts.length === 13;
+      const actualPosts = hasMorePosts ? swrPosts.slice(0, 12) : swrPosts;
+      
+      usePostStore.getState().addOrUpdatePosts(actualPosts);
+      let ids = actualPosts.map(p => p.id);
+      
+      if (localRecentUpload && !ids.includes(localRecentUpload)) {
+        ids = [localRecentUpload, ...ids];
       }
-    }).catch(err => {
-      console.error('Initial fetch failed:', err);
-      if (mounted) {
-        setIsFetchingPage(false);
+      
+      setFeedPostIds(ids);
+      setHasMore(hasMorePosts);
+      setIsFetchingPage(false);
+      
+      if (usePostStore.getState().newlyUploadedPostId) {
+        usePostStore.getState().setNewlyUploadedPostId(null);
       }
-    });
-    return () => { 
-      mounted = false; 
-    };
-  }, [localRecentUpload, initialPosts]);
+    }
+  }, [swrPosts, localRecentUpload]);
 
   const handleLoadMore = useCallback(async () => {
     // ... logic remains the same
@@ -132,7 +133,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     const cursor = lastPost ? lastPost.created_at : undefined;
 
     try {
-      const fetchLimit = 20;
+      const fetchLimit = 12;
       const newPosts = await getFeedPosts({ limit: fetchLimit + 1, cursor });
       
       const hasMorePosts = newPosts.length > fetchLimit;
@@ -152,19 +153,24 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   }, [isFetchingPage, hasMore, feedPostIds]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef(handleLoadMore);
+  
+  useEffect(() => {
+    loadMoreRef.current = handleLoadMore;
+  }, [handleLoadMore]);
+
   const bottomRef = useCallback((node: HTMLDivElement | null) => {
-    if (isFetchingPage) return;
     if (observerRef.current) observerRef.current.disconnect();
     
     if (node) {
       observerRef.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasMore) {
-          handleLoadMore();
+        if (entries[0].isIntersecting) {
+          loadMoreRef.current();
         }
       }, { rootMargin: '400px' });
       observerRef.current.observe(node);
     }
-  }, [isFetchingPage, hasMore, handleLoadMore]);
+  }, []);
 
 
   // Read URL params
@@ -180,6 +186,10 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   // Results state
   const [sortedPostIds, setSortedPostIds] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(true);
+  const [lastProcessedSignature, setLastProcessedSignature] = useState('');
+
+  const currentSignature = `${feedPostIds.join(',')}-${urlQuery}-${selectedCategories.join(',')}-${sortBy}-${avatarId || ''}`;
+  const isEffectivelyProcessing = isProcessing || isFetchingPage || lastProcessedSignature !== currentSignature;
 
   // Handle search submission (only on Enter)
   const handleSearchSubmit = (query: string) => {
@@ -309,11 +319,13 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
 
             if (isMounted) {
                 setSortedPostIds(finalPosts.map(p => p.id));
+                setLastProcessedSignature(currentSignature);
             }
         } catch (error) {
             console.error('Failed to process posts:', error);
             if (isMounted) {
                 setSortedPostIds([]);
+                setLastProcessedSignature(currentSignature);
             }
         } finally {
             if (isMounted) {
@@ -324,7 +336,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
 
     processPosts();
     return () => { isMounted = false; };
-  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds]);
+  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds, currentSignature]);
 
   return (
     <>
@@ -390,7 +402,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               className="pt-4 md:pt-0"
             >
               {selectedAvatar && (
-                <div className="max-w-[1600px] mx-auto px-6 mb-6">
+                <div className="max-w-400 mx-auto px-6 mb-6">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
                     <span className="text-sm font-medium text-gray-600">Avatar:</span>
                     <span className="text-sm font-bold text-black">{selectedAvatar.name}</span>
@@ -405,7 +417,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               )}
 
               {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
-                <div className="min-[769px]:hidden max-w-[1600px] mx-auto px-6 mb-4">
+                <div className="min-[769px]:hidden max-w-400 mx-auto px-6 mb-4">
                   <div className="flex flex-wrap items-center gap-2">
                     {sortBy !== 'balanced' && (
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
@@ -464,7 +476,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                       </button>
                     </div>
                     <span className="text-sm text-gray-400">
-                      {(isProcessing || isFetchingPage) ? 'Searching...' : (
+                      {isEffectivelyProcessing ? 'Searching...' : (
                         sortedPostIds.length === 0
                           ? 'Nothing here yet'
                           : `${sortedPostIds.length} post${sortedPostIds.length === 1 ? '' : 's'} found`
@@ -482,13 +494,13 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                 return (
                   <MasonryGrid 
                     postIds={finalPostIds} 
-                    isLoading={isProcessing || isFetchingPage}
+                    isLoading={isEffectivelyProcessing}
                   />
                 );
               })()}
 
-              {(!isProcessing && !isFetchingPage) && (
-                <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
+              {!isEffectivelyProcessing && (
+                <div className="max-w-400 mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
                     {hasMore ? (
                         <div ref={bottomRef} className="h-10 w-full" />
                     ) : (

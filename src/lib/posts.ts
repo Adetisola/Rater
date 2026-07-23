@@ -17,7 +17,7 @@ import { populateProfileCache } from './profiles';
 export async function getFeedPosts({ limit = 20, cursor, isRetry = false }: { limit?: number; cursor?: string; isRetry?: boolean } = {}): Promise<Post[]> {
   let query = supabase
     .from('posts')
-    .select('*, profiles(id, username, name, avatar_url, bg_color)')
+    .select('*, profiles(id, username, name, avatar_url)')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -61,7 +61,7 @@ export async function getFeedPosts({ limit = 20, cursor, isRetry = false }: { li
 export async function getPost(postId: string, isRetry = false): Promise<Post | null> {
   const { data, error } = await supabase
     .from('posts')
-    .select('*, profiles(id, username, name, avatar_url, bg_color)')
+    .select('*, profiles(id, username, name, avatar_url)')
     .eq('id', postId)
     .single();
 
@@ -95,7 +95,7 @@ export async function getPost(postId: string, isRetry = false): Promise<Post | n
 export async function getProfilePosts(avatarId: string, { limit = 20, cursor }: { limit?: number; cursor?: string } = {}): Promise<Post[]> {
   let query = supabase
     .from('posts')
-    .select('*, profiles(id, username, name, avatar_url, bg_color)')
+    .select('*, profiles(id, username, name, avatar_url)')
     .eq('avatar_id', avatarId)
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })

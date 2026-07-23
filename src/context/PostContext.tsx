@@ -68,8 +68,25 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbUpdatePost(postId, updates, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       
+      const serverPost = { ...result.post };
+      
+      // Safeguard: If PostgREST schema cache is stale, it might drop new columns during UPDATE
+      // and return the old values. We preserve our optimistic AI fields if they were modified.
+      const aiFieldsMismatched = (
+        (updates.uses_ai !== undefined && serverPost.uses_ai !== updates.uses_ai) ||
+        (updates.ai_tool !== undefined && serverPost.ai_tool !== updates.ai_tool) ||
+        (updates.ai_prompt !== undefined && serverPost.ai_prompt !== updates.ai_prompt)
+      );
+      
+      if (aiFieldsMismatched) {
+        console.warn("PostgREST schema cache may be stale. Preserving optimistic AI fields.");
+        if (updates.uses_ai !== undefined) serverPost.uses_ai = updates.uses_ai;
+        if (updates.ai_tool !== undefined) serverPost.ai_tool = updates.ai_tool;
+        if (updates.ai_prompt !== undefined) serverPost.ai_prompt = updates.ai_prompt;
+      }
+
       // Update with the definitive server state to pick up database triggers (e.g. edited_at)
-      usePostStore.getState().updatePost(postId, result.post);
+      usePostStore.getState().updatePost(postId, serverPost);
       
       return true;
     } catch (err) {

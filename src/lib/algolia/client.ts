@@ -5,7 +5,7 @@
  * Used for querying the search index.
  */
 
-import { algoliasearch } from 'algoliasearch';
+import { liteClient as algoliasearch } from 'algoliasearch/lite';
 
 const appId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || '';
 const searchKey = process.env.NEXT_PUBLIC_ALGOLIA_SEARCH_KEY || '';

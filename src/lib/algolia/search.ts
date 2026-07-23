@@ -89,8 +89,16 @@ export async function searchAll(
           // Enrich with local data if Algolia record is stale
           const rawAvatar = indexes.rawAvatars?.[hit.objectID];
           const username = hit.username || rawAvatar?.username;
+          const role = hit.role || rawAvatar?.role || null;
+          const avatar = { ...rawAvatar, ...hit, id: hit.objectID, username, role } as Avatar;
+          
+          // If Algolia stripped large fields (like Base64 avatars) during sync, fallback to the local cache
+          if (!hit.avatar_url && rawAvatar?.avatar_url) avatar.avatar_url = rawAvatar.avatar_url;
+          if (!hit.name && rawAvatar?.name) avatar.name = rawAvatar.name;
+          if (!hit.bg_color && rawAvatar?.bg_color) avatar.bg_color = rawAvatar.bg_color;
+          
           return {
-            avatar: { ...hit, id: hit.objectID, username } as Avatar,
+            avatar,
             score: 1 // Algolia handles internal scoring
           };
         })

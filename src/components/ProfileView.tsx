@@ -22,6 +22,8 @@ import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
+import { uploadMedia } from '@/lib/cloudinary/uploads';
+import { Loader2 } from 'lucide-react';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -107,6 +109,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   // Smart Bio Links state
   const [editSocialLinks, setEditSocialLinks] = useState<SocialLink[]>([]);
   const [editShowEmail, setEditShowEmail] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
 
@@ -273,13 +276,27 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) return showToast("Image too large (Max 5MB)", "error");
-      const reader = new FileReader();
-      reader.onloadend = () => updateProfile({ avatar_url: reader.result as string });
-      reader.readAsDataURL(file);
+      
+      setIsUploadingAvatar(true);
+      try {
+        const asset = await uploadMedia(file, 'avatars');
+        const result = await updateProfile({ avatar_url: asset.url });
+        if (result.ok) {
+          showToast("Profile picture updated", "success");
+        } else {
+          showToast(result.error || "Failed to update profile", "error");
+        }
+      } catch (err: any) {
+        showToast(err.message || "Failed to upload image", "error");
+      } finally {
+        setIsUploadingAvatar(false);
+        // Reset input value so the same file can be selected again if needed
+        if (e.target) e.target.value = '';
+      }
     }
   };
 
@@ -354,19 +371,30 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
               <button
                 onClick={() => setShowFullscreenAvatar(true)}
                 className="w-full h-full cursor-zoom-in group/avatar"
+                disabled={isUploadingAvatar}
               >
                 <img
                   src={targetAvatar.avatar_url}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110"
+                  className={cn(
+                    "w-full h-full object-cover transition-transform duration-500",
+                    !isUploadingAvatar && "group-hover/avatar:scale-110",
+                    isUploadingAvatar && "opacity-50 blur-sm"
+                  )}
                   alt=""
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </button>
             ) : (
-              <User className="w-1/2 h-1/2 text-gray-400" strokeWidth={2.5} />
+              <User className={cn("w-1/2 h-1/2 text-gray-400", isUploadingAvatar && "opacity-50")} strokeWidth={2.5} />
+            )}
+            
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-20">
+                <Loader2 className="w-8 h-8 text-white animate-spin drop-shadow-md" />
+              </div>
             )}
 
-            {isMe && (
+            {isMe && !isUploadingAvatar && (
               <motion.div
                 onMouseLeave={() => setIsConfirmingRemove(false)}
                 className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 rounded-full z-10"
@@ -877,7 +905,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 />
               </div>
             ) : (
-              <div className="py-20 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
+              <div className="py-20 text-center bg-gray-50 rounded-4xl border-2 border-dashed border-gray-200">
                 <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
                 <h3 className="text-xl font-medium mb-2">No posts yet</h3>
                 <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
@@ -896,7 +924,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="py-24 text-center bg-white rounded-[24px] border-2 border-primary border-dashed shadow-xl shadow-primary/5 max-w-2xl mx-auto px-8"
+            className="py-24 text-center bg-white rounded-3xl border-2 border-primary border-dashed shadow-xl shadow-primary/5 max-w-2xl mx-auto px-8"
           >
             <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="w-10 h-10 text-primary fill-primary" />

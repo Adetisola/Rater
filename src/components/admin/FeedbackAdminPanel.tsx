@@ -25,7 +25,7 @@ export function FeedbackAdminPanel() {
     setIsLoading(true);
     const { data, error } = await supabase
       .from('feedback_requests_with_stats')
-      .select('*')
+      .select('id, title, description, created_at, status, category, admin_notes, upvote_count')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -88,7 +88,7 @@ export function FeedbackAdminPanel() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>

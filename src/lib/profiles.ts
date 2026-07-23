@@ -22,6 +22,10 @@ const profileByUsernameCache: Record<string, Avatar> = (globalThis as any).__pro
 const usernameToEmailCache: Record<string, string> = (globalThis as any).__usernameToEmailCache || {};
 (globalThis as any).__usernameToEmailCache = usernameToEmailCache;
 
+// Promise cache for deduplicating concurrent network requests
+const pendingProfilePromises: Record<string, Promise<Avatar | null>> = (globalThis as any).__pendingProfilePromises || {};
+(globalThis as any).__pendingProfilePromises = pendingProfilePromises;
+
 export function populateProfileCache(profiles: Partial<Avatar>[]) {
   profiles.forEach(p => {
     if (!p.id || !p.username) return;
@@ -40,25 +44,35 @@ export function populateProfileCache(profiles: Partial<Avatar>[]) {
 export async function getProfileById(id: string): Promise<Avatar | null> {
   if (profileCache[id] && profileCache[id].created_at) return profileCache[id];
 
-  // Check Supabase
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
-    .eq('id', id)
-    .single();
+  const cacheKey = `id:${id}`;
+  if (pendingProfilePromises[cacheKey]) return pendingProfilePromises[cacheKey];
 
-  if (!error && data) {
-    const profile = data as Avatar;
-    // Merge with any existing partial data just in case
-    profileCache[id] = { ...profileCache[id], ...profile };
-    profileByUsernameCache[profile.username.toLowerCase()] = profileCache[id];
-    return profileCache[id];
-  }
+  const promise = (async () => {
+    // Check Supabase
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
+      .eq('id', id)
+      .single();
 
-  // If we only have a partial profile, return that as a last resort
-  if (profileCache[id]) return profileCache[id];
+    delete pendingProfilePromises[cacheKey];
 
-  return null;
+    if (!error && data) {
+      const profile = data as Avatar;
+      // Merge with any existing partial data just in case
+      profileCache[id] = { ...profileCache[id], ...profile };
+      profileByUsernameCache[profile.username.toLowerCase()] = profileCache[id];
+      return profileCache[id];
+    }
+
+    // If we only have a partial profile, return that as a last resort
+    if (profileCache[id]) return profileCache[id];
+
+    return null;
+  })();
+
+  pendingProfilePromises[cacheKey] = promise;
+  return promise;
 }
 
 /**
@@ -71,25 +85,35 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
     return profileByUsernameCache[normalized];
   }
 
-  // Check Supabase
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
-    .eq('username', normalized)
-    .limit(1)
-    .maybeSingle();
+  const cacheKey = `username:${normalized}`;
+  if (pendingProfilePromises[cacheKey]) return pendingProfilePromises[cacheKey];
 
-  if (!error && data) {
-    const profile = data as Avatar;
-    profileCache[profile.id] = { ...profileCache[profile.id], ...profile };
-    profileByUsernameCache[normalized] = profileCache[profile.id];
-    return profileCache[profile.id];
-  }
+  const promise = (async () => {
+    // Check Supabase
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
+      .eq('username', normalized)
+      .limit(1)
+      .maybeSingle();
 
-  // If we only have a partial profile, return that as a last resort
-  if (profileByUsernameCache[normalized]) return profileByUsernameCache[normalized];
+    delete pendingProfilePromises[cacheKey];
 
-  return null;
+    if (!error && data) {
+      const profile = data as Avatar;
+      profileCache[profile.id] = { ...profileCache[profile.id], ...profile };
+      profileByUsernameCache[normalized] = profileCache[profile.id];
+      return profileCache[profile.id];
+    }
+
+    // If we only have a partial profile, return that as a last resort
+    if (profileByUsernameCache[normalized]) return profileByUsernameCache[normalized];
+
+    return null;
+  })();
+
+  pendingProfilePromises[cacheKey] = promise;
+  return promise;
 }
 
 /**

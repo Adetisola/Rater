@@ -8,10 +8,9 @@
 
 import { Cloudinary } from '@cloudinary/url-gen';
 import { fill, scale } from '@cloudinary/url-gen/actions/resize';
-import { format, quality, dpr } from '@cloudinary/url-gen/actions/delivery';
+import { format, quality } from '@cloudinary/url-gen/actions/delivery';
 import { auto as fAuto } from '@cloudinary/url-gen/qualifiers/format';
 import { auto as qAuto } from '@cloudinary/url-gen/qualifiers/quality';
-import { auto as autoDpr } from '@cloudinary/url-gen/qualifiers/dpr';
 import { blur } from '@cloudinary/url-gen/actions/effect';
 import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
 
@@ -50,7 +49,6 @@ export function generateResponsiveUrls(publicId: string): ResponsiveImageSet {
       .resize(scale().width(w))
       .delivery(format(fAuto()))
       .delivery(quality(qAuto()))
-      .delivery(dpr(autoDpr()))
       .toURL();
   };
 

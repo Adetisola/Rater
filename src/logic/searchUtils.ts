@@ -134,7 +134,9 @@ export function createSearchIndexes(
   const avatarOptions: IFuseOptions<NormalizedAvatar> = {
     keys: [
       { name: 'username', weight: 1.5 },
-      { name: 'name_normalized', weight: 1.0 }
+      { name: 'name', weight: 1.2 },
+      { name: 'name_normalized', weight: 1.0 },
+      { name: 'role', weight: 0.8 }
     ],
     threshold: 0.4,
     ignoreLocation: true,
