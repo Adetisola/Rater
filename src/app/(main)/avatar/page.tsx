@@ -8,14 +8,14 @@ import { useEffect } from 'react';
  * /avatar → Redirect to /@username if logged in, else show identity required
  */
 export default function MyAvatarRedirect() {
-  const { currentAvatar, isLoading } = useAuth();
+  const { currentProfile, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && currentAvatar) {
-      router.replace(`/@${currentAvatar.username}`);
+    if (!isLoading && currentProfile) {
+      router.replace(`/@${currentProfile.username}`);
     }
-  }, [currentAvatar, isLoading, router]);
+  }, [currentProfile, isLoading, router]);
 
   if (isLoading) {
     return (
@@ -25,7 +25,7 @@ export default function MyAvatarRedirect() {
     );
   }
 
-  if (!currentAvatar) {
+  if (!currentProfile) {
     // Redirect to browse - user should use /@username route for profiles
     router.replace('/browse');
     return null;

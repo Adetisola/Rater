@@ -6,12 +6,10 @@
  * draft storage. Guest sessions should use anonymous auth or device IDs.
  */
 
+import type { Review } from '../types';
+
 export interface ReviewDraft {
-  ratings: {
-    clarity: number;
-    purpose: number;
-    aesthetics: number;
-  };
+  ratings: Partial<Record<keyof Review, number>>;
   comment: string;
   name: string;
   updatedAt: number;

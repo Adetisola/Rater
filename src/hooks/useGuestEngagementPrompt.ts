@@ -19,7 +19,7 @@ interface UseGuestEngagementPromptOptions {
 }
 
 export function useGuestEngagementPrompt({ guestName, isNameFocused }: UseGuestEngagementPromptOptions) {
-  const { currentAvatar } = useAuth();
+  const { currentProfile } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [hasTriggered, setHasTriggered] = useState(false);
@@ -43,7 +43,7 @@ export function useGuestEngagementPrompt({ guestName, isNameFocused }: UseGuestE
   // Core trigger: name field loses focus or user pauses typing with a valid name
   useEffect(() => {
     // Guard: only for guests who haven't been prompted yet
-    if (currentAvatar || isDismissed || hasTriggered) return;
+    if (currentProfile || isDismissed || hasTriggered) return;
 
     const trimmedName = guestName.trim();
     const isValidName = trimmedName.length >= 2;
@@ -82,7 +82,7 @@ export function useGuestEngagementPrompt({ guestName, isNameFocused }: UseGuestE
         debounceRef.current = null;
       }
     };
-  }, [guestName, isNameFocused, currentAvatar, isDismissed, hasTriggered]);
+  }, [guestName, isNameFocused, currentProfile, isDismissed, hasTriggered]);
 
   const dismiss = useCallback(() => {
     setIsVisible(false);
@@ -98,7 +98,7 @@ export function useGuestEngagementPrompt({ guestName, isNameFocused }: UseGuestE
     : 'Want to keep your reviews connected to you?';
 
   return {
-    isVisible: isVisible && !currentAvatar && !isDismissed,
+    isVisible: isVisible && !currentProfile && !isDismissed,
     dismiss,
     personalizedTitle,
     guestName: guestName.trim(),

@@ -1,22 +1,21 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-
 export const viewport: Viewport = {
   themeColor: "#FEC312",
 };
 
 export const metadata: Metadata = {
-  title: "Rater — Judgment is built, not found",
-  description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
+  title: "Rater — Design Critique Studio",
+  description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
   manifest: "/manifest.json",
   openGraph: {
-    title: "Rater — Judgment is built, not found",
-    description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
-    url: "https://rater-web.vercel.app",
+    title: "Rater — Design Critique Studio",
+    description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
+    url: "https://raterapp.site",
     siteName: "Rater",
     images: [
       {
-        url: "https://rater-web.vercel.app/og-image.png",
+        url: "https://raterapp.site/og-image.png",
         width: 1200,
         height: 630,
       },
@@ -26,9 +25,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rater — Judgment is built, not found",
-    description: "Train your design eye by observing, evaluating, and reflecting on real design work.",
-    images: ["https://rater-web.vercel.app/og-image.png"],
+    title: "Rater — Design Critique Studio",
+    description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
+    images: ["https://raterapp.site/og-image.png"],
   },
 };
 

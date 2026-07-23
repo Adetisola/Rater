@@ -1,48 +1,54 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
-// TODO(backend): Replace these mock functions with Supabase queries
-import {
-    getReviewsByPostId,
-    getReviewerDisplayName,
-    calculatePostMetrics,
-} from '../logic/mockData';
+import { AI_TOOLS } from '@/types';
+import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview } from '@/lib/reviews';
+import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
+import { usePostStore } from '../store/postStore';
 import { useNow } from '../context/TimeContext';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { PostActionsMenu } from './PostActionsMenu';
 import { sharePost } from '../lib/postActions';
-
 import { ReviewForm } from './ReviewForm';
+import { getReviewMode } from '../config/reviewModes';
 import { Button } from './ui/Button';
+import { Tooltip } from './ui/Tooltip';
+import { UserAvatar } from './UserAvatar';
 import { ImageFallback } from './ImageFallback';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
+import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transforms';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { AmbientLoadingText } from './AmbientLoadingText';
-import { useBadges } from '../hooks/useBadges';
-import { useHotPosts } from '../hooks/useHotPosts';
 import { useNavigationStore } from '../store/navigationStore';
-import { MoreLikeThisSection } from './MoreLikeThisSection';
+import { RelatedSection } from './RelatedSection';
+import { MediaCarousel } from './MediaCarousel';
+import { PulseTab, shouldShowPulseTab } from './PulseTab';
+import { InsightsTab } from './InsightsTab';
+import { showToast } from './GlobalOverlays';
+import { cn } from '../lib/utils';
 
 import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
-import { motion, useMotionValue, useAnimation, type PanInfo } from 'framer-motion';
+import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
     ArrowLeft,
     Download,
     Share2,
-    ChevronDown,
     X,
     Plus,
     Minus,
     Lock,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Copy,
+    Check
 } from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
@@ -66,6 +72,12 @@ interface PostDetailOverlayProps {
  */
 export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     const [isMobile, setIsMobile] = useState(false);
+
+    // Hydrate the store with the server-provided post data
+    useEffect(() => {
+        usePostStore.getState().addOrUpdatePosts([post]);
+    }, [post]);
+
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
@@ -73,12 +85,13 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    const { posts } = usePosts();
+    const posts = usePostStore(state => state.posts);
+    const displayPost = posts[post.id] || post;
     const nextPostId = useNavigationStore(state => state.getNextPostId(post.id));
     const prevPostId = useNavigationStore(state => state.getPrevPostId(post.id));
 
-    const nextPost = useMemo(() => posts.find(p => p.id === nextPostId), [nextPostId, posts]);
-    const prevPost = useMemo(() => posts.find(p => p.id === prevPostId), [prevPostId, posts]);
+    const nextPost = useMemo(() => nextPostId ? posts[nextPostId] : null, [nextPostId, posts]);
+    const prevPost = useMemo(() => prevPostId ? posts[prevPostId] : null, [prevPostId, posts]);
 
     const router = useRouter();
     const pageX = useMotionValue(0);
@@ -110,7 +123,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     useEffect(() => {
         controls.set({ x: 0 });
         pageX.set(0);
-    }, [post.id, controls, pageX]);
+    }, [displayPost.id, controls, pageX]);
 
     useEffect(() => {
         const unsubscribe = pageX.on("change", (v) => {
@@ -129,7 +142,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
     const [isSwipeDisabled, setIsSwipeDisabled] = useState(false);
 
     if (!isMobile) {
-        return <PostDetailCore post={post} onClose={onClose} />;
+        return <PostDetailCore post={displayPost} onClose={onClose} />;
     }
 
     return (
@@ -153,7 +166,7 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
 
                 {/* Current Post */}
                 <div className="w-screen shrink-0 relative z-10">
-                    <PostDetailCore post={post} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
+                    <PostDetailCore post={displayPost} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
                 </div>
 
                 {/* Next Post */}
@@ -172,20 +185,31 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
-    const { currentAvatar, allAvatars } = useAuth();
-    const { posts } = usePosts();
+    const { optimisticUpdateMetrics } = usePosts();
+    const badgeMap = usePostStore(state => state.badgeMap);
+    const hotPostIds = usePostStore(state => state.hotPostIds);
+    const posts = usePostStore(state => state.posts);
+    const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuth() as any;
     const now = useNow();
     const router = useRouter();
 
     const handleClose = onClose || (() => router.back());
 
     // Data State
+    const modeConfig = getReviewMode(post.category);
     const [dbReviews, setDbReviews] = useState<Review[]>([]);
     const [userReviews, setUserReviews] = useState<Review[]>([]);
-    const [metrics, setMetrics] = useState<PostMetrics | null>(null);
+    const [metrics, setMetrics] = useState<PostMetrics>({
+        post_id: post.id,
+        review_count: post.review_count || 0,
+        average_score: post.average_score || 0,
+        rating_unlocked: (post.review_count || 0) >= 3,
+        criteria_scores: post.criteria_scores || {},
+    });
 
     // UI State
     const [hasReviewed, setHasReviewed] = useState(false);
+    const headerOpacity = 1;
     const isFreshReviewRef = useRef(false);
     const successStarRef = useRef<SVGPathElement>(null);
     const successCheckRef = useRef<SVGPathElement>(null);
@@ -229,10 +253,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
     const [isFetchingReviews, setIsFetchingReviews] = useState(true);
     const [imageError, setImageError] = useState(false);
+    const [isAiPromptExpanded, setIsAiPromptExpanded] = useState(false);
+    const [aiPromptCopied, setAiPromptCopied] = useState(false);
 
     // External Metadata (Badges, Hot Status)
-    const { badgeMap } = useBadges(posts);
-    const { hotPostIds } = useHotPosts(posts);
     const badge = badgeMap[post.id];
     const isHot = hotPostIds.has(post.id);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
@@ -244,14 +268,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         setIsFetchingReviews(true);
 
         const loadData = async () => {
-            const [reviews, initialMetrics] = await Promise.all([
-                getReviewsByPostId(post.id),
-                calculatePostMetrics(post.id)
-            ]);
+            const reviews = await getReviewsByPostId(post.id);
 
             if (isMounted) {
                 setDbReviews(reviews);
-                setMetrics(initialMetrics);
                 setIsFetchingReviews(false);
             }
         };
@@ -282,11 +302,29 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
+    const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+    const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
     const [zoomScale, setZoomScale] = useState(1);
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
+
+    const displayMedia = useMemo(() => {
+        return post.media && post.media.length > 0 ? post.media : [{
+            id: post.id,
+            type: 'image' as const,
+            url: post.image_url,
+            public_id: '',
+            width: 1200,
+            height: 800,
+            aspect_ratio: 1.5,
+            format: 'jpg',
+            bytes: 0,
+            alt: post.title,
+            order: 0
+        }];
+    }, [post]);
 
     useEffect(() => {
         if (onDisableSwipe) {
@@ -294,16 +332,23 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         }
     }, [isImageFullscreen, isReportOpen, isShareOpen, onDisableSwipe]);
 
+    useEffect(() => {
+        if (isImageFullscreen || isReportOpen || isShareOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isImageFullscreen, isReportOpen, isShareOpen]);
+
     const imgRef = useRef<HTMLImageElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const lastTapRef = useRef(0);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
     const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
-    const [isReviewCountTooltipVisible, setIsReviewCountTooltipVisible] = useState(false);
-    const reviewCountTooltipRef = useRef<HTMLDivElement>(null);
-    const [isTopRatedTooltipVisible, setIsTopRatedTooltipVisible] = useState(false);
-    const topRatedTooltipRef = useRef<HTMLDivElement>(null);
 
     const ZOOM_IN_SCALE = 2.5;
 
@@ -388,11 +433,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     // Preload adjacent images
     useEffect(() => {
         if (nextPostId) {
-            const p = posts.find(p => p.id === nextPostId);
+            const p = posts[nextPostId];
             if (p?.image_url) new Image().src = p.image_url;
         }
         if (prevPostId) {
-            const p = posts.find(p => p.id === prevPostId);
+            const p = posts[prevPostId];
             if (p?.image_url) new Image().src = p.image_url;
         }
     }, [nextPostId, prevPostId, posts]);
@@ -413,7 +458,19 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     const sortedReviews = useMemo(() => {
         return [...allReviews].sort((a, b) => {
-            const getAvg = (r: Review) => (r.clarity + r.purpose + r.aesthetics) / 3;
+            const getAvg = (r: Review) => {
+                let sum = 0;
+                let count = 0;
+                modeConfig.criteria.forEach(c => {
+                    const val = r.ratings?.[c.dbKey];
+                    if (typeof val === 'number') {
+                        sum += val;
+                        count++;
+                    }
+                });
+                return count > 0 ? sum / count : 0;
+            };
+
             const getTime = (r: Review) => new Date(r.created_at).getTime();
 
             if (sortBy === 'Top') return getAvg(b) - getAvg(a);
@@ -422,13 +479,13 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             if (sortBy === 'Oldest') return getTime(a) - getTime(b);
             return 0;
         });
-    }, [allReviews, sortBy]);
+    }, [allReviews, sortBy, modeConfig]);
 
     const visibleReviews = sortedReviews.slice(0, visibleCount);
     const hasMoreReviews = visibleCount < sortedReviews.length;
     const remainingReviews = sortedReviews.length - visibleCount;
 
-    const handleReviewSubmit = async (ratings: any, comment: string, reviewer_name: string) => {
+    const handleReviewSubmit = async (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewer_name: string) => {
         if (currentAvatar && post.avatar_id === currentAvatar.id) return;
 
         const device_id = getDeviceId();
@@ -438,7 +495,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         );
 
         if (hasDuplicate || hasReviewedPost(post.id)) {
-            alert("You've already reviewed this post.");
+            showToast("You've already reviewed this post.", "error");
             return;
         }
 
@@ -452,19 +509,24 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             setRateLimitMessage(null);
         }
 
-        const newReview: Review = {
+        const newReview = {
             id: `r_new_${Date.now()}`,
             post_id: post.id,
-            clarity: ratings.clarity,
-            purpose: ratings.purpose,
-            aesthetics: ratings.aesthetics,
+            ratings: ratings,
             comment,
             reviewer_id: currentAvatar?.id,
-            reviewer_name: currentAvatar ? undefined : reviewer_name,
+            reviewer_name: currentAvatar ? currentAvatar.name : reviewer_name,
             created_at: new Date().toISOString(),
             device_id: device_id
-        };
+        } as Review;
 
+        // Snapshot state for rollback
+        const previousReviews = [...userReviews];
+        const previousHasReviewed = hasReviewed;
+        const previousTimestamps = localStorage.getItem(RATE_LIMIT_KEY);
+        const previousMetrics = metrics;
+
+        // Apply Optimistic State
         isFreshReviewRef.current = true;
         setUserReviews([newReview, ...userReviews]);
         setHasReviewed(true);
@@ -472,38 +534,45 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
         const updatedTimestamps = [...validTimestamps, Date.now()];
         localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
+
+        // Optimistically calculate new metrics and push to global context
+        try {
+            const newEstimatedMetrics = await calculatePostMetrics(post.id, [newReview, ...userReviews]);
+            optimisticUpdateMetrics(post.id, {
+                review_count: newEstimatedMetrics.review_count,
+                average_score: newEstimatedMetrics.average_score,
+                criteria_scores: newEstimatedMetrics.criteria_scores,
+            });
+
+            // Submit the review to the database
+            const result = await submitReview(newReview);
+            if (!result.ok) {
+                throw new Error(result.error);
+            }
+        } catch (err) {
+            console.error('Failed to submit review:', err);
+            // Rollback State
+            setUserReviews(previousReviews);
+            setHasReviewed(previousHasReviewed);
+            if (previousTimestamps) {
+                localStorage.setItem(RATE_LIMIT_KEY, previousTimestamps);
+            }
+            if (previousMetrics) {
+                optimisticUpdateMetrics(post.id, {
+                    review_count: previousMetrics.review_count,
+                    average_score: previousMetrics.average_score,
+                    criteria_scores: previousMetrics.criteria_scores,
+                });
+            }
+            showToast('Failed to submit review. Please try again.', "error");
+        }
     };
-
-    useEffect(() => {
-        if (!isReviewCountTooltipVisible && !isTopRatedTooltipVisible) return;
-
-        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
-            const target = e.target as Node;
-            if (isReviewCountTooltipVisible && reviewCountTooltipRef.current && !reviewCountTooltipRef.current.contains(target)) {
-                setIsReviewCountTooltipVisible(false);
-            }
-            if (isTopRatedTooltipVisible && topRatedTooltipRef.current && !topRatedTooltipRef.current.contains(target)) {
-                setIsTopRatedTooltipVisible(false);
-            }
-        };
-
-        const timer = setTimeout(() => {
-            document.addEventListener('mousedown', handleClickOutside);
-            document.addEventListener('touchstart', handleClickOutside);
-        }, 10);
-
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('touchstart', handleClickOutside);
-        };
-    }, [isReviewCountTooltipVisible, isTopRatedTooltipVisible]);
 
     const handleLoadMore = () => {
         setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
     };
 
-    const avatar = allAvatars[post.avatar_id];
+    const avatar = allAvatars[post.avatar_id] || post.author;
 
     return (
         <motion.div
@@ -517,6 +586,21 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                 {/* HEADER: Back Button & Navigation Controls */}
                 <div className="mb-8 flex items-center justify-between sticky top-0 bg-transparent pt-8 pb-2 z-50">
+                    {/* Gradient Blur Background Layer */}
+                    <div
+                        style={{
+                            position: 'absolute',
+                            top: '-32px',
+                            bottom: '-10px',
+                            left: '-24px',
+                            right: '-24px',
+                            opacity: headerOpacity,
+                            background: 'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 85%, rgba(255, 255, 255, 0) 100%)',
+                            zIndex: -1,
+                            pointerEvents: 'none',
+                            transition: 'opacity 0.1s ease-out'
+                        }}
+                    ></div>
                     <Button
                         variant="secondary"
                         onClick={handleClose}
@@ -550,38 +634,47 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </div>
 
                 {/* MAIN GRID */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20 relative">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-15 relative">
 
                     {/* LEFT COLUMN: Content */}
                     <div className="md:col-span-7 space-y-6">
 
                         {/* 1. Image Preview */}
                         <div
-                            className={`group relative w-full ${imageError ? 'aspect-video' : 'aspect-auto xs:aspect-video'} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                            className={`group relative w-full ${imageError ? 'aspect-video' : ''} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
                             onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
+                            onPointerDownCapture={(e) => {
+                                // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
+                                e.stopPropagation();
+                            }}
                         >
                             {imageError ? (
                                 <ImageFallback
                                     src={post.image_url}
                                     alt={post.title}
-                                    className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500"
+                                    className="w-full h-auto transition-transform duration-500"
                                     fallbackClassName="w-full h-full rounded-[24px]"
                                     onErrorChange={(err) => setImageError(err)}
                                 />
                             ) : (
-                                <>
-                                    <img
-                                        src={post.image_url}
-                                        alt={post.title}
-                                        className="w-full h-auto xs:h-full xs:object-cover transition-transform duration-500"
-                                        onError={() => setImageError(true)}
+                                <div className="w-full relative">
+                                    <MediaCarousel
+                                        media={displayMedia}
+                                        variant="detail"
+                                        className="w-full"
+                                        imageClassName="w-full h-auto transition-transform duration-500"
+                                        onErrorChange={(err) => setImageError(err)}
+                                        onImageClick={(index) => {
+                                            setFullscreenImageIndex(index);
+                                            if (!imageError) setIsImageFullscreen(true);
+                                        }}
                                     />
-                                    <div className="absolute inset-0 bg-transparent opacity-0 group-hover:opacity-100 duration-300 flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-transparent opacity-0 group-hover:opacity-100 duration-300 flex items-center justify-center pointer-events-none z-10">
                                         <span className="text-black font-semibold text-sm bg-white/80 px-4 py-2 rounded-full backdrop-blur-md">
                                             View Full Image
                                         </span>
                                     </div>
-                                </>
+                                </div>
                             )}
 
 
@@ -603,16 +696,22 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 <span className="text-[10px] font-semibold tracking-wider bg-transparent text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">
                                     {post.category}
                                 </span>
-                                {badge === 'top_rated_active' && (
-                                    <div
-                                        ref={topRatedTooltipRef}
-                                        className="relative group/toprated cursor-help"
-                                        onClick={() => setIsTopRatedTooltipVisible(!isTopRatedTooltipVisible)}
+                                {badge && (
+                                    <Tooltip
+                                        content={<p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>}
+                                        position="top"
+                                        align="center"
+                                        width="w-48"
+                                        contentStyle={{
+                                            background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
+                                            border: '2px solid transparent'
+                                        }}
                                     >
-                                        <span
-                                            className="text-[10px] font-bold uppercase tracking-wider text-black px-2.5 py-1 rounded-full flex items-center gap-1 border-2 border-transparent"
+                                        <div 
+                                            className="text-black text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 cursor-help"
                                             style={{
                                                 background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
+                                                border: '2px solid transparent'
                                             }}
                                         >
                                             <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
@@ -629,32 +728,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     className="relative z-10 w-full h-full"
                                                 />
                                             </div>
-                                            Top Rated
-                                        </span>
-
-                                        <div
-                                            className={`absolute bottom-full left-0 mb-3 w-48 p-3 bg-white border-2 border-transparent text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-                                    ${isTopRatedTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/toprated:opacity-100 md:group-hover/toprated:visible md:group-hover/toprated:translate-y-0'}`}
-                                            style={{
-                                                background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, #fec312, #ff4f6d, #c400d2, #7c3bed) border-box',
-                                            }}
-                                        >
-                                            <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
+                                            <span>Top Rated</span>
                                         </div>
-                                    </div>
-                                )}
-                                {badge === 'top_rated_previous' && (
-                                    <div
-                                        className="relative group/prevrated cursor-help"
-                                    >
-                                        <span className="px-3 py-1 bg-gray-50 rounded-full text-[10px] font-bold uppercase tracking-widest text-[#FEC312] border border-gray-200 flex items-center gap-1.5 transition-colors group-hover/prevrated:bg-gray-100">
-                                            <span className="opacity-70">🏆</span> Prev Top Rated
-                                        </span>
-                                        <div className="absolute bottom-full left-0 mb-3 w-64 p-4 bg-white border-2 border-gray-100 text-black text-[12px] rounded-2xl shadow-2xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/prevrated:opacity-100 group-hover/prevrated:visible group-hover/prevrated:translate-y-0 transition-all duration-200 hidden md:block z-50">
-                                            <p className="leading-relaxed text-center font-medium">This design was among the top rated in a previous period</p>
-                                            <div className="absolute top-full left-6 border-8 border-transparent border-t-white" />
-                                        </div>
-                                    </div>
+                                    </Tooltip>
                                 )}
                             </div>
                             <span
@@ -662,7 +738,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 title={getFullTimestamp(post.created_at)}
                             >
                                 {formatTimestamp(post.created_at, now)}
-                                {post.updated_at && new Date(post.updated_at).getTime() > new Date(post.created_at).getTime() && (
+                                {post.edited_at && (
                                     <>
                                         <span className="mx-1">•</span>
                                         <span>Edited</span>
@@ -676,12 +752,18 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             <h1 className="text-lg xs:text-xl font-semibold text-black leading-tight">
                                 {post.title}
                             </h1>
-                            <div
-                                ref={reviewCountTooltipRef}
-                                className="relative group/tooltip cursor-help shrink-0"
-                                onClick={() => setIsReviewCountTooltipVisible(!isReviewCountTooltipVisible)}
+                            <Tooltip
+                                content={
+                                    <p className="leading-relaxed text-center">
+                                        {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
+                                    </p>
+                                }
+                                position="top"
+                                align="end"
+                                width="w-[calc(100vw-3rem)] xs:w-64"
+                                triggerClassName="relative inline-flex items-center shrink-0"
                             >
-                                <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap">
+                                <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
                                     {isHot && (
                                         <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                             {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -700,32 +782,103 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     )}
                                     {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
                                 </span>
-
-                                <div className={`absolute bottom-full right-0 mb-3 w-[calc(100vw-3rem)] xs:w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none transform transition-all duration-200
-                            ${isReviewCountTooltipVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 md:group-hover/tooltip:opacity-100 md:group-hover/tooltip:visible md:group-hover/tooltip:translate-y-0'}`}
-                                >
-                                    <p className="leading-relaxed text-center">
-                                        {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
-                                    </p>
-                                </div>
-                            </div>
+                            </Tooltip>
                         </div>
 
                         {/* 4. Description */}
-                        <div>
-                            <p className={`text-sm text-gray-600 leading-relaxed transition-all duration-300 ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                        <div className="text-sm leading-relaxed text-gray-600">
+                            <span className={!isExpanded ? 'line-clamp-2' : ''}>
                                 {post.description}
-                            </p>
-                            {post.description.length > 160 && (
+                                {isExpanded && post.description.length > 100 && (
+                                    <button
+                                        onClick={() => setIsExpanded(false)}
+                                        className="font-semibold text-gray-800 hover:text-primary transition-colors ml-1"
+                                    >
+                                        Show less
+                                    </button>
+                                )}
+                            </span>
+                            {!isExpanded && post.description.length > 100 && (
                                 <button
-                                    onClick={() => setIsExpanded(!isExpanded)}
-                                    className="text-xs font-bold text-black mt-3 flex items-center gap-1.5 hover:text-[#FEC312] transition-colors uppercase tracking-widest group"
+                                    onClick={() => setIsExpanded(true)}
+                                    className="font-semibold text-gray-800 hover:text-primary transition-colors"
                                 >
-                                    <span>{isExpanded ? 'Show Less' : 'Read more'}</span>
-                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''} group-hover:translate-y-0.5`} />
+                                    Read more
                                 </button>
                             )}
                         </div>
+
+                        {/* AI Badge & Prompt */}
+                        {post.uses_ai && (
+                            <div className="flex flex-col gap-2 py-2">
+                                <button
+                                    onClick={() => post.ai_prompt && setIsAiPromptExpanded(!isAiPromptExpanded)}
+                                    className={cn(
+                                        "inline-flex self-start items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                                        post.ai_prompt ? "cursor-pointer hover:bg-gray-50 border-gray-200" : "cursor-default border-gray-100 bg-gray-50",
+                                        isAiPromptExpanded && "bg-gray-50 border-gray-200"
+                                    )}
+                                >
+                                    <svg 
+                                        width="14" 
+                                        height="14" 
+                                        viewBox="0 0 13.97 13.97" 
+                                        fill="none" 
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="w-3.5 h-3.5 shrink-0"
+                                    >
+                                        <defs>
+                                            <linearGradient id="rater-star-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                                <stop offset="0%" stopColor="#fec312" />
+                                                <stop offset="33%" stopColor="#ff4f6d" />
+                                                <stop offset="66%" stopColor="#c400d2" />
+                                                <stop offset="100%" stopColor="#7c3bed" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path 
+                                            d="M13.9697 6.98486C13.9697 7.43872 13.6035 7.80695 13.1476 7.80695C11.7244 7.80695 10.3809 8.3623 9.37354 9.37354C8.3623 10.3807 7.80701 11.7223 7.80701 13.1476C7.80701 13.6014 7.44067 13.9697 6.98486 13.9697C6.52905 13.9697 6.16284 13.6034 6.16284 13.1476C6.16284 10.2035 3.76611 7.80695 0.822144 7.80695C0.370361 7.80695 0 7.44067 0 6.98486C0 6.52899 0.370361 6.16272 0.822144 6.16272C3.76611 6.16272 6.16284 3.76611 6.16284 0.822083C6.16284 0.370239 6.53296 0 6.98486 0C7.43665 0 7.80701 0.370239 7.80701 0.822083C7.81885 3.77808 10.2135 6.16272 13.1476 6.16272C13.3687 6.16272 13.5756 6.24835 13.731 6.40363C13.8842 6.55688 13.9697 6.76587 13.9697 6.98486Z" 
+                                            fill="url(#rater-star-grad)" 
+                                        />
+                                    </svg>
+                                    <span className="text-gray-700">
+                                        AI-assisted • {post.ai_tool === 'other' || !post.ai_tool 
+                                            ? 'Custom Tool' 
+                                            : AI_TOOLS.find(t => t.id === post.ai_tool)?.label || post.ai_tool}
+                                    </span>
+                                </button>
+
+                                <AnimatePresence>
+                                    {isAiPromptExpanded && post.ai_prompt && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="mt-2 bg-gray-50 border border-gray-100 rounded-[16px] p-4 relative group">
+                                                <button
+                                                    onClick={() => {
+                                                        if (post.ai_prompt) {
+                                                            navigator.clipboard.writeText(post.ai_prompt);
+                                                            setAiPromptCopied(true);
+                                                            showToast("Prompt copied to clipboard.", "success");
+                                                            setTimeout(() => setAiPromptCopied(false), 2000);
+                                                        }
+                                                    }}
+                                                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 active:scale-95"
+                                                    title="Copy Prompt"
+                                                >
+                                                    {aiPromptCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                                                </button>
+                                                <p className="text-sm font-mono text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word pr-8">
+                                                    {post.ai_prompt}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
 
                         {/* 5. Avatar & Rating */}
                         <div className="flex items-center justify-between">
@@ -734,24 +887,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 scroll={false}
                                 className="flex items-center gap-3 group/author"
                             >
-                                <div className="w-10 h-10 rounded-full overflow-hidden ring-2 ring-transparent group-hover/author:ring-[#FEC312] transition-all flex items-center justify-center">
-                                    {avatar?.avatar_url ? (
-                                        <img
-                                            src={avatar.avatar_url}
-                                            className="w-full h-full object-cover group-hover/author:scale-110 transition-transform duration-300"
-                                            alt="Avatar"
-                                        />
-                                    ) : (
-                                        <div
-                                            className="w-full h-full flex items-center justify-center text-sm text-white font-bold"
-                                            style={{ backgroundColor: avatar?.bg_color || '#cccccc' }}
-                                        >
-                                            {(avatar?.name || 'Unknown').substring(0, 1).toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
+                                <UserAvatar 
+                                    avatarUrl={avatar?.avatar_url} 
+                                    className="w-10 h-10 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
+                                />
                                 <div className="text-left flex flex-col min-w-0">
-                                    <span className="block text-sm font-semibold text-black group-hover/author:text-[#FEC312] transition-colors truncate">{avatar?.name || 'Unknown'}</span>
+                                    <span className="block text-sm font-semibold text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
                                     <span className="block text-[10px] text-gray-400 font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
                                 </div>
                             </Link>
@@ -761,7 +902,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     <div className="relative group/lock cursor-help flex items-center gap-1.5 pl-2">
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
                                         <Lock className="w-4 h-4 text-gray-400 group-hover/lock:text-gray-500 transition-colors" />
-                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
+                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
                                             <p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>
                                         </div>
                                     </div>
@@ -796,9 +937,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         {isShareOpen && <SharePostOverlay onClose={() => setIsShareOpen(false)} post_id={post.id} />}
                     </div>
 
-                    {/* RIGHT COLUMN: Review Form */}
+                    {/* RIGHT COLUMN: Tabbed Rate / Pulse / Insights Hub */}
                     <div className="md:col-span-5 relative">
-                        <div className="sticky top-8">
+                        <div className="sticky top-24">
                             {rateLimitMessage && (
                                 <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-[24px] text-amber-700 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
                                     <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">⏳</div>
@@ -806,67 +947,159 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 </div>
                             )}
 
-                            {isSelfPost ? (
-                                <div className="bg-gray-50 p-12 rounded-[24px] text-center border-2 border-dashed border-gray-200">
-                                    <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
-                                    <h3 className="font-semibold text-xl mb-2 text-gray-700">Self-Review Locked</h3>
-                                    <p className="text-gray-500">You cannot review your own post.</p>
-                                </div>
-                            ) : !hasReviewed ? (
-                                <ReviewForm
-                                    onSubmit={handleReviewSubmit}
-                                    isLoggedIn={!!currentAvatar}
-                                    initialName={currentAvatar?.name}
-                                    postId={post.id}
-                                    userId={currentAvatar?.id}
-                                />
-                            ) : (
-                                <div className="bg-gray-50 p-12 rounded-[24px] text-center">
-                                    <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
-                                        <svg className="w-8 h-8 filter" viewBox="0 0 83 80">
-                                            <defs>
-                                                <linearGradient id="success-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                    <stop offset="0%" stopColor="#fec312" />
-                                                    <stop offset="33%" stopColor="#ff4f6d" />
-                                                    <stop offset="66%" stopColor="#c400d2" />
-                                                    <stop offset="100%" stopColor="#7c3bed" />
-                                                </linearGradient>
-                                            </defs>
-                                            <path
-                                                ref={successStarRef}
-                                                d="M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z"
-                                                fill="url(#success-star-grad)"
-                                                style={{
-                                                    opacity: isFreshReviewRef.current ? 0 : 1,
-                                                }}
-                                            />
-                                            <path
-                                                ref={successCheckRef}
-                                                d="M32 40 L40 48 L52 32"
-                                                stroke="white"
-                                                strokeWidth="5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                fill="none"
-                                                style={{
-                                                    opacity: isFreshReviewRef.current ? 0 : 1,
-                                                    strokeDasharray: isFreshReviewRef.current ? 35 : undefined,
-                                                    strokeDashoffset: isFreshReviewRef.current ? 35 : undefined,
-                                                }}
-                                            />
-                                        </svg>
+                            {/* Tab Bar */}
+                            {(() => {
+                                const showPulse = shouldShowPulseTab(post.id, isSelfPost);
+                                const tabs = [
+                                    { key: 'rate' as const, label: 'Rate' },
+                                    ...(showPulse ? [{ key: 'pulse' as const, label: 'Pulse' }] : []),
+                                    { key: 'insights' as const, label: 'Insights' },
+                                ];
+
+                                return (
+                                    <div className="bg-white border-2 border-gray-100 rounded-[24px]">
+                                        {/* Tabs */}
+                                        <div className="flex items-center border-b border-gray-100">
+                                            {tabs.map((tab) => (
+                                                <button
+                                                    key={tab.key}
+                                                    type="button"
+                                                    onClick={() => setActiveTab(tab.key)}
+                                                    className={`relative flex-1 py-3.5 text-[13px] font-semibold transition-colors duration-150 flex items-center justify-center gap-1.5 ${activeTab === tab.key
+                                                        ? 'text-black'
+                                                        : 'text-gray-400 hover:text-gray-600'
+                                                        }`}
+                                                >
+                                                    {tab.label}
+                                                    {(tab.key === 'pulse' || tab.key === 'insights') && (
+                                                        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider leading-none mt-px ${activeTab === tab.key
+                                                            ? 'bg-primary/20 text-[#D9A000]'
+                                                            : 'bg-gray-100 text-gray-500'
+                                                            }`}>
+                                                            Beta
+                                                        </span>
+                                                    )}
+                                                    {/* Active underline */}
+                                                    {activeTab === tab.key && (
+                                                        <motion.div
+                                                            layoutId="review-tab-underline"
+                                                            className="absolute bottom-0 left-3 right-3 h-[2px] bg-primary rounded-full"
+                                                            transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                                                        />
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Tab Content */}
+                                        <div className="p-5 xs:p-6">
+                                            <AnimatePresence mode="wait" initial={false}>
+                                                {activeTab === 'rate' && (
+                                                    <motion.div
+                                                        key="rate-tab"
+                                                        initial={{ opacity: 0, y: 6 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -6 }}
+                                                        transition={{ duration: 0.15 }}
+                                                    >
+                                                        {isSelfPost ? (
+                                                            <div className="bg-gray-50 p-12 rounded-[24px] text-center border-2 border-dashed border-gray-200">
+                                                                <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
+                                                                <h3 className="font-semibold text-lg mb-1 text-gray-700">Self-Review Locked</h3>
+                                                                <p className="text-sm text-gray-500">You cannot review your own post.</p>
+                                                            </div>
+                                                        ) : !hasReviewed ? (
+                                                            <ReviewForm
+                                                                onSubmit={handleReviewSubmit}
+                                                                isLoggedIn={!!currentAvatar}
+                                                                initialName={currentAvatar?.name}
+                                                                postId={post.id}
+                                                                userId={currentAvatar?.id}
+                                                                postCategory={post.category}
+                                                            />
+                                                        ) : (
+                                                            <div className="bg-gray-50 p-10 rounded-[24px] text-center">
+                                                                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
+                                                                    <svg className="w-7 h-7 filter" viewBox="0 0 83 80">
+                                                                        <defs>
+                                                                            <linearGradient id="success-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                                                <stop offset="0%" stopColor="#fec312" />
+                                                                                <stop offset="33%" stopColor="#ff4f6d" />
+                                                                                <stop offset="66%" stopColor="#c400d2" />
+                                                                                <stop offset="100%" stopColor="#7c3bed" />
+                                                                            </linearGradient>
+                                                                        </defs>
+                                                                        <path
+                                                                            ref={successStarRef}
+                                                                            d="M33.4429 5.87036C35.9789 -1.9568 47.0211 -1.95678 49.5571 5.87037L53.5461 18.1821C54.6803 21.6825 57.933 24.0525 61.6032 24.0525H74.5121C82.7188 24.0525 86.131 34.5838 79.4916 39.4213L69.0481 47.0303C66.0789 49.1937 64.8365 53.0284 65.9706 56.5288L69.9596 68.8405C72.4957 76.6677 63.5624 83.1764 56.923 78.3389L46.4796 70.7299C43.5103 68.5665 39.4897 68.5665 36.5204 70.7299L26.077 78.339C19.4376 83.1764 10.5043 76.6676 13.0404 68.8405L17.0294 56.5288C18.1635 53.0284 16.9211 49.1937 13.9519 47.0303L3.5084 39.4213C-3.131 34.5838 0.281216 24.0525 8.48797 24.0525H21.3968C25.067 24.0525 28.3197 21.6825 29.4539 18.1821L33.4429 5.87036Z"
+                                                                            fill="url(#success-star-grad)"
+                                                                            style={{
+                                                                                opacity: isFreshReviewRef.current ? 0 : 1,
+                                                                            }}
+                                                                        />
+                                                                        <path
+                                                                            ref={successCheckRef}
+                                                                            d="M32 40 L40 48 L52 32"
+                                                                            stroke="white"
+                                                                            strokeWidth="5"
+                                                                            strokeLinecap="round"
+                                                                            strokeLinejoin="round"
+                                                                            fill="none"
+                                                                            style={{
+                                                                                opacity: isFreshReviewRef.current ? 0 : 1,
+                                                                                strokeDasharray: isFreshReviewRef.current ? 35 : undefined,
+                                                                                strokeDashoffset: isFreshReviewRef.current ? 35 : undefined,
+                                                                            }}
+                                                                        />
+                                                                    </svg>
+                                                                </div>
+                                                                <h3 className="font-medium text-xl mb-2">Review added</h3>
+                                                                <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
+                                                            </div>
+                                                        )}
+                                                    </motion.div>
+                                                )}
+
+                                                {activeTab === 'pulse' && (
+                                                    <motion.div
+                                                        key="pulse-tab"
+                                                        initial={{ opacity: 0, y: 6 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -6 }}
+                                                        transition={{ duration: 0.15 }}
+                                                    >
+                                                        <PulseTab
+                                                            postId={post.id}
+                                                            isCreator={isSelfPost}
+                                                            creatorId={currentAvatar?.id}
+                                                            avatarId={currentAvatar?.id}
+                                                        />
+                                                    </motion.div>
+                                                )}
+
+                                                {activeTab === 'insights' && (
+                                                    <motion.div
+                                                        key="insights-tab"
+                                                        initial={{ opacity: 0, y: 6 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, y: -6 }}
+                                                        transition={{ duration: 0.15 }}
+                                                    >
+                                                        <InsightsTab reviews={allReviews} postCategory={post.category} postTitle={post.title} postDescription={post.description} postId={post.id} />
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
                                     </div>
-                                    <h3 className="font-medium text-xl mb-2">Review added</h3>
-                                    <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
-                                </div>
-                            )}
+                                );
+                            })()}
                         </div>
                     </div>
 
                 </div>
 
                 {/* BOTTOM SECTION: Reviews List */}
-                <div className="border-t border-gray-100 pt-8 xs:pt-12">
+                <div className="border-t border-gray-100 pt-8 xs:pt-15">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
                         <h2 className="text-xl font-semibold text-black shrink-0">Reviews ({allReviews.length})</h2>
 
@@ -877,7 +1110,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     type="button"
                                     onClick={() => setSortBy(option)}
                                     className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all duration-200 ${sortBy === option
-                                        ? "bg-[#FEC312]/10 border-[#FEC312]/40 text-black"
+                                        ? "bg-primary/10 border-primary/40 text-black"
                                         : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
                                         }`}
                                 >
@@ -887,7 +1120,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         </div>
                     </div>
 
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                         {isFetchingReviews ? (
                             <div className="py-20 text-center text-gray-400 font-medium"><AmbientLoadingText /></div>
                         ) : allReviews.length === 0 ? (
@@ -896,8 +1129,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 animate={{ opacity: 1, y: 0 }}
                                 className="py-20 px-8 text-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200"
                             >
-                                <div className="w-16 h-16 bg-[#FEC312]/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <Plus className="w-8 h-8 text-[#FEC312]" />
+                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Plus className="w-8 h-8 text-primary" />
                                 </div>
                                 <h3 className="text-xl font-semibold text-black mb-2">Be the first to rate this design</h3>
                                 <p className="text-gray-500 max-w-xs mx-auto text-[15px] leading-relaxed">
@@ -905,11 +1138,20 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 </p>
                             </motion.div>
                         ) : visibleReviews.map((review) => {
-                            const ratingAvg = (review.clarity + review.purpose + review.aesthetics) / 3;
+                            // Calculate dynamic rating average based on mode criteria
+                            let sum = 0;
+                            let count = 0;
+                            modeConfig.criteria.forEach(c => {
+                                const val = review.ratings?.[c.dbKey];
+                                if (typeof val === 'number') {
+                                    sum += val;
+                                    count++;
+                                }
+                            });
+                            const ratingAvg = count > 0 ? sum / count : 0;
+
                             const timeLabel = formatTimestamp(review.created_at, now);
                             const fullTime = getFullTimestamp(review.created_at);
-                            const isReviewEdited = review.updated_at &&
-                                new Date(review.updated_at).getTime() > new Date(review.created_at).getTime();
 
                             return (
                                 <motion.div
@@ -917,12 +1159,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     initial={{ opacity: 0, y: 16 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.35, ease: "easeOut" }}
-                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-8 flex flex-col xs:flex-row xs:items-center justify-between gap-4 xs:gap-8"
+                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4"
                                 >
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-full">
+                                        <div className="flex items-center gap-3 mb-3">
                                             <div
-                                                className={`w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-0 transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:ring-1 ring-[#FEC312]' : ''}`}
+                                                className={`transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer' : ''}`}
                                                 onClick={(e) => {
                                                     if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                         e.stopPropagation();
@@ -931,29 +1173,23 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 }}
                                             >
                                                 {review.reviewer_id && allAvatars[review.reviewer_id] ? (
-                                                    allAvatars[review.reviewer_id].avatar_url ? (
-                                                        <img src={allAvatars[review.reviewer_id].avatar_url} alt="" className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div
-                                                            className="w-full h-full flex items-center justify-center text-xs text-white font-bold"
-                                                            style={{ backgroundColor: allAvatars[review.reviewer_id].bg_color || '#cccccc' }}
-                                                        >
-                                                            {allAvatars[review.reviewer_id].name.substring(0, 1).toUpperCase()}
-                                                        </div>
-                                                    )
+                                                    <UserAvatar 
+                                                        avatarUrl={allAvatars[review.reviewer_id].avatar_url} 
+                                                        className="w-8 h-8 hover:ring-1 ring-primary transition-all"
+                                                        iconClassName="w-3/4 h-3/4"
+                                                    />
                                                 ) : (
-                                                    <div
-                                                        className="w-full h-full flex items-center justify-center text-xs text-white font-bold"
-                                                        style={{ backgroundColor: '#cccccc' }}
-                                                    >
-                                                        {(review.reviewer_name || 'Anonymous').substring(0, 1).toUpperCase()}
-                                                    </div>
+                                                    <UserAvatar 
+                                                        avatarUrl={null} 
+                                                        className="w-8 h-8"
+                                                        iconClassName="w-3/4 h-3/4"
+                                                    />
                                                 )}
                                             </div>
                                             <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span
-                                                        className={`font-medium text-base text-black truncate max-w-[150px] xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-[#FEC312]' : ''}`}
+                                                        className={`font-medium text-base text-black truncate max-w-[150px] xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
                                                         onClick={(e) => {
                                                             if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                                 e.stopPropagation();
@@ -969,10 +1205,13 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="flex gap-0.5">
-                                                    {[1, 2, 3, 4, 5].map(i => (
-                                                        <img key={i} src={i <= Math.floor(ratingAvg) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"} className="w-3.5 h-3.5" alt="" />
-                                                    ))}
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className="flex gap-0.5">
+                                                        <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
+                                                    </div>
+                                                    <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
+                                                        {ratingAvg.toFixed(1)}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <span
@@ -980,54 +1219,33 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 title={fullTime}
                                             >
                                                 {timeLabel}
-                                                {isReviewEdited && (
-                                                    <>
-                                                        <span className="mx-1">•</span>
-                                                        <span>Edited</span>
-                                                    </>
-                                                )}
                                             </span>
                                         </div>
 
-                                        {review.comment && <p className="text-sm text-black leading-relaxed mb-6">{review.comment}</p>}
+                                        {review.comment && <p className="text-sm text-black leading-relaxed mb-4">{review.comment}</p>}
 
-                                        <div className="flex items-center justify-between gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100">
-                                            <div className="flex flex-wrap gap-3 xs:gap-6">
-                                                <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Clarity">
-                                                    <img src="https://img.icons8.com/external-creatype-blue-field-colourcreatype/100/external-clarity-tools-design-creatype-blue-field-colourcreatype.png" alt="Clarity" className="w-5 h-5 object-contain" />
-                                                    {review.clarity}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Purpose">
-                                                    <img src="https://img.icons8.com/color/96/goal--v1.png" alt="Purpose" className="w-5 h-5 object-contain" />
-                                                    {review.purpose}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 text-md font-semibold text-black" title="Aesthetics">
-                                                    <img src="https://img.icons8.com/color/96/color-palette.png" alt="Aesthetics" className="w-5 h-5 object-contain" />
-                                                    {review.aesthetics}
-                                                </div>
-                                            </div>
-
-
-                                            <div className="text-right shrink-0 xs:hidden">
-                                                <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                                <div className="text-lg font-semibold md:font-bold text-black">{ratingAvg.toFixed(1)}/5.0</div>
+                                        <div className="flex items-center gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100 mt-2">
+                                            <div className="flex flex-wrap gap-3 xs:gap-4">
+                                                {modeConfig.criteria.map(c => (
+                                                    <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
+                                                        <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
+                                                        {review.ratings?.[c.dbKey] || '-'}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="hidden xs:block text-right shrink-0">
-                                        <div className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-0.5">Total Rating</div>
-                                        <div className="text-xl font-semibold text-black">{ratingAvg.toFixed(1)}/5.0</div>
                                     </div>
                                 </motion.div>
                             );
                         })}
                     </div>
 
+
                     {hasMoreReviews && (
-                        <div className="flex justify-center mt-10">
+                        <div className="flex justify-center mt-8">
                             <Button variant='ghost' onClick={handleLoadMore} className="group relative px-8 py-3.5 bg-transparent text-sm font-medium transition-all duration-200 flex items-center gap-2">
                                 Load More
-                                <span className="text-xs font-medium">({Math.min(REVIEWS_PER_PAGE, remainingReviews)} of {remainingReviews} remaining)</span>
+                                <span className="text-xs font-medium">({remainingReviews} remaining)</span>
                             </Button>
                         </div>
                     )}
@@ -1037,15 +1255,34 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </div>
 
                 {/* RELATED DESIGNS SECTION */}
-                <MoreLikeThisSection currentPost={post} />
+                <RelatedSection currentPost={post} />
             </div>
 
             {/* Fullscreen Image Overlay */}
-            {isImageFullscreen && (
+            {isImageFullscreen && typeof document !== 'undefined' && createPortal(
+                <>
+                {displayMedia.length > 1 && (
+                    <div style={{ display: 'none' }}>
+                        <span ref={() => {
+                            // Inline keyboard listener setup to avoid finding the top of the component
+                            window.onkeydown = (e) => {
+                                if (!isImageFullscreen) return;
+                                if (e.key === 'ArrowRight' && fullscreenImageIndex < displayMedia.length - 1) {
+                                    setFullscreenImageIndex(prev => prev + 1);
+                                    setZoomScale(1);
+                                }
+                                if (e.key === 'ArrowLeft' && fullscreenImageIndex > 0) {
+                                    setFullscreenImageIndex(prev => prev - 1);
+                                    setZoomScale(1);
+                                }
+                            };
+                        }} />
+                    </div>
+                )}
                 <div
                     ref={containerRef}
-                    className="fixed inset-0 z-60 flex items-center justify-center p-4 overflow-hidden"
-                    onPointerDown={(e) => {
+                    className="fixed inset-0 z-100 flex items-center justify-center p-4 overflow-hidden"
+                    onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setIsImageFullscreen(false);
                             setZoomScale(1);
@@ -1054,21 +1291,22 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 >
                     <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 pointer-events-none" />
                     <div className="absolute bottom-6 left-6 md:top-4 md:right-4 md:bottom-auto md:left-auto flex md:flex-col flex-row gap-4 z-50 pointer-events-auto">
-                        <button className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full items-center justify-center text-white transition-all hover:scale-105 active:scale-95 hidden md:flex" onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); setZoomScale(1); }}>
+                        <button className="w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all hover:scale-105 active:scale-95" onClick={(e) => { e.stopPropagation(); setIsImageFullscreen(false); setZoomScale(1); }}>
                             <X className="w-6 h-6" />
                         </button>
                         <button onClick={async (e) => {
                             e.stopPropagation();
+                            const currentUrl = displayMedia[fullscreenImageIndex]?.url || post.image_url;
                             try {
-                                const response = await fetch(post.image_url);
+                                const response = await fetch(currentUrl);
                                 const blob = await response.blob();
                                 const url = window.URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 link.href = url;
-                                link.download = `${post.title.replace(/\s+/g, '_')}.jpg`;
+                                link.download = `${post.title.replace(/\s+/g, '_')}_${fullscreenImageIndex + 1}.jpg`;
                                 document.body.appendChild(link); link.click();
                                 document.body.removeChild(link); window.URL.revokeObjectURL(url);
-                            } catch (err) { window.open(post.image_url, '_blank'); }
+                            } catch (err) { window.open(currentUrl, '_blank'); }
                         }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"><Download className="w-5 h-5 text-black" /></button>
                         <button onClick={async (e) => {
                             e.stopPropagation();
@@ -1080,27 +1318,79 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         <button onClick={(e) => { e.stopPropagation(); setZoomScale(ZOOM_IN_SCALE); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale >= ZOOM_IN_SCALE ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale >= ZOOM_IN_SCALE}><Plus className="w-6 h-6 text-black" /></button>
                         <button onClick={(e) => { e.stopPropagation(); setZoomScale(1); }} className={`w-12 h-12 bg-white/95 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 ${zoomScale <= 1 ? 'opacity-50 cursor-not-allowed' : ''}`} disabled={zoomScale <= 1}><Minus className="w-6 h-6 text-black" /></button>
                     </div>
-                    <motion.img
-                        ref={imgRef}
-                        src={post.image_url}
-                        className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
-                        style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
-                        whileDrag={{ cursor: 'grabbing' }}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: zoomScale }}
-                        transition={{ duration: 0.25, ease: "easeOut" }}
-                        drag={zoomScale > 1}
-                        dragConstraints={dragConstraints}
-                        dragMomentum={false}
-                        dragElastic={0}
-                        onLoad={() => updateConstraints(zoomScale)}
-                        onPointerDown={() => {
-                            const now = Date.now();
-                            if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
-                            else { lastTapRef.current = now; }
-                        }}
-                    />
+
+                    {/* Navigation Controls */}
+                    {displayMedia.length > 1 && (
+                        <div className="absolute top-12 md:top-auto md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50 pointer-events-auto">
+                            {fullscreenImageIndex > 0 ? (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setFullscreenImageIndex(prev => prev - 1); setZoomScale(1); }}
+                                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <ChevronLeft className="w-6 h-6 text-black" />
+                                </button>
+                            ) : (
+                                <div className="w-12 h-12" />
+                            )}
+                            
+                            <div className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium tracking-wide">
+                                {fullscreenImageIndex + 1} / {displayMedia.length}
+                            </div>
+
+                            {fullscreenImageIndex < displayMedia.length - 1 ? (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setFullscreenImageIndex(prev => prev + 1); setZoomScale(1); }}
+                                    className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-105 active:scale-95"
+                                >
+                                    <ChevronRight className="w-6 h-6 text-black" />
+                                </button>
+                            ) : (
+                                <div className="w-12 h-12" />
+                            )}
+                        </div>
+                    )}
+                    {(() => {
+                      const currentFullscreenItem = displayMedia[fullscreenImageIndex];
+                      const currentFullscreenRawUrl = currentFullscreenItem?.url || post.image_url;
+                      const currentFullscreenPublicId = currentFullscreenItem?.public_id || (currentFullscreenRawUrl ? extractPublicId(currentFullscreenRawUrl) : null);
+                      const fullscreenOptimizedSet = currentFullscreenPublicId ? generateResponsiveUrls(currentFullscreenPublicId) : null;
+                      return (
+                        <motion.img
+                            ref={imgRef}
+                            src={fullscreenOptimizedSet?.src || currentFullscreenRawUrl}
+                            srcSet={fullscreenOptimizedSet?.srcSet}
+                            sizes="100vw"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
+                            style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
+                            whileDrag={{ cursor: 'grabbing' }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: zoomScale }}
+                            transition={{ duration: 0.25, ease: "easeOut" }}
+                            drag={zoomScale > 1 ? true : (displayMedia.length > 1 ? "x" : false)}
+                            dragConstraints={zoomScale > 1 ? dragConstraints : { left: 0, right: 0 }}
+                            dragMomentum={false}
+                            dragElastic={zoomScale > 1 ? 0 : 0.5}
+                            onDragEnd={(_e, info) => {
+                                if (zoomScale === 1 && displayMedia.length > 1) {
+                                    if (info.offset.x < -50 && fullscreenImageIndex < displayMedia.length - 1) {
+                                        setFullscreenImageIndex(prev => prev + 1);
+                                    } else if (info.offset.x > 50 && fullscreenImageIndex > 0) {
+                                        setFullscreenImageIndex(prev => prev - 1);
+                                    }
+                                }
+                            }}
+                            onLoad={() => updateConstraints(zoomScale)}
+                            onPointerDown={() => {
+                                const now = Date.now();
+                                if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
+                                else { lastTapRef.current = now; }
+                            }}
+                        />
+                      );
+                    })()}
                 </div>
+                </>,
+                document.body
             )}
         </motion.div>
     );

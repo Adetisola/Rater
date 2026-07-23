@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 // The minimum ideal width a column should be before the grid considers adding a new one.
 // Decreasing this fits MORE columns on smaller screens, increasing it creates WIDER cards.
-const MIN_COLUMN_WIDTH = 260;
+const MIN_COLUMN_WIDTH = 210;
 const GAP = 16; // 1rem (gap-4 equivalent)
 
 export function useMasonryColumns() {

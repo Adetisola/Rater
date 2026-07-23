@@ -1,7 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');/* font-display: swap is handled via the &display=swap param above */
 
 @import "tailwindcss";
-@config "../../tailwind.config.js";
+
+@theme {
+  --font-sans: 'Poppins', sans-serif;
+  --color-primary: #FEC312;
+  --color-brand: #7C3BED;
+  --color-surface: #EBEBEB;
+  --color-muted: #999999;
+  --breakpoint-xs: 426px;
+}
+
 
 @layer base {
   body {
@@ -27,6 +36,20 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
+}
+
+@layer components {
+  /* Legal Markdown Styles */
+  .markdown-content h1 { @apply text-2xl font-bold text-black mb-6 mt-8 first:mt-0; }
+  .markdown-content h2 { @apply text-xl font-semibold text-black mb-4 mt-8; }
+  .markdown-content h3 { @apply text-lg font-medium text-black mb-3 mt-6; }
+  .markdown-content p { @apply mb-4 leading-relaxed; }
+  .markdown-content ul { @apply list-disc pl-5 mb-4 space-y-2; }
+  .markdown-content ol { @apply list-decimal pl-5 mb-4 space-y-2; }
+  .markdown-content li::marker { @apply text-gray-400; }
+  .markdown-content a { @apply text-primary hover:underline font-medium transition-colors; }
+  .markdown-content strong { @apply text-black font-semibold; }
+  .markdown-content hr { @apply my-8 border-gray-100; }
 }
 
 /* ── Shimmer sweep effect ─────────────────────────────────────── */

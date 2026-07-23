@@ -7,7 +7,7 @@ import { Trash2, X } from 'lucide-react';
 import { usePosts } from '../context/PostContext';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { showUndoToast } from './GlobalOverlays';
+import { showUndoToast, showToast } from './GlobalOverlays';
 
 /**
  * Props for the DeletePostOverlay component.
@@ -44,22 +44,26 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
 
   if (!mounted) return null;
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!postId) return;
-    setIsDeleting(true);
-    const success = await deletePost(postId);
-    if (success) {
-      // If we are on the post detail page, redirect to browse
-      if (pathname.includes(`/post/${postId}`)) {
-        window.dispatchEvent(new Event('app-navigation-start'));
-        router.push('/browse', { scroll: false });
-      }
-      onClose();
-      showUndoToast(postId);
-    } else {
-      setIsDeleting(false);
-      alert("Failed to delete post.");
+    
+    // Optimistically close modal and show toast immediately
+    const id = postId;
+    onClose();
+    showUndoToast(id);
+    
+    // Redirect if on detail page
+    if (pathname.includes(`/post/${id}`)) {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.push('/browse', { scroll: false });
     }
+
+    // Fire and forget the background deletion
+    deletePost(id).then(success => {
+      if (!success) {
+        showToast('Failed to delete post', 'error');
+      }
+    });
   };
 
   return createPortal(

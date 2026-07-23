@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 const heroVisual = '/assets/landing/hero/hero-visual.png';
 const heroBg = '/assets/landing/hero/hero-bg.svg';
 import { AnimatedScribble } from '../../../components/AnimatedScribble';
+import { AuthOverlay } from '../../../components/AuthOverlay';
 
 interface HeroProps {
   onReady?: () => void;
@@ -24,6 +25,10 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
   // Track image loading to prevent animation-before-layout-stable glitch
   const [bgLoaded, setBgLoaded] = useState(false);
   const [visualLoaded, setVisualLoaded] = useState(false);
+
+  // Auth Overlay State
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   
   // If parent controls animation, wait for it, otherwise use local loading state
   const isReady = animationReady !== undefined ? animationReady : (bgLoaded && visualLoaded);
@@ -89,7 +94,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               href="#what-is-rater"
               onClick={() => onSectionClick?.('what-is-rater')}
               className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
-                activeSection === 'what-is-rater' ? 'text-[#FEC312]' : 'text-black hover:text-[#FEC312]'
+                activeSection === 'what-is-rater' ? 'text-primary' : 'text-black hover:text-primary'
               }`}
             >
               What is Rater
@@ -100,7 +105,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               href="#what-changes"
               onClick={() => onSectionClick?.('what-changes')}
               className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
-                activeSection === 'what-changes' ? 'text-[#FEC312]' : 'text-black hover:text-[#FEC312]'
+                activeSection === 'what-changes' ? 'text-primary' : 'text-black hover:text-primary'
               }`}
             >
               What Changes
@@ -111,7 +116,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               href="#how-it-works"
               onClick={() => onSectionClick?.('how-it-works')}
               className={`text-[15px] font-medium transition-colors whitespace-nowrap ${
-                activeSection === 'how-it-works' ? 'text-[#FEC312]' : 'text-black hover:text-[#FEC312]'
+                activeSection === 'how-it-works' ? 'text-primary' : 'text-black hover:text-primary'
               }`}
             >
               How it works
@@ -119,7 +124,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
 
             {/* Single moving dot */}
             <span
-              className="absolute -bottom-[14px] h-2 w-2 rounded-full bg-[#FEC312] pointer-events-none"
+              className="absolute -bottom-[14px] h-2 w-2 rounded-full bg-primary pointer-events-none"
               style={{
                 left: dotStyle.left,
                 opacity: dotStyle.opacity,
@@ -128,14 +133,20 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             />
           </div>
 
-          {/* Right Side: CTA Button */}
-          <div className="flex-1 flex justify-end">
-            <Link 
-              href="/browse"
-              className="px-5 py-1.5 rounded-full border-2 border-[#FEC312] text-[15px] font-medium text-black hover:bg-[#FEC312] hover:text-white transition-all duration-300"
+          {/* Right Side: CTA Buttons */}
+          <div className="flex-1 flex justify-end items-center gap-5">
+            <button 
+              onClick={() => { setAuthTab('login'); setShowAuthOverlay(true); }}
+              className="text-[15px] font-medium text-black hover:text-primary transition-colors"
             >
-              Enter Rater
-            </Link>
+              Login
+            </button>
+            <button 
+              onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
+              className="px-5 py-1.5 rounded-full border-2 border-primary text-[15px] font-medium text-black hover:bg-primary hover:text-white transition-all duration-300"
+            >
+              Sign Up
+            </button>
           </div>
         </div>
       </nav>
@@ -166,7 +177,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             initial={{ opacity: 0, y: 40 }}
             animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[70%] sm:h-[95%] md:h-[90%] w-auto max-w-none"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[80%] md:h-[75%] w-auto max-w-none"
             style={{ willChange: 'transform, opacity' }}
             onLoad={onVisualLoad}
           />
@@ -181,6 +192,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               style={{ willChange: 'transform, opacity' }}
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-black text-center leading-tight tracking-tight px-4 w-full"
             >
+              <span className="block text-gray-800 uppercase tracking-widest text-sm md:text-base font-extrabold mb-3 md:mb-4">Rater</span>
               <span className="block sm:inline">Judgment is built, </span>
               <span className="block sm:inline">
                 not{' '}
@@ -195,15 +207,15 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             </motion.h1>
 
             {/* Subheadline */}
-            <motion.p 
+            <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               style={{ willChange: 'transform, opacity' }}
-              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0"
+              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0 font-normal"
             >
-              Rater helps designers train their eye by actively evaluating real design work.
-            </motion.p>
+              Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.
+            </motion.h2>
 
             {/* CTA Buttons */}
             <motion.div 
@@ -214,17 +226,17 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               className="mt-10 sm:mt-8 md:mt-6 xl:mt-8 flex items-center justify-center gap-5 sm:gap-4 md:gap-5 xl:gap-6 w-full pointer-events-auto"
             >
               {/* Primary CTA */}
-              <Link 
-                href="/browse"
-                className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-[#FEC312] text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-white hover:bg-[#e6b00f] transition-all duration-300"
+              <button 
+                onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
+                className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-primary text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-white hover:bg-[#e6b00f] transition-all duration-300"
               >
-                Enter Rater
-              </Link>
+                Try it Now
+              </button>
 
               {/* Secondary CTA */}
               <a 
                 href="#how-it-works"
-                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-black hover:text-[#FEC312] transition-colors"
+                className="text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-black hover:text-primary transition-colors"
               >
                 How it works
               </a>
@@ -244,6 +256,14 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
 
       </div>
       </section>
+
+      {showAuthOverlay && (
+        <AuthOverlay 
+          initialTab={authTab} 
+          onClose={() => setShowAuthOverlay(false)} 
+          redirectOnSuccess={true}
+        />
+      )}
     </>
   );
 }

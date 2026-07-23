@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { PostMetrics } from '@/types';
-import { calculatePostMetrics } from '../logic/mockData';
+import { getPostMetrics } from '@/lib/metrics';
 
 /**
  * Hook to fetch metrics for a post.
@@ -17,7 +17,7 @@ export function usePostMetrics(postId: string) {
     let isMounted = true;
     setLoading(true);
 
-    calculatePostMetrics(postId)
+    getPostMetrics(postId)
       .then(data => {
         if (isMounted) {
           setMetrics(data);

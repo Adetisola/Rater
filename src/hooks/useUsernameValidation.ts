@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { RESERVED_ROUTES } from '../lib/constants';
+import { RESERVED_ROUTES, RESERVED_PREFIXES } from '../lib/constants';
 
 /**
  * Represents the possible states of a username validation request.
@@ -30,7 +30,7 @@ export interface UsernameValidationResult {
   suggestions: string[];
 }
 
-const USERNAME_REGEX = /^[a-z0-9_]{3,20}$/;
+const USERNAME_REGEX = /^[a-z0-9_.]{3,20}$/;
 const COOLDOWN_DAYS = 14;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
 
@@ -54,7 +54,7 @@ function generateSuggestions(base: string): string[] {
     `${safeBase}_`,                        // timmy_
     `the_${safeBase}`,                      // the_timmy
     `${safeBase}_vibe`                      // timmy_vibe
-  ].filter(s => /^[a-z0-9_]{3,20}$/.test(s));
+  ].filter(s => /^[a-z0-9_.]{3,20}$/.test(s) && !RESERVED_PREFIXES.some(prefix => s.startsWith(prefix)));
 }
 
 /**
@@ -90,10 +90,19 @@ export function useUsernameValidation({
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestInput = useRef(input);
+  const checkAvailabilityRef = useRef(checkAvailability);
+
+  // Keep ref synced with the latest function without triggering re-renders
+  useEffect(() => {
+    checkAvailabilityRef.current = checkAvailability;
+  }, [checkAvailability]);
 
   const validate = useCallback(
     async (value: string) => {
       const normalized = value.toLowerCase().trim();
+      
+      // Always track the latest validation request to prevent stale async responses
+      latestInput.current = normalized;
 
       // Unchanged  
       if (normalized === currentUsername.toLowerCase()) {
@@ -103,12 +112,22 @@ export function useUsernameValidation({
 
       // Format check first (synchronous)
       if (!USERNAME_REGEX.test(normalized)) {
-        let message = 'Username must be 3–20 characters using only a–z, 0–9, and _.';
+        let message = 'Username must be 3–20 characters using only a–z, 0–9, _, and .';
         if (value.includes(' ')) message = 'No spaces allowed.';
         else if (/[A-Z]/.test(value)) message = 'Lowercase letters only.';
         else if (value.length < 3) message = 'At least 3 characters required.';
         else if (value.length > 20) message = 'Maximum 20 characters.';
         setResult({ status: 'invalid_format', message, suggestions: [] });
+        return;
+      }
+
+      // Reserved prefixes check (synchronous)
+      if (RESERVED_PREFIXES.some(prefix => normalized.startsWith(prefix))) {
+        setResult({
+          status: 'taken',
+          message: 'This username prefix is reserved.',
+          suggestions: generateSuggestions(normalized.replace(/^([a-z]+_)/, '') || 'user')
+        });
         return;
       }
 
@@ -141,7 +160,7 @@ export function useUsernameValidation({
       // Async uniqueness check
       setResult({ status: 'checking', message: 'Checking availability...', suggestions: [] });
       try {
-        const isAvailable = await checkAvailability(normalized);
+        const isAvailable = await checkAvailabilityRef.current(normalized);
         // Guard stale async response
         if (latestInput.current.toLowerCase().trim() !== normalized) return;
         if (isAvailable) {
@@ -157,16 +176,17 @@ export function useUsernameValidation({
         setResult({ status: 'idle', message: 'Could not check availability.', suggestions: [] });
       }
     },
-    [currentUsername, username_last_changed_at, checkAvailability]
+    [currentUsername, username_last_changed_at]
   );
 
   const handleChange = useCallback(
     (value: string) => {
-      setInput(value);
-      latestInput.current = value;
+      const lowercasedValue = value.toLowerCase();
+      setInput(lowercasedValue);
+      latestInput.current = lowercasedValue;
 
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => validate(value), debounceMs);
+      debounceTimer.current = setTimeout(() => validate(lowercasedValue), debounceMs);
     },
     [validate, debounceMs]
   );

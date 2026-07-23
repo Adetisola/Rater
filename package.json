@@ -3,16 +3,25 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.x"
+  },
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint ."
   },
   "dependencies": {
+    "@cloudinary/url-gen": "^1.22.0",
     "@lottiefiles/dotlottie-react": "^0.18.10",
+    "@radix-ui/react-tooltip": "^1.2.12",
+    "@supabase/ssr": "^0.12.3",
+    "@supabase/supabase-js": "^2.110.1",
     "@tailwindcss/postcss": "^4.1.18",
+    "algoliasearch": "^5.56.0",
     "clsx": "^2.1.1",
+    "date-fns": "^4.4.0",
     "framer-motion": "^12.25.0",
     "fuse.js": "^7.1.0",
     "gsap": "^3.15.0",
@@ -21,6 +30,8 @@
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "swr": "^2.4.2",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.13"
   },
@@ -34,6 +45,7 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "autoprefixer": "^10.4.23",
+    "cloudinary": "^2.10.0",
     "eslint": "^9.39.1",
     "eslint-config-next": "^15.4.0",
     "eslint-plugin-react-hooks": "^7.0.1",

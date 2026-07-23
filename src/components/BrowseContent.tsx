@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
 import type { Post, Avatar } from '@/types';
-// TODO(backend): Replace mock data imports with Supabase queries
-import { MOCK_AVATARS, CATEGORIES, calculatePostMetrics } from '@/logic/mockData';
+import { CATEGORIES } from '@/constants/categories';
+
+import { buildSearchIndexes, searchPosts } from '@/lib/algolia/search';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
-import { createSearchIndexes, searchPosts } from '@/logic/searchUtils';
-import { useBadges } from '@/hooks/useBadges';
-import { useHotPosts } from '@/hooks/useHotPosts';
 import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { usePosts } from '@/context/PostContext';
+import { getFeedPosts } from '@/lib/posts';
+import { usePostStore } from '@/store/postStore';
+import useSWR from 'swr';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -25,26 +25,171 @@ const SORT_LABELS: Record<string, string> = {
 };
 
 
-export default function BrowseContent() {
+const EMPTY_ARRAY: Post[] = [];
+
+export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialPosts?: Post[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { currentAvatar } = useAuth();
-  const { posts: allPosts } = usePosts();
+  const { currentProfile, profileMap } = useAuth();
+  
+  // Data State
+  const [localRecentUpload, setLocalRecentUpload] = useState<string | null>(
+    usePostStore.getState().newlyUploadedPostId
+  );
+  
+  // Sync from store in case Next.js router cache restores the component without remounting
+  useEffect(() => {
+    const recentId = usePostStore.getState().newlyUploadedPostId;
+    if (recentId && recentId !== localRecentUpload) {
+      setLocalRecentUpload(recentId);
+    }
+    const unsub = usePostStore.subscribe((state) => {
+      if (state.newlyUploadedPostId && state.newlyUploadedPostId !== localRecentUpload) {
+        setLocalRecentUpload(state.newlyUploadedPostId);
+      }
+    });
+    return unsub;
+  }, [localRecentUpload]);
+  
+  const fetchLimit = 12;
+  const initialHasMore = initialPosts.length > fetchLimit;
+  const displayPosts = useMemo(() => {
+    return initialHasMore ? initialPosts.slice(0, fetchLimit) : initialPosts;
+  }, [initialPosts, initialHasMore]);
+  
+  const [feedPostIds, setFeedPostIds] = useState<string[]>(() => {
+    let ids = displayPosts.map(p => p.id);
+    if (localRecentUpload && !ids.includes(localRecentUpload)) {
+      ids = [localRecentUpload, ...ids];
+    }
+    return ids.length > 0 ? ids : (localRecentUpload ? [localRecentUpload] : []);
+  });
+  
+  // Also sync feedPostIds if localRecentUpload changes later due to cache restore
+  useEffect(() => {
+    if (localRecentUpload && !feedPostIds.includes(localRecentUpload)) {
+      setFeedPostIds(prev => [localRecentUpload, ...prev]);
+    }
+  }, [localRecentUpload, feedPostIds]);
+
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isFetchingPage, setIsFetchingPage] = useState(displayPosts.length === 0);
+
+  // Hydrate Zustand store on mount (client-side)
+  useEffect(() => {
+    if (displayPosts.length > 0) {
+      usePostStore.getState().addOrUpdatePosts(displayPosts);
+    }
+  }, [displayPosts]);
+
+  // Client-side fallback fetch (only if SSR didn't provide posts)
+  const { data: swrPosts, isValidating } = useSWR(
+    initialPosts.length > 0 ? null : 'feed_posts_page_1',
+    () => getFeedPosts({ limit: 13 }),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 60000,
+    }
+  );
+
+  useEffect(() => {
+    if (initialPosts.length === 0 && isValidating && feedPostIds.length === 0) {
+      setIsFetchingPage(true);
+    }
+  }, [initialPosts.length, isValidating, feedPostIds.length]);
+
+  useEffect(() => {
+    if (swrPosts) {
+      setIsProcessing(true); // Prevent "Nothing is here" flicker before the sort effect runs
+      const hasMorePosts = swrPosts.length === 13;
+      const actualPosts = hasMorePosts ? swrPosts.slice(0, 12) : swrPosts;
+      
+      usePostStore.getState().addOrUpdatePosts(actualPosts);
+      let ids = actualPosts.map(p => p.id);
+      
+      if (localRecentUpload && !ids.includes(localRecentUpload)) {
+        ids = [localRecentUpload, ...ids];
+      }
+      
+      setFeedPostIds(ids);
+      setHasMore(hasMorePosts);
+      setIsFetchingPage(false);
+      
+      if (usePostStore.getState().newlyUploadedPostId) {
+        usePostStore.getState().setNewlyUploadedPostId(null);
+      }
+    }
+  }, [swrPosts, localRecentUpload]);
+
+  const handleLoadMore = useCallback(async () => {
+    // ... logic remains the same
+    if (isFetchingPage || !hasMore || feedPostIds.length === 0) return;
+    setIsFetchingPage(true);
+    
+    // Use the created_at of the last fetched post as cursor
+    const lastPostId = feedPostIds[feedPostIds.length - 1];
+    const lastPost = usePostStore.getState().posts[lastPostId];
+    const cursor = lastPost ? lastPost.created_at : undefined;
+
+    try {
+      const fetchLimit = 12;
+      const newPosts = await getFeedPosts({ limit: fetchLimit + 1, cursor });
+      
+      const hasMorePosts = newPosts.length > fetchLimit;
+      const actualNewPosts = hasMorePosts ? newPosts.slice(0, fetchLimit) : newPosts;
+      
+      usePostStore.getState().addOrUpdatePosts(actualNewPosts);
+      setFeedPostIds(prev => {
+        const newIds = actualNewPosts.map(p => p.id).filter(id => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
+      setHasMore(hasMorePosts);
+    } catch (err) {
+      console.error('Load more failed:', err);
+    } finally {
+      setIsFetchingPage(false);
+    }
+  }, [isFetchingPage, hasMore, feedPostIds]);
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef(handleLoadMore);
+  
+  useEffect(() => {
+    loadMoreRef.current = handleLoadMore;
+  }, [handleLoadMore]);
+
+  const bottomRef = useCallback((node: HTMLDivElement | null) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    
+    if (node) {
+      observerRef.current = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+          loadMoreRef.current();
+        }
+      }, { rootMargin: '400px' });
+      observerRef.current.observe(node);
+    }
+  }, []);
 
 
   // Read URL params
   const urlQuery = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'balanced';
-  const selectedCategories = useMemo(() => searchParams.getAll('cat'), [searchParams]);
+  const catString = searchParams.getAll('cat').join(',');
+  const selectedCategories = useMemo(() => catString ? catString.split(',') : [], [catString]);
   const avatarId = searchParams.get('avatar');
 
   // Local state for fast typing in search
   const [searchQuery, setSearchQuery] = useState(urlQuery);
 
   // Results state
-  const [sortedPosts, setSortedPosts] = useState<Post[]>([]);
+  const [sortedPostIds, setSortedPostIds] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(true);
+  const [lastProcessedSignature, setLastProcessedSignature] = useState('');
+
+  const currentSignature = `${feedPostIds.join(',')}-${urlQuery}-${selectedCategories.join(',')}-${sortBy}-${avatarId || ''}`;
+  const isEffectivelyProcessing = isProcessing || isFetchingPage || lastProcessedSignature !== currentSignature;
 
   // Handle search submission (only on Enter)
   const handleSearchSubmit = (query: string) => {
@@ -53,16 +198,18 @@ export default function BrowseContent() {
 
   const selectedAvatar = useMemo(() => {
     if (!avatarId) return null;
-    return MOCK_AVATARS[avatarId] || null;
-  }, [avatarId]);
+    return profileMap[avatarId] || null;
+  }, [avatarId, profileMap]);
 
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
 
   // Logic dependencies
-  const searchIndexes = useMemo(() => createSearchIndexes(allPosts, MOCK_AVATARS, CATEGORIES as any), [allPosts]);
-  const { badgeMap } = useBadges(allPosts);
-  const { hotPostIds } = useHotPosts(allPosts);
+  const postsSearchSignature = feedPostIds.join(',');
+  const searchIndexes = useMemo(() => {
+    const loadedPosts = feedPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
+    return buildSearchIndexes(loadedPosts, profileMap, CATEGORIES);
+  }, [postsSearchSignature, profileMap]);
 
   const updateUrl = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -93,8 +240,8 @@ export default function BrowseContent() {
   };
   
   const handleAvatarSelect = (avatar: Avatar) => {
-    const href = currentAvatar && avatar.id === currentAvatar.id 
-      ? `/@${currentAvatar.username}` 
+    const href = currentProfile && avatar.id === currentProfile.id 
+      ? `/@${currentProfile.username}` 
       : `/@${avatar.username}`;
     window.dispatchEvent(new Event('app-navigation-start'));
     router.push(href, { scroll: false });
@@ -115,15 +262,16 @@ export default function BrowseContent() {
         try {
             setIsProcessing(true);
             let posts: Post[];
+            const loadedPosts = feedPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
 
             // 1. Initial filter (Avatar or Search)
             if (selectedAvatar) {
-                posts = allPosts.filter(post => post.avatar_id === selectedAvatar.id);
+                posts = loadedPosts.filter(post => post.avatar_id === selectedAvatar.id);
             } else if (urlQuery.trim().length >= 2) {
                 const results = await searchPosts(searchIndexes, urlQuery, 100);
                 posts = results.map(r => r.post);
             } else {
-                posts = [...allPosts];
+                posts = [...loadedPosts];
             }
 
             // 2. Category filter
@@ -133,26 +281,14 @@ export default function BrowseContent() {
 
             // 3. Sorting & Metrics filter
             if (sortBy === 'highest_rated') {
-                const metricsMap = await Promise.all(posts.map(async p => ({
-                    id: p.id,
-                    m: await calculatePostMetrics(p.id)
-                })));
-                posts = posts.filter(p => metricsMap.find(m => m.id === p.id)?.m.rating_unlocked);
+                posts = posts.filter(p => (p.review_count || 0) >= 3);
                 
                 posts.sort((a,b) => {
-                    const mA = metricsMap.find(m => m.id === a.id)!.m;
-                    const mB = metricsMap.find(m => m.id === b.id)!.m;
-                    return mB.average_score - mA.average_score;
+                    return (b.average_score || 0) - (a.average_score || 0);
                 });
             } else if (sortBy === 'most_reviewed') {
-                const metricsMap = await Promise.all(posts.map(async p => ({
-                    id: p.id,
-                    m: await calculatePostMetrics(p.id)
-                })));
                 posts.sort((a,b) => {
-                    const mA = metricsMap.find(m => m.id === a.id)!.m;
-                    const mB = metricsMap.find(m => m.id === b.id)!.m;
-                    return mB.review_count - mA.review_count;
+                    return (b.review_count || 0) - (a.review_count || 0);
                 });
             } else if (sortBy === 'newest') {
                 posts.sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -161,16 +297,35 @@ export default function BrowseContent() {
             // 4. Balanced Curated Sort
             let finalPosts = posts;
             if (sortBy === 'balanced' && urlQuery.trim().length < 2) {
-                finalPosts = await curatedFreshnessSort(posts);
+                finalPosts = curatedFreshnessSort(posts);
+            }
+
+            // --- INSTANT INJECTION OVERRIDE ---
+            if (localRecentUpload) {
+                const recentPostIndex = finalPosts.findIndex(p => p.id === localRecentUpload);
+                if (recentPostIndex > -1) {
+                    const recentPost = finalPosts[recentPostIndex];
+                    finalPosts.splice(recentPostIndex, 1);
+                    finalPosts.unshift(recentPost);
+                } else {
+                    const post = usePostStore.getState().posts[localRecentUpload];
+                    // Only inject if there are no strict filters active that it failed, 
+                    // or just inject it anyway to guarantee visibility
+                    if (post && !selectedAvatar && selectedCategories.length === 0) {
+                        finalPosts.unshift(post);
+                    }
+                }
             }
 
             if (isMounted) {
-                setSortedPosts(finalPosts);
+                setSortedPostIds(finalPosts.map(p => p.id));
+                setLastProcessedSignature(currentSignature);
             }
         } catch (error) {
             console.error('Failed to process posts:', error);
             if (isMounted) {
-                setSortedPosts([]);
+                setSortedPostIds([]);
+                setLastProcessedSignature(currentSignature);
             }
         } finally {
             if (isMounted) {
@@ -181,7 +336,7 @@ export default function BrowseContent() {
 
     processPosts();
     return () => { isMounted = false; };
-  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar]);
+  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds, currentSignature]);
 
   return (
     <>
@@ -247,7 +402,7 @@ export default function BrowseContent() {
               className="pt-4 md:pt-0"
             >
               {selectedAvatar && (
-                <div className="max-w-[1600px] mx-auto px-6 mb-6">
+                <div className="max-w-400 mx-auto px-6 mb-6">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
                     <span className="text-sm font-medium text-gray-600">Avatar:</span>
                     <span className="text-sm font-bold text-black">{selectedAvatar.name}</span>
@@ -262,14 +417,14 @@ export default function BrowseContent() {
               )}
 
               {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
-                <div className="min-[769px]:hidden max-w-[1600px] mx-auto px-6 mb-4">
+                <div className="min-[769px]:hidden max-w-400 mx-auto px-6 mb-4">
                   <div className="flex flex-wrap items-center gap-2">
                     {sortBy !== 'balanced' && (
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
                         <span className="text-xs font-medium text-black">{SORT_LABELS[sortBy] ?? sortBy}</span>
                         <button 
                           onClick={() => setSortBy('balanced')}
-                          className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
+                          className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
                         >
                           <X className="w-2.5 h-2.5 text-white" />
                         </button>
@@ -321,33 +476,45 @@ export default function BrowseContent() {
                       </button>
                     </div>
                     <span className="text-sm text-gray-400">
-                      {isProcessing ? 'Searching...' : (
-                        sortedPosts.length === 0
+                      {isEffectivelyProcessing ? 'Searching...' : (
+                        sortedPostIds.length === 0
                           ? 'Nothing here yet'
-                          : `${sortedPosts.length} post${sortedPosts.length === 1 ? '' : 's'} found`
+                          : `${sortedPostIds.length} post${sortedPostIds.length === 1 ? '' : 's'} found`
                       )}
                     </span>
                   </div>
                 </div>
               )}
 
-              <MasonryGrid 
-                posts={sortedPosts} 
-                badgeMap={badgeMap}
-                hotPostIds={hotPostIds}
-                isLoading={isProcessing}
-              />
+              {(() => {
+                let finalPostIds = sortedPostIds;
+                if (localRecentUpload && !selectedAvatar && selectedCategories.length === 0) {
+                  finalPostIds = [localRecentUpload, ...sortedPostIds.filter(id => id !== localRecentUpload)];
+                }
+                return (
+                  <MasonryGrid 
+                    postIds={finalPostIds} 
+                    isLoading={isEffectivelyProcessing}
+                  />
+                );
+              })()}
 
-              {!isProcessing && (
-                <div className="max-w-[1600px] mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
-                    <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
-                        {sortedPosts.length > 0 
-                          ? "You've reached the end of the feed"
-                          : sortedPosts.length === 0 && urlQuery.trim() 
-                            ? "Everybody still dey create"
-                            : "Nothing here yet"}
-                    </p>
+              {!isEffectivelyProcessing && (
+                <div className="max-w-400 mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
+                    {hasMore ? (
+                        <div ref={bottomRef} className="h-10 w-full" />
+                    ) : (
+                        <>
+                            <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
+                            <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
+                                {sortedPostIds.length > 0 
+                                ? "You've reached the end of the feed"
+                                : sortedPostIds.length === 0 && urlQuery.trim() 
+                                    ? "Everybody still dey create"
+                                    : "Nothing here yet"}
+                            </p>
+                        </>
+                    )}
                 </div>
               )}
             </motion.div>

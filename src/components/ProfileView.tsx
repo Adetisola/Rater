@@ -1,19 +1,19 @@
 "use client";
 
 import { useAuth } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
-import { calculatePostMetrics } from '../logic/mockData';
+import { getPostMetrics } from '@/lib/metrics';
+import { getProfilePosts } from '@/lib/posts';
+import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
+import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
-import { useBadges } from '../hooks/useBadges';
-import { useHotPosts } from '../hooks/useHotPosts';
-import { LogOut, Grid, Heart, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Grid, Heart, ArrowLeft } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
-import { useRouter } from 'next/navigation';
-import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode } from 'lucide-react';
-import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
+import { UserMenu } from './UserMenu';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode, User } from 'lucide-react';
 import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -21,7 +21,10 @@ import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
-import { AmbientSuccessText } from './AmbientSuccessText';
+import { showToast } from './GlobalOverlays';
+import { uploadMedia } from '@/lib/cloudinary/uploads';
+import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
+import { Loader2 } from 'lucide-react';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -86,28 +89,28 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId }: ProfileViewProps) {
-  const { currentAvatar: me, allAvatars, logout, updateProfile, checkUsernameAvailable } = useAuth();
+  const { currentProfile: me, profileMap, updateProfile, checkUsernameAvailable } = useAuth();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
-  const { posts: allPosts } = usePosts();
+
+  const [avatarPostIds, setAvatarPostIds] = useState<string[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   // Edit State
   type EditState = 'idle' | 'editing' | 'saving' | 'error';
   const [editState, setEditState] = useState<EditState>('idle');
   const [saveError, setSaveError] = useState<string>('');
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const [editRole, setEditRole] = useState('');
   const [editBio, setEditBio] = useState('');
   const [editName, setEditName] = useState('');
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
   const [showFullscreenAvatar, setShowFullscreenAvatar] = useState(false);
 
   // Smart Bio Links state
   const [editSocialLinks, setEditSocialLinks] = useState<SocialLink[]>([]);
   const [editShowEmail, setEditShowEmail] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const [stats, setStats] = useState({ totalReviews: 0, avgRating: '—' });
 
@@ -118,7 +121,17 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const roleInputRef = useRef<HTMLInputElement>(null);
 
   // Find the avatar to display
-  const targetAvatar = allAvatars[avatarId];
+  const targetAvatar = profileMap[avatarId];
+
+  // Compute optimized avatar URL for the main profile header
+  const optimizedAvatarUrl = useMemo(() => {
+    if (!targetAvatar?.avatar_url) return null;
+    const publicId = extractPublicId(targetAvatar.avatar_url);
+    if (publicId) {
+      return generateThumbnail(publicId, 400, 400); // slightly larger for profile header
+    }
+    return targetAvatar.avatar_url;
+  }, [targetAvatar?.avatar_url]);
 
   // Username validation hook (wired to checkUsernameAvailable from AuthContext)
   const memoizedCheckAvailability = useCallback(
@@ -136,16 +149,24 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     checkAvailability: memoizedCheckAvailability,
   });
 
-  // External Metadata (Badges, Hot Status)
-  const { badgeMap } = useBadges(allPosts);
-  const { hotPostIds } = useHotPosts(allPosts);
+  // Fetch Profile Posts
+  useEffect(() => {
+    let mounted = true;
+    setIsLoadingPosts(true);
+    getProfilePosts(avatarId, { limit: 100 }).then(posts => {
+      if (mounted) {
+        usePostStore.getState().addOrUpdatePosts(posts);
+        setAvatarPostIds(posts.map(p => p.id));
+        setIsLoadingPosts(false);
+      }
+    });
+    return () => { mounted = false; };
+  }, [avatarId]);
 
   const avatarPosts = useMemo(() => {
-    if (!targetAvatar) return [];
-    return allPosts
-      .filter(p => p.avatar_id === targetAvatar.id)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [targetAvatar, allPosts]);
+    const posts = avatarPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
+    return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [avatarPostIds]);
 
   // Async stats calculation
   useEffect(() => {
@@ -156,7 +177,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       let totalScore = 0;
       let ratedPosts = 0;
 
-      const metricsList = await Promise.all(avatarPosts.map(p => calculatePostMetrics(p.id)));
+      const metricsList = await Promise.all(avatarPosts.map(p => getPostMetrics(p.id)));
 
       metricsList.forEach(metrics => {
         totalReviews += metrics.review_count;
@@ -206,6 +227,16 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     }, 50);
   };
 
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    if (isMe && editState === 'idle' && searchParams?.get('edit') === 'true') {
+      startEditing();
+      const url = new URL(window.location.href);
+      url.searchParams.delete('edit');
+      window.history.replaceState({}, '', url);
+    }
+  }, [isMe, editState, searchParams]);
+
   const handleCancel = () => {
     setSaveError('');
     setEditState('idle');
@@ -245,8 +276,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
     if (result.ok) {
       setEditState('idle');
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 2500);
+      showToast("Profile updated successfully", "success");
       // Reroute to new username slug if it changed
       if (usernameChanged) {
         router.replace(`/@${editUsername.toLowerCase().trim()}`);
@@ -257,13 +287,27 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     }
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) return alert("Image too large (Max 5MB)");
-      const reader = new FileReader();
-      reader.onloadend = () => updateProfile({ avatar_url: reader.result as string });
-      reader.readAsDataURL(file);
+      if (file.size > 5 * 1024 * 1024) return showToast("Image too large (Max 5MB)", "error");
+      
+      setIsUploadingAvatar(true);
+      try {
+        const asset = await uploadMedia(file, 'avatars');
+        const result = await updateProfile({ avatar_url: asset.url });
+        if (result.ok) {
+          showToast("Profile picture updated", "success");
+        } else {
+          showToast(result.error || "Failed to update profile", "error");
+        }
+      } catch (err: any) {
+        showToast(err.message || "Failed to upload image", "error");
+      } finally {
+        setIsUploadingAvatar(false);
+        // Reset input value so the same file can be selected again if needed
+        if (e.target) e.target.value = '';
+      }
     }
   };
 
@@ -293,23 +337,9 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
   return (
     <div className="max-w-6xl mx-auto px-2 xs:px-6 pt-1 pb-16 md:pt-4 md:pb-24 w-full min-h-[60vh] relative">
-      {/* SUCCESS TOAST */}
-      <AnimatePresence>
-        {showSuccessToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#111111] text-white px-5 py-2.5 rounded-full shadow-lg flex items-center gap-2 pointer-events-none"
-          >
-            <Check className="w-4 h-4 text-green-400" />
-            <AmbientSuccessText className="text-sm font-medium tracking-wide" />
-          </motion.div>
-        )}
-      </AnimatePresence>
 
-      {/* HEADER: Back Button */}
-      <div className="mb-4 md:mb-8">
+      {/* HEADER: Back Button & Mobile Menu */}
+      <div className="mb-4 md:mb-8 flex justify-between items-center">
         <Button
           variant="secondary"
           onClick={() => router.back()}
@@ -318,47 +348,13 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           <ArrowLeft className="w-5 h-5 text-black" />
           Back
         </Button>
+
+        {isMe && (
+          <div className="md:hidden">
+            <UserMenu variant="profile" align="right" onEditProfile={startEditing} />
+          </div>
+        )}
       </div>
-
-      {isMe && (
-        <div className="md:hidden absolute top-8 right-4 z-40">
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-gray-50 transition-all shadow-sm active:scale-95"
-          >
-            <MoreHorizontal className="w-6 h-6 text-black" />
-          </button>
-
-          {showMobileMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowMobileMenu(false)} />
-              <div className="absolute top-13 right-0 w-53 bg-white rounded-[20px] shadow-2xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95 duration-200">
-                <button
-                  onClick={() => { startEditing(); setShowMobileMenu(false); }}
-                  className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
-                >
-                  <Edit2 className="w-5 h-5" />
-                  <span className="font-medium text-[15px]">Edit Avatar Profile</span>
-                </button>
-                <button
-                  onClick={() => { setShowQrCode(true); setShowMobileMenu(false); }}
-                  className="w-full px-5 py-3.5 flex items-center gap-3 text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors border-b border-gray-50"
-                >
-                  <QrCode className="w-5 h-5" />
-                  <span className="font-medium text-[15px]">Share Profile</span>
-                </button>
-                <button
-                  onClick={() => { setShowLogoutConfirm(true); setShowMobileMenu(false); }}
-                  className="w-full px-5 py-3.5 flex items-center gap-3 text-red-500 hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="font-medium text-[15px]">Logout</span>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Share Button for Mobile (Non-Owners) */}
       {!isMe && (
@@ -377,49 +373,62 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       <div className="flex flex-col md:flex-row items-center md:items-start gap-5 lg:gap-8 mb-16 px-4">
         <div className="relative group shrink-0 flex flex-col items-center">
           <div
-            className="w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden bg-gray-100 transition-all shadow-sm relative"
-            style={{ backgroundColor: targetAvatar.bg_color }}
+            className={cn(
+              "w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden transition-all shadow-sm relative",
+              !targetAvatar.avatar_url && "bg-gray-100 border border-gray-200/50"
+            )}
           >
             {targetAvatar.avatar_url ? (
               <button
                 onClick={() => setShowFullscreenAvatar(true)}
                 className="w-full h-full cursor-zoom-in group/avatar"
+                disabled={isUploadingAvatar}
               >
                 <img
-                  src={targetAvatar.avatar_url}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover/avatar:scale-110"
+                  src={optimizedAvatarUrl || targetAvatar.avatar_url}
+                  className={cn(
+                    "w-full h-full object-cover transition-transform duration-500",
+                    !isUploadingAvatar && "group-hover/avatar:scale-110",
+                    isUploadingAvatar && "opacity-50 blur-sm"
+                  )}
                   alt=""
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </button>
             ) : (
-              <span className="animate-in fade-in duration-300">
-                {targetAvatar.name.charAt(0).toUpperCase()}
-              </span>
+              <User className={cn("w-1/2 h-1/2 text-gray-400", isUploadingAvatar && "opacity-50")} strokeWidth={2.5} />
+            )}
+            
+            {isUploadingAvatar && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-20">
+                <Loader2 className="w-8 h-8 text-white animate-spin drop-shadow-md" />
+              </div>
             )}
 
-            {isMe && (
+            {isMe && !isUploadingAvatar && (
               <motion.div
                 onMouseLeave={() => setIsConfirmingRemove(false)}
                 className="hidden md:flex absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-4 rounded-full z-10"
               >
                 {!isConfirmingRemove ? (
                   <>
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-2 rounded-full bg-white/20 hover:bg-[#FEC312] text-white transition-all transform hover:scale-110"
-                      title="Change Avatar"
-                    >
-                      <Camera className="w-5 h-5" />
-                    </button>
-                    {targetAvatar.avatar_url && (
+                    <Tooltip content="Change Avatar" position="top">
                       <button
-                        onClick={handleAvatarRemove}
-                        className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
-                        title="Remove Avatar"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="p-2 rounded-full bg-white/20 hover:bg-primary text-white transition-all transform hover:scale-110"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Camera className="w-5 h-5" />
                       </button>
+                    </Tooltip>
+                    {targetAvatar.avatar_url && (
+                      <Tooltip content="Remove Avatar" position="top">
+                        <button
+                          onClick={handleAvatarRemove}
+                          className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </Tooltip>
                     )}
                   </>
                 ) : (
@@ -430,20 +439,22 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                   >
                     <span className="text-[10px] text-white font-bold uppercase tracking-tighter">Are you sure?</span>
                     <div className="flex gap-2">
-                      <button
-                        onClick={handleAvatarRemove}
-                        className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
-                        title="Yes, remove"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
-                        className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
-                        title="Cancel"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      <Tooltip content="Yes, remove" position="top">
+                        <button
+                          onClick={handleAvatarRemove}
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content="Cancel" position="top">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </motion.div>
                 )}
@@ -587,7 +598,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                         <button
                           key={s}
                           onClick={() => handleUsernameChange(s)}
-                          className="text-xs px-2.5 py-1 rounded-full bg-gray-100 hover:bg-[#FEC312]/20 hover:text-[#b38a00] border border-gray-200 transition-all font-medium text-gray-600"
+                          className="text-xs px-2.5 py-1 rounded-full bg-gray-100 hover:bg-primary/20 hover:text-[#b38a00] border border-gray-200 transition-all font-medium text-gray-600"
                         >
                           @{s}
                         </button>
@@ -611,7 +622,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     {isMe && editState === 'idle' && (
                       <button
                         onClick={() => startEditing()}
-                        className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-[#FEC312]"
+                        className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-primary"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -649,7 +660,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 ) : (
                   <button
                     onClick={() => startEditing('role')}
-                    className="text-[16px] font-base text-gray-400 hover:text-[#FEC312] transition-colors focus:outline-none"
+                    className="text-[16px] font-base text-gray-400 hover:text-primary transition-colors focus:outline-none"
                   >
                     Tell us your creative role
                   </button>
@@ -723,7 +734,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 ) : (
                   <button
                     onClick={() => startEditing('bio')}
-                    className="text-gray-500 hover:text-[#FEC312] transition-colors"
+                    className="text-gray-500 hover:text-primary transition-colors"
                   >
                     Say a little about yourself...
                   </button>
@@ -756,7 +767,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                       checked={editShowEmail}
                       onChange={(e) => setEditShowEmail(e.target.checked)}
                       disabled={editState === 'saving'}
-                      className="w-4 h-4 rounded-sm border-gray-300 text-[#FEC312] focus:ring-[#FEC312] cursor-pointer"
+                      className="w-4 h-4 rounded-sm border-gray-300 text-primary focus:ring-primary cursor-pointer"
                     />
                     <span className="text-[13px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Show email on profile</span>
                   </label>
@@ -838,19 +849,20 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         </div>
 
         <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
-          <Button
-            variant="ghost"
-            className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
-            onClick={() => setShowQrCode(true)}
-          >
-            <QrCode className="w-4 h-4" />
-            Share Profile
-          </Button>
-          {isMe && (
-            <Button variant="ghost" className="h-11 rounded-full px-5 flex items-center gap-2 hover:bg-[#ff4848] hover:text-white transition-all text-gray-500 font-semibold" onClick={() => setShowLogoutConfirm(true)}>
-              <LogOut className="w-4 h-4" />
-              Logout
+          {!isMe && (
+            <Button
+              variant="ghost"
+              className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
+              onClick={() => setShowQrCode(true)}
+            >
+              <QrCode className="w-4 h-4" />
+              Share Profile
             </Button>
+          )}
+          {isMe && (
+            <div className="flex justify-end">
+              <UserMenu variant="profile" align="right" />
+            </div>
           )}
         </div>
       </div>
@@ -897,14 +909,14 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           >
             {avatarPosts.length > 0 ? (
               <div className="-mx-2 xs:-mx-4 md:-mx-6 lg:-mx-8">
-                <MasonryGrid
-                  posts={avatarPosts}
-                  badgeMap={badgeMap}
-                  hotPostIds={hotPostIds}
+                <MasonryGrid 
+                  postIds={avatarPostIds} 
+                  isLoading={isLoadingPosts}
+                  maxColumns={3}
                 />
               </div>
             ) : (
-              <div className="py-20 text-center bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
+              <div className="py-20 text-center bg-gray-50 rounded-4xl border-2 border-dashed border-gray-200">
                 <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
                 <h3 className="text-xl font-medium mb-2">No posts yet</h3>
                 <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
@@ -923,17 +935,17 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="py-24 text-center bg-white rounded-[24px] border-2 border-[#FEC312] border-dashed shadow-xl shadow-[#FEC312]/5 max-w-2xl mx-auto px-8"
+            className="py-24 text-center bg-white rounded-3xl border-2 border-primary border-dashed shadow-xl shadow-primary/5 max-w-2xl mx-auto px-8"
           >
             <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
-              <Heart className="w-10 h-10 text-[#FEC312] fill-[#FEC312]" />
+              <Heart className="w-10 h-10 text-primary fill-primary" />
             </div>
             <h3 className="text-3xl font-semibold mb-4 text-black">Coming Soon!</h3>
             <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
               You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
             </p>
             <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-gray-100 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-[#FEC312] animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Development in Progress</span>
             </div>
           </motion.div>
@@ -941,16 +953,6 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       </AnimatePresence>
 
       {showAuthOverlay && <AuthOverlay initialTab="login" onClose={() => setShowAuthOverlay(false)} />}
-      {showLogoutConfirm && (
-        <LogoutConfirmOverlay
-          onClose={() => setShowLogoutConfirm(false)}
-          onConfirm={() => {
-            logout();
-            setShowLogoutConfirm(false);
-            router.push('/browse', { scroll: false });
-          }}
-        />
-      )}
       {showQrCode && targetAvatar && (
         <QRCodeOverlay
           isOpen={showQrCode}

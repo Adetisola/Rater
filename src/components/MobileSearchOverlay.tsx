@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
-import { searchAll, type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
+import { searchAll, type SearchIndexes, type SectionedSearchResults } from '@/lib/algolia/search';
 import type { Post, Avatar, Category } from '@/types';
-import { MOCK_POSTS } from '../logic/mockData';
 import { useAuth } from '../context/AuthContext';
+import { usePostStore } from '../store/postStore';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useNavigationStore } from '../store/navigationStore';
 import { Search } from 'lucide-react';
+import { UserAvatar } from './UserAvatar';
 
 // Maps internal sort keys → display labels for active filter pills
 const SORT_OPTION_LABELS: Record<string, string> = {
@@ -59,7 +60,8 @@ export function MobileSearchOverlay({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const { currentAvatar, allAvatars } = useAuth();
+  const { currentProfile, profileMap } = useAuth();
+  const allPosts = usePostStore(state => state.posts);
   
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
 
@@ -133,8 +135,8 @@ export function MobileSearchOverlay({
     if (onAvatarSelect) {
       onAvatarSelect(avatar);
     } else {
-      const href = currentAvatar && avatar.id === currentAvatar.id 
-        ? `/@${currentAvatar.username}` 
+      const href = currentProfile && avatar.id === currentProfile.id 
+        ? `/@${currentProfile.username}` 
         : `/@${avatar.username}`;
       window.dispatchEvent(new Event('app-navigation-start'));
       router.push(href, { scroll: false });
@@ -199,7 +201,7 @@ export function MobileSearchOverlay({
 
             <motion.div 
               layoutId={activeLayoutId}
-              className="flex-1 relative flex items-center bg-white rounded-full border-2 border-[#FEC312] overflow-hidden focus-within:ring-4 focus-within:ring-[#FEC312]/10"
+              className="flex-1 relative flex items-center bg-white rounded-full border-2 border-primary overflow-hidden focus-within:ring-4 focus-within:ring-primary/10"
               style={{ borderRadius: 9999 }}
             >
               <img 
@@ -247,11 +249,11 @@ export function MobileSearchOverlay({
         {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
           <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
             {sortBy !== 'balanced' && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#FEC312]/15 border border-[#FEC312] rounded-full">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
                 <span className="text-xs font-medium text-black">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
                 <button 
                   onClick={() => onSortChange('balanced')}
-                  className="w-4 h-4 flex items-center justify-center rounded-full bg-[#FEC312] hover:bg-[#e6b00f] transition-colors"
+                  className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
                 >
                   <X className="w-2.5 h-2.5 text-white" />
                 </button>
@@ -335,7 +337,7 @@ export function MobileSearchOverlay({
                   }
 
                   if (item.type === 'avatar') {
-                    const avatar = allAvatars[item.avatarId];
+                    const avatar = profileMap[item.avatarId];
                     if (!avatar) return null;
                     return (
                       <div key={`rec-av-${item.avatarId}`} className="flex items-center group flex-nowrap">
@@ -348,7 +350,7 @@ export function MobileSearchOverlay({
                   }
 
                   if (item.type === 'post') {
-                    const postObj = MOCK_POSTS.find(p => p.id === item.postId);
+                    const postObj = allPosts[item.postId];
                     if (!postObj) return null;
                     return (
                       <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">
@@ -466,23 +468,12 @@ interface AvatarResultItemProps {
 }
 
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
-  const initials = avatar.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
-
   return (
     <div
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
-      <div 
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-        style={{ backgroundColor: avatar.bg_color }}
-      >
-        {avatar.avatar_url ? (
-          <img src={avatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-        ) : (
-          initials
-        )}
-      </div>
+      <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
       <div className="flex-1 min-w-0">
         <span className="font-bold text-sm text-black">{avatar.name}</span>
         <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
@@ -528,8 +519,8 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
-      <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">
-        <span className="text-[#FEC312] text-sm">📁</span>
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <span className="text-primary text-sm">📁</span>
       </div>
       <span className="font-medium text-sm text-black">{category}</span>
     </div>

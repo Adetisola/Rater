@@ -1,10 +1,13 @@
-const CACHE_NAME = 'rater-cache-v1';
+const CACHE_NAME = 'rater-cache-v3';
 const STATIC_ASSETS = [
+  '/offline',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/icons/logo-rater-hover.svg',
-  '/icons/logo-rater.svg'
+  '/icons/rater-logo-black-bg.svg',
+  '/icons/rater-logo-transparent-bg-stroked.svg',
+  '/icons/rater-logo-white-bg-stroked.svg',
+  '/icons/rater-logo-white-bg.svg'
 ];
 
 self.addEventListener('install', (event) => {
@@ -40,10 +43,7 @@ self.addEventListener('fetch', (event) => {
       fetch(event.request).catch(() => {
         return caches.match(event.request).then((response) => {
           if (response) return response;
-          // Return offline fallback if we had one, but we don't right now
-          return new Response('Connection looks unstable. Go buy Data.', {
-            headers: { 'Content-Type': 'text/html' }
-          });
+          return caches.match('/offline');
         });
       })
     );

@@ -4,6 +4,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface ImageFallbackProps {
   src: string;
+  srcSet?: string;
+  sizes?: string;
+  placeholderSrc?: string;
+  priority?: boolean;
   alt: string;
   className?: string;
   fallbackClassName?: string;
@@ -15,6 +19,10 @@ interface ImageFallbackProps {
 
 export function ImageFallback({
   src,
+  srcSet,
+  sizes,
+  placeholderSrc,
+  priority = false,
   alt,
   className = '',
   fallbackClassName = '',
@@ -25,8 +33,11 @@ export function ImageFallback({
 }: ImageFallbackProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [isRetrying, setIsRetrying] = useState(false);
+  const [retryKey, setRetryKey] = useState<string>('');
   const cooldownRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const imgRef = useRef<HTMLImageElement>(null);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -35,6 +46,7 @@ export function ImageFallback({
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Reset status when source changes
   useEffect(() => {
     if (!src || src.trim() === '') {
       setStatus('error');
@@ -42,47 +54,55 @@ export function ImageFallback({
       onErrorChange?.(true);
       return;
     }
-
     setStatus('loading');
-    const img = new window.Image();
-    img.src = src;
-    img.onload = () => {
-      setStatus('loaded');
-      setIsRetrying(false);
-      onLoadChange?.(true);
-      onErrorChange?.(false);
-    };
-    img.onerror = () => {
-      setStatus('error');
-      setIsRetrying(false);
-      onLoadChange?.(true);
-      onErrorChange?.(true);
-    };
+    setRetryKey('');
   }, [src]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleLoad = useCallback(() => {
+    setStatus('loaded');
+    setIsRetrying(false);
+    onLoadChange?.(true);
+    onErrorChange?.(false);
+  }, [onLoadChange, onErrorChange]);
+
+  const handleError = useCallback(() => {
+    setStatus('error');
+    setIsRetrying(false);
+    onLoadChange?.(true);
+    onErrorChange?.(true);
+  }, [onLoadChange, onErrorChange]);
+
+  // Append retry keys to URLs if we are retrying
+  const currentSrc = retryKey && src ? `${src}${src.includes('?') ? '' : '?'}${retryKey}` : src;
+  
+  // Helper to append retry key to a srcSet string
+  const currentSrcSet = retryKey && srcSet 
+    ? srcSet.split(',').map(part => {
+        const [url, size] = part.trim().split(' ');
+        if (!url) return part;
+        return `${url}${url.includes('?') ? '' : '?'}${retryKey} ${size}`;
+      }).join(', ')
+    : srcSet;
+
+  // Check for cached images
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current?.naturalHeight > 0) {
+      handleLoad();
+    }
+  }, [src, currentSrcSet, handleLoad]);
 
   const handleRetry = useCallback(() => {
     if (cooldownRef.current || status !== 'error') return;
     cooldownRef.current = true;
     setIsRetrying(true);
 
-    // Bust cache with timestamp
-    const separator = src.includes('?') ? '&' : '?';
-    const retrySrc = `${src}${separator}_retry=${Date.now()}`;
+    setStatus('loading');
+    setRetryKey(`&_retry=${Date.now()}`);
 
-    const img = new window.Image();
-    img.src = retrySrc;
-    img.onload = () => {
-      setStatus('loaded');
-      setIsRetrying(false);
-      onLoadChange?.(true);
-      onErrorChange?.(false);
-      setTimeout(() => { cooldownRef.current = false; }, 500);
-    };
-    img.onerror = () => {
-      setIsRetrying(false);
-      setTimeout(() => { cooldownRef.current = false; }, 500);
-    };
-  }, [src, status, onLoadChange, onErrorChange]);
+    setTimeout(() => { 
+      cooldownRef.current = false; 
+    }, 500);
+  }, [status]);
 
   if (status === 'error') {
     return (
@@ -127,21 +147,33 @@ export function ImageFallback({
     );
   }
 
-  if (status === 'loading') {
-    return (
-      <div className={`bg-[#d1d5db] animate-pulse ${fallbackClassName}`} />
-    );
-  }
-
-  // status === 'loaded'
   return (
-    <div className={`relative overflow-hidden ${fallbackClassName}`} onClick={onClick}>
-      <img
-        src={src}
-        alt={alt}
-        className={`${className} transition-opacity duration-300`}
-        style={{ opacity: 1 }}
-      />
+    <div className={`relative overflow-hidden bg-[#d1d5db] ${fallbackClassName}`} onClick={onClick}>
+      {/* Blur Placeholder */}
+      {placeholderSrc && (
+        <img
+          src={placeholderSrc}
+          className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 z-0"
+          alt=""
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Main Image */}
+      {src && (
+        <img
+          ref={imgRef}
+          src={currentSrc}
+          srcSet={currentSrcSet}
+          sizes={sizes}
+          alt={alt}
+          loading={priority ? "eager" : "lazy"}
+          decoding="async"
+          onLoad={handleLoad}
+          onError={handleError}
+          className={`${className} relative z-10 transition-opacity duration-500 ease-in-out ${status === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
+        />
+      )}
       {children}
     </div>
   );

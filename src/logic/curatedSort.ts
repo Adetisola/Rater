@@ -13,8 +13,7 @@
  */
 
 import type { Post } from '../types';
-import { calculatePostMetrics } from './mockData';
-import { computeBadges } from './badgeUtils';
+import { usePostStore } from '../store/postStore';
 
 const BUCKET_B_WINDOW_DAYS = 17; // Middle of 14-21 range
 const STANDOUT_SPACING = 7;      // Middle of 6-8 range
@@ -57,23 +56,22 @@ function shuffleWithinDays<T extends { created_at: string }>(posts: T[], seed: n
 }
 
 /**
- * Curated Freshness Sort (Async Version)
+ * Curated Freshness Sort
  * Returns posts sorted according to the Curated Freshness V1 algorithm.
  */
-export async function curatedFreshnessSort(posts: Post[]): Promise<Post[]> {
+export function curatedFreshnessSort(posts: Post[]): Post[] {
   const now = Date.now();
   const BUCKET_B_MS = BUCKET_B_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
-  // 1. Compute badges for all posts (now async)
-  const badgeMap = await computeBadges(posts);
+  // 1. Get pre-computed badges from store
+  const badgeMap = usePostStore.getState().badgeMap;
 
   // 2. Pre-calculate metrics for all posts (needed for Bucket B sorting)
   // This avoids async sorting pitfalls
   const metricsMap: Record<string, { review_count: number }> = {};
-  await Promise.all(posts.map(async post => {
-    const m = await calculatePostMetrics(post.id);
-    metricsMap[post.id] = { review_count: m.review_count };
-  }));
+  posts.forEach(post => {
+    metricsMap[post.id] = { review_count: post.review_count || 0 };
+  });
 
   // 3. Categorize into buckets
   const bucketA: Post[] = []; // Standout (Top Rated badge)

@@ -7,10 +7,20 @@
 
 const logoRater = '/assets/landing/footer/rater-logo-black-bg.svg';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
+import { useState } from 'react';
+import { LegalModal } from '../../../components/LegalModal';
 
 export function StatusFooter() {
   const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>({ triggerOnce: true, enterThreshold: 0.25 });
   const stateClass = state === 'visible' ? 'reveal-visible' : '';
+
+  const [legalModal, setLegalModal] = useState<{isOpen: boolean, title: string, url: string}>({
+    isOpen: false, title: '', url: ''
+  });
+
+  const openLegal = (title: string, url: string) => {
+    setLegalModal({ isOpen: true, title, url });
+  };
 
   return (
     <section id="status-footer" className="pt-4 pb-6 md:pt-24 md:pb-24 relative z-10 bg-white" ref={sectionRef}>
@@ -58,14 +68,27 @@ export function StatusFooter() {
               A design exploration experiment.
             </p>
 
-            {/* Right: Copyright */}
-            <p className="text-[13px] md:text-[14px] text-black font-medium">
-              ©2026
-            </p>
+            {/* Right: Copyright & Legal */}
+            <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 text-[13px] md:text-[14px] text-black font-medium">
+              <span>©2026</span>
+              <span className="text-gray-300">•</span>
+              <a href="/legal/Rater Terms of Service.md" onClick={(e) => { e.preventDefault(); openLegal('Terms of Service', '/legal/Rater Terms of Service.md'); }} className="hover:text-primary transition-colors">Terms</a>
+              <span className="text-gray-300">•</span>
+              <a href="/legal/Rater Privacy Policy.md" onClick={(e) => { e.preventDefault(); openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md'); }} className="hover:text-primary transition-colors">Privacy</a>
+              <span className="text-gray-300">•</span>
+              <a href="/legal/Rater Community Guidelines.md" onClick={(e) => { e.preventDefault(); openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md'); }} className="hover:text-primary transition-colors">Guidelines</a>
+            </div>
           </div>
 
         </div>
       </div>
+
+      <LegalModal
+        isOpen={legalModal.isOpen}
+        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
+        title={legalModal.title}
+        docUrl={legalModal.url}
+      />
     </section>
   );
 }

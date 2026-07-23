@@ -7,7 +7,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useAnimation } f
 import type { PanInfo } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
-import { CATEGORIES } from '../logic/mockData';
+import { CATEGORIES } from '@/constants/categories';
 
 interface MobileFilterPanelProps {
   isOpen: boolean;

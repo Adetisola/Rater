@@ -7,10 +7,12 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
+import { usePostStore } from '../store/postStore';
 import type { RecentItemData } from '../hooks/useRecentSearches';
 
+import { UserAvatar } from './UserAvatar';
 import Link from 'next/link';
+import { extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
 
 /**
  * Props for the SearchResults dropdown component.
@@ -53,8 +55,8 @@ export function SearchResults({
     ? recentItems.length > 0 
     : (results.avatars.length > 0 || results.posts.length > 0 || results.categories.length > 0);
   
-  const { allAvatars } = useAuth();
-  const { posts: allPosts } = usePosts();
+  const { profileMap } = useAuth();
+  const allPosts = usePostStore(state => state.posts);
   
   const [mounted, setMounted] = useState(false);
 
@@ -138,7 +140,7 @@ export function SearchResults({
                 }
 
                 if (item.type === 'avatar') {
-                  const avatar = allAvatars[item.avatarId];
+                  const avatar = profileMap[item.avatarId];
                   if (!avatar) return null;
                   return (
                     <div key={`rec-av-${item.avatarId}`} className="flex items-center group flex-nowrap">
@@ -151,7 +153,7 @@ export function SearchResults({
                 }
 
                 if (item.type === 'post') {
-                  const postObj = allPosts.find(p => p.id === item.postId);
+                  const postObj = allPosts[item.postId];
                   if (!postObj) return null;
                   return (
                     <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">
@@ -197,11 +199,11 @@ export function SearchResults({
           </div>
         )}
 
-        {/* AVATARS SECTION */}
+        {/* CREATORS SECTION */}
         {results.avatars.length > 0 && (
           <div className="border-b border-gray-100">
             <div className="px-4 py-2 bg-gray-50">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Avatars</span>
+              <span className="text-xs font-semibold text-gray-500 tracking-wide">Creators</span>
             </div>
             <div className="p-2">
               {results.avatars.map(({ avatar }) => (
@@ -219,7 +221,7 @@ export function SearchResults({
         {results.posts.length > 0 && (
           <div>
             <div className="px-4 py-2 bg-gray-50">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Posts</span>
+              <span className="text-xs font-semibold text-gray-500 tracking-wide">Posts</span>
             </div>
             <div className="p-2">
               {results.posts.map((result) => (
@@ -255,13 +257,6 @@ interface AvatarResultItemProps {
  * Renders an individual avatar search result with their picture/initials, name, and role.
  */
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
-  const initials = avatar.name
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
     <div
       onMouseDown={(e) => {
@@ -272,16 +267,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Avatar */}
-      <div 
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold text-sm"
-        style={{ backgroundColor: avatar.bg_color }}
-      >
-        {avatar.avatar_url ? (
-          <img src={avatar.avatar_url} alt="" className="w-full h-full object-cover rounded-full" />
-        ) : (
-          initials
-        )}
-      </div>
+      <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
       
       {/* Name */}
       <div className="flex-1 min-w-0">
@@ -325,7 +311,11 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       {/* Thumbnail */}
       <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
         <img 
-          src={post.image_url} 
+          src={
+            (post.image_url && extractPublicId(post.image_url))
+              ? generateThumbnail(extractPublicId(post.image_url)!, 56, 40)
+              : post.image_url
+          } 
           alt="" 
           className="w-full h-full object-cover"
         />
@@ -370,8 +360,8 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Icon */}
-      <div className="w-8 h-8 rounded-lg bg-[#FEC312]/10 flex items-center justify-center shrink-0">
-        <span className="text-[#FEC312] text-sm">📁</span>
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+        <span className="text-primary text-sm">📁</span>
       </div>
       
       {/* Category Name */}
@@ -395,7 +385,7 @@ function HighlightedText({ segments }: HighlightedTextProps) {
         segment.isMatch ? (
           <mark 
             key={index} 
-            className="bg-[#FEC312]/30 text-inherit rounded-sm px-0.5"
+            className="bg-primary/30 text-inherit rounded-sm px-0.5"
           >
             {segment.text}
           </mark>

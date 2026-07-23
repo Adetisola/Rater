@@ -165,7 +165,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
 
             <div className="text-center mb-8">
               <p className="text-base font-semibold text-black mb-1">@{username}</p>
-              <p className="text-sm text-gray-500 font-medium">rater-web.vercel.app/@{username}</p>
+              <p className="text-sm text-gray-500 font-medium">{typeof window !== 'undefined' ? window.location.host : 'raterapp.site'}/@{username}</p>
             </div>
 
             {/* Actions */}
@@ -179,14 +179,14 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
               </button>
               <button 
                 onClick={handleDownload}
-                className="flex-[1.5] flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#FEC312] hover:bg-[#e6b00f] text-white font-semibold text-sm transition-colors shadow-sm shadow-[#FEC312]/20"
+                className="flex-[1.5] flex items-center justify-center gap-2 py-3.5 rounded-full bg-primary hover:bg-[#e6b00f] text-white font-semibold text-sm transition-colors shadow-sm shadow-primary/20"
               >
                 <Download className="w-4 h-4" />
                 Download PNG
               </button>
             </div>
             
-            <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-linear-to-bl from-[#FEC312]/10 to-transparent -mr-16 -mt-16 rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-linear-to-bl from-primary/10 to-transparent -mr-16 -mt-16 rounded-full pointer-events-none" />
           </motion.div>
         </div>
       )}

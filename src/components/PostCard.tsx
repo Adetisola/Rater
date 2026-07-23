@@ -1,31 +1,30 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import type { Post, BadgeType } from '@/types';
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { usePostStore } from '../store/postStore';
 import Link from 'next/link';
 import { ImageFallback } from './ImageFallback';
-import { usePostMetrics } from '../hooks/usePostMetrics';
+import { MediaCarousel } from './MediaCarousel';
+import { generateResponsiveUrls, extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
+
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { PostActionsMenu } from './PostActionsMenu';
 import { useNow } from '../context/TimeContext';
 import { Lock } from 'lucide-react';
+import { Tooltip } from './ui/Tooltip';
+import { UserAvatar } from './UserAvatar';
 
 /**
  * Props for the PostCard component.
  */
 interface PostCardProps {
-    /** The post object containing details like title, image, and metadata */
-    post: Post;
-    /** Optional badge to display on the card (e.g., 'top_rated_active') */
-    badge?: BadgeType;
-    /** Whether the post is currently "hot" based on recent engagement */
-    isHot?: boolean;
+    postId: string;
     /** Whether to show a skeleton loading state instead of the actual card content */
     isLoading?: boolean;
-    /** Optional click handler for when the card is pressed */
     onClick?: () => void;
 }
 
@@ -34,50 +33,30 @@ interface PostCardProps {
  * Includes image loading fallbacks, interactive hover states, metadata, 
  * and Lottie animations for badges (Hot, Top Rated).
  */
-export function PostCard({ post, badge, isHot = false, isLoading: parentLoading = false, onClick }: PostCardProps) {
-    const [imageLoaded, setImageLoaded] = useState(false);
+export function PostCard({ postId, isLoading: parentLoading = false, onClick }: PostCardProps) {
+    const post = usePostStore(state => state.posts[postId]);
+    const badge = usePostStore(state => state.badgeMap[postId]);
+    const isHot = usePostStore(state => state.hotPostIds.has(postId));
+
     const [hasError, setHasError] = useState(false);
-    const [retryCount, setRetryCount] = useState(0);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
 
-    const { allAvatars } = useAuth();
-    const { metrics, loading: metricsLoading } = usePostMetrics(post.id);
+    const { profileMap } = useAuth();
+    
+    // Derive metrics directly from the post object (which is kept fresh by PostContext Realtime)
+    const metrics = {
+        review_count: post?.review_count || 0,
+        average_score: post?.average_score || 0,
+        rating_unlocked: (post?.review_count || 0) >= 3,
+    };
+    const metricsLoading = false;
     const router = useRouter();
     const now = useNow();
 
-    useEffect(() => {
-        if (retryCount === 0) {
-            setImageLoaded(false);
-            setHasError(false);
-        }
 
-        if (!post.image_url || post.image_url.trim() === '') {
-            setHasError(true);
-            setImageLoaded(true);
-            return;
-        }
 
-        const img = new Image();
-        img.src = post.image_url;
-        img.onload = () => {
-            setImageLoaded(true);
-            setHasError(false);
-        };
-        img.onerror = () => {
-            if (retryCount >= 2) {
-                setHasError(true);
-                setImageLoaded(true);
-            } else {
-                const timer = setTimeout(() => {
-                    setRetryCount(prev => prev + 1);
-                }, 2000);
-                return () => clearTimeout(timer);
-            }
-        };
-    }, [post.image_url, retryCount, post.id]);
-
-    const showSkeleton = parentLoading || metricsLoading || (!imageLoaded && !hasError);
+    const showSkeleton = parentLoading || metricsLoading;
 
     if (showSkeleton) {
         return (
@@ -119,25 +98,56 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
         );
     }
 
-    const isTopRated = badge === 'top_rated_active';
-    const avatar = allAvatars[post.avatar_id];
+    const optimizedFallback = useMemo(() => {
+        const mediaData = post?.media?.[0];
+        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
+        if (publicId) {
+            return generateResponsiveUrls(publicId);
+        }
+        return null;
+    }, [post?.media, post?.image_url]);
 
-    const isEdited = post.updated_at &&
-        new Date(post.updated_at).getTime() > new Date(post.created_at).getTime();
+    const bgUrl = useMemo(() => {
+        const mediaData = post?.media?.[0];
+        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
+        if (publicId) {
+            return generateThumbnail(publicId, 400, 300);
+        }
+        return post?.image_url;
+    }, [post?.media, post?.image_url]);
+
+    if (!post) return null;
+
+    const isTopRated = badge === 'top_rated_active';
+    const avatar = profileMap[post.avatar_id];
+
+    const isEdited = !!post.edited_at;
 
     return (
-        <Link
-            href={`/post/${post.id}`}
-            scroll={false}
-            className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
-            onClick={onClick}
+        <motion.div
+            layout
+            initial={{ opacity: 1, scale: 1, height: 'auto' }}
+            animate={
+                post.is_deleted 
+                ? { opacity: 0, scale: 0.9, height: 0, overflow: 'hidden', margin: 0, padding: 0 } 
+                : { opacity: 1, scale: 1, height: 'auto' }
+            }
+            transition={{ duration: 0.3 }}
+            className={post.is_deleted ? 'pointer-events-none' : ''}
+            style={{ originY: 0.5 }}
         >
+            <Link
+                href={`/post/${post.id}`}
+                        scroll={false}
+                        className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
+                        onClick={onClick}
+                    >
             <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
-                {!hasError && (
+                {!hasError && bgUrl && (
                     <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                         <div
                             className="absolute inset-0 bg-cover bg-center blur-lg scale-125 brightness-[0.6]"
-                            style={{ backgroundImage: `url(${post.image_url})` }}
+                            style={{ backgroundImage: `url(${bgUrl})` }}
                         />
                     </div>
                 )}
@@ -153,44 +163,53 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                             {hasError ? (
                                 <div className="w-full aspect-4/3">
                                     <ImageFallback
-                                        src={post.image_url}
+                                        src={optimizedFallback ? optimizedFallback.src : post.image_url}
+                                        srcSet={optimizedFallback?.srcSet}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                        placeholderSrc={optimizedFallback?.placeholder}
                                         alt={post.title}
                                         className="w-full h-auto object-cover transition-transform duration-500 block"
                                         fallbackClassName={`w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}
                                         onErrorChange={(err) => setHasError(err)}
-                                        onLoadChange={(loaded) => setImageLoaded(loaded)}
                                     />
                                 </div>
                             ) : (
-                                <img
-                                    src={post.image_url}
-                                    alt={post.title}
-                                    className="w-full h-auto object-cover transition-transform duration-500 block"
+                                <MediaCarousel
+                                    media={post.media || [{ type: 'image', url: post.image_url } as import('@/types').MediaAsset]}
+                                    variant="thumbnail"
+                                    className="w-full h-auto block"
+                                    imageClassName="w-full h-auto object-cover transition-transform duration-500 block"
+                                    onErrorChange={(err) => setHasError(err)}
                                 />
                             )}
 
                             {isTopRated && (
-                                <div className="absolute top-3 left-3 z-20 group/toprated cursor-help">
-                                    <div className="bg-white text-black text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                                        <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
-                                            {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
-                                            <DotLottieReact
-                                                src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
-                                                loop
-                                                autoplay
-                                                dotLottieRefCallback={(dotLottie) => {
-                                                    if (dotLottie) {
-                                                        dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
-                                                    }
-                                                }}
-                                                className="relative z-10 w-full h-full"
-                                            />
+                                <div className="absolute top-3 left-3 z-20">
+                                    <Tooltip
+                                        position="bottom"
+                                        gapClass="pt-1"
+                                        width="w-48"
+                                        contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
+                                        content={<p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>}
+                                    >
+                                        <div className="bg-white text-black text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm cursor-help">
+                                            <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
+                                                {!topRatedLottieLoaded && <span className="absolute text-[12px]">🏆</span>}
+                                                <DotLottieReact
+                                                    src="https://lottie.host/9f381d99-a012-4ffb-83c6-f00e5ce0495f/JD28EvSg2I.lottie"
+                                                    loop
+                                                    autoplay
+                                                    dotLottieRefCallback={(dotLottie) => {
+                                                        if (dotLottie) {
+                                                            dotLottie.addEventListener('load', () => setTopRatedLottieLoaded(true));
+                                                        }
+                                                    }}
+                                                    className="relative z-10 w-full h-full"
+                                                />
+                                            </div>
+                                            <span>Top Rated</span>
                                         </div>
-                                        <span>Top Rated</span>
-                                    </div>
-                                    <div className="absolute top-full left-0 mt-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl pointer-events-none opacity-0 invisible -translate-y-2 group-hover/toprated:opacity-100 group-hover/toprated:visible group-hover/toprated:translate-y-0 transition-all duration-200 hidden md:block">
-                                        <p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>
-                                    </div>
+                                    </Tooltip>
                                 </div>
                             )}
 
@@ -205,11 +224,11 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
 
                     <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
                         <div className="flex justify-between items-center mb-3">
-                            <span className="bg-transparent text-gray-500 text-[10px] font-semibold tracking-wider px-3 py-1 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-[100px] xs:max-w-none block">
+                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[10px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-[100px] xs:max-w-none block">
                                 {post.category}
                             </span>
                             <span
-                                className="text-[12px] text-[#999999] font-medium group-hover/card:text-white/80 transition-colors shrink-0 ml-2"
+                                className="text-[12px] text-muted font-medium group-hover/card:text-white/80 transition-colors shrink-0 ml-2"
                                 title={getFullTimestamp(post.created_at)}
                             >
                                 {formatTimestamp(post.created_at, now)}
@@ -243,24 +262,13 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                 }
                             }}
                         >
-                            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full overflow-hidden ring-0 group-hover/avatar:ring-1 ring-[#FEC312] transition-all shrink-0 flex items-center justify-center">
-                                {avatar?.avatar_url ? (
-                                    <img
-                                        src={avatar.avatar_url}
-                                        alt="Avatar"
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    <div
-                                        className="w-full h-full flex items-center justify-center text-[10px] md:text-xs text-white font-bold"
-                                        style={{ backgroundColor: avatar?.bg_color || '#cccccc' }}
-                                    >
-                                        {(avatar?.name || 'Unknown').substring(0, 1).toUpperCase()}
-                                    </div>
-                                )}
-                            </div>
+                            <UserAvatar 
+                                avatarUrl={avatar?.avatar_url} 
+                                className="w-5 h-5 md:w-6 md:h-6 ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0" 
+                                iconClassName="w-3/4 h-3/4"
+                            />
                             <div className="flex-1 min-w-0 truncate text-black group-hover/card:text-white transition-colors">
-                                <span className="text-xs font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-[#FEC312] transition-colors">
+                                <span className="text-xs font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-primary transition-colors">
                                     {avatar?.name || 'Unknown'}
                                 </span>
                                 <span className="ml-1.5 text-[10px] text-gray-400 font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors">
@@ -270,7 +278,21 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                         </div>
 
                         <div className="pt-2 sm:pt-3 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
-                            <div className="relative group/tooltip cursor-help">
+                            <Tooltip
+                                position="top"
+                                gapClass="pb-1"
+                                width="w-64"
+                                contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
+                                triggerClassName="group relative inline-flex items-center cursor-help py-1"
+                                content={
+                                    <p className="leading-relaxed text-center">
+                                        {isHot
+                                            ? "This design is getting high attention based on recent reviews"
+                                            : "Number of structured reviews this design has received"
+                                        }
+                                    </p>
+                                }
+                            >
                                 <div className="flex items-start gap-1 xs:gap-1.5">
                                     <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                     <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
@@ -293,25 +315,22 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                                         )}
                                     </span>
                                 </div>
-                                <div className="absolute bottom-full left-0 mb-3 w-64 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:translate-y-0 transition-all duration-200 hidden md:block">
-                                    <p className="leading-relaxed text-center">
-                                        {isHot
-                                            ? "This design is getting high attention based on recent reviews"
-                                            : "Number of structured reviews this design has received"
-                                        }
-                                    </p>
-                                </div>
-                            </div>
+                            </Tooltip>
 
                             <div className="flex items-center gap-1.5 w-auto justify-end">
                                 {!metrics?.rating_unlocked ? (
-                                    <div className="relative group/lock cursor-help flex items-center gap-1 pl-2">
+                                    <Tooltip
+                                        position="top"
+                                        align="end"
+                                        gapClass="pb-1"
+                                        width="w-48"
+                                        contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
+                                        triggerClassName="group relative inline-flex items-center cursor-help flex items-center gap-1 pl-2 py-1"
+                                        content={<p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>}
+                                    >
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-4 sm:h-4 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                         <Lock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />
-                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
-                                            <p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>
-                                        </div>
-                                    </div>
+                                    </Tooltip>
                                 ) : (
                                     <>
                                         <div className="flex gap-0.5">
@@ -338,5 +357,6 @@ export function PostCard({ post, badge, isHot = false, isLoading: parentLoading 
                 </div>
             </div>
         </Link>
+    </motion.div>
     );
 }

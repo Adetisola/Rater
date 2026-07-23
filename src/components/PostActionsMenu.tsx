@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreVertical, Edit2, Trash2, Share2, Download, Flag, Check } from 'lucide-react';
+import { MoreVertical, Edit2, Trash2, Share2, Download, Flag, Check, Copy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { showToast } from './GlobalOverlays';
 import { usePosts } from '../context/PostContext';
 import { showDeleteConfirmation } from './GlobalOverlays';
 import { cn } from '../lib/utils';
@@ -39,7 +40,7 @@ export function PostActionsMenu({
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { currentAvatar } = useAuth();
+  const { currentProfile } = useAuth();
   const { setEditingPost } = usePosts();
   const menuRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
@@ -65,7 +66,7 @@ export function PostActionsMenu({
     };
   }, [isOpen]);
 
-  const isOwner = currentAvatar?.id === post.avatar_id;
+  const isOwner = currentProfile?.id === post.avatar_id;
 
   useEffect(() => {
     setMounted(true);
@@ -106,6 +107,16 @@ export function PostActionsMenu({
     e.preventDefault();
     e.stopPropagation();
     await downloadPostImage(post.image_url, post.title);
+    setIsOpen(false);
+  };
+
+  const handleCopyPrompt = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (post.ai_prompt) {
+      navigator.clipboard.writeText(post.ai_prompt);
+      showToast("Prompt copied to clipboard.", "success");
+    }
     setIsOpen(false);
   };
 
@@ -163,7 +174,7 @@ export function PostActionsMenu({
       )}
 
       {isOwner ? (
-        /* OWNER: Edit, Delete, divider, Download */
+        /* OWNER: Edit, Delete, divider, Copy Prompt, Download */
         <>
           <button
             type="button"
@@ -192,6 +203,16 @@ export function PostActionsMenu({
             Remove Post
           </button>
           <div className="border-t border-gray-100 mx-3" />
+          {post.ai_prompt && (
+            <button
+              type="button"
+              onClick={handleCopyPrompt}
+              className={cn(menuItemClass, "text-gray-600")}
+            >
+              <Copy className="w-4 h-4" />
+              Copy Prompt
+            </button>
+          )}
           <button
             type="button"
             onClick={handleDownload}
@@ -202,8 +223,18 @@ export function PostActionsMenu({
           </button>
         </>
       ) : (
-        /* NON-OWNER / GUEST: Download, divider, Report */
+        /* NON-OWNER / GUEST: Copy Prompt, Download, divider, Report */
         <>
+          {post.ai_prompt && (
+            <button
+              type="button"
+              onClick={handleCopyPrompt}
+              className={cn(menuItemClass, "text-gray-600")}
+            >
+              <Copy className="w-4 h-4" />
+              Copy Prompt
+            </button>
+          )}
           <button
             type="button"
             onClick={handleDownload}

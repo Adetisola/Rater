@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { LogIn, UserPlus } from 'lucide-react';
 import { AccessAvatarForm } from './AccessAvatarForm';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
+import { LegalModal } from './LegalModal';
 
 interface AuthOverlayProps {
   onClose: () => void;
@@ -17,8 +18,17 @@ interface AuthOverlayProps {
 
 export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redirectOnSuccess = true }: AuthOverlayProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
+  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
+    isOpen: false,
+    title: '',
+    docUrl: ''
+  });
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  const openLegal = (title: string, docUrl: string) => {
+    setLegalModal({ isOpen: true, title, docUrl });
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -35,6 +45,9 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
 
   const handleLoginSuccess = () => {
     onClose();
+    if (redirectOnSuccess) {
+      router.push('/browse', { scroll: false });
+    }
   };
 
   if (!mounted) return null;
@@ -48,7 +61,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
       />
 
       {/* Modal Container */}
-      <div className="bg-white w-full max-w-md rounded-[24px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 max-h-[90vh] md:max-h-[660px]">
+      <div className="bg-white w-full max-w-md rounded-[24px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 h-[560px] max-h-[90vh]">
 
         {/* Tab Header */}
         <div className="flex border-b border-gray-100 shrink-0">
@@ -64,7 +77,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
             {activeTab === 'login' && (
               <motion.div
                 layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FEC312]"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
               />
             )}
           </button>
@@ -80,7 +93,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
             {activeTab === 'signup' && (
               <motion.div
                 layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FEC312]"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
               />
             )}
           </button>
@@ -95,7 +108,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
-                className="w-full flex flex-col items-center"
+                className="w-full flex flex-col items-center my-auto py-2"
               >
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-medium text-black mb-1">Welcome Back</h2>
@@ -124,6 +137,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                   <CreateAvatarOverlay
                     isEmbedded
                     onClose={onClose}
+                    onShowLegal={openLegal}
                     onCreate={async () => {
                       onClose();
                       if (redirectOnSuccess) {
@@ -131,14 +145,32 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                       }
                     }}
                     prefillName={prefillName}
-                    onLogin={() => setActiveTab('login')}
                   />
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
+
+        {/* Footer Link */}
+        {activeTab === 'login' && (
+          <div className="p-4 text-center border-t border-gray-100 shrink-0 bg-gray-50/50">
+            <p className="text-[11px] text-gray-400">
+              By continuing, you agree to Rater's{' '}
+              <button onClick={() => openLegal('Terms of Service', '/legal/Rater Terms of Service.md')} className="font-semibold text-gray-500 hover:text-black transition-colors">Terms of Service</button>{' '}
+              and{' '}
+              <button onClick={() => openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md')} className="font-semibold text-gray-500 hover:text-black transition-colors">Privacy Policy</button>.
+            </p>
+          </div>
+        )}
       </div>
+      
+      <LegalModal
+        isOpen={legalModal.isOpen}
+        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
+        title={legalModal.title}
+        docUrl={legalModal.docUrl}
+      />
     </div>,
     document.body
   );
