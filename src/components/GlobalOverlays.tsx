@@ -109,7 +109,7 @@ export function GlobalOverlays() {
       <OfflineStatus />
       
       {/* Toast Notifications Container */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-200 flex flex-col items-center gap-3 pointer-events-none">
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-200 flex flex-col items-center gap-3 pointer-events-none w-[calc(100vw-2rem)] sm:w-auto max-w-md">
         <AnimatePresence mode="popLayout">
           {/* Undo Toast */}
           {undoPostId && (
@@ -119,7 +119,7 @@ export function GlobalOverlays() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               layout
-              className="flex items-center gap-4 px-6 py-4 bg-[#111111] text-white rounded-2xl shadow-2xl border border-white/10 pointer-events-auto"
+              className="flex items-center gap-4 px-6 py-4 bg-[#111111] text-white rounded-2xl shadow-2xl border border-white/10 pointer-events-auto w-max max-w-full"
             >
               <span className="text-sm font-medium">Post removed</span>
               <div className="w-px h-4 bg-white/20" />
@@ -150,7 +150,7 @@ export function GlobalOverlays() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 layout
-                className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl pointer-events-auto text-white
+                className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl pointer-events-auto text-white w-max max-w-full
                   ${isError ? 'bg-red-500' : isSuccess ? 'bg-green-500' : 'bg-[#111111]'}`}
               >
                 {isError && <AlertCircle className="w-5 h-5 shrink-0" />}

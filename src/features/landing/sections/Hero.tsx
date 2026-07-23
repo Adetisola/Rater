@@ -177,7 +177,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             initial={{ opacity: 0, y: 40 }}
             animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
             transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[70%] sm:h-[95%] md:h-[90%] w-auto max-w-none"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 z-5 h-[65%] sm:h-[80%] md:h-[75%] w-auto max-w-none"
             style={{ willChange: 'transform, opacity' }}
             onLoad={onVisualLoad}
           />
@@ -192,7 +192,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               style={{ willChange: 'transform, opacity' }}
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-black text-center leading-tight tracking-tight px-4 w-full"
             >
-              <span className="sr-only">Rater: </span>
+              <span className="block text-gray-800 uppercase tracking-widest text-sm md:text-base font-extrabold mb-3 md:mb-4">Rater</span>
               <span className="block sm:inline">Judgment is built, </span>
               <span className="block sm:inline">
                 not{' '}
@@ -214,7 +214,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               style={{ willChange: 'transform, opacity' }}
               className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0 font-normal"
             >
-              Rater is an application that helps designers train their eye by actively observing and evaluating real design work.
+              Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.
             </motion.h2>
 
             {/* CTA Buttons */}
