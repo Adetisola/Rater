@@ -23,7 +23,7 @@ const usernameToEmailCache: Record<string, string> = (globalThis as any).__usern
 (globalThis as any).__usernameToEmailCache = usernameToEmailCache;
 
 // Promise cache for deduplicating concurrent network requests
-const pendingProfilePromises: Record<string, Promise<Avatar | null>> = (globalThis as any).__pendingProfilePromises || {};
+const pendingProfilePromises: Record<string, Promise<Avatar | null> | undefined> = (globalThis as any).__pendingProfilePromises || {};
 (globalThis as any).__pendingProfilePromises = pendingProfilePromises;
 
 export function populateProfileCache(profiles: Partial<Avatar>[]) {
