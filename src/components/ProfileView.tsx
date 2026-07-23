@@ -23,6 +23,7 @@ import { SocialLinksRow } from './SocialLinksRow';
 import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
+import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
 import { Loader2 } from 'lucide-react';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
@@ -121,6 +122,16 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
 
   // Find the avatar to display
   const targetAvatar = profileMap[avatarId];
+
+  // Compute optimized avatar URL for the main profile header
+  const optimizedAvatarUrl = useMemo(() => {
+    if (!targetAvatar?.avatar_url) return null;
+    const publicId = extractPublicId(targetAvatar.avatar_url);
+    if (publicId) {
+      return generateThumbnail(publicId, 400, 400); // slightly larger for profile header
+    }
+    return targetAvatar.avatar_url;
+  }, [targetAvatar?.avatar_url]);
 
   // Username validation hook (wired to checkUsernameAvailable from AuthContext)
   const memoizedCheckAvailability = useCallback(
@@ -374,7 +385,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                 disabled={isUploadingAvatar}
               >
                 <img
-                  src={targetAvatar.avatar_url}
+                  src={optimizedAvatarUrl || targetAvatar.avatar_url}
                   className={cn(
                     "w-full h-full object-cover transition-transform duration-500",
                     !isUploadingAvatar && "group-hover/avatar:scale-110",

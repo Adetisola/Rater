@@ -1,5 +1,7 @@
 import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
+import { useMemo } from 'react';
 
 interface UserAvatarProps {
   avatarUrl?: string | null;
@@ -8,6 +10,15 @@ interface UserAvatarProps {
 }
 
 export function UserAvatar({ avatarUrl, className, iconClassName }: UserAvatarProps) {
+  const optimizedUrl = useMemo(() => {
+    if (!avatarUrl) return null;
+    const publicId = extractPublicId(avatarUrl);
+    if (publicId) {
+      return generateThumbnail(publicId, 200, 200);
+    }
+    return avatarUrl;
+  }, [avatarUrl]);
+
   return (
     <div
       className={cn(
@@ -16,9 +27,9 @@ export function UserAvatar({ avatarUrl, className, iconClassName }: UserAvatarPr
         className
       )}
     >
-      {avatarUrl ? (
+      {optimizedUrl ? (
         <img 
-          src={avatarUrl} 
+          src={optimizedUrl} 
           alt="Avatar" 
           className="w-full h-full object-cover rounded-full" 
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
