@@ -60,7 +60,7 @@ export interface Avatar {
   name: string;                      // Display name (flexible)
   role: string | null;               // public-facing identity label (nullable)
   avatar_url?: string;
-  readonly bg_color?: string;
+  bg_color?: string;
   is_admin?: boolean;
   bio?: string;
   is_blocked: boolean;
