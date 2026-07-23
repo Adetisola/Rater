@@ -193,11 +193,11 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-black text-center leading-tight tracking-tight px-4 w-full"
             >
               <span className="block text-gray-800 uppercase tracking-widest text-sm md:text-base font-extrabold mb-3 md:mb-4">Rater</span>
-              <span className="block sm:inline">Judgment is built, </span>
+              <span className="block sm:inline">Share your creative work. </span>
               <span className="block sm:inline">
-                not{' '}
+                Get structured{' '}
                 <span className="relative inline-block">
-                  found
+                  feedback.
                 {/* Animated yellow scribble on top of the word */}
                 <AnimatedScribble 
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-auto pointer-events-none select-none"
@@ -214,7 +214,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               style={{ willChange: 'transform, opacity' }}
               className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0 font-normal"
             >
-              Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.
+              Rater is a platform for creators to publish their work, receive structured reviews, and discover inspiration from a community of peers.
             </motion.h2>
 
             {/* CTA Buttons */}
