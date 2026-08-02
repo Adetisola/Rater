@@ -654,13 +654,14 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       perf.end('Database Write');
       try { perf.end('Total Pipeline Execution'); } catch(e){}
     } catch (err: any) {
-      console.error('[PostForm] handleSubmit error:', err);
-      const errorMsg = err.message || 'Upload failed. Please check your connection and try again.';
-      
-      const isCancellation = err.name === 'AbortError' || errorMsg.toLowerCase().includes('abort');
+      const isCancellation = err?.name === 'AbortError' || err?.message?.toLowerCase().includes('abort');
       
       if (!isCancellation) {
-        setInlineUploadError(errorMsg);
+        const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+          fallbackCode: 'RATER_UPLOAD_001',
+          fallbackMessage: 'Upload failed. Please check your connection and try again.'
+        }));
+        setInlineUploadError(normalized.userMessage);
       } else {
         setInlineUploadError(null);
       }

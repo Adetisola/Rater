@@ -9,6 +9,7 @@ import { Input } from './ui/Input';
 import { useGuestEngagementPrompt } from '../hooks/useGuestEngagementPrompt';
 import { GuestSignupPrompt } from './GuestSignupPrompt';
 import { Tooltip } from './ui/Tooltip';
+import { AppErrorState } from './AppErrorState';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -323,8 +324,11 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
   // Calculate completeness
   const isComplete = criteria.every(c => (ratings[c.dbKey] || 0) > 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [inlineSubmitError, setInlineSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setInlineSubmitError(null);
 
     // Final validation
     if (!isComplete) return;
@@ -334,21 +338,31 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
     }
 
     setIsSubmitting(true);
-    // Simulate network delay
-    setTimeout(() => {
+    
+    // Slight artificial delay for UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    try {
       const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
+
+      await onSubmit(ratings, comment, finalName);
 
       // Trigger screen success confetti rain!
       triggerSuccessConfetti();
-
-      onSubmit(ratings, comment, finalName);
 
       // Clear drafts on success
       deleteDraft(postId, userId);
       deleteSnapshot(postId);
 
+    } catch (err: any) {
+      const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+        fallbackCode: 'RATER_REVIEW_001',
+        fallbackMessage: 'Failed to submit review. Please try again.'
+      }));
+      setInlineSubmitError(normalized.userMessage);
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
   };
 
   return (
@@ -432,6 +446,19 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
             </div>
           </div>
         </div>
+
+        {inlineSubmitError && (
+          <div className="mb-6">
+            <AppErrorState
+              title="Failed to submit"
+              description={inlineSubmitError}
+              onRetry={() => {
+                setInlineSubmitError(null);
+                handleSubmit(new Event('submit') as unknown as React.FormEvent);
+              }}
+            />
+          </div>
+        )}
 
         <Button
           ref={btnRef}

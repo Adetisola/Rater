@@ -59,10 +59,8 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
     }
 
     // Fire and forget the background deletion
-    deletePost(id).then(success => {
-      if (!success) {
-        showToast('Failed to delete post', 'error');
-      }
+    deletePost(id).catch(err => {
+      showToast(err.userMessage || err.message || 'Failed to delete post', 'error');
     });
   };
 

@@ -10,7 +10,9 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuth } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { usePostStore } from '../store/postStore';
-import { useNow } from '../context/TimeContext';
+import { useNavigationStore } from '@/store/navigationStore';
+import { useNow } from '@/context/TimeContext';
+import { AppErrorState } from '@/components/AppErrorState';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
@@ -27,7 +29,6 @@ import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transf
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { AmbientLoadingText } from './AmbientLoadingText';
-import { useNavigationStore } from '../store/navigationStore';
 import { RelatedSection } from './RelatedSection';
 import { MediaCarousel } from './MediaCarousel';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
@@ -186,6 +187,8 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
  */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
     const { optimisticUpdateMetrics } = usePosts();
+    const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
+    const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
     const badgeMap = usePostStore(state => state.badgeMap);
     const hotPostIds = usePostStore(state => state.hotPostIds);
     const posts = usePostStore(state => state.posts);
@@ -259,20 +262,40 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     // External Metadata (Badges, Hot Status)
     const badge = badgeMap[post.id];
     const isHot = hotPostIds.has(post.id);
-    const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
-    const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
+    const [loadError, setLoadError] = useState<Error | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
+    const MAX_RETRIES = 1;
 
     // 1. Initial Data Load
     useEffect(() => {
         let isMounted = true;
-        setIsFetchingReviews(true);
+        
+        if (retryCount === 0) {
+           setIsFetchingReviews(true);
+           setLoadError(null);
+        }
 
         const loadData = async () => {
-            const reviews = await getReviewsByPostId(post.id);
-
-            if (isMounted) {
-                setDbReviews(reviews);
-                setIsFetchingReviews(false);
+            try {
+                const reviews = await getReviewsByPostId(post.id);
+                if (isMounted) {
+                    setDbReviews(reviews);
+                    setIsFetchingReviews(false);
+                    setRetryCount(0);
+                }
+            } catch (err) {
+                const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+                    fallbackCode: 'RATER_NETWORK_003',
+                    fallbackMessage: 'Failed to load reviews.'
+                }));
+                if (isMounted) {
+                    if (retryCount < MAX_RETRIES) {
+                        setRetryCount(prev => prev + 1);
+                    } else {
+                        setLoadError(normalized);
+                        setIsFetchingReviews(false);
+                    }
+                }
             }
         };
 
@@ -291,7 +314,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         }
 
         return () => { isMounted = false; };
-    }, [post.id, currentAvatar, post.avatar_id]);
+    }, [post.id, currentAvatar, post.avatar_id, retryCount]);
 
     // 2. Derive metrics locally when userReviews change (Optimistic UI)
     useEffect(() => {
@@ -1123,6 +1146,14 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     <div className="space-y-4">
                         {isFetchingReviews ? (
                             <div className="py-20 text-center text-gray-400 font-medium"><AmbientLoadingText /></div>
+                        ) : loadError ? (
+                            <div className="w-full">
+                               <AppErrorState
+                                 title="Failed to load reviews"
+                                 description={loadError.message || "We encountered an issue while loading reviews."}
+                                 onRetry={() => setRetryCount(0)}
+                               />
+                            </div>
                         ) : allReviews.length === 0 ? (
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}

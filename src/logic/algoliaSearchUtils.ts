@@ -99,8 +99,11 @@ export async function searchAll(
 
     return { avatars, posts, categories };
   } catch (error) {
-    console.error("Algolia search error:", error);
-    return { avatars: [], posts: [], categories: [] };
+    throw await import('@/lib/errors/normalizeError').then(m => m.normalizeError(error, {
+      fallbackCode: 'RATER_NETWORK_002',
+      fallbackMessage: 'Search failed. Please try again.',
+      context: { action: 'searchAll', query }
+    }));
   }
 }
 
@@ -133,8 +136,11 @@ export async function searchPosts(
       algoliaHighlight: hit._highlightResult,
     }));
   } catch (error) {
-    console.error("Algolia search error:", error);
-    return [];
+    throw await import('@/lib/errors/normalizeError').then(m => m.normalizeError(error, {
+      fallbackCode: 'RATER_NETWORK_002',
+      fallbackMessage: 'Search failed. Please try again.',
+      context: { action: 'searchPosts', query }
+    }));
   }
 }
 

@@ -38,6 +38,7 @@ import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
 import { GlobalOverlays } from "../components/GlobalOverlays";
 import { PWARegistry } from "../components/PWARegistry";
 import { ScrollRestorationProvider } from "../components/ScrollRestorationProvider";
+import { GlobalErrorBoundary } from "../components/GlobalErrorBoundary";
 
 export default function RootLayout({
   children,
@@ -50,18 +51,20 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icons/rater-logo-white-bg.svg" />
       </head>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <PostProvider>
-            <TimeProvider>
-              <ScrollRestorationProvider>
-                <PWARegistry />
-                <GlobalRouteLoader />
-                <GlobalOverlays />
-                {children}
-              </ScrollRestorationProvider>
-            </TimeProvider>
-          </PostProvider>
-        </AuthProvider>
+        <GlobalErrorBoundary>
+          <AuthProvider>
+            <PostProvider>
+              <TimeProvider>
+                <ScrollRestorationProvider>
+                  <PWARegistry />
+                  <GlobalRouteLoader />
+                  <GlobalOverlays />
+                  {children}
+                </ScrollRestorationProvider>
+              </TimeProvider>
+            </PostProvider>
+          </AuthProvider>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );

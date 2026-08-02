@@ -282,7 +282,11 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         router.replace(`/@${editUsername.toLowerCase().trim()}`);
       }
     } else {
-      setSaveError(result.error);
+      const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(new Error(result.error), {
+        fallbackCode: 'RATER_PROFILE_002',
+        fallbackMessage: 'Failed to update profile.'
+      }));
+      setSaveError(normalized.userMessage);
       setEditState('error');
     }
   };
@@ -299,10 +303,18 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         if (result.ok) {
           showToast("Profile picture updated", "success");
         } else {
-          showToast(result.error || "Failed to update profile", "error");
+          const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(new Error(result.error), {
+            fallbackCode: 'RATER_PROFILE_001',
+            fallbackMessage: 'Failed to update profile.'
+          }));
+          showToast(normalized.userMessage, "error");
         }
       } catch (err: any) {
-        showToast(err.message || "Failed to upload image", "error");
+        const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+          fallbackCode: 'RATER_UPLOAD_002',
+          fallbackMessage: 'Failed to upload image.'
+        }));
+        showToast(normalized.userMessage, "error");
       } finally {
         setIsUploadingAvatar(false);
         // Reset input value so the same file can be selected again if needed

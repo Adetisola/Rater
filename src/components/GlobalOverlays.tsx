@@ -92,7 +92,11 @@ export function GlobalOverlays() {
 
   const handleUndo = async () => {
     if (undoPostId) {
-      await undoDelete(undoPostId);
+      try {
+        await undoDelete(undoPostId);
+      } catch (err: any) {
+        showToast(err.userMessage || err.message || "Failed to undo delete", "error");
+      }
       setUndoPostId(null);
     }
   };

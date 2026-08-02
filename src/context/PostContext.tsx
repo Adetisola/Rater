@@ -89,11 +89,13 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       usePostStore.getState().updatePost(postId, serverPost);
       
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic update failed, rolling back:', err);
       // 3. Precise rollback
       usePostStore.getState().updatePost(postId, previousPost);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_UPDATE_001', fallbackMessage: 'Failed to update post.' });
     }
   }, [currentProfile]);
 
@@ -114,10 +116,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbSoftDeletePost(postId, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic delete failed, rolling back:', err);
       usePostStore.getState().updatePost(postId, previousPost);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_DELETE_001', fallbackMessage: 'Failed to delete post.' });
     }
   }, [currentProfile]);
 
@@ -134,10 +138,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbUpdatePost(postId, { is_deleted: false, deleted_at: undefined }, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic undo failed, rolling back:', err);
       usePostStore.getState().updatePost(postId, previousPost);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_RESTORE_001', fallbackMessage: 'Failed to restore post.' });
     }
   }, [currentProfile]);
 
@@ -154,10 +160,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbHardDeletePost(postId, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic hard delete failed, rolling back:', err);
       usePostStore.getState().addOrUpdatePosts([previousPost]);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_HDELETE_001', fallbackMessage: 'Failed to permanently delete post.' });
     }
   }, [currentProfile]);
 
@@ -180,11 +188,13 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       usePostStore.getState().addOrUpdatePosts([newPost]);
       usePostStore.getState().setNewlyUploadedPostId(newPost.id);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic create failed, rolling back:', err);
       // Rollback newly inserted optimistic post
       usePostStore.getState().deletePost(tempId);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_CREATE_001', fallbackMessage: 'Failed to create post.' });
     }
   }, []);
 
