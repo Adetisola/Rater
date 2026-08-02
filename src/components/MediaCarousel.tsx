@@ -193,9 +193,10 @@ export function MediaCarousel({
         ))}
       </div>
 
-      {/* Adaptive Navigation Pill - Bottom Right */}
+      {/* Desktop Navigation Pill - Bottom Right */}
       <div
         data-no-route-loader
+        className="hidden sm:inline-flex items-center justify-between bg-black/20 backdrop-blur-md text-white"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -206,12 +207,6 @@ export function MediaCarousel({
           right: 12,
           zIndex: 20,
           pointerEvents: 'auto',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
           borderRadius: 9999,
           height: 28,
           overflow: 'hidden',
@@ -219,7 +214,6 @@ export function MediaCarousel({
       >
         {/* Previous Arrow - slides in from left */}
         <div
-          className="hidden sm:flex"
           style={{
             width: showPrev ? 28 : 0,
             opacity: showPrev ? 1 : 0,
@@ -237,7 +231,7 @@ export function MediaCarousel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#000',
+              color: 'white',
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
@@ -254,7 +248,7 @@ export function MediaCarousel({
           style={{
             fontSize: 10,
             fontWeight: 600,
-            color: '#000',
+            color: 'white',
             letterSpacing: '0.06em',
             paddingLeft: showPrev ? 0 : 10,
             paddingRight: showNext ? 0 : 10,
@@ -270,7 +264,6 @@ export function MediaCarousel({
 
         {/* Next Arrow - slides in from right */}
         <div
-          className="hidden sm:flex"
           style={{
             width: showNext ? 28 : 0,
             opacity: showNext ? 1 : 0,
@@ -288,7 +281,7 @@ export function MediaCarousel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#000',
+              color: 'white',
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
@@ -299,6 +292,20 @@ export function MediaCarousel({
             <ChevronRight size={14} strokeWidth={2.5} />
           </button>
         </div>
+      </div>
+
+      {/* Mobile Pagination Dots */}
+      <div 
+        className="absolute bottom-3 left-1/2 -translate-x-1/2 flex sm:hidden items-center gap-1.5 z-20 pointer-events-none bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full"
+      >
+        {media.map((_, idx) => (
+          <div 
+            key={idx}
+            className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+              idx === currentIndex ? 'bg-white' : 'bg-white/40'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );
