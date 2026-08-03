@@ -185,7 +185,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
   const passkeyMismatch = confirmPasskey.length > 0 && passkey !== confirmPasskey;
 
-  const handleCreateStepSubmit = (e: React.FormEvent) => {
+  const handleCreateStepSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const nameErr = validateDisplayName(name);
     const emailErr = validateEmailFormat(email);
@@ -195,6 +195,26 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
     if (nameErr || emailErr) return;
     if (!validation.canSubmit || passkeyMismatch) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      
+      if (response.ok && !data.available) {
+        setEmailError('Email is already registered');
+        setIsSubmitting(false);
+        return;
+      }
+    } catch (err) {
+      console.error('Network error checking email:', err);
+      // Proceed on network error so we don't hard-block them; the final signup will catch it anyway
+    }
+    setIsSubmitting(false);
 
     // Jump to username step
     setDirection(1);
@@ -456,9 +476,20 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     }`}
                 />
                 {emailError && (
-                  <p className="text-xs text-red-500 font-medium ml-1 animate-in slide-in-from-top-1">
-                    {emailError}
-                  </p>
+                  <div className="flex items-center gap-2 mt-1 ml-1 animate-in slide-in-from-top-1">
+                    <p className="text-xs text-red-500 font-medium">
+                      {emailError}
+                    </p>
+                    {emailError === 'Email is already registered' && onLogin && (
+                      <button
+                        type="button"
+                        onClick={onLogin}
+                        className="text-xs font-semibold text-primary hover:underline"
+                      >
+                        Log in instead
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -535,8 +566,15 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               <div className="pt-4 flex flex-col items-center justify-center gap-4 w-full">
                 <div className="flex items-center justify-center gap-6 w-full">
                   <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
-                  <Button variant='outline' type="submit" disabled={!validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
-                    Continue
+                  <Button variant='outline' type="submit" disabled={isSubmitting || !validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
+                    {isSubmitting ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>Checking...</span>
+                      </div>
+                    ) : (
+                      "Continue"
+                    )}
                   </Button>
                 </div>
                 <div className="px-2">

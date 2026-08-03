@@ -138,6 +138,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                     isEmbedded
                     onClose={onClose}
                     onShowLegal={openLegal}
+                    onLogin={() => setActiveTab('login')}
                     onCreate={async () => {
                       onClose();
                       if (redirectOnSuccess) {

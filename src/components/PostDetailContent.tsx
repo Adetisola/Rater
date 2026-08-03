@@ -282,6 +282,24 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     setDbReviews(reviews);
                     setIsFetchingReviews(false);
                     setRetryCount(0);
+
+                    // 1. Backend is the source of truth for "hasReviewed"
+                    const device_id = getDeviceId();
+                    const hasExistingReview = reviews.some(r => 
+                        (currentAvatar && r.reviewer_id === currentAvatar.id) ||
+                        (!currentAvatar && r.device_id === device_id)
+                    );
+
+                    if (hasExistingReview) {
+                        setHasReviewed(true);
+                        // Heal localStorage if missing
+                        markPostAsReviewed(post.id);
+                    } else if (hasReviewedPost(post.id)) {
+                        // Optional fallback: use localStorage cache while we wait or if backend missed it
+                        // but ideally we wouldn't even need this if backend is strict truth.
+                        // We will allow it as a fast cache.
+                        setHasReviewed(true);
+                    }
                 }
             } catch (err) {
                 const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
@@ -294,6 +312,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     } else {
                         setLoadError(normalized);
                         setIsFetchingReviews(false);
+                        
+                        // Fast fallback on network error
+                        if (hasReviewedPost(post.id)) {
+                            setHasReviewed(true);
+                        }
                     }
                 }
             }
@@ -306,11 +329,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             setIsSelfPost(true);
         } else {
             setIsSelfPost(false);
-        }
-
-        // Check device-based review history
-        if (hasReviewedPost(post.id)) {
-            setHasReviewed(true);
         }
 
         return () => { isMounted = false; };
@@ -512,12 +530,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         if (currentAvatar && post.avatar_id === currentAvatar.id) return;
 
         const device_id = getDeviceId();
-        const hasDuplicate = allReviews.some(r =>
+        const hasExistingReview = allReviews.some(r =>
             (currentAvatar && r.reviewer_id === currentAvatar.id) ||
             (!currentAvatar && r.device_id === device_id)
         );
 
-        if (hasDuplicate || hasReviewedPost(post.id)) {
+        if (hasExistingReview || hasReviewedPost(post.id)) {
             showToast("You've already reviewed this post.", "error");
             return;
         }
@@ -549,11 +567,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         const previousTimestamps = localStorage.getItem(RATE_LIMIT_KEY);
         const previousMetrics = metrics;
 
-        // Apply Optimistic State
+        // Apply Optimistic State (React only, NOT localStorage yet)
         isFreshReviewRef.current = true;
         setUserReviews([newReview, ...userReviews]);
         setHasReviewed(true);
-        markPostAsReviewed(post.id);
 
         const updatedTimestamps = [...validTimestamps, Date.now()];
         localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
@@ -572,9 +589,18 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             if (!result.ok) {
                 throw new Error(result.error);
             }
+
+            // SUCCESS: Now persist to localStorage
+            markPostAsReviewed(post.id);
+
+            // Replace the optimistic review with the real one from the server
+            if (result.review) {
+                setUserReviews(prev => prev.map(r => r.id === newReview.id ? result.review : r));
+            }
+
         } catch (err) {
             console.error('Failed to submit review:', err);
-            // Rollback State
+            // Rollback State (localStorage was never touched for markPostAsReviewed)
             setUserReviews(previousReviews);
             setHasReviewed(previousHasReviewed);
             if (previousTimestamps) {
