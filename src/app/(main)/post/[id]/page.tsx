@@ -4,6 +4,7 @@ import { PostDetailContent } from "@/components/PostDetailContent";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata, ResolvingMetadata } from "next";
+import { extractPublicId } from "@/lib/cloudinary/transforms";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> },
@@ -19,10 +20,30 @@ export async function generateMetadata(
   }
 
   const previousImages = (await parent).openGraph?.images || [];
-  const postImageUrl = post.media?.[0]?.url || post.image_url;
+  const rawPostImageUrl = post.media?.[0]?.url || post.image_url;
+  
+  let ogImageUrl = rawPostImageUrl;
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  
+  if (rawPostImageUrl && cloudName) {
+    const publicId = extractPublicId(rawPostImageUrl);
+    if (publicId) {
+      // WhatsApp requires <300KB, JPG, preferably 1200x630.
+      // We use c_pad to ensure the design isn't cut off.
+      ogImageUrl = `https://res.cloudinary.com/${cloudName}/image/upload/c_pad,w_1200,h_630,f_jpg,q_auto/${publicId}`;
+    }
+  }
 
-  const images = postImageUrl
-    ? [{ url: postImageUrl }, ...previousImages]
+  const images = ogImageUrl
+    ? [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+        ...previousImages,
+      ]
     : previousImages;
 
   return {
@@ -38,7 +59,7 @@ export async function generateMetadata(
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: postImageUrl ? [postImageUrl] : undefined,
+      images: ogImageUrl ? [ogImageUrl] : undefined,
     },
   };
 }
