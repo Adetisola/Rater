@@ -201,7 +201,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const handleClose = onClose || (() => router.back());
 
     // Data State
-    const [inlineImageIndex, setInlineImageIndex] = useState(0);
     const modeConfig = getReviewMode(post.category);
     const [dbReviews, setDbReviews] = useState<Review[]>([]);
     const [userReviews, setUserReviews] = useState<Review[]>([]);
@@ -703,7 +702,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                         className="w-full"
                                         imageClassName="w-full h-auto transition-transform duration-500"
                                         onErrorChange={(err) => setImageError(err)}
-                                        onIndexChange={setInlineImageIndex}
                                         onImageClick={(index) => {
                                             setFullscreenImageIndex(index);
                                             if (!imageError) setIsImageFullscreen(true);
