@@ -4,7 +4,9 @@ import { supabase } from '@/lib/supabase/client';
 
 // Simple in-memory rate limiter for guest reviews.
 // Prevents a single IP from spamming guest reviews via device_id rotation.
-// NOTE: For a multi-region production app, use Redis (e.g. Upstash).
+// SECURITY NOTE: This in-memory store resets on server restart and is not shared across edge nodes.
+// For production at scale, you MUST use a persistent store like Upstash Redis to prevent rate limit bypasses.
+// The client-side rate limit in PostDetailContent is just UX sugar and cannot be relied on for security.
 const rateLimitMap = new Map<string, { count: number, resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const MAX_REQUESTS_PER_WINDOW = 3; // Max 3 reviews per minute per IP

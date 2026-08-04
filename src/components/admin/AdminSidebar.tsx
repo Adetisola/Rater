@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, MessageSquare, FileText, Users, BarChart, Settings, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   
   const navItems = [
     { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },

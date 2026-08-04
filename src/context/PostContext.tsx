@@ -8,7 +8,7 @@ import {
   softDeletePost as dbSoftDeletePost,
   hardDeletePost as dbHardDeletePost,
 } from '@/lib/posts';
-import { useAuth } from './AuthContext';
+import { useAuthState } from './AuthContext';
 import { supabase } from '@/lib/supabase/client';
 import { getActiveBadges } from '@/lib/badges';
 import { computeHotPosts } from '@/logic/hotPostUtils';
@@ -29,7 +29,7 @@ const PostContext = createContext<PostContextType | undefined>(undefined);
 
 export function PostProvider({ children }: { children: React.ReactNode }) {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
 
   // Supabase Realtime synchronization for post metrics
   useEffect(() => {

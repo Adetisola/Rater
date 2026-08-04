@@ -10,7 +10,7 @@ import { ImageFallback } from './ImageFallback';
 import { MediaCarousel } from './MediaCarousel';
 import { generateResponsiveUrls, extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { PostActionsMenu } from './PostActionsMenu';
 import { useNow } from '../context/TimeContext';
@@ -42,7 +42,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
 
-    const { profileMap } = useAuth();
+    const { profileMap } = useAuthState();
     
     // Derive metrics directly from the post object (which is kept fresh by PostContext Realtime)
     const metrics = {
@@ -60,9 +60,9 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
     if (showSkeleton) {
         return (
-            <div className="bg-[#ebebeb] p-1.5 rounded-[24px] overflow-hidden h-full">
+            <div className="bg-[#ebebeb] p-1.5 rounded-3xl overflow-hidden h-full">
                 <div className="relative z-10 h-full flex flex-col">
-                    <div className="w-full aspect-4/3 bg-[#d1d5db] rounded-[24px] animate-pulse mb-4" />
+                    <div className="w-full aspect-4/3 bg-[#d1d5db] rounded-3xl animate-pulse mb-4" />
                     <div className="px-2 xs:px-4 pt-0 pb-2 flex-1 flex flex-col">
                         <div className="flex justify-between items-center mb-4">
                             <div className="h-5 w-20 bg-[#d1d5db] rounded-full animate-pulse" />
@@ -142,7 +142,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
                         onClick={onClick}
                     >
-            <div className={`bg-[#ebebeb] p-1.5 rounded-[24px] relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
+            <div className={`bg-[#ebebeb] p-1.5 rounded-3xl relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
                 {!hasError && bgUrl && (
                     <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                         <div
@@ -153,7 +153,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                 )}
 
                 <div className="relative z-10">
-                    <div className={`relative w-full rounded-[20px] ${isTopRated ? 'p-[2px]' : 'overflow-hidden'}`}>
+                    <div className={`relative w-full rounded-[20px] ${isTopRated ? 'p-0.5' : 'overflow-hidden'}`}>
                         {isTopRated && (
                             <div className="absolute inset-0 z-0 rounded-[20px] overflow-hidden pointer-events-none">
                                 <div className="mesh-gradient-layer" />
@@ -224,7 +224,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
                     <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
                         <div className="flex justify-between items-center mb-3">
-                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[10px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-[100px] xs:max-w-none block">
+                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[10px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-25 xs:max-w-none block">
                                 {post.category}
                             </span>
                             <span

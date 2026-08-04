@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthActions } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 export function ConnectedAccounts() {
-  const { connectGoogle } = useAuth();
+  const { connectGoogle } = useAuthActions();
   const [identities, setIdentities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

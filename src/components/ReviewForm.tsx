@@ -9,7 +9,6 @@ import { Input } from './ui/Input';
 import { useGuestEngagementPrompt } from '../hooks/useGuestEngagementPrompt';
 import { GuestSignupPrompt } from './GuestSignupPrompt';
 import { Tooltip } from './ui/Tooltip';
-import { AppErrorState } from './AppErrorState';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -339,13 +338,14 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
 
     setIsSubmitting(true);
     
-    // Slight artificial delay for UX
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
       const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
 
-      await onSubmit(ratings, comment, finalName);
+      // Ensure the loading spinner shows for at least 500ms even if the network is super fast
+      await Promise.all([
+        onSubmit(ratings, comment, finalName),
+        new Promise(resolve => setTimeout(resolve, 500))
+      ]);
 
       // Trigger screen success confetti rain!
       triggerSuccessConfetti();
@@ -438,7 +438,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
                 }
               }}
               maxLength={200}
-              className="min-h-[120px] rounded-xl resize-none p-4 pb-8 focus-visible:border-primary"
+              className="min-h-30 rounded-xl resize-none p-4 pb-8 focus-visible:border-primary"
             />
             <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${comment.length >= 200 ? 'text-red-500' : 'text-gray-400'
               }`}>
@@ -447,18 +447,20 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
           </div>
         </div>
 
-        {inlineSubmitError && (
-          <div className="mb-6">
-            <AppErrorState
-              title="Failed to submit"
-              description={inlineSubmitError}
-              onRetry={() => {
-                setInlineSubmitError(null);
-                handleSubmit(new Event('submit') as unknown as React.FormEvent);
-              }}
-            />
-          </div>
-        )}
+        <AnimatePresence>
+          {inlineSubmitError && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="flex justify-center mb-3"
+            >
+              <p className="text-xs text-red-500 font-medium">
+                {inlineSubmitError}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <Button
           ref={btnRef}

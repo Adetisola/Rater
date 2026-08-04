@@ -6,7 +6,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Tooltip } from './ui/Tooltip';
 import { validatePasskey, getStrengthColor, getStrengthLabel } from '../utils/passkeyValidation';
-import { useAuth } from '../context/AuthContext';
+import { useAuthActions } from '../context/AuthContext';
 import { generateAvailableUsernameAsync } from '../utils/usernameUtils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -69,7 +69,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return "Enter a valid email";
     return null;
   };
-  const { signup, checkUsernameAvailable, loginWithGoogle } = useAuth();
+  const { signup, checkUsernameAvailable, loginWithGoogle } = useAuthActions();
   const [generatedUsernamePreview, setGeneratedUsernamePreview] = useState('username');
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
 
@@ -321,7 +321,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             <div className="text-center mb-6 pt-2">
               <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Avatar</h2>
 
-              <div className="w-full max-w-sm mx-auto mb-6">
+              <div className="w-full max-w-sm mx-auto mb-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -337,7 +337,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   <span className="font-medium text-[15px]">Continue with Google</span>
                 </Button>
 
-                <div className="relative flex items-center py-4">
+                <div className="relative flex items-center py-2 pt-2">
                   <div className="grow border-t border-gray-100"></div>
                   <span className="shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
                   <div className="grow border-t border-gray-100"></div>
@@ -527,7 +527,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                         />
                       </div>
                       <span
-                        className="text-[10px] font-bold min-w-[65px] text-right uppercase tracking-widest"
+                        className="text-[10px] font-bold min-w-16.25 text-right uppercase tracking-widest"
                         style={{ color: getStrengthColor(validation.strength) }}
                       >
                         {getStrengthLabel(validation.strength)}
@@ -566,7 +566,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               <div className="pt-4 flex flex-col items-center justify-center gap-4 w-full">
                 <div className="flex items-center justify-center gap-6 w-full">
                   <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
-                  <Button variant='outline' type="submit" disabled={isSubmitting || !validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all">
+                  <Button variant='outline' type="submit" disabled={isSubmitting || !validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-35 h-12 rounded-full text-lg font-medium transition-all">
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -631,7 +631,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   value={usernameInput}
                   onChange={(e) => handleUsernameChange(e.target.value)}
                   className={cn(
-                    "h-12 pl-[115px] pr-4 text-base font-normal rounded-xl border transition-all outline-none",
+                    "h-12 pl-28.75 pr-4 text-base font-normal rounded-xl border transition-all outline-none",
                     validationResult.status === 'valid' && "border-green-400 focus-visible:border-green-400 bg-green-50/10",
                     validationResult.status === 'taken' && "border-red-400 focus-visible:border-red-400 bg-red-50/10",
                     (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-300 focus-visible:border-primary"
@@ -799,7 +799,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} />
-      <div className="bg-white w-full max-w-md rounded-[32px] relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-md rounded-4xl relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex flex-col items-center">
           {stepContent}
         </div>

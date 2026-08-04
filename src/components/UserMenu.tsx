@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState, useAuthActions } from '../context/AuthContext';
 import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2 } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
@@ -18,7 +18,8 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfile }: UserMenuProps = {}) {
-  const { currentProfile, logout } = useAuth();
+  const { currentProfile } = useAuthState();
+const { logout } = useAuthActions();
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);

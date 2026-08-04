@@ -1,4 +1,10 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 import { supabase } from '@/lib/supabase/client';
 
 const appId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || '';
@@ -57,7 +63,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const secret = searchParams.get('secret');
 
-    if (secret !== process.env.WEBHOOK_SECRET) {
+    if (!secret || !safeCompare(secret, process.env.WEBHOOK_SECRET!)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -112,6 +118,6 @@ export async function GET(req: Request) {
 
   } catch (error: any) {
     console.error('[Algolia Sync Error]', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

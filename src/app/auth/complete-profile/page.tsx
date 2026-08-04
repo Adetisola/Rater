@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState, useAuthActions } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Sparkles, Loader2, AtSign, ChevronLeft } from 'lucide-react';
@@ -20,7 +20,8 @@ const SUGGESTED_ROLES = [
 ];
 
 export default function CompleteProfilePage() {
-  const { currentProfile, updateProfile, isLoading: isAuthLoading } = useAuth();
+  const { currentProfile, isLoading: isAuthLoading } = useAuthState();
+const { updateProfile } = useAuthActions();
   const router = useRouter();
   
   // Step state

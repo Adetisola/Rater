@@ -9,7 +9,7 @@ import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchAll, type SearchIndexes, type SectionedSearchResults } from '@/lib/algolia/search';
 import type { Post, Avatar, Category } from '@/types';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { usePostStore } from '../store/postStore';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useNavigationStore } from '../store/navigationStore';
@@ -60,7 +60,7 @@ export function MobileSearchOverlay({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const { currentProfile, profileMap } = useAuth();
+  const { currentProfile, profileMap } = useAuthState();
   const allPosts = usePostStore(state => state.posts);
   
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();

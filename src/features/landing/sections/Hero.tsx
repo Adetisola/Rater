@@ -124,7 +124,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
 
             {/* Single moving dot */}
             <span
-              className="absolute -bottom-[14px] h-2 w-2 rounded-full bg-primary pointer-events-none"
+              className="absolute -bottom-3.5 h-2 w-2 rounded-full bg-primary pointer-events-none"
               style={{
                 left: dotStyle.left,
                 opacity: dotStyle.opacity,
@@ -155,7 +155,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
       <section className="bg-white">
       <div className="relative w-full px-0 md:px-12 lg:px-20 md:pt-4 pb-8">
         {/* Hero Background Container */}
-        <div className="relative w-full max-w-[1400px] mx-auto overflow-hidden">
+        <div className="relative w-full max-w-350 mx-auto overflow-hidden">
           {/* SVG Background - defines container height. Fixed taller height on mobile to prevent text overlap */}
           <img 
             src={heroBg}
@@ -163,7 +163,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             width={1400}
             height={700}
             fetchPriority="high"
-            className="w-full h-[590px] sm:h-[600px] md:h-auto object-cover object-center block"
+            className="w-full h-147.5 sm:h-150 md:h-auto object-cover object-center block"
             aria-hidden="true"
             onLoad={onBgLoad}
           />
@@ -212,7 +212,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               style={{ willChange: 'transform, opacity' }}
-              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0 font-normal"
+              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-150 mx-auto px-4 sm:px-0 font-normal"
             >
               Rater is an application that helps designers train their eye by actively observing and evaluating real design work.
             </motion.h2>

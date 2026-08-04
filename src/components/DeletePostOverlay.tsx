@@ -79,7 +79,7 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl border border-gray-100 overflow-hidden"
+            className="relative w-full max-w-md bg-white rounded-4xl shadow-2xl border border-gray-100 overflow-hidden"
           >
             <div className="p-8 text-center">
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -94,7 +94,7 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
               <div className="flex flex-col gap-3">
                 <Button 
                   variant="outline" 
-                  className="min-w-[140px] h-12 rounded-full border-red-600 hover:bg-red-600 text-lg font-medium transition-all"
+                  className="min-w-35 h-12 rounded-full border-red-600 hover:bg-red-600 text-lg font-medium transition-all"
                   onClick={handleDelete}
                   disabled={isDeleting}
                   isLoading={isDeleting}

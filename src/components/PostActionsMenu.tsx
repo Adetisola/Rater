@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoreVertical, Edit2, Trash2, Share2, Download, Flag, Check, Copy } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { showToast } from './GlobalOverlays';
 import { usePosts } from '../context/PostContext';
 import { showDeleteConfirmation } from './GlobalOverlays';
@@ -40,7 +40,7 @@ export function PostActionsMenu({
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const { setEditingPost } = usePosts();
   const menuRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 
 const TITLE_VARIANTS = [
   (name: string) => `Hi ${name}, want to keep your reviews connected to you?`,
@@ -19,7 +19,7 @@ interface UseGuestEngagementPromptOptions {
 }
 
 export function useGuestEngagementPrompt({ guestName, isNameFocused }: UseGuestEngagementPromptOptions) {
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [hasTriggered, setHasTriggered] = useState(false);

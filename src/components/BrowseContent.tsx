@@ -13,7 +13,7 @@ import { CATEGORIES } from '@/constants/categories';
 import { buildSearchIndexes, searchPosts } from '@/lib/algolia/search';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { X } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 import { getFeedPosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import useSWR from 'swr';
@@ -32,7 +32,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { currentProfile, profileMap } = useAuth();
+  const { currentProfile, profileMap } = useAuthState();
   
   // Data State
   const [localRecentUpload, setLocalRecentUpload] = useState<string | null>(
@@ -482,7 +482,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               )}
               
               {urlQuery.trim().length >= 2 && !selectedAvatar && (
-                <div className="max-w-[1600px] mx-auto px-6 mb-5">
+                <div className="max-w-400 mx-auto px-6 mb-5">
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-sm text-gray-500 font-medium">Results for</span>
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111] rounded-full">

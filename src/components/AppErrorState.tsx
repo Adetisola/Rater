@@ -15,7 +15,7 @@ export function AppErrorState({
   icon
 }: AppErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center min-h-[300px] w-full">
+    <div className="flex flex-col items-center justify-center p-8 text-center min-h-75 w-full">
       <div className="mb-4 text-gray-400">
         {icon || <AlertCircle className="w-12 h-12 opacity-50" />}
       </div>
@@ -24,7 +24,7 @@ export function AppErrorState({
         {title}
       </h3>
       
-      <p className="text-sm text-gray-500 max-w-[280px] mb-6">
+      <p className="text-sm text-gray-500 max-w-70 mb-6">
         {description}
       </p>
       

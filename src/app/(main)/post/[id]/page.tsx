@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { getPost } from "@/lib/posts";
 import { PostDetailContent } from "@/components/PostDetailContent";
 import { notFound } from "next/navigation";
@@ -31,10 +32,14 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
     );
   }
 
+  const headersList = await headers();
+  const userAgent = headersList.get('user-agent') || '';
+  const isMobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
+
   // 4. Render the client-side interactive content, passing the server-fetched post
   return (
     <main className="flex-1 w-full relative">
-      <PostDetailContent key={post.id} post={post} />
+      <PostDetailContent key={post.id} post={post} initialIsMobile={isMobile} />
     </main>
   );
 }
