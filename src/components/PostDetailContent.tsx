@@ -722,7 +722,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             <div className="absolute top-6 right-6 z-20">
                                 <PostActionsMenu
                                     post={post}
-                                    activeImageIndex={inlineImageIndex}
                                     className="flex gap-3"
                                     buttonClassName="w-10 h-10 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
                                     iconSizeClass="w-5 h-5"

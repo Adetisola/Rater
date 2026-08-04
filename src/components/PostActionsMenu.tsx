@@ -23,7 +23,6 @@ interface PostActionsMenuProps {
   iconSizeClass?: string;
   onReport?: () => void;
   isCardContext?: boolean;
-  activeImageIndex?: number;
 }
 
 export function PostActionsMenu({
@@ -34,7 +33,6 @@ export function PostActionsMenu({
   iconSizeClass = "w-4 h-4",
   onReport,
   isCardContext,
-  activeImageIndex,
 }: PostActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -387,7 +385,6 @@ export function PostActionsMenu({
         isOpen={isDownloadOverlayOpen}
         onClose={() => setIsDownloadOverlayOpen(false)}
         post={post}
-        activeImageIndex={activeImageIndex}
       />
     </div>
   );

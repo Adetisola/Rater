@@ -14,10 +14,9 @@ interface DownloadImageOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   post: Post;
-  activeImageIndex?: number;
 }
 
-export function DownloadImageOverlay({ isOpen, onClose, post, activeImageIndex = 0 }: DownloadImageOverlayProps) {
+export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOverlayProps) {
   const [mounted, setMounted] = useState(false);
   const [downloadingIndices, setDownloadingIndices] = useState<number[]>([]);
   const [downloadedIndices, setDownloadedIndices] = useState<number[]>([]);
