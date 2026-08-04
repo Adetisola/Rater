@@ -278,27 +278,35 @@ export async function checkUsernameAvailable(
 export async function persistProfileUpdate(
   userId: string,
   updates: Partial<Avatar>
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; data: Avatar } | { ok: false; error: string }> {
   // Security safeguard: Strip sensitive fields that should never be updated directly via the client
   const safeUpdates = { ...updates };
   delete safeUpdates.is_admin;
-  delete safeUpdates.role;
   delete safeUpdates.is_blocked;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .update(safeUpdates)
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
+    .single();
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
-  // Explicit cache invalidation
-  ProfileCache.invalidate(userId);
-  if (updates.username) {
-     ProfileCache.invalidate(updates.username);
+  if (!data) {
+    return { ok: false, error: "Profile update failed or unauthorized." };
   }
 
-  return { ok: true };
+  const updatedProfile = data as Avatar;
+
+  // Explicit cache invalidation & update
+  ProfileCache.invalidate(userId);
+  if (updates.username) {
+    ProfileCache.invalidate(updates.username);
+  }
+  ProfileCache.set(updatedProfile, true);
+
+  return { ok: true, data: updatedProfile };
 }

@@ -21,16 +21,27 @@ export async function generateMetadata(
 
   const previousImages = (await parent).openGraph?.images || [];
   const rawPostImageUrl = post.media?.[0]?.url || post.image_url;
-  
   let ogImageUrl = rawPostImageUrl;
+  let ogWidth = post.media?.[0]?.width;
+  let ogHeight = post.media?.[0]?.height;
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   
   if (rawPostImageUrl && cloudName) {
     const publicId = extractPublicId(rawPostImageUrl);
     if (publicId) {
-      // WhatsApp requires <300KB, JPG, preferably 1200x630.
-      // We use c_pad to ensure the design isn't cut off.
-      ogImageUrl = `https://res.cloudinary.com/${cloudName}/image/upload/c_pad,w_1200,h_630,f_jpg,q_auto/${publicId}`;
+      // WhatsApp requires <300KB, JPG. We use c_limit to preserve the exact original aspect ratio
+      // while ensuring the resolution doesn't exceed 1200x1200.
+      ogImageUrl = `https://res.cloudinary.com/${cloudName}/image/upload/c_limit,w_1200,h_1200,f_jpg,q_auto/${publicId}`;
+      
+      // Calculate scaled dimensions for accurate meta tags if original dimensions exist
+      if (ogWidth && ogHeight) {
+        const maxDimension = Math.max(ogWidth, ogHeight);
+        if (maxDimension > 1200) {
+          const scale = 1200 / maxDimension;
+          ogWidth = Math.round(ogWidth * scale);
+          ogHeight = Math.round(ogHeight * scale);
+        }
+      }
     }
   }
 
@@ -38,8 +49,8 @@ export async function generateMetadata(
     ? [
         {
           url: ogImageUrl,
-          width: 1200,
-          height: 630,
+          ...(ogWidth ? { width: ogWidth } : {}),
+          ...(ogHeight ? { height: ogHeight } : {}),
           alt: post.title,
         }
       ]

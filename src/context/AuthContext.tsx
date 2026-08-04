@@ -151,10 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback(async (data: Partial<Avatar>) => {
     if (!currentProfile) return { ok: false, error: "Not logged in" } as const;
     const result = await persistProfileUpdate(currentProfile.id, data);
-    if (result.ok) {
-      // Re-fetch to guarantee state is synced (persistProfileUpdate already invalidates the cache)
-      const updated = await getProfileById(currentProfile.id);
-      if (updated) setCurrentProfile(updated);
+    if (result.ok && result.data) {
+      setCurrentProfile(result.data);
     }
     return result;
   }, [currentProfile]);
