@@ -3,6 +3,45 @@ import { getPost } from "@/lib/posts";
 import { PostDetailContent } from "@/components/PostDetailContent";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import type { Metadata, ResolvingMetadata } from "next";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> },
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const { id } = await params;
+  const post = await getPost(id);
+
+  if (!post) {
+    return {
+      title: "Post Not Found",
+    };
+  }
+
+  const previousImages = (await parent).openGraph?.images || [];
+  const postImageUrl = post.media?.[0]?.url || post.image_url;
+
+  const images = postImageUrl
+    ? [{ url: postImageUrl }, ...previousImages]
+    : previousImages;
+
+  return {
+    title: `${post.title} — Rater`,
+    description: post.description || `View ${post.title} on Rater`,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      images: images,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+      images: postImageUrl ? [postImageUrl] : undefined,
+    },
+  };
+}
 
 export default async function PostDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
