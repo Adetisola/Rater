@@ -13,6 +13,7 @@ import { sharePost, downloadPostImage } from '../lib/postActions';
 import { createPortal } from 'react-dom';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
+import { DownloadImageOverlay } from './DownloadImageOverlay';
 
 interface PostActionsMenuProps {
   post: Post;
@@ -22,6 +23,7 @@ interface PostActionsMenuProps {
   iconSizeClass?: string;
   onReport?: () => void;
   isCardContext?: boolean;
+  activeImageIndex?: number;
 }
 
 export function PostActionsMenu({
@@ -32,11 +34,13 @@ export function PostActionsMenu({
   iconSizeClass = "w-4 h-4",
   onReport,
   isCardContext,
+  activeImageIndex,
 }: PostActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [isShareOverlayOpen, setIsShareOverlayOpen] = useState(false);
   const [isReportOverlayOpen, setIsReportOverlayOpen] = useState(false);
+  const [isDownloadOverlayOpen, setIsDownloadOverlayOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -106,7 +110,14 @@ export function PostActionsMenu({
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await downloadPostImage(post.image_url, post.title);
+    const imageCount = (post.media && post.media.length > 0) ? post.media.length : (post.image_url ? 1 : 0);
+    
+    if (imageCount > 1) {
+      setIsDownloadOverlayOpen(true);
+    } else if (imageCount === 1) {
+      const urlToDownload = post.media?.[0]?.url || post.image_url;
+      await downloadPostImage(urlToDownload, post.title);
+    }
     setIsOpen(false);
   };
 
@@ -370,6 +381,14 @@ export function PostActionsMenu({
           }}
         />
       )}
+
+      {/* Download Image Overlay for Multi-Image Posts */}
+      <DownloadImageOverlay
+        isOpen={isDownloadOverlayOpen}
+        onClose={() => setIsDownloadOverlayOpen(false)}
+        post={post}
+        activeImageIndex={activeImageIndex}
+      />
     </div>
   );
 }

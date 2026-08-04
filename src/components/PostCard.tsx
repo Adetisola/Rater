@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from 'react';
+import useSWR from 'swr';
 import { motion } from 'framer-motion';
 import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -119,7 +120,18 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     if (!post) return null;
 
     const isTopRated = badge === 'top_rated_active';
-    const avatar = profileMap[post.avatar_id];
+    let avatar = profileMap[post.avatar_id] || post.author;
+
+    // Background fetch if avatar is completely missing (e.g., Algolia search results)
+    const { data: fetchedAvatar } = useSWR(
+        !avatar ? `profile_${post.avatar_id}` : null,
+        () => import('@/lib/profiles').then(m => m.getProfileById(post.avatar_id)),
+        { revalidateOnFocus: false, dedupingInterval: 60000 }
+    );
+    
+    if (!avatar && fetchedAvatar) {
+        avatar = fetchedAvatar;
+    }
 
     const isEdited = !!post.edited_at;
 
@@ -222,9 +234,9 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         </div>
                     </div>
 
-                    <div className="px-2 xs:px-4 pt-2 xs:pt-4 pb-2">
-                        <div className="flex justify-between items-center mb-3">
-                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[10px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-25 xs:max-w-none block">
+                    <div className="px-2 xs:px-4 pt-2 xs:pt-2 pb-1">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[9px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-25 xs:max-w-none block">
                                 {post.category}
                             </span>
                             <span
@@ -241,18 +253,18 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             </span>
                         </div>
 
-                        <h3 className="font-medium text-sm xs:text-[16px] text-black leading-tight group-hover/card:text-white transition-colors truncate">
+                        <h3 className="font-medium mb-1 text-sm xs:text-[12px] text-black leading-tight group-hover/card:text-white transition-colors truncate">
                             {post.title}
                         </h3>
 
-                        <div className="hidden md:block mb-3">
+                        <div className="hidden mb-2">
                             <p className="text-xs text-black leading-relaxed line-clamp-3 group-hover/card:text-white/90 transition-colors truncate">
                                 {post.description}
                             </p>
                         </div>
 
                         <div
-                            className="flex items-center gap-2 mb-2 sm:mb-3 group/avatar pointer-events-auto cursor-pointer relative z-20 max-w-full"
+                            className="flex items-center gap-2 mb-2 sm:mb-2 group/avatar pointer-events-auto cursor-pointer relative z-20 max-w-full"
                             data-no-route-loader
                             onClick={(e) => {
                                 e.preventDefault();
@@ -264,11 +276,11 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         >
                             <UserAvatar 
                                 avatarUrl={avatar?.avatar_url} 
-                                className="w-5 h-5 md:w-6 md:h-6 ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0" 
+                                className="w-5 h-5 md:w-5 md:h-5 ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0" 
                                 iconClassName="w-3/4 h-3/4"
                             />
                             <div className="flex-1 min-w-0 truncate text-black group-hover/card:text-white transition-colors">
-                                <span className="text-xs font-medium text-black leading-tight group-hover/card:text-white group-hover/avatar:text-primary transition-colors">
+                                <span className="text-xs font-medium sm:text-[10px] text-black leading-tight group-hover/card:text-white group-hover/avatar:text-primary transition-colors">
                                     {avatar?.name || 'Unknown'}
                                 </span>
                                 <span className="ml-1.5 text-[10px] text-gray-400 font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors">
@@ -277,7 +289,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             </div>
                         </div>
 
-                        <div className="pt-2 sm:pt-3 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
+                        <div className="pt-2 sm:pt-1 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
                             <Tooltip
                                 position="top"
                                 gapClass="pb-1"
@@ -293,8 +305,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                     </p>
                                 }
                             >
-                                <div className="flex items-start gap-1 xs:gap-1.5">
-                                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                <div className="flex items-center gap-1 xs:gap-1.5">
+                                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4 md:h-4 md:-mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                     <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
                                         {metrics?.review_count || 0}
                                         {isHot && (
@@ -328,7 +340,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         triggerClassName="group relative inline-flex items-center cursor-help flex items-center gap-1 pl-2 py-1"
                                         content={<p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>}
                                     >
-                                        <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-4 sm:h-4 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                        <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                         <Lock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                     </Tooltip>
                                 ) : (
@@ -340,7 +352,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                                     <img
                                                         key={i}
                                                         src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"}
-                                                        className={`w-3 h-3 sm:w-4 sm:h-4 ${isActive ? 'group-hover/card:brightness-0 group-hover/card:invert transition-all' : ''}`}
+                                                        className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'group-hover/card:brightness-0 group-hover/card:invert transition-all' : ''}`}
                                                         alt=""
                                                     />
                                                 );
@@ -360,3 +372,4 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     </motion.div>
     );
 }
+

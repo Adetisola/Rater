@@ -12,6 +12,7 @@ interface MediaCarouselProps {
   onErrorChange?: (hasError: boolean) => void;
   onLoadChange?: (loaded: boolean) => void;
   onImageClick?: (index: number) => void;
+  onIndexChange?: (index: number) => void;
   externalIndex?: number;
 }
 
@@ -23,6 +24,7 @@ export function MediaCarousel({
   onErrorChange,
   onLoadChange,
   onImageClick,
+  onIndexChange,
   externalIndex
 }: MediaCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,6 +68,10 @@ export function MediaCarousel({
       setCurrentIndex(index);
     }
   }, [currentIndex, media.length]);
+
+  useEffect(() => {
+    onIndexChange?.(currentIndex);
+  }, [currentIndex, onIndexChange]);
 
   // Sync from external index
   useEffect(() => {
