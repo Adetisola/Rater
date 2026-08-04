@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: "Rater — Design Critique Studio",
   description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icons/rater-logo-white-bg.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }
+    ],
+    apple: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }
+    ],
+  },
   openGraph: {
     title: "Rater — Design Critique Studio",
     description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
@@ -47,10 +56,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" type="image/svg+xml" href="/icons/rater-logo-white-bg.svg" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-      </head>
       <body suppressHydrationWarning>
         <GlobalErrorBoundary>
           <AuthProvider>

@@ -6,6 +6,19 @@ import Link from "next/link";
 import type { Metadata, ResolvingMetadata } from "next";
 import { extractPublicId } from "@/lib/cloudinary/transforms";
 
+function cleanAndTruncate(text: string, maxLen: number = 140): string {
+  if (!text) return "";
+  const cleaned = text.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= maxLen) return cleaned;
+  
+  let truncated = cleaned.slice(0, maxLen);
+  const lastSpace = truncated.lastIndexOf(" ");
+  if (lastSpace > 0) {
+    truncated = truncated.slice(0, lastSpace);
+  }
+  return truncated.trim() + "...";
+}
+
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> },
   parent: ResolvingMetadata
@@ -56,19 +69,71 @@ export async function generateMetadata(
       ]
     : previousImages;
 
+  // Formatting Title: {Post Title} • by @{username}
+  const username = post.author?.username;
+  const displayName = post.author?.name;
+  let creator = "";
+  if (username) {
+    creator = `@${username}`;
+  } else if (displayName) {
+    creator = displayName;
+  }
+  const ogTitle = creator ? `${post.title} • by ${creator}` : post.title;
+
+  // Formatting Description:
+  let ogDescription = "";
+  const cleanDesc = post.description ? post.description.replace(/\s+/g, ' ').trim() : "";
+
+  if (cleanDesc) {
+    // Case 1: Post has description
+    const truncated = cleanAndTruncate(cleanDesc, 140);
+    
+    let suffixParts: string[] = [];
+    if (post.category) {
+      suffixParts.push(post.category);
+    }
+    
+    const reviewCount = post.review_count || 0;
+    const avgScore = post.average_score || 0;
+    
+    // rating is unlocked if review_count >= 3
+    if (reviewCount >= 3 && avgScore > 0) {
+      suffixParts.push(`★ ${avgScore.toFixed(1)}`);
+      suffixParts.push(`${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}`);
+    } else if (reviewCount > 0) {
+      suffixParts.push(`${reviewCount} ${reviewCount === 1 ? 'review' : 'reviews'}`);
+    } else if (creator) {
+      suffixParts.push(`by ${creator}`);
+    }
+    
+    const suffix = suffixParts.join(" • ");
+    ogDescription = truncated ? `${truncated}\n\n${suffix}` : suffix;
+  } else {
+    // Case 2: Post has no description
+    let parts: string[] = [];
+    if (post.category) {
+      parts.push(post.category);
+    }
+    if (creator) {
+      parts.push(`by ${creator}`);
+    }
+    parts.push("View on Rater.");
+    ogDescription = parts.join(" • ");
+  }
+
   return {
-    title: `${post.title} — Rater`,
-    description: post.description || `View ${post.title} on Rater`,
+    title: ogTitle,
+    description: ogDescription,
     openGraph: {
-      title: post.title,
-      description: post.description,
+      title: ogTitle,
+      description: ogDescription,
       images: images,
       type: "article",
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
-      description: post.description,
+      title: ogTitle,
+      description: ogDescription,
       images: ogImageUrl ? [ogImageUrl] : undefined,
     },
   };
