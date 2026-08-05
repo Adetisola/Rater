@@ -678,14 +678,15 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     <div className="md:col-span-7 space-y-6">
 
                         {/* 1. Image Preview */}
-                        <div
-                            className={`group relative w-full ${imageError ? 'aspect-video' : ''} rounded-3xl overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
-                            onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
-                            onPointerDownCapture={(e) => {
-                                // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
-                                e.stopPropagation();
-                            }}
-                        >
+                        <div className="w-full md:flex md:justify-center">
+                            <div
+                                className={`group relative w-full md:w-fit ${imageError ? 'aspect-video' : ''} rounded-3xl overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                                onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
+                                onPointerDownCapture={(e) => {
+                                    // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
+                                    e.stopPropagation();
+                                }}
+                            >
                             {imageError ? (
                                 <ImageFallback
                                     src={post.image_url}
@@ -695,12 +696,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     onErrorChange={(err) => setImageError(err)}
                                 />
                             ) : (
-                                <div className="w-full relative">
+                                <>
                                     <MediaCarousel
                                         media={displayMedia}
                                         variant="detail"
-                                        className="w-full"
-                                        imageClassName="w-full h-auto transition-transform duration-500"
+                                        imageClassName="transition-transform duration-500"
                                         onErrorChange={(err) => setImageError(err)}
                                         onImageClick={(index) => {
                                             setFullscreenImageIndex(index);
@@ -712,7 +712,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             View Full Image
                                         </span>
                                     </div>
-                                </div>
+                                </>
                             )}
 
 
@@ -727,6 +727,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 />
                             </div>
                         </div>
+                    </div>
 
                         {/* 2. Metadata Row */}
                         <div className="flex items-center justify-between">

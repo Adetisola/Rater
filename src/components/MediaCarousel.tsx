@@ -32,12 +32,13 @@ export function MediaCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [coverHeight, setCoverHeight] = useState<number | null>(null);
+  const [coverWidth, setCoverWidth] = useState<number | null>(null);
   const coverImgRef = useRef<HTMLImageElement>(null);
 
   // If only one media, render simple version exactly as before
   if (media.length <= 1) {
     return (
-      <div className={cn("w-full h-full relative", className)}>
+      <div className={cn("relative", variant === 'thumbnail' ? 'w-full h-full' : 'w-fit h-auto', className)}>
         <OptimizedMedia 
           media={media[0]} 
           variant={variant} 
@@ -119,6 +120,7 @@ export function MediaCarousel({
   const handleCoverLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     setCoverHeight(img.offsetHeight);
+    setCoverWidth(img.offsetWidth);
     onLoadChange?.(true);
   }, [variant, onLoadChange]);
 
@@ -128,6 +130,7 @@ export function MediaCarousel({
     const observer = new ResizeObserver(() => {
       if (coverImgRef.current) {
         setCoverHeight(coverImgRef.current.offsetHeight);
+        setCoverWidth(coverImgRef.current.offsetWidth);
       }
     });
     observer.observe(coverImgRef.current);
@@ -143,10 +146,13 @@ export function MediaCarousel({
 
   return (
     <div 
-      className={cn("relative w-full overflow-hidden", className)}
+      className={cn("relative overflow-hidden", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={coverHeight ? { height: coverHeight } : undefined}
+      style={{
+        height: (variant === 'thumbnail' && coverHeight) ? coverHeight : coverHeight ? coverHeight : undefined,
+        width: variant === 'detail' && coverWidth ? coverWidth : undefined,
+      }}
     >
       
       {/* Scroll Container - Native snap for mobile, hidden scrollbar */}
@@ -160,7 +166,7 @@ export function MediaCarousel({
           <div 
             key={`${item.url}-${idx}`} 
             data-index={idx}
-            className="w-full h-full shrink-0 snap-center relative"
+            className={cn("w-full h-full shrink-0 snap-center snap-always relative", variant === 'detail' ? 'flex items-center justify-center' : '')}
           >
             {idx === 0 ? (
               <OptimizedMedia 
@@ -184,7 +190,7 @@ export function MediaCarousel({
                 loading="lazy"
                 className={cn(
                   imageClassName,
-                  'w-full h-full object-cover'
+                  variant === 'thumbnail' ? 'w-full h-full object-cover' : undefined
                 )} 
                 onLoad={() => { if (idx === 0) onLoadChange?.(true); }}
               />
