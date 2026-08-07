@@ -52,8 +52,8 @@ export async function POST(
         const guestSessionHash = (!viewerId && guestSessionId) ? hashValue(guestSessionId) : null;
         
         // Get IP and User-Agent for bot heuristics
-        // Note: In Next.js App Router, request.ip is available if deployed on Vercel
-        const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+        // Note: In modern Next.js App Router, rely on x-forwarded-for
+        const ip = request.headers.get('x-forwarded-for') || 'unknown';
         const userAgent = request.headers.get('user-agent') || 'unknown';
         
         const ipHash = hashValue(ip);
