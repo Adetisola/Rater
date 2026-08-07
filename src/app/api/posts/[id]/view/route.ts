@@ -25,7 +25,7 @@ export async function POST(
                     getAll() {
                         return request.cookies.getAll();
                     },
-                    setAll(cookiesToSet) {
+                    setAll(_cookiesToSet) {
                         // View route only reads cookies for auth
                     }
                 }
