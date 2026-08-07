@@ -326,7 +326,7 @@ export function PostActionsMenu({
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="w-full bg-white rounded-t-[32px] overflow-hidden relative z-10 pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
+                  className="w-full bg-white rounded-t-4xl overflow-hidden shadow-2xl relative z-10 pb-6"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex justify-center pt-4 pb-2">
@@ -350,7 +350,7 @@ export function PostActionsMenu({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 4 }}
                 transition={{ duration: 0.15 }}
-                className="fixed bg-white rounded-2xl shadow-xl border border-gray-100 z-60 min-w-[200px] overflow-hidden"
+                className="absolute right-0 top-full mt-2 w-max min-w-50 bg-white rounded-2xl shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
                 style={{ top: dropdownPos.top, right: dropdownPos.right }}
               >
                 {menuContent}

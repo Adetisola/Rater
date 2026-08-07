@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize a Supabase admin client using the service role key to bypass RLS.
-// This allows us to securely check the auth.users table or profiles table for email existence
-// without exposing sensitive user data to the client.
-const supabaseAdmin = createClient(
+// Initialize a standard Supabase client.
+// We query the public profiles table which contains the email for each user.
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export async function POST(req: NextRequest) {
@@ -19,21 +18,21 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // Check the auth.users table for the email using the admin API.
-    // This is the absolute source of truth for registered emails in Supabase.
-    // We fetch a list of users matching the search string (the email).
-    const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({
-      page: 1,
-      perPage: 1000
-    });
+    // Check the profiles table for the email using the public API.
+    // The profiles table stores emails and is indexed/accessible.
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', normalizedEmail)
+      .maybeSingle();
 
     if (error) {
       console.error('Error checking email availability:', error);
       return NextResponse.json({ error: 'Database error' }, { status: 500 });
     }
 
-    // Check if any user exactly matches the normalized email
-    const isAvailable = !users.some(u => u.email?.toLowerCase() === normalizedEmail);
+    // If data exists, the email is taken.
+    const isAvailable = !data;
 
     return NextResponse.json({ available: isAvailable }, { status: 200 });
   } catch (error) {

@@ -118,7 +118,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
       />
 
       {/* Modal Content */}
-      <div className="w-full sm:max-w-[400px] bg-white rounded-t-[32px] sm:rounded-[32px] p-6 sm:p-8 shadow-2xl relative z-10 animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
+      <div className="w-full sm:max-w-100 bg-white rounded-t-4xl sm:rounded-4xl p-6 sm:p-8 shadow-2xl relative z-10 animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
         
         <div className="text-center mb-6 shrink-0">
           <h2 className="text-xl font-medium text-black mb-1">Download Images</h2>
@@ -168,7 +168,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                     "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all",
                     isDownloaded 
                       ? "bg-green-100 text-green-600" 
-                      : "bg-transparent border-[2px] border-gray-300 text-gray-700 hover:bg-white hover:text-black active:scale-95 disabled:opacity-50"
+                      : "bg-transparent border-2 border-gray-300 text-gray-700 hover:bg-white hover:text-black active:scale-95 disabled:opacity-50"
                   )}
                 >
                   {isDownloading ? (
@@ -176,7 +176,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                   ) : isDownloaded ? (
                     <Check className="w-5 h-5" strokeWidth={3} />
                   ) : (
-                    <Download className="w-4.5 h-4.5" />
+                    <Download className="w-5 h-5" />
                   )}
                 </button>
               </div>
@@ -207,7 +207,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                   </>
                 ) : (
                   <>
-                    <Download className="w-4.5 h-4.5" />
+                    <Download className="w-5 h-5" />
                     Download All
                   </>
                 )}

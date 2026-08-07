@@ -13,7 +13,19 @@
 
 import type { PulseSession, PulseVote, PulseType, PulseDuration } from '@/types';
 import { PULSE_DURATION_MS } from '@/types';
-import { getDeviceId } from './deviceTracking';
+
+// Simple local ID generator just for anonymous Pulse voting
+function getPulseUserId(): string {
+  if (typeof window === 'undefined') return 'ssr';
+  let uid = localStorage.getItem('rater_pulse_uid');
+  if (!uid) {
+    uid = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('rater_pulse_uid', uid);
+  }
+  return uid;
+}
 
 const PULSE_STORAGE_KEY = 'rater_pulse_sessions';
 
@@ -54,7 +66,7 @@ export function isPulseActive(session: PulseSession): boolean {
  * Check if the current user/device has already voted in a Pulse session.
  */
 export function hasVotedInPulse(session: PulseSession, avatarId?: string): boolean {
-  const deviceId = getDeviceId();
+  const deviceId = getPulseUserId();
   return session.votes.some(v =>
     (avatarId && v.voter_id === avatarId) ||
     v.device_id === deviceId
@@ -126,7 +138,7 @@ export function voteInPulse(
   const vote: PulseVote = {
     choice,
     voter_id: avatarId,
-    device_id: getDeviceId(),
+    device_id: getPulseUserId(),
     voted_at: new Date().toISOString(),
   };
 

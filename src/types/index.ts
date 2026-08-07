@@ -77,9 +77,8 @@ export interface Avatar {
 export interface Review {
   id: string;
   post_id: string;
-  reviewer_id?: string;
+  reviewer_id: string;
   reviewer_name?: string;
-  device_id?: string;
   ratings: Record<string, number>;
 
   comment?: string;

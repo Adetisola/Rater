@@ -6,6 +6,8 @@ import Link from "next/link";
 import type { Metadata, ResolvingMetadata } from "next";
 import { extractPublicId } from "@/lib/cloudinary/transforms";
 
+export const dynamic = 'force-dynamic';
+
 function cleanAndTruncate(text: string, maxLen: number = 140): string {
   if (!text) return "";
   const cleaned = text.replace(/\s+/g, " ").trim();

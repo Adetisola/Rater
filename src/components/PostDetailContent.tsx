@@ -4,11 +4,13 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
 import { AI_TOOLS } from '@/types';
-import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview } from '@/lib/reviews';
+import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview, updateReview, deleteReview } from '@/lib/reviews';
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { useAuthState } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
+import { useAuthState } from '@/context/AuthContext';
+import { usePosts } from '@/context/PostContext';
 import { usePostStore } from '../store/postStore';
 import { useNavigationStore } from '@/store/navigationStore';
 import { useNow } from '@/context/TimeContext';
@@ -34,9 +36,10 @@ import { MediaCarousel } from './MediaCarousel';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 import { showToast } from './GlobalOverlays';
+import { AuthOverlay } from '@/components/AuthOverlay';
 import { cn } from '../lib/utils';
 
-import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
+
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
     ArrowLeft,
@@ -53,7 +56,6 @@ import {
 } from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
-const RATE_LIMIT_KEY = 'rater_review_timestamps';
 
 /**
  * Props for the PostDetailOverlay and PostDetailCore components.
@@ -219,6 +221,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const successStarRef = useRef<SVGPathElement>(null);
     const successCheckRef = useRef<SVGPathElement>(null);
     const [isSelfPost, setIsSelfPost] = useState(false);
+    const [showAuthOverlay, setShowAuthOverlay] = useState(false);
 
     // GSAP animation for review success card
     useEffect(() => {
@@ -255,7 +258,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             }
         }
     }, [hasReviewed]);
-    const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
     const [isFetchingReviews, setIsFetchingReviews] = useState(true);
     const [imageError, setImageError] = useState(false);
     const [isAiPromptExpanded, setIsAiPromptExpanded] = useState(false);
@@ -286,20 +288,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     setRetryCount(0);
 
                     // 1. Backend is the source of truth for "hasReviewed"
-                    const device_id = getDeviceId();
                     const hasExistingReview = reviews.some(r => 
-                        (currentAvatar && r.reviewer_id === currentAvatar.id) ||
-                        (!currentAvatar && r.device_id === device_id)
+                        currentAvatar && r.reviewer_id === currentAvatar.id
                     );
 
                     if (hasExistingReview) {
-                        setHasReviewed(true);
-                        // Heal localStorage if missing
-                        markPostAsReviewed(post.id);
-                    } else if (hasReviewedPost(post.id)) {
-                        // Optional fallback: use localStorage cache while we wait or if backend missed it
-                        // but ideally we wouldn't even need this if backend is strict truth.
-                        // We will allow it as a fast cache.
                         setHasReviewed(true);
                     }
                 }
@@ -313,12 +306,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         setRetryCount(prev => prev + 1);
                     } else {
                         setLoadError(normalized);
-                        setIsFetchingReviews(false);
-                        
                         // Fast fallback on network error
-                        if (hasReviewedPost(post.id)) {
-                            setHasReviewed(true);
-                        }
+                        // Removing guest cache completely as per user request
                     }
                 }
             }
@@ -334,7 +323,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         }
 
         return () => { isMounted = false; };
-    }, [post.id, currentAvatar, post.avatar_id, retryCount]);
+    }, [post.id, currentAvatar?.id, post.avatar_id, retryCount]);
 
     // 2. Derive metrics locally when userReviews change (Optimistic UI)
     useEffect(() => {
@@ -345,6 +334,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
+    
+    // Edit and Delete Review State
+    const [editingReview, setEditingReview] = useState<Review | null>(null);
+    const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+
     const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -531,25 +525,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const handleReviewSubmit = async (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewer_name: string) => {
         if (currentAvatar && post.avatar_id === currentAvatar.id) return;
 
-        const device_id = getDeviceId();
-        const hasExistingReview = allReviews.some(r =>
-            (currentAvatar && r.reviewer_id === currentAvatar.id) ||
-            (!currentAvatar && r.device_id === device_id)
-        );
-
-        if (hasExistingReview || hasReviewedPost(post.id)) {
+        if (hasReviewed) {
             showToast("You've already reviewed this post.", "error");
             return;
-        }
-
-        const now = Date.now();
-        const timestamps: number[] = JSON.parse(localStorage.getItem(RATE_LIMIT_KEY) || '[]');
-        const validTimestamps = timestamps.filter(t => now - t < 60000);
-
-        if (validTimestamps.length >= 5) {
-            setRateLimitMessage("You're reviewing too fast, slow down a bit.");
-            await new Promise(resolve => setTimeout(resolve, 30000));
-            setRateLimitMessage(null);
         }
 
         const newReview = {
@@ -559,8 +537,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             comment,
             reviewer_id: currentAvatar?.id,
             reviewer_name: currentAvatar ? currentAvatar.name : reviewer_name,
-            created_at: new Date().toISOString(),
-            device_id: device_id
+            created_at: new Date().toISOString()
         } as Review;
 
         try {
@@ -586,10 +563,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             setUserReviews([finalReview, ...userReviews]);
             setHasReviewed(true);
 
-            // 3. Persist to localStorage rate limiter & device tracker
-            const updatedTimestamps = [...validTimestamps, Date.now()];
-            localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
-            markPostAsReviewed(post.id);
+            // 3. (Removed local storage cache)
 
             // 4. Calculate and update new global metrics
             const newEstimatedMetrics = await calculatePostMetrics(post.id, [finalReview, ...userReviews]);
@@ -603,6 +577,62 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             console.error('Failed to submit review:', err);
             // We just throw the error so the ReviewForm can catch it and display an inline message.
             throw err;
+        }
+    };
+
+    const handleReviewUpdate = async (ratings: Partial<Record<keyof Review, number>>, comment: string, _reviewer_name: string) => {
+        if (!editingReview) return;
+        const oldReview = allReviews.find(r => r.id === editingReview.id);
+        if (!oldReview) return;
+
+        try {
+            const result = await updateReview(editingReview.id, { ratings, comment });
+            if (!result.ok) throw new Error(result.error);
+
+            // Update both userReviews (if created this session) and dbReviews (if fetched on mount)
+            const updated = { ...oldReview, ratings, comment };
+            setUserReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
+            setDbReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
+            
+            // Fetch fresh global metrics from DB (the server trigger handles recalculation instantly)
+            const freshMetrics = await calculatePostMetrics(post.id);
+            optimisticUpdateMetrics(post.id, {
+                review_count: freshMetrics.review_count,
+                average_score: freshMetrics.average_score,
+                criteria_scores: freshMetrics.criteria_scores,
+            });
+            
+            setEditingReview(null);
+            showToast("Review updated successfully", "success");
+        } catch (err: any) {
+            console.error('Failed to update review:', err);
+            throw err; // Form will handle it
+        }
+    };
+
+    const handleDeleteReview = async (reviewId: string) => {
+        try {
+            const result = await deleteReview(reviewId);
+            if (!result.ok) {
+                showToast(result.error, "error");
+                return;
+            }
+
+            setUserReviews(prev => prev.filter(r => r.id !== reviewId));
+            setDbReviews(prev => prev.filter(r => r.id !== reviewId));
+            
+            // Fetch fresh global metrics from DB (the server trigger handles recalculation instantly)
+            const freshMetrics = await calculatePostMetrics(post.id);
+            optimisticUpdateMetrics(post.id, {
+                review_count: freshMetrics.review_count,
+                average_score: freshMetrics.average_score,
+                criteria_scores: freshMetrics.criteria_scores,
+            });
+
+            showToast("Review deleted.", "success");
+            setReviewToDelete(null);
+        } catch (err: any) {
+            showToast("Failed to delete review", "error");
         }
     };
 
@@ -979,13 +1009,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     {/* RIGHT COLUMN: Tabbed Rate / Pulse / Insights Hub */}
                     <div className="md:col-span-5 relative">
                         <div className="sticky top-24">
-                            {rateLimitMessage && (
-                                <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-3xl text-amber-700 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">⏳</div>
-                                    <p className="font-medium">{rateLimitMessage}</p>
-                                </div>
-                            )}
-
                             {/* Tab Bar */}
                             {(() => {
                                 const showPulse = shouldShowPulseTab(post.id, isSelfPost);
@@ -1047,15 +1070,36 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                                 <h3 className="font-semibold text-lg mb-1 text-gray-700">Self-Review Locked</h3>
                                                                 <p className="text-sm text-gray-500">You cannot review your own post.</p>
                                                             </div>
-                                                        ) : !hasReviewed ? (
-                                                            <ReviewForm
-                                                                onSubmit={handleReviewSubmit}
-                                                                isLoggedIn={!!currentAvatar}
-                                                                initialName={currentAvatar?.name}
-                                                                postId={post.id}
-                                                                userId={currentAvatar?.id}
-                                                                postCategory={post.category}
-                                                            />
+                                                        ) : !currentAvatar ? (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: 16 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                className="py-8 px-3 bg-gray-50 rounded-[20px] border border-gray-100 flex flex-col items-center text-center"
+                                                            >
+                                                                <img
+                                                                    src="/icons/rater-logo-white-bg.svg"
+                                                                    alt="Rater"
+                                                                    className="w-12 h-12 mb-4"
+                                                                />
+                                                                <h3 className="text-md font-medium text-black mb-1.5">Have an opinion?</h3>
+                                                                <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
+                                                                    Create a profile to drop your rating, join the conversation, and influence the overall score.
+                                                                </p>
+                                                                <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
+                                                                    Create Profile
+                                                                </Button>
+                                                            </motion.div>
+                                                        ) : (!hasReviewed || editingReview) ? (
+                                                                <ReviewForm
+                                                                    onSubmit={editingReview ? handleReviewUpdate : handleReviewSubmit}
+                                                                    isLoggedIn={!!currentAvatar}
+                                                                    postId={post.id}
+                                                                    userId={currentAvatar?.id}
+                                                                    userName={currentAvatar?.name}
+                                                                    postCategory={post.category}
+                                                                    editingReview={editingReview}
+                                                                    onCancelEdit={() => setEditingReview(null)}
+                                                                />
                                                         ) : (
                                                             <div className="bg-gray-50 p-10 rounded-3xl text-center">
                                                                 <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
@@ -1261,15 +1305,60 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     </span>
                                                 </div>
                                             </div>
-                                            <span
-                                                className="text-xs text-gray-400 font-medium ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0"
-                                                title={fullTime}
-                                            >
-                                                {timeLabel}
-                                            </span>
+                                            <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
+                                                <span
+                                                    className="text-xs text-gray-400 font-medium"
+                                                    title={fullTime}
+                                                >
+                                                    {timeLabel}
+                                                </span>
+                                                {currentAvatar?.id === review.reviewer_id && (
+                                                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
+                                                        <button 
+                                                            onClick={() => {
+                                                                if (editingReview && editingReview.id !== review.id) {
+                                                                    if (!window.confirm("You have unsaved changes. Discard and edit this review instead?")) {
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                setEditingReview(review);
+                                                                setReviewToDelete(null);
+                                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                            }}
+                                                            className="hover:text-primary transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <span>•</span>
+                                                        {reviewToDelete === review.id ? (
+                                                            <div className="flex items-center gap-1 text-red-500">
+                                                                <span>Are you sure?</span>
+                                                                <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
+                                                                <span>/</span>
+                                                                <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => setReviewToDelete(review.id)}
+                                                                className="hover:text-red-500 transition-colors"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {review.comment && <p className="text-sm text-black leading-relaxed mb-4">{review.comment}</p>}
+                                        {review.comment && (
+                                            <div className="text-sm text-black leading-relaxed mb-4">
+                                                <div className="markdown-content text-sm break-words">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                        {review.comment}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="flex items-center gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100 mt-2">
                                             <div className="flex flex-wrap gap-3 xs:gap-4">
@@ -1439,6 +1528,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </>,
                 document.body
             )}
+            {showAuthOverlay && <AuthOverlay initialTab="signup" redirectOnSuccess={false} onClose={() => setShowAuthOverlay(false)} />}
         </motion.div>
     );
 }

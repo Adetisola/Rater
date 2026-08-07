@@ -40,9 +40,9 @@ export const metadata: Metadata = {
   },
 };
 
-import { AuthProvider } from "../context/AuthContext";
-import { PostProvider } from "../context/PostContext";
-import { TimeProvider } from "../context/TimeContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { PostProvider } from "@/context/PostContext";
+import { TimeProvider } from "@/context/TimeContext";
 import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
 import { GlobalOverlays } from "../components/GlobalOverlays";
 import { PWARegistry } from "../components/PWARegistry";

@@ -1,7 +1,4 @@
-/**
- * Shared action utilities for post interactions.
- * Used by PostActionsMenu across Post Card and Post Detail.
- */
+import { extractPublicId, generateDownloadUrl } from './cloudinary/transforms';
 
 /**
  * Share a post.
@@ -29,10 +26,13 @@ export async function sharePost(postId: string, title?: string): Promise<boolean
  * Download the post's image as a file.
  */
 export async function downloadPostImage(imageUrl: string, title?: string): Promise<void> {
+  const publicId = extractPublicId(imageUrl);
+  const downloadUrl = publicId ? generateDownloadUrl(publicId) : imageUrl;
+  
   const filename = `${(title || 'rater-image').replace(/\s+/g, '_')}.jpg`;
 
   try {
-    const response = await fetch(imageUrl);
+    const response = await fetch(downloadUrl);
     const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -44,6 +44,6 @@ export async function downloadPostImage(imageUrl: string, title?: string): Promi
     window.URL.revokeObjectURL(blobUrl);
   } catch (err) {
     console.error('Download failed', err);
-    window.open(imageUrl, '_blank');
+    window.open(downloadUrl, '_blank');
   }
 }
