@@ -350,7 +350,7 @@ export function PostActionsMenu({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 4 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-2 w-max min-w-50 bg-white rounded-2xl shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
+                className="absolute right-0 top-full mt-2 w-max min-w-50 bg-white rounded-2xl overflow-hidden shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
                 style={{ top: dropdownPos.top, right: dropdownPos.right }}
               >
                 {menuContent}

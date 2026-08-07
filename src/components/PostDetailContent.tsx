@@ -209,6 +209,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [metrics, setMetrics] = useState<PostMetrics>({
         post_id: post.id,
         review_count: post.review_count || 0,
+        view_count: post.view_count || 0,
         average_score: post.average_score || 0,
         rating_unlocked: (post.review_count || 0) >= 3,
         criteria_scores: post.criteria_scores || {},
@@ -331,6 +332,57 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             calculatePostMetrics(post.id, userReviews).then(setMetrics);
         }
     }, [userReviews, post.id]);
+
+    // 3. View Tracking (2-second strict visibility timer)
+    useEffect(() => {
+        let timer: NodeJS.Timeout;
+        let hasFired = false;
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState !== 'visible' && !hasFired) {
+                clearTimeout(timer);
+            } else if (document.visibilityState === 'visible' && !hasFired) {
+                // Restart timer if they return to the tab
+                startTimer();
+            }
+        };
+
+        const fireViewEvent = () => {
+            if (hasFired || document.visibilityState !== 'visible') return;
+            hasFired = true;
+            
+            fetch(`/api/posts/${post.id}/view`, {
+                method: 'POST',
+                keepalive: true, // Crucial for reliability during page unloads
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.incremented) {
+                    setMetrics(prev => ({
+                        ...prev,
+                        view_count: (prev.view_count || 0) + 1
+                    }));
+                }
+            })
+            .catch(err => console.error("Failed to record view", err));
+        };
+
+        const startTimer = () => {
+            clearTimeout(timer);
+            timer = setTimeout(fireViewEvent, 2000);
+        };
+
+        if (document.visibilityState === 'visible') {
+            startTimer();
+        }
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [post.id]);
 
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
@@ -821,37 +873,52 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             <h1 className="text-lg xs:text-xl font-semibold text-black leading-tight">
                                 {post.title}
                             </h1>
-                            <Tooltip
-                                content={
-                                    <p className="leading-relaxed text-center">
-                                        {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
-                                    </p>
-                                }
-                                position="top"
-                                align="end"
-                                width="w-[calc(100vw-3rem)] xs:w-64"
-                                triggerClassName="relative inline-flex items-center shrink-0"
-                            >
-                                <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
-                                    {isHot && (
-                                        <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
-                                            {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
-                                            <DotLottieReact
-                                                src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                                loop
-                                                autoplay
-                                                dotLottieRefCallback={(dotLottie) => {
-                                                    if (dotLottie) {
-                                                        dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
-                                                    }
-                                                }}
-                                                className="relative z-10 w-full h-full"
-                                            />
-                                        </div>
-                                    )}
-                                    {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
-                                </span>
-                            </Tooltip>
+                            <div className="flex items-center gap-3">
+                                {metrics?.view_count !== undefined && (
+                                    <Tooltip
+                                        content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
+                                        position="top"
+                                        align="end"
+                                        width="w-[calc(100vw-3rem)] xs:w-48"
+                                        triggerClassName="relative inline-flex items-center shrink-0"
+                                    >
+                                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                            👁 {metrics.view_count.toLocaleString()} {(metrics.view_count === 1) ? 'view' : 'views'}
+                                        </span>
+                                    </Tooltip>
+                                )}
+                                <Tooltip
+                                    content={
+                                        <p className="leading-relaxed text-center">
+                                            {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
+                                        </p>
+                                    }
+                                    position="top"
+                                    align="end"
+                                    width="w-[calc(100vw-3rem)] xs:w-64"
+                                    triggerClassName="relative inline-flex items-center shrink-0"
+                                >
+                                    <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                        {isHot && (
+                                            <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
+                                                {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
+                                                <DotLottieReact
+                                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                                    loop
+                                                    autoplay
+                                                    dotLottieRefCallback={(dotLottie) => {
+                                                        if (dotLottie) {
+                                                            dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
+                                                        }
+                                                    }}
+                                                    className="relative z-10 w-full h-full"
+                                                />
+                                            </div>
+                                        )}
+                                        {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
+                                    </span>
+                                </Tooltip>
+                            </div>
                         </div>
 
                         {/* 4. Description */}
