@@ -876,19 +876,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 {post.title}
                             </h1>
                             <div className="flex items-center gap-3">
-                                {metrics?.view_count !== undefined && (
-                                    <Tooltip
-                                        content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
-                                        position="top"
-                                        align="end"
-                                        width="w-[calc(100vw-3rem)] xs:w-48"
-                                        triggerClassName="relative inline-flex items-center shrink-0"
-                                    >
-                                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
-                                            <Eye className="w-4 h-4 mr-1.5" /> {metrics.view_count.toLocaleString()}
-                                        </span>
-                                    </Tooltip>
-                                )}
                                 <Tooltip
                                     content={
                                         <p className="leading-relaxed text-center">
@@ -920,6 +907,19 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                         {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
                                     </span>
                                 </Tooltip>
+                                {metrics?.view_count !== undefined && (
+                                    <Tooltip
+                                        content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
+                                        position="top"
+                                        align="end"
+                                        width="w-[calc(100vw-3rem)] xs:w-48"
+                                        triggerClassName="relative inline-flex items-center shrink-0"
+                                    >
+                                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                            <Eye className="w-4 h-4 mr-1.5" /> {metrics.view_count.toLocaleString()}
+                                        </span>
+                                    </Tooltip>
+                                )}
                             </div>
                         </div>
 

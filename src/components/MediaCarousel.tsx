@@ -159,7 +159,7 @@ export function MediaCarousel({
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        className="flex w-full h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         {media.map((item, idx) => (

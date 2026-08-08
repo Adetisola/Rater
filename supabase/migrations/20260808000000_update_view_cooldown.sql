@@ -20,8 +20,10 @@ BEGIN
               (p_viewer_id IS NOT NULL AND viewer_id = p_viewer_id)
               OR 
               (p_guest_session_hash IS NOT NULL AND guest_session_hash = p_guest_session_hash)
+              OR
+              (p_ip_hash IS NOT NULL AND ip_hash = p_ip_hash)
           )
-          AND created_at > (NOW() - INTERVAL '12 hours')
+          AND created_at > (NOW() - INTERVAL '1 hour')
     ) INTO v_recent_view_exists;
 
     -- If a recent view exists, return false (did not increment)
@@ -32,6 +34,11 @@ BEGIN
     -- Otherwise, insert the new view
     INSERT INTO post_views (post_id, viewer_id, guest_session_hash, ip_hash, user_agent_hash)
     VALUES (p_post_id, p_viewer_id, p_guest_session_hash, p_ip_hash, p_user_agent_hash);
+
+    -- Increment the view count on the posts table
+    UPDATE posts 
+    SET view_count = COALESCE(view_count, 0) + 1 
+    WHERE id = p_post_id;
 
     RETURN TRUE;
 END;

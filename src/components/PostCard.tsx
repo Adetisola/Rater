@@ -173,35 +173,37 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                 )}
 
                 <div className="relative z-10">
-                    <div className={`relative w-full rounded-[20px] ${isTopRated ? 'p-0.5' : 'overflow-hidden'}`}>
+                    <div className={`relative w-full rounded-[20px] ${isTopRated ? 'p-0.5' : ''}`}>
                         {isTopRated && (
                             <div className="absolute inset-0 z-0 rounded-[20px] overflow-hidden pointer-events-none">
                                 <div className="mesh-gradient-layer" />
                             </div>
                         )}
-                        <div className={`relative z-10 w-full h-full overflow-hidden ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}>
-                            {hasError ? (
-                                <div className="w-full aspect-4/3">
-                                    <ImageFallback
-                                        src={optimizedFallback ? optimizedFallback.src : post.image_url}
-                                        srcSet={optimizedFallback?.srcSet}
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        placeholderSrc={optimizedFallback?.placeholder}
-                                        alt={post.title}
-                                        className="w-full h-auto object-cover transition-transform duration-500 block"
-                                        fallbackClassName={`w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}
+                        <div className={`relative z-10 w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}>
+                            <div className="w-full h-full overflow-hidden rounded-[inherit]">
+                                {hasError ? (
+                                    <div className="w-full aspect-4/3">
+                                        <ImageFallback
+                                            src={optimizedFallback ? optimizedFallback.src : post.image_url}
+                                            srcSet={optimizedFallback?.srcSet}
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                            placeholderSrc={optimizedFallback?.placeholder}
+                                            alt={post.title}
+                                            className="w-full h-auto object-cover transition-transform duration-500 block"
+                                            fallbackClassName={`w-full h-full ${isTopRated ? 'rounded-[18px]' : 'rounded-[20px]'}`}
+                                            onErrorChange={(err) => setHasError(err)}
+                                        />
+                                    </div>
+                                ) : (
+                                    <MediaCarousel
+                                        media={post.media || [{ type: 'image', url: post.image_url } as import('@/types').MediaAsset]}
+                                        variant="thumbnail"
+                                        className="w-full h-auto block"
+                                        imageClassName="w-full h-auto object-cover transition-transform duration-500 block"
                                         onErrorChange={(err) => setHasError(err)}
                                     />
-                                </div>
-                            ) : (
-                                <MediaCarousel
-                                    media={post.media || [{ type: 'image', url: post.image_url } as import('@/types').MediaAsset]}
-                                    variant="thumbnail"
-                                    className="w-full h-auto block"
-                                    imageClassName="w-full h-auto object-cover transition-transform duration-500 block"
-                                    onErrorChange={(err) => setHasError(err)}
-                                />
-                            )}
+                                )}
+                            </div>
 
                             {isTopRated && (
                                 <div className="absolute top-3 left-3 z-20">
@@ -300,24 +302,6 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
                         <div className="pt-2 sm:pt-1 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
                                 <div className="flex items-center gap-3 xs:gap-3">
-                                    {/* View Count */}
-                                    {metrics?.view_count !== undefined && (
-                                        <Tooltip
-                                            position="top"
-                                            gapClass="pb-1"
-                                            width="w-48"
-                                            contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
-                                            triggerClassName="group/tooltip relative inline-flex items-center cursor-help py-1"
-                                            content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
-                                        >
-                                            <div className="flex items-center gap-1 xs:gap-1">
-                                                <Eye className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-black group-hover/card:text-white transition-colors" strokeWidth={1.5} />
-                                                <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors">
-                                                    {metrics?.view_count || 0}
-                                                </span>
-                                            </div>
-                                        </Tooltip>
-                                    )}
                                     {/* Review Count */}
                                     <Tooltip
                                         position="top"
@@ -357,6 +341,25 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                             </span>
                                         </div>
                                     </Tooltip>
+
+                                    {/* View Count */}
+                                    {metrics?.view_count !== undefined && (
+                                        <Tooltip
+                                            position="top"
+                                            gapClass="pb-1"
+                                            width="w-48"
+                                            contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
+                                            triggerClassName="group/tooltip relative inline-flex items-center cursor-help py-1"
+                                            content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
+                                        >
+                                            <div className="flex items-center gap-1 xs:gap-1">
+                                                <Eye className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-black group-hover/card:text-white transition-colors" strokeWidth={1.5} />
+                                                <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors">
+                                                    {metrics?.view_count || 0}
+                                                </span>
+                                            </div>
+                                        </Tooltip>
+                                    )}
                                 </div>
 
                             <div className="flex items-center gap-1.5 w-auto justify-end">
