@@ -9,7 +9,7 @@ import {
   hardDeletePost as dbHardDeletePost,
 } from '@/lib/posts';
 import { useAuthState } from './AuthContext';
-import { supabase } from '@/lib/supabase/client';
+
 import { getActiveBadges } from '@/lib/badges';
 import { computeHotPosts } from '@/logic/hotPostUtils';
 import { usePostStore } from '../store/postStore';
