@@ -7,7 +7,7 @@ export function useViewTracker(postId: string, onIncrement?: () => void) {
     const containerRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(containerRef, { amount: 0.5 }); // 50% visibility
 
-    const trackView = useCallback(async (trigger: 'viewport' | 'action') => {
+    const trackView = useCallback(async (_trigger: 'viewport' | 'action') => {
         if (viewState.current !== 'idle') return;
         viewState.current = 'pending';
 
