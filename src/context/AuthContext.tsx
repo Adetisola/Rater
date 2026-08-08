@@ -8,26 +8,29 @@ import {
   resolveIdentifierToEmail, 
   checkUsernameAvailable as dbCheckUsername,
   persistProfileUpdate,
-  clearProfileCache,
-  profileCache
+  ProfileCache
 } from '@/lib/profiles';
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
 
-interface AuthContextType {
+interface AuthState {
   currentProfile: Avatar | null;
   profileMap: Record<string, Avatar>; // Kept for backwards compatibility until M3
+  isLoading: boolean;
+}
+
+interface AuthActions {
   login: (identifier: string, passkey: string) => Promise<boolean>;
   signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string) => Promise<{ ok: boolean; error?: string }>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginWithGoogle: () => Promise<void>;
   connectGoogle: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
-  isLoading: boolean;
   checkUsernameAvailable: (username: string, excludeAvatarId?: string) => Promise<boolean>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthStateContext = createContext<AuthState | undefined>(undefined);
+const AuthActionsContext = createContext<AuthActions | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentProfile, setCurrentProfile] = useState<Avatar | null>(null);
@@ -60,8 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setCurrentProfile(null);
-        // We intentionally don't call clearProfileCache() here anymore.
-        // It holds public profiles for the feed. If we clear it, the feed shows 'unknown' avatars!
       } else if (session?.user?.id) {
         const profile = await getProfileById(session.user.id);
         if (profile) setCurrentProfile(profile);
@@ -94,7 +95,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     username?: string, 
     role?: string
   ): Promise<{ ok: boolean; error?: string }> => {
-    
     // 1. Pre-flight format validation
     const validationError = validateSignupInput(username || name, email, passkey);
     if (validationError) return { ok: false, error: validationError };
@@ -106,6 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       finalUsername = generateUsernameFromName(name, []);
     }
 
+    finalUsername = finalUsername.toLowerCase();
+    
     const isAvailable = await dbCheckUsername(finalUsername);
     if (!isAvailable) {
       return { ok: false, error: 'Username is already taken.' };
@@ -122,7 +124,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role || 'user',
           bg_color: '#FEC312',
           onboarding_completed: true,
-          // Do not put avatar_url here, it's a huge base64 string that breaks JWT size limits
         }
       }
     });
@@ -131,8 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, error: error.message };
     }
 
-    // 4. Save the base64 avatar directly to the profile table
-    // The handle_new_user trigger creates the profile synchronously during signUp
+    // 3. Save the base64 avatar directly to the profile table
     if (avatar_url && authData.user) {
       await supabase
         .from('profiles')
@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', authData.user.id);
         
       // Re-fetch to guarantee state is synced
-      clearProfileCache();
+      ProfileCache.invalidate(authData.user.id);
       const updated = await getProfileById(authData.user.id);
       if (updated) setCurrentProfile(updated);
     }
@@ -151,20 +151,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback(async (data: Partial<Avatar>) => {
     if (!currentProfile) return { ok: false, error: "Not logged in" } as const;
     const result = await persistProfileUpdate(currentProfile.id, data);
-    if (result.ok) {
-      // Re-fetch to guarantee state is synced
-      const updated = await getProfileById(currentProfile.id);
-      if (updated) setCurrentProfile(updated);
+    if (result.ok && result.data) {
+      setCurrentProfile(result.data);
     }
     return result;
   }, [currentProfile]);
 
-  // Provide a proxy for profileMap so UI can read from cache synchronously
+  // Provide a proxy for profileMap so UI can read from cache synchronously without causing re-renders
   const safeProfileMap = useMemo(() => {
-     return new Proxy(profileCache, {
-       get: (target, prop) => {
+     return new Proxy({} as Record<string, Avatar>, {
+       get: (_, prop) => {
          if (typeof prop === 'string') {
-            return target[prop] || undefined;
+            return ProfileCache.get(prop) || undefined;
          }
          return undefined;
        }
@@ -203,40 +201,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const contextValue = useMemo(() => ({ 
-    currentProfile, 
-    profileMap: safeProfileMap, 
-    login, 
-    signup, 
-    updateProfile, 
-    checkUsernameAvailable: dbCheckUsername,
-    loginWithGoogle,
-    connectGoogle,
-    logout, 
-    isLoading 
-  }), [
+  const stateValue = useMemo(() => ({
     currentProfile,
-    safeProfileMap,
+    profileMap: safeProfileMap,
+    isLoading
+  }), [currentProfile, safeProfileMap, isLoading]);
+
+  const actionsValue = useMemo(() => ({
     login,
     signup,
     updateProfile,
+    checkUsernameAvailable: dbCheckUsername,
     loginWithGoogle,
     connectGoogle,
-    logout,
-    isLoading
-  ]);
+    logout
+  }), [login, signup, updateProfile, loginWithGoogle, connectGoogle, logout]);
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthStateContext.Provider value={stateValue}>
+      <AuthActionsContext.Provider value={actionsValue}>
+        {children}
+      </AuthActionsContext.Provider>
+    </AuthStateContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+export function useAuthState() {
+  const context = useContext(AuthStateContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuthState must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export function useAuthActions() {
+  const context = useContext(AuthActionsContext);
+  if (context === undefined) {
+    throw new Error('useAuthActions must be used within an AuthProvider');
   }
   return context;
 }

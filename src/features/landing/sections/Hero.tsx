@@ -124,7 +124,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
 
             {/* Single moving dot */}
             <span
-              className="absolute -bottom-[14px] h-2 w-2 rounded-full bg-primary pointer-events-none"
+              className="absolute -bottom-3.5 h-2 w-2 rounded-full bg-primary pointer-events-none"
               style={{
                 left: dotStyle.left,
                 opacity: dotStyle.opacity,
@@ -155,7 +155,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
       <section className="bg-white">
       <div className="relative w-full px-0 md:px-12 lg:px-20 md:pt-4 pb-8">
         {/* Hero Background Container */}
-        <div className="relative w-full max-w-[1400px] mx-auto overflow-hidden">
+        <div className="relative w-full max-w-350 mx-auto overflow-hidden">
           {/* SVG Background - defines container height. Fixed taller height on mobile to prevent text overlap */}
           <img 
             src={heroBg}
@@ -163,7 +163,7 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
             width={1400}
             height={700}
             fetchPriority="high"
-            className="w-full h-[590px] sm:h-[600px] md:h-auto object-cover object-center block"
+            className="w-full h-147.5 sm:h-150 md:h-auto object-cover object-center block"
             aria-hidden="true"
             onLoad={onBgLoad}
           />
@@ -192,12 +192,12 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               style={{ willChange: 'transform, opacity' }}
               className="text-[34px] sm:text-[36px] md:text-[38px] lg:text-[44px] xl:text-[56px] font-bold text-black text-center leading-tight tracking-tight px-4 w-full"
             >
-              <span className="block text-gray-800 uppercase tracking-widest text-sm md:text-base font-extrabold mb-3 md:mb-4">Rater</span>
-              <span className="block sm:inline">Share your creative work. </span>
+              <span className="sr-only">Rater: </span>
+              <span className="block sm:inline">Judgment is built, </span>
               <span className="block sm:inline">
-                Get structured{' '}
+                not{' '}
                 <span className="relative inline-block">
-                  feedback.
+                  found
                 {/* Animated yellow scribble on top of the word */}
                 <AnimatedScribble 
                   className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-auto pointer-events-none select-none"
@@ -212,9 +212,9 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               animate={isReady ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
               style={{ willChange: 'transform, opacity' }}
-              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-[600px] mx-auto px-4 sm:px-0 font-normal"
+              className="mt-2 md:mt-4 lg:mt-5 xl:mt-6 text-[14px] md:text-[15px] lg:text-[16px] xl:text-[17px] text-black text-center max-w-150 mx-auto px-4 sm:px-0 font-normal"
             >
-              Rater is a platform for creators to publish their work, receive structured reviews, and discover inspiration from a community of peers.
+              Rater is an application that helps designers train their eye by actively observing and evaluating real design work.
             </motion.h2>
 
             {/* CTA Buttons */}

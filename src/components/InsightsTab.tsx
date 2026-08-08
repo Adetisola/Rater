@@ -19,9 +19,9 @@ import gsap from 'gsap';
 import type { Review, Category } from '@/types';
 import { TrendingUp, TrendingDown, Sparkles, MessageCircle, RefreshCw, Loader2, AlertCircle, Info } from 'lucide-react';
 import { getReviewMode } from '@/config/reviewModes';
-import { getCachedInsight, setCachedInsight, type CachedInsight } from '@/utils/insightCache';
+import { getCachedInsight, type CachedInsight } from '@/utils/insightCache';
 import { Button } from './ui/Button';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { AuthOverlay } from './AuthOverlay';
 import { supabase } from '@/lib/supabase/client';
 import { LegalModal } from './LegalModal';
@@ -180,6 +180,9 @@ function useInsightSynthesis(
           await new Promise(r => setTimeout(r, attempt * 3000));
         }
 
+        // SECURITY NOTE: getSession() reads from local storage without server validation.
+        // This is safe here because we only use it to attach the token to the request header.
+        // The actual verification of this token happens server-side in the /api/insights route.
         const { data: { session } } = await supabase.auth.getSession();
 
         const response = await fetch('/api/insights', {
@@ -189,6 +192,7 @@ function useInsightSynthesis(
             ...(session?.access_token ? { 'Authorization': `Bearer ${session?.access_token}` } : {})
           },
           body: JSON.stringify({
+            postId,
             reviews,
             postCategory,
             postTitle,
@@ -216,7 +220,6 @@ function useInsightSynthesis(
         throw new Error('Invalid response shape');
       }
 
-      await setCachedInsight(postId, data, reviews.length);
       setResult(data);
       setModel(data.model || '');
       setState('done');
@@ -301,7 +304,7 @@ function LoadingTextAnimation() {
   return (
     <span
       ref={textRef}
-      className="text-[13px] font-medium min-w-[150px] inline-block"
+      className="text-[13px] font-medium min-w-37.5 inline-block"
       style={{
         backgroundImage: 'linear-gradient(to right, var(--color-primary, #fec312), #ff4f6d, #c400d2, #7c3bed, var(--color-primary, #fec312))',
         backgroundSize: '200% auto',
@@ -349,7 +352,7 @@ function FastTypewriter({ text, delay = 0 }: { text: string; delay?: number }) {
   return (
     <>
       {displayedText}
-      {isTyping && <span className="inline-block w-[3px] h-[1em] ml-0.5 bg-gray-300 align-middle opacity-70" />}
+      {isTyping && <span className="inline-block w-0.75 h-[1em] ml-0.5 bg-gray-300 align-middle opacity-70" />}
     </>
   );
 }
@@ -363,7 +366,7 @@ interface InsightsTabProps {
 }
 
 export function InsightsTab({ reviews, postCategory, postTitle, postDescription, postId }: InsightsTabProps) {
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
     isOpen: false,
@@ -477,7 +480,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
             className="w-12 h-12 mb-4"
           />
           <h3 className="text-md font-medium text-black mb-1.5">Let's look deeper.</h3>
-          <p className="text-xs text-gray-500 mb-6 max-w-[260px] leading-relaxed">
+          <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
             Create an avatar to unlock audience perception insights and see exactly how this work is landing.
           </p>
           <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
@@ -529,7 +532,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                     <div className="space-y-2.5">
                       {result.strengths.map((observation, i) => (
                         <div key={i} className="flex items-start gap-2.5">
-                          <div className="w-1 h-1 rounded-full bg-emerald-400 mt-[7px] shrink-0" />
+                          <div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.75 shrink-0" />
                           <p className="text-[13px] text-gray-600 leading-relaxed">
                             <FastTypewriter text={observation} delay={300 + i * 150} />
                           </p>
@@ -549,7 +552,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                     <div className="space-y-2.5">
                       {result.areasToImprove.map((observation, i) => (
                         <div key={i} className="flex items-start gap-2.5">
-                          <div className="w-1 h-1 rounded-full bg-amber-400 mt-[7px] shrink-0" />
+                          <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.75 shrink-0" />
                           <p className="text-[13px] text-gray-600 leading-relaxed">
                             <FastTypewriter text={observation} delay={500 + (result.strengths.length * 150) + (i * 150)} />
                           </p>
@@ -562,7 +565,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
 
               {/* Bottom fade mask for scrollable area */}
               <div
-                className={`absolute bottom-[36px] left-0 right-2 h-8 bg-linear-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute bottom-9 left-0 right-2 h-8 bg-linear-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
               />
 
               {/* Footer info: Sources & Model indicator (Outside scroll area to prevent tooltip clipping) */}

@@ -11,19 +11,53 @@ import { populateProfileCache } from './profiles';
 
 // ─── Reads ────────────────────────────────────────────────────────────────────
 
+export interface FeedFilters {
+  limit?: number;
+  offset?: number;
+  cursor?: string; // Kept for backwards compatibility if needed
+  categories?: string[];
+  sortBy?: 'balanced' | 'highest_rated' | 'most_reviewed' | 'newest';
+  avatarId?: string;
+  isRetry?: boolean;
+}
+
 /**
- * Fetch the base feed posts (without localStorage session overlays).
+ * Fetch the base feed posts (with optional SQL filters).
  */
-export async function getFeedPosts({ limit = 20, cursor, isRetry = false }: { limit?: number; cursor?: string; isRetry?: boolean } = {}): Promise<Post[]> {
+export async function getFeedPosts(filters: FeedFilters = {}): Promise<Post[]> {
+  const { limit = 20, offset = 0, cursor, categories, sortBy = 'balanced', avatarId, isRetry = false } = filters;
+  
   let query = supabase
     .from('posts')
     .select('*, profiles(id, username, name, avatar_url)')
-    .eq('is_deleted', false)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-    
-  if (cursor) {
-    query = query.lt('created_at', cursor);
+    .eq('is_deleted', false);
+
+  if (avatarId) {
+    query = query.eq('avatar_id', avatarId);
+  }
+
+  if (categories && categories.length > 0) {
+    query = query.in('category', categories);
+  }
+
+  // Sorting
+  if (sortBy === 'highest_rated') {
+    // Requires posts to have at least 3 reviews per our previous logic
+    query = query.gte('review_count', 3).order('average_score', { ascending: false }).order('created_at', { ascending: false });
+  } else if (sortBy === 'most_reviewed') {
+    query = query.order('review_count', { ascending: false }).order('created_at', { ascending: false });
+  } else {
+    // newest and balanced fallback to created_at
+    query = query.order('created_at', { ascending: false });
+  }
+
+  // Pagination
+  if (offset > 0) {
+    query = query.range(offset, offset + limit - 1);
+  } else if (cursor && (sortBy === 'newest' || sortBy === 'balanced')) {
+    query = query.lt('created_at', cursor).limit(limit);
+  } else {
+    query = query.limit(limit);
   }
 
   const { data, error } = await query;
@@ -33,7 +67,7 @@ export async function getFeedPosts({ limit = 20, cursor, isRetry = false }: { li
       if (!isRetry) {
         console.warn('JWT expired during getFeedPosts, retrying in 1s...');
         await new Promise(resolve => setTimeout(resolve, 1000));
-        return getFeedPosts({ limit, cursor, isRetry: true });
+        return getFeedPosts({ ...filters, isRetry: true });
       } else {
         console.warn('JWT expired during getFeedPosts retry, forcing sign out...');
         if (typeof window !== 'undefined') {

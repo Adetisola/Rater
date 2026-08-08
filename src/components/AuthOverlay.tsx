@@ -61,7 +61,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
       />
 
       {/* Modal Container */}
-      <div className="bg-white w-full max-w-md rounded-[24px] overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 h-[560px] max-h-[90vh]">
+      <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 h-140 max-h-[90vh]">
 
         {/* Tab Header */}
         <div className="flex border-b border-gray-100 shrink-0">
@@ -138,6 +138,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                     isEmbedded
                     onClose={onClose}
                     onShowLegal={openLegal}
+                    onLogin={() => setActiveTab('login')}
                     onCreate={async () => {
                       onClose();
                       if (redirectOnSuccess) {

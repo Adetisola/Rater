@@ -12,7 +12,7 @@ import type { Post, Category } from '@/types';
 import { AI_TOOLS } from '@/types';
 import type { UploadProgressEvent } from '@/lib/cloudinary/uploads';
 import { CATEGORIES } from '@/constants/categories';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { AuthOverlay } from './AuthOverlay';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -112,7 +112,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   // IDENTITY STATE
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const { addPost, updatePost } = usePosts();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -654,13 +654,14 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       perf.end('Database Write');
       try { perf.end('Total Pipeline Execution'); } catch(e){}
     } catch (err: any) {
-      console.error('[PostForm] handleSubmit error:', err);
-      const errorMsg = err.message || 'Upload failed. Please check your connection and try again.';
-      
-      const isCancellation = err.name === 'AbortError' || errorMsg.toLowerCase().includes('abort');
+      const isCancellation = err?.name === 'AbortError' || err?.message?.toLowerCase().includes('abort');
       
       if (!isCancellation) {
-        setInlineUploadError(errorMsg);
+        const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+          fallbackCode: 'RATER_UPLOAD_001',
+          fallbackMessage: 'Upload failed. Please check your connection and try again.'
+        }));
+        setInlineUploadError(normalized.userMessage);
       } else {
         setInlineUploadError(null);
       }
@@ -709,7 +710,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     return (
       <div className={cn(
         "w-full flex flex-col items-center justify-center text-center animate-in fade-in duration-500 max-w-2xl mx-auto",
-        isOverlay ? "p-4 min-h-[400px]" : "p-8 min-h-[60vh]"
+        isOverlay ? "p-4 min-h-100" : "p-8 min-h-[60vh]"
       )}>
         <div className="w-48 h-48">
           <DotLottieReact
@@ -741,7 +742,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={cn(
         "mx-auto",
-        isOverlay ? "w-full max-w-3xl" : "max-w-[1200px] pb-32 pt-8 px-6"
+        isOverlay ? "w-full max-w-3xl" : "max-w-300 pb-32 pt-8 px-6"
       )}
     >
 
@@ -791,8 +792,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div className={cn("space-y-2 flex flex-col h-full", mediaPreviews.length > 0 && !isEditMode ? "md:col-span-3" : "")}>
             <div
               className={cn(
-                "group relative rounded-[24px] flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                !isEditMode ? "flex-1 w-full bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-primary transition-all cursor-pointer" : "h-[380px] w-full max-w-[500px] mx-auto bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
+                "group relative rounded-3xl flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                !isEditMode ? "flex-1 w-full bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-primary transition-all cursor-pointer" : "h-95 w-full max-w-125 mx-auto bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
                 !isEditMode && mediaPreviews.length === 0 ? "aspect-video" : "",
                 isDragging && !isEditMode && "bg-[#FFF6DD] border-primary shadow-[0_0_20px_rgba(254,195,18,0.15)]"
               )}
@@ -957,9 +958,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             {/* Skeleton Card Preview (Desktop Only) */}
             {!isEditMode && mediaPreviews.length > 0 && (
               <div className="hidden md:block md:col-span-2 pt-0 sticky top-8">
-                <div className="bg-[#ebebeb] p-1.5 rounded-[24px] overflow-hidden w-full mx-auto shadow-sm transition-all duration-300">
+                <div className="bg-[#ebebeb] p-1.5 rounded-3xl overflow-hidden w-full mx-auto shadow-sm transition-all duration-300">
                   <div className="relative z-10 flex flex-col">
-                    <div className="w-full aspect-4/3 rounded-[24px] overflow-hidden bg-gray-200 mb-4 relative">
+                    <div className="w-full aspect-4/3 rounded-3xl overflow-hidden bg-gray-200 mb-4 relative">
                       <img src={mediaPreviews[0]} alt="Cover preview" className="w-full h-full object-cover" />
                     </div>
                     <div className="px-2 pt-0 pb-2 flex-1 flex flex-col">
@@ -1005,7 +1006,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   value={description}
                   maxLength={400}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="min-h-[180px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 resize-none font-medium"
+                  className="min-h-45 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 resize-none font-medium"
                 />
                 <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
                   {description.length} / 400 chars
@@ -1281,7 +1282,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                           value={aiPrompt}
                           maxLength={8000}
                           onChange={(e) => setAiPrompt(e.target.value)}
-                          className="min-h-[120px] text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium font-mono"
+                          className="min-h-30 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium font-mono"
                         />
                         <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
                           {aiPrompt.length.toLocaleString()} / 8,000 chars
@@ -1302,7 +1303,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         {/* RIGHT COLUMN: Onboarding & Actions */}
         {!isOverlay && (
           <div className="space-y-8 sticky top-32 lg:max-w-sm">
-            <div className="bg-gray-50/50 border border-gray-200/60 rounded-[24px] p-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-gray-50/50 border border-gray-200/60 rounded-3xl p-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <CloudUpload className="w-4 h-4 text-primary" />
@@ -1353,7 +1354,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 disabled={!title || (mediaFiles.length === 0 && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
                 onClick={handleSubmit}
                 className={cn(
-                  "group relative min-w-[160px] h-12 rounded-full text-lg font-medium transition-colors overflow-hidden border-2 border-primary",
+                  "group relative min-w-40 h-12 rounded-full text-lg font-medium transition-colors overflow-hidden border-2 border-primary",
                   "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
                   !isSubmitting && "hover:bg-primary"
                 )}
@@ -1494,7 +1495,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 disabled={!title || (mediaFiles.length === 0 && !isEditing) || isSubmitting || (isEditing && !hasChanges)}
                 onClick={handleSubmit}
                 className={cn(
-                  "group relative min-w-[160px] h-12 rounded-full text-lg font-medium overflow-hidden border-2 border-primary transition-colors",
+                  "group relative min-w-40 h-12 rounded-full text-lg font-medium overflow-hidden border-2 border-primary transition-colors",
                   "disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent",
                   !isSubmitting && "hover:bg-primary"
                 )}

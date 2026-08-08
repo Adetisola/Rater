@@ -1,13 +1,13 @@
 "use client";
 
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { CloudUpload } from 'lucide-react';
 import { useRouter, usePathname, useParams } from 'next/navigation';
 import { cn } from '../lib/utils';
 
 export function FloatingPostButton() {
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -35,8 +35,8 @@ export function FloatingPostButton() {
                   router.push('/submit', { scroll: false });
                 }}
                 className={cn(
-                    "w-[56px] h-[56px] sm:w-auto sm:h-14 rounded-full px-4 sm:px-6 shadow-2xl border-2 border-[#FEC312] bg-white transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap",
-                    "hover:bg-[#FEC312] hover:scale-105 active:scale-95"
+                    "w-14 h-14 sm:w-auto sm:h-14 rounded-full px-4 sm:px-6 shadow-2xl border-2 border-primary bg-white transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap",
+                    "hover:bg-primary hover:scale-105 active:scale-95"
                 )}
             >
                 <div className="flex items-center gap-2">
@@ -46,7 +46,7 @@ export function FloatingPostButton() {
                     />
                     <span className="hidden sm:flex items-center text-lg font-medium text-black group-hover:text-white transition-colors">
                         Post
-                        <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[120px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                        <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-30 xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
                             <span className="pl-1.5 whitespace-nowrap">your work</span>
                         </span>
                     </span>

@@ -6,7 +6,7 @@ import { highlightMatches } from '../logic/searchUtils';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { usePostStore } from '../store/postStore';
 import type { RecentItemData } from '../hooks/useRecentSearches';
 
@@ -55,7 +55,7 @@ export function SearchResults({
     ? recentItems.length > 0 
     : (results.avatars.length > 0 || results.posts.length > 0 || results.categories.length > 0);
   
-  const { profileMap } = useAuth();
+  const { profileMap } = useAuthState();
   const allPosts = usePostStore(state => state.posts);
   
   const [mounted, setMounted] = useState(false);

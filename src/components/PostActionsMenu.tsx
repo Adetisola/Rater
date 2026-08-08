@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoreVertical, Edit2, Trash2, Share2, Download, Flag, Check, Copy } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { showToast } from './GlobalOverlays';
 import { usePosts } from '../context/PostContext';
 import { showDeleteConfirmation } from './GlobalOverlays';
@@ -13,6 +13,7 @@ import { sharePost, downloadPostImage } from '../lib/postActions';
 import { createPortal } from 'react-dom';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
+import { DownloadImageOverlay } from './DownloadImageOverlay';
 
 interface PostActionsMenuProps {
   post: Post;
@@ -22,6 +23,7 @@ interface PostActionsMenuProps {
   iconSizeClass?: string;
   onReport?: () => void;
   isCardContext?: boolean;
+  trackView?: (trigger: 'viewport' | 'action') => void;
 }
 
 export function PostActionsMenu({
@@ -32,15 +34,17 @@ export function PostActionsMenu({
   iconSizeClass = "w-4 h-4",
   onReport,
   isCardContext,
+  trackView,
 }: PostActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [isShareOverlayOpen, setIsShareOverlayOpen] = useState(false);
   const [isReportOverlayOpen, setIsReportOverlayOpen] = useState(false);
+  const [isDownloadOverlayOpen, setIsDownloadOverlayOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const { setEditingPost } = usePosts();
   const menuRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
@@ -96,9 +100,11 @@ export function PostActionsMenu({
     e.stopPropagation();
     const handledNatively = await sharePost(post.id, post.title);
     if (handledNatively) {
+      trackView?.('action');
       setShareSuccess(true);
       setTimeout(() => setShareSuccess(false), 2000);
     } else {
+      trackView?.('action');
       setIsShareOverlayOpen(true);
     }
   };
@@ -106,7 +112,15 @@ export function PostActionsMenu({
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    await downloadPostImage(post.image_url, post.title);
+    const imageCount = (post.media && post.media.length > 0) ? post.media.length : (post.image_url ? 1 : 0);
+    trackView?.('action');
+    
+    if (imageCount > 1) {
+      setIsDownloadOverlayOpen(true);
+    } else if (imageCount === 1) {
+      const urlToDownload = post.media?.[0]?.url || post.image_url;
+      await downloadPostImage(urlToDownload, post.title);
+    }
     setIsOpen(false);
   };
 
@@ -115,6 +129,7 @@ export function PostActionsMenu({
     e.stopPropagation();
     if (post.ai_prompt) {
       navigator.clipboard.writeText(post.ai_prompt);
+      trackView?.('action');
       showToast("Prompt copied to clipboard.", "success");
     }
     setIsOpen(false);
@@ -123,6 +138,7 @@ export function PostActionsMenu({
   const handleReport = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    trackView?.('action');
     if (onReport) {
       onReport();
     } else {
@@ -317,7 +333,7 @@ export function PostActionsMenu({
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="w-full bg-white rounded-t-[32px] overflow-hidden relative z-10 pb-6 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]"
+                  className="w-full bg-white rounded-t-4xl overflow-hidden shadow-2xl relative z-10 pb-6"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex justify-center pt-4 pb-2">
@@ -341,7 +357,7 @@ export function PostActionsMenu({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 4 }}
                 transition={{ duration: 0.15 }}
-                className="fixed bg-white rounded-2xl shadow-xl border border-gray-100 z-60 min-w-[200px] overflow-hidden"
+                className="absolute right-0 top-full mt-2 w-max min-w-50 bg-white rounded-2xl overflow-hidden shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
                 style={{ top: dropdownPos.top, right: dropdownPos.right }}
               >
                 {menuContent}
@@ -370,6 +386,13 @@ export function PostActionsMenu({
           }}
         />
       )}
+
+      {/* Download Image Overlay for Multi-Image Posts */}
+      <DownloadImageOverlay
+        isOpen={isDownloadOverlayOpen}
+        onClose={() => setIsDownloadOverlayOpen(false)}
+        post={post}
+      />
     </div>
   );
 }

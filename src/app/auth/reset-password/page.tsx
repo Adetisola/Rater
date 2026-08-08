@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/Input';
 import { Eye, EyeOff, AlertCircle, KeyRound, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { validatePasskey } from '@/utils/validation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
-  const { currentProfile, isLoading: isAuthLoading } = useAuth();
+  const { currentProfile, isLoading: isAuthLoading } = useAuthState();
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

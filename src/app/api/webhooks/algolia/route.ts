@@ -1,4 +1,10 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+function safeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
 
 const appId = process.env.NEXT_PUBLIC_ALGOLIA_APP_ID || '';
 const adminKey = process.env.ALGOLIA_ADMIN_KEY || '';
@@ -9,7 +15,7 @@ export async function POST(req: Request) {
     const secret = searchParams.get('secret');
 
     // Verify webhook secret
-    if (secret !== process.env.WEBHOOK_SECRET) {
+    if (!secret || !safeCompare(secret, process.env.WEBHOOK_SECRET!)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -118,6 +124,6 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('[Algolia Webhook Error]', error);
-    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

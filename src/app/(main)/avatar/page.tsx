@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
@@ -8,7 +8,7 @@ import { useEffect } from 'react';
  * /avatar → Redirect to /@username if logged in, else show identity required
  */
 export default function MyAvatarRedirect() {
-  const { currentProfile, isLoading } = useAuth();
+  const { currentProfile, isLoading } = useAuthState();
   const router = useRouter();
 
   useEffect(() => {

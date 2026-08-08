@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from '../context/AuthContext';
+import { useAuthState, useAuthActions } from '../context/AuthContext';
 import { getPostMetrics } from '@/lib/metrics';
 import { getProfilePosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
@@ -89,7 +89,8 @@ interface ProfileViewProps {
 }
 
 export function ProfileView({ avatarId }: ProfileViewProps) {
-  const { currentProfile: me, profileMap, updateProfile, checkUsernameAvailable } = useAuth();
+  const { currentProfile: me, profileMap } = useAuthState();
+  const { updateProfile, checkUsernameAvailable } = useAuthActions();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const router = useRouter();
 
@@ -120,8 +121,28 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const bioInputRef = useRef<HTMLTextAreaElement>(null);
   const roleInputRef = useRef<HTMLInputElement>(null);
 
-  // Find the avatar to display
-  const targetAvatar = profileMap[avatarId];
+  // Find the avatar to display — prefer cache, but fall back to a direct fetch
+  // when the cache only has a partial profile (e.g. from post/review joins)
+  const cachedAvatar = profileMap[avatarId];
+  const [fetchedAvatar, setFetchedAvatar] = useState<import('@/types').Avatar | null>(null);
+
+  useEffect(() => {
+    // If the cache already has complete data, nothing to do
+    if (cachedAvatar?.created_at) return;
+    // If we already have a fetched result, nothing to do
+    if (fetchedAvatar) return;
+
+    let mounted = true;
+    import('@/lib/profiles').then(({ getProfileById }) => {
+      getProfileById(avatarId).then(profile => {
+        if (mounted && profile) setFetchedAvatar(profile);
+      });
+    });
+    return () => { mounted = false; };
+  }, [avatarId, cachedAvatar?.created_at, fetchedAvatar]);
+
+  // Use cached avatar when it has full data, otherwise fall back to fetched
+  const targetAvatar = (cachedAvatar?.created_at ? cachedAvatar : fetchedAvatar) ?? cachedAvatar;
 
   // Compute optimized avatar URL for the main profile header
   const optimizedAvatarUrl = useMemo(() => {
@@ -282,7 +303,11 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         router.replace(`/@${editUsername.toLowerCase().trim()}`);
       }
     } else {
-      setSaveError(result.error);
+      const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(new Error(result.error), {
+        fallbackCode: 'RATER_PROFILE_002',
+        fallbackMessage: 'Failed to update profile.'
+      }));
+      setSaveError(normalized.userMessage);
       setEditState('error');
     }
   };
@@ -299,10 +324,18 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
         if (result.ok) {
           showToast("Profile picture updated", "success");
         } else {
-          showToast(result.error || "Failed to update profile", "error");
+          const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(new Error(result.error), {
+            fallbackCode: 'RATER_PROFILE_001',
+            fallbackMessage: 'Failed to update profile.'
+          }));
+          showToast(normalized.userMessage, "error");
         }
       } catch (err: any) {
-        showToast(err.message || "Failed to upload image", "error");
+        const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+          fallbackCode: 'RATER_UPLOAD_002',
+          fallbackMessage: 'Failed to upload image.'
+        }));
+        showToast(normalized.userMessage, "error");
       } finally {
         setIsUploadingAvatar(false);
         // Reset input value so the same file can be selected again if needed

@@ -8,6 +8,15 @@ export const metadata: Metadata = {
   title: "Rater — Design Critique Studio",
   description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
   manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/icons/rater-logo-white-bg.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }
+    ],
+    apple: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }
+    ],
+  },
   openGraph: {
     title: "Rater — Design Critique Studio",
     description: "Rater is a design feedback platform where designers can share their work, give constructive critiques, and train their eye by evaluating real-world projects.",
@@ -31,13 +40,14 @@ export const metadata: Metadata = {
   },
 };
 
-import { AuthProvider } from "../context/AuthContext";
-import { PostProvider } from "../context/PostContext";
-import { TimeProvider } from "../context/TimeContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { PostProvider } from "@/context/PostContext";
+import { TimeProvider } from "@/context/TimeContext";
 import { GlobalRouteLoader } from "../components/GlobalRouteLoader";
 import { GlobalOverlays } from "../components/GlobalOverlays";
 import { PWARegistry } from "../components/PWARegistry";
 import { ScrollRestorationProvider } from "../components/ScrollRestorationProvider";
+import { GlobalErrorBoundary } from "../components/GlobalErrorBoundary";
 
 export default function RootLayout({
   children,
@@ -46,22 +56,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="icon" type="image/svg+xml" href="/icons/rater-logo-white-bg.svg" />
-      </head>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          <PostProvider>
-            <TimeProvider>
-              <ScrollRestorationProvider>
-                <PWARegistry />
-                <GlobalRouteLoader />
-                <GlobalOverlays />
-                {children}
-              </ScrollRestorationProvider>
-            </TimeProvider>
-          </PostProvider>
-        </AuthProvider>
+        <GlobalErrorBoundary>
+          <AuthProvider>
+            <PostProvider>
+              <TimeProvider>
+                <ScrollRestorationProvider>
+                  <PWARegistry />
+                  <GlobalRouteLoader />
+                  <GlobalOverlays />
+                  {children}
+                </ScrollRestorationProvider>
+              </TimeProvider>
+            </PostProvider>
+          </AuthProvider>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 import { AuthOverlay } from '@/components/AuthOverlay';
 
 interface ProtectedRouteProps {
@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
-  const { currentProfile, isLoading } = useAuth();
+  const { currentProfile, isLoading } = useAuthState();
   const router = useRouter();
   const pathname = usePathname();
   const [hasChecked, setHasChecked] = useState(false);

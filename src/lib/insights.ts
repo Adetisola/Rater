@@ -21,7 +21,7 @@ export {
 
 export {
   getCachedInsight as getCachedInsights,
-  setCachedInsight as saveInsights,
+
   hasCachedInsight,
 } from '@/utils/insightCache';
 

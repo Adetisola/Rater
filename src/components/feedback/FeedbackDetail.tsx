@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { ChevronUp, ChevronLeft, MessageSquare, Send } from 'lucide-react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 import { UserAvatar } from '../UserAvatar';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,7 +20,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasVoted, setHasVoted] = useState(false);
   
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
 
   useEffect(() => {
     let isMounted = true;

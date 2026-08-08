@@ -5,9 +5,7 @@ import gsap from 'gsap';
 import { Button } from './ui/Button';
 import { Textarea } from './ui/Textarea';
 import { StarRating } from './ui/StarRating';
-import { Input } from './ui/Input';
-import { useGuestEngagementPrompt } from '../hooks/useGuestEngagementPrompt';
-import { GuestSignupPrompt } from './GuestSignupPrompt';
+
 import { Tooltip } from './ui/Tooltip';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,11 +13,8 @@ import {
   loadDraft,
   saveDraft,
   deleteDraft,
-  saveSnapshot,
   loadSnapshot,
-  deleteSnapshot,
-  migrateDraft,
-  getGuestSessionId
+  deleteSnapshot
 } from '../utils/draftManager';
 import { useDebounce } from '../hooks/useDebounce';
 import type { Category } from '../types';
@@ -30,11 +25,13 @@ import { getReviewMode } from '../config/reviewModes';
  */
 interface ReviewFormProps {
   onSubmit: (ratings: Record<string, number>, comment: string, reviewerName: string) => void | Promise<void>;
-  initialName?: string;
   isLoggedIn?: boolean;
   postId: string;
   userId?: string;
+  userName?: string;
   postCategory?: Category;
+  editingReview?: import('../types').Review | null;
+  onCancelEdit?: () => void;
 }
 
 function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { question: string, points: string[] }, iconUrl?: string }) {
@@ -72,18 +69,34 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
  * A form component for submitting reviews on a post.
  * Features a star rating system across multiple criteria (Clarity, Purpose, Aesthetics),
  * a comment box, and draft persistence to survive auth interruptions.
- * Also intelligently prompts guest users to sign up after filling out their name.
  */
-export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, postCategory }: ReviewFormProps) {
+export function ReviewForm({
+  onSubmit,
+  isLoggedIn = true,
+  postId,
+  userId,
+  userName,
+  postCategory,
+  editingReview,
+  onCancelEdit
+}: ReviewFormProps) {
   const modeConfig = getReviewMode(postCategory);
   const criteria = modeConfig.criteria;
 
-  const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [comment, setComment] = useState('');
-  const [name, setName] = useState(initialName || '');
+  const [ratings, setRatings] = useState<Record<string, number>>(editingReview?.ratings || {});
+  const [comment, setComment] = useState(editingReview?.comment || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showNameError, setShowNameError] = useState(false);
-  const [isNameFocused, setIsNameFocused] = useState(false);
+
+  // Sync state when editingReview changes
+  useEffect(() => {
+    if (editingReview) {
+      setRatings(editingReview.ratings || {});
+      setComment(editingReview.comment || '');
+    } else {
+      setRatings({});
+      setComment('');
+    }
+  }, [editingReview]);
 
   // --- GSAP RATE BUTTON HOVER EXPLOSION LOGIC ---
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -259,16 +272,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
     }
   };
 
-  // Guest engagement prompt — triggers only after name field completion
-  const {
-    isVisible: isPromptVisible,
-    dismiss: dismissPrompt,
-    personalizedTitle,
-    guestName: resolvedGuestName,
-  } = useGuestEngagementPrompt({
-    guestName: isLoggedIn ? '' : name,
-    isNameFocused,
-  });
+
 
   // --- DRAFT SYSTEM ---
 
@@ -278,7 +282,7 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
     const snapshot = loadSnapshot(postId);
 
     // Priority 2: Persistent Local Draft
-    const localDraft = loadDraft(postId, userId);
+    const localDraft = userId ? loadDraft(postId, userId) : null;
 
     // Merge logic: Snapshot usually wins as it's the most recent unsaved state during auth
     const draftToRestore = snapshot || localDraft;
@@ -286,69 +290,70 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
     if (draftToRestore) {
       if (draftToRestore.ratings) setRatings(draftToRestore.ratings);
       if (draftToRestore.comment) setComment(draftToRestore.comment);
-      if (draftToRestore.name && !isLoggedIn) setName(draftToRestore.name);
-
-      // Clear snapshot after use
-      if (snapshot) deleteSnapshot(postId);
-    }
-
-    // Handle Migration: Guest -> User
-    if (isLoggedIn && userId) {
-      migrateDraft(postId, getGuestSessionId(), userId);
     }
   }, [postId, isLoggedIn, userId]);
 
   // 2. Auto-Save (Debounced)
   const currentDraftData = {
     ratings,
-    comment,
-    name
+    comment
   };
   const debouncedDraft = useDebounce(currentDraftData, 800);
 
   useEffect(() => {
     // Only save if there is some progress
     const hasRatings = Object.values(ratings).some(val => val && val > 0);
-    const hasProgress = hasRatings || comment.trim() || name.trim();
-    if (hasProgress) {
+    const hasProgress = hasRatings || comment.trim();
+    if (hasProgress && userId) {
       saveDraft(postId, userId, debouncedDraft);
     }
   }, [debouncedDraft, postId, userId]);
 
-  // 3. Auth Interruption Snapshot
-  const handleBeforeSignup = () => {
-    saveSnapshot(postId, currentDraftData);
-  };
-
   // Calculate completeness
   const isComplete = criteria.every(c => (ratings[c.dbKey] || 0) > 0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [inlineSubmitError, setInlineSubmitError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setInlineSubmitError(null);
 
     // Final validation
     if (!isComplete) return;
-    if (!isLoggedIn && !name.trim()) {
-      setShowNameError(true);
-      return;
-    }
+    if (!isLoggedIn) return;
 
     setIsSubmitting(true);
-    // Simulate network delay
-    setTimeout(() => {
-      const finalName = isLoggedIn ? (initialName || 'Member') : name.trim();
+    
+    try {
+      if (editingReview) {
+        await onSubmit(ratings, comment.trim(), userName || 'Anonymous');
+        if (onCancelEdit) onCancelEdit();
+      } else {
+        await Promise.all([
+          onSubmit(ratings, comment.trim(), userName || 'Anonymous'),
+          new Promise(resolve => setTimeout(resolve, 500))
+        ]);
 
-      // Trigger screen success confetti rain!
-      triggerSuccessConfetti();
+        // Trigger screen success confetti rain!
+        triggerSuccessConfetti();
 
-      onSubmit(ratings, comment, finalName);
+        setRatings({});
+        setComment('');
 
-      // Clear drafts on success
-      deleteDraft(postId, userId);
-      deleteSnapshot(postId);
-
+        if (userId) {
+          deleteDraft(postId, userId);
+        }
+        deleteSnapshot(postId);
+      }
+    } catch (err: any) {
+      const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+        fallbackCode: 'RATER_REVIEW_001',
+        fallbackMessage: 'Failed to submit review. Please try again.'
+      }));
+      setInlineSubmitError(normalized.userMessage);
+    } finally {
       setIsSubmitting(false);
-    }, 800);
+    }
   };
 
   return (
@@ -377,96 +382,88 @@ export function ReviewForm({ onSubmit, initialName, isLoggedIn, postId, userId, 
         </div>
 
         <div className="space-y-4 mb-8">
-          <AnimatePresence mode="wait" initial={false}>
-            {!isLoggedIn && (
-              <motion.div
-                key="guest-name"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="pb-1">
-                  <Input
-                    placeholder="Your name"
-                    value={name}
-                    onChange={(e) => {
-                      setName(e.target.value);
-                      if (e.target.value.trim()) setShowNameError(false);
-                    }}
-                    onFocus={() => setIsNameFocused(true)}
-                    onBlur={() => setIsNameFocused(false)}
-                    className={`h-12 rounded-xl transition-all focus-visible:border-primary ${showNameError ? 'border-red-500 bg-red-50/30' : ''
-                      }`}
-                  />
-                  {showNameError && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-[10px] text-red-500 font-semibold mt-1 ml-1"
-                    >
-                      Name is required to rate
-                    </motion.p>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
-          <div className="relative">
-            <Textarea
-              placeholder={isLoggedIn ? `${initialName}, What do you think?...` : "What do you think?..."}
-              value={comment}
-              onChange={(e) => {
-                if (e.target.value.length <= 200) {
-                  setComment(e.target.value);
-                }
-              }}
-              maxLength={200}
-              className="min-h-[120px] rounded-xl resize-none p-4 pb-8 focus-visible:border-primary"
-            />
-            <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${comment.length >= 200 ? 'text-red-500' : 'text-gray-400'
-              }`}>
-              {comment.length} / 200
+
+          <div>
+            <div className="relative">
+              <Textarea
+                placeholder={userName ? `${userName}, what do you think?...` : "What do you think?..."}
+                value={comment}
+                onChange={(e) => {
+                  if (e.target.value.length <= 500) {
+                    setComment(e.target.value);
+                  }
+                }}
+                maxLength={500}
+                className="min-h-30 rounded-xl resize-none p-4 pb-8 focus-visible:border-primary font-sans"
+              />
+              <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${comment.length >= 500 ? 'text-red-500' : 'text-gray-400'
+                }`}>
+                {comment.length} / 500
+              </div>
+            </div>
+            <div className="mt-2 ml-2 text-[11px] font-medium text-gray-400 pointer-events-none">
+              Supports markdown: **bold**, *italic*, - list, https://link.com
             </div>
           </div>
         </div>
 
-        <Button
-          ref={btnRef}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-          type="submit"
-          className="relative w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all overflow-hidden"
-          variant="outline"
-          disabled={!isComplete || isSubmitting}
-          isLoading={isSubmitting}
-        >
-          <div className="relative w-14 h-[1.3em] overflow-hidden flex justify-center items-center pointer-events-none select-none">
-            {['R', 'a', 't', 'e'].map((char, index) => (
-              <span
-                key={index}
-                className="rate-btn-span inline-block relative font-medium text-lg"
-                style={{
-                  textShadow: "0px 1.3em currentColor",
-                  transform: "translateY(0.001deg)"
-                }}
+        <AnimatePresence>
+          {inlineSubmitError && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="flex justify-center mb-3"
+            >
+              <p className="text-xs text-red-500 font-medium">
+                {inlineSubmitError}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+          {/* Submit/Cancel Buttons */}
+          <div className="flex items-center justify-end gap-3 w-full sm:w-auto">
+            {editingReview && onCancelEdit && (
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={onCancelEdit}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto text-gray-500 font-semibold h-12 rounded-full px-6"
               >
-                {char}
-              </span>
-            ))}
+                Cancel
+              </Button>
+            )}
+            <Button
+              ref={btnRef}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              type="submit"
+              className="relative w-full sm:w-28 h-12 rounded-full text-lg font-medium transition-all overflow-hidden"
+              variant="outline"
+              disabled={!isComplete || isSubmitting}
+              isLoading={isSubmitting}
+            >
+              <div className="relative w-14 h-[1.3em] overflow-hidden flex justify-center items-center pointer-events-none select-none">
+                {['S', 'a', 'v', 'e'].map((_, index) => (
+                  <span
+                    key={index}
+                    className="rate-btn-span inline-block relative font-medium text-lg"
+                    style={{
+                      textShadow: "0px 1.3em currentColor",
+                      transform: "translateY(0.001deg)"
+                    }}
+                  >
+                    {editingReview ? (['S', 'a', 'v', 'e'][index] || '') : (['R', 'a', 't', 'e'][index] || '')}
+                  </span>
+                ))}
+              </div>
+            </Button>
           </div>
-        </Button>
       </form>
 
-      <GuestSignupPrompt
-        isVisible={isPromptVisible}
-        onDismiss={dismissPrompt}
-        onBeforeSignup={handleBeforeSignup}
-        personalizedTitle={personalizedTitle}
-        guestName={resolvedGuestName}
-      />
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/client';
 import { uploadAsset } from '@/lib/cloudinary/service';
+import sizeOf from 'image-size';
 
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
 
@@ -85,6 +86,22 @@ export async function POST(req: NextRequest) {
 
     if (!isValidSignature) {
       return jsonError('Invalid file content. The file contents do not match its declared media format.', 400);
+    }
+
+    // 4.75. Dimension and Megapixel Limit (Pixel Flood Protection)
+    if (mimeType.startsWith('image/')) {
+      try {
+        const dimensions = sizeOf(buffer);
+        if (!dimensions || !dimensions.width || !dimensions.height) {
+          return jsonError('Invalid image file: could not determine dimensions.', 400);
+        }
+        const megapixels = (dimensions.width * dimensions.height) / 1000000;
+        if (megapixels > 50) {
+          return jsonError(`Image resolution too high (${Math.round(megapixels)}MP). Maximum allowed is 50MP to prevent pixel flood attacks.`, 400);
+        }
+      } catch (err) {
+        return jsonError('Invalid or corrupted image file.', 400);
+      }
     }
 
     // 5. Upload via Cloudinary Service

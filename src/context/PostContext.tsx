@@ -8,8 +8,8 @@ import {
   softDeletePost as dbSoftDeletePost,
   hardDeletePost as dbHardDeletePost,
 } from '@/lib/posts';
-import { useAuth } from './AuthContext';
-import { supabase } from '@/lib/supabase/client';
+import { useAuthState } from './AuthContext';
+
 import { getActiveBadges } from '@/lib/badges';
 import { computeHotPosts } from '@/logic/hotPostUtils';
 import { usePostStore } from '../store/postStore';
@@ -29,30 +29,13 @@ const PostContext = createContext<PostContextType | undefined>(undefined);
 
 export function PostProvider({ children }: { children: React.ReactNode }) {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
 
-  // Supabase Realtime synchronization for post metrics
-  useEffect(() => {
-    const channel = supabase.channel('public:posts')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'posts' },
-        (payload) => {
-          const newPostData = payload.new as Post;
-          usePostStore.getState().updatePostMetrics(newPostData.id, {
-            review_count: newPostData.review_count,
-            average_score: newPostData.average_score,
-            criteria_scores: newPostData.criteria_scores,
-            updated_at: newPostData.updated_at
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // The global Supabase Realtime WebSocket listener was intentionally removed here.
+  // It was an unfiltered global listener that would broadcast every platform update to all users,
+  // causing massive scalability issues. 
+  // Live metric synchronization is now handled via localized component-level polling (e.g. in PostDetailContent)
+  // and Pull-to-Refresh on feeds.
 
   const updatePost = useCallback(async (postId: string, updates: Partial<Post>) => {
     if (!currentProfile) return false;
@@ -89,11 +72,13 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       usePostStore.getState().updatePost(postId, serverPost);
       
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic update failed, rolling back:', err);
       // 3. Precise rollback
       usePostStore.getState().updatePost(postId, previousPost);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_UPDATE_001', fallbackMessage: 'Failed to update post.' });
     }
   }, [currentProfile]);
 
@@ -114,10 +99,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbSoftDeletePost(postId, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic delete failed, rolling back:', err);
       usePostStore.getState().updatePost(postId, previousPost);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_DELETE_001', fallbackMessage: 'Failed to delete post.' });
     }
   }, [currentProfile]);
 
@@ -134,10 +121,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbUpdatePost(postId, { is_deleted: false, deleted_at: undefined }, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic undo failed, rolling back:', err);
       usePostStore.getState().updatePost(postId, previousPost);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_RESTORE_001', fallbackMessage: 'Failed to restore post.' });
     }
   }, [currentProfile]);
 
@@ -154,10 +143,12 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       const result = await dbHardDeletePost(postId, currentProfile.id);
       if (!result.ok) throw new Error(result.error);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic hard delete failed, rolling back:', err);
       usePostStore.getState().addOrUpdatePosts([previousPost]);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_HDELETE_001', fallbackMessage: 'Failed to permanently delete post.' });
     }
   }, [currentProfile]);
 
@@ -180,11 +171,13 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
       usePostStore.getState().addOrUpdatePosts([newPost]);
       usePostStore.getState().setNewlyUploadedPostId(newPost.id);
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Optimistic create failed, rolling back:', err);
       // Rollback newly inserted optimistic post
       usePostStore.getState().deletePost(tempId);
-      return false;
+      
+      const { normalizeError } = await import('@/lib/errors/normalizeError');
+      throw normalizeError(err, { fallbackCode: 'RATER_POST_CREATE_001', fallbackMessage: 'Failed to create post.' });
     }
   }, []);
 

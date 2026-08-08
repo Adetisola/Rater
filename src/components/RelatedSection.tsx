@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { usePostStore } from '../store/postStore';
 import { MasonryGrid } from './MasonryGrid';
 import type { Post } from '@/types';
@@ -18,7 +18,7 @@ type TabType = 'related' | 'creator';
 export function RelatedSection({ currentPost }: RelatedSectionProps) {
   const allPostsObj = usePostStore(state => state.posts);
   const posts = useMemo(() => Object.values(allPostsObj), [allPostsObj]);
-  const { profileMap } = useAuth();
+  const { profileMap } = useAuthState();
 
   const creator = profileMap[currentPost.avatar_id];
   const creatorName = creator?.name || 'Creator';

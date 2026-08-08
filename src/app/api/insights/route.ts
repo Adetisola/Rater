@@ -7,6 +7,7 @@ import { extractInsightSignals } from '@/utils/insightEngine';
 import type { ScoredReview, InsightSignals } from '@/utils/insightEngine';
 import type { Review, Category } from '@/types';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 // ─── Model Invocation ─────────────────────────────────────────────────────────
 
@@ -87,6 +88,28 @@ interface ClassifyResult {
   signal_strength: number;
 }
 
+function sampleReviews(reviews: Review[], limits: { newest: number, highestRated: number, longest: number }): Review[] {
+  const sampled = new Map<string, Review>();
+  
+  // 1. Newest
+  const byNewest = [...reviews].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  byNewest.slice(0, limits.newest).forEach(r => sampled.set(r.id, r));
+
+  // 2. Highest Rated (Average of ratings given)
+  const byRating = [...reviews].sort((a, b) => {
+    const avgA = Object.values(a.ratings || {}).reduce((sum, val) => sum + val, 0) / (Object.values(a.ratings || {}).length || 1);
+    const avgB = Object.values(b.ratings || {}).reduce((sum, val) => sum + val, 0) / (Object.values(b.ratings || {}).length || 1);
+    return avgB - avgA;
+  });
+  byRating.filter(r => !sampled.has(r.id)).slice(0, limits.highestRated).forEach(r => sampled.set(r.id, r));
+
+  // 3. Longest
+  const byLength = [...reviews].sort((a, b) => (b.comment?.length || 0) - (a.comment?.length || 0));
+  byLength.filter(r => !sampled.has(r.id)).slice(0, limits.longest).forEach(r => sampled.set(r.id, r));
+
+  return Array.from(sampled.values());
+}
+
 async function classifyComments(
   reviews: Review[],
   category: string,
@@ -95,6 +118,12 @@ async function classifyComments(
   openrouterKey: string
 ): Promise<ScoredReview[]> {
   const reviewsWithComments = reviews.filter(r => !!r.comment && r.comment.trim().length > 0);
+
+  const INSIGHT_COMMENT_LIMITS = {
+    newest: 40,
+    highestRated: 30, // Sorted by average rating given
+    longest: 30,
+  };
 
   if (reviewsWithComments.length === 0) {
     return reviews.map(r => ({
@@ -131,7 +160,7 @@ COMMENT: "spam 1" -> {"classification": "off_topic", "confidence": 0.9, "signal_
 COMMENT: "follow my instagram" -> {"classification": "off_topic", "confidence": 0.9, "signal_strength": 0.0}
 
 COMMENTS TO CLASSIFY:
-${reviewsWithComments.map(r => `ID: "${r.id}"\nCOMMENT: "${r.comment}"`).join('\n\n')}
+${sampleReviews(reviewsWithComments, INSIGHT_COMMENT_LIMITS).map(r => `ID: "${r.id}"\nCOMMENT: "${r.comment}"`).join('\n\n')}
 `;
 
   let lastError: any;
@@ -390,6 +419,7 @@ function parseJSONResponse(responseText: string) {
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
 interface RequestBody {
+  postId: string;
   reviews: Review[];
   postCategory: Category;
   postTitle?: string;
@@ -424,7 +454,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: RequestBody = await request.json();
-    const { reviews, postCategory, postTitle, postDescription } = body;
+    const { postId, reviews, postCategory, postTitle, postDescription } = body;
 
     if (!reviews || reviews.length < 2) {
       return NextResponse.json(
@@ -488,12 +518,31 @@ export async function POST(request: NextRequest) {
 
     const parsed = parseJSONResponse(responseText);
 
-    return NextResponse.json({
+    const resultPayload = {
       summary: parsed.summary.slice(0, 500),
       strengths: parsed.strengths.slice(0, 3).map((s: string) => s.slice(0, 200)),
       areasToImprove: parsed.areasToImprove.slice(0, 3).map((s: string) => s.slice(0, 200)),
       model: usedModel,
-    });
+    };
+
+    // Cache the result using Service Role so everyone benefits, bypassing RLS
+    if (postId) {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      const { error } = await supabaseAdmin.from('insight_cache').upsert({
+        post_id: postId,
+        result: resultPayload,
+        review_count: reviews.length
+      });
+      if (error) {
+        console.error('[Insights API] Failed to cache:', error);
+      }
+    }
+
+    return NextResponse.json(resultPayload);
   } catch (error: unknown) {
     console.error('[Insights API] Error:', error);
     return NextResponse.json({ error: 'Synthesis failed' }, { status: 500 });

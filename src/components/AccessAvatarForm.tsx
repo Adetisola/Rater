@@ -7,7 +7,7 @@ import { Eye, EyeOff, AlertCircle, Lock, AtSign, Mail } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ForgotPasskeyOverlay } from './ForgotPasskeyOverlay';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuthActions } from '../context/AuthContext';
 
 interface AccessAvatarFormProps {
   onSuccess: () => void;
@@ -46,7 +46,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
     return () => clearInterval(timer);
   }, [lockoutTime]);
 
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle } = useAuthActions();
 
   // Normalize username input: strip @, extract from URLs, trim
   const normalizeUsername = (raw: string): string => {

@@ -80,6 +80,47 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
     props.onError?.(e);
   };
 
+  // Detail variant: image dictates container size naturally (no crop)
+  if (variant === 'detail') {
+    return (
+      <div className={cn("relative", className)}>
+        {/* Blur Placeholder - hidden once loaded */}
+        {optimizedData && (
+          <img
+            src={optimizedData.placeholder}
+            className={cn(
+              "absolute inset-0 w-full h-full object-cover blur-xl scale-110 z-0 transition-opacity duration-500",
+              isLoaded ? "opacity-0" : "opacity-100"
+            )}
+            alt=""
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Main Image - natural flow, no crop */}
+        <img
+          ref={setRefs}
+          src={src}
+          srcSet={srcSet}
+          sizes={sizes}
+          alt={alt || "Post media"}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          className={cn(
+            "relative z-10 block transition-opacity duration-500",
+            !optimizedData || isLoaded ? "opacity-100" : "opacity-0"
+          )}
+          style={{ maxWidth: '100%', maxHeight: '75vh', width: 'auto', height: 'auto' }}
+          {...props}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+      </div>
+    );
+  }
+
+  // Thumbnail variant: fill container with crop (object-cover)
   return (
     <div className={cn("relative overflow-hidden bg-[#d1d5db]", className)}>
       {/* Blur Placeholder */}
@@ -102,7 +143,6 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
         decoding="async"
-        // Native browser behavior for progressive loading requires the image to sit above the placeholder
         className={cn(
           "object-cover w-full h-full relative z-10 transition-opacity duration-500",
           !optimizedData || isLoaded ? "opacity-100" : "opacity-0"

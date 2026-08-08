@@ -4,13 +4,17 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
 import { AI_TOOLS } from '@/types';
-import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview } from '@/lib/reviews';
+import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview, updateReview, deleteReview } from '@/lib/reviews';
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { useAuth } from '../context/AuthContext';
-import { usePosts } from '../context/PostContext';
+import { useAuthState } from '@/context/AuthContext';
+import { usePosts } from '@/context/PostContext';
 import { usePostStore } from '../store/postStore';
-import { useNow } from '../context/TimeContext';
+import { useNavigationStore } from '@/store/navigationStore';
+import { useNow } from '@/context/TimeContext';
+import { AppErrorState } from '@/components/AppErrorState';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
@@ -27,15 +31,16 @@ import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transf
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
 import { AmbientLoadingText } from './AmbientLoadingText';
-import { useNavigationStore } from '../store/navigationStore';
 import { RelatedSection } from './RelatedSection';
 import { MediaCarousel } from './MediaCarousel';
 import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 import { showToast } from './GlobalOverlays';
+import { AuthOverlay } from '@/components/AuthOverlay';
 import { cn } from '../lib/utils';
 
-import { getDeviceId, hasReviewedPost, markPostAsReviewed } from '../utils/deviceTracking';
+
+import { useViewTracker } from '@/hooks/useViewTracker';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
     ArrowLeft,
@@ -48,11 +53,11 @@ import {
     ChevronLeft,
     ChevronRight,
     Copy,
-    Check
+    Check,
+    Eye
 } from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
-const RATE_LIMIT_KEY = 'rater_review_timestamps';
 
 /**
  * Props for the PostDetailOverlay and PostDetailCore components.
@@ -64,14 +69,16 @@ interface PostDetailOverlayProps {
     onClose?: () => void;
     /** Optional callback to disable swipe navigation, used when interactable child overlays are open */
     onDisableSwipe?: (disabled: boolean) => void;
+    /** Initial mobile state passed from the server */
+    initialIsMobile?: boolean;
 }
 
 /**
  * Responsive wrapper for the post detail view.
  * Handles mobile swipe-to-navigate gestures while delegating rendering to PostDetailCore.
  */
-export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
-    const [isMobile, setIsMobile] = useState(false);
+export function PostDetailContent({ post, onClose, initialIsMobile = false }: PostDetailOverlayProps) {
+    const [isMobile, setIsMobile] = useState(initialIsMobile);
 
     // Hydrate the store with the server-provided post data
     useEffect(() => {
@@ -186,10 +193,12 @@ export function PostDetailContent({ post, onClose }: PostDetailOverlayProps) {
  */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
     const { optimisticUpdateMetrics } = usePosts();
+    const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
+    const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
     const badgeMap = usePostStore(state => state.badgeMap);
     const hotPostIds = usePostStore(state => state.hotPostIds);
     const posts = usePostStore(state => state.posts);
-    const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuth() as any;
+    const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuthState();
     const now = useNow();
     const router = useRouter();
 
@@ -202,6 +211,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [metrics, setMetrics] = useState<PostMetrics>({
         post_id: post.id,
         review_count: post.review_count || 0,
+        view_count: post.view_count || 0,
         average_score: post.average_score || 0,
         rating_unlocked: (post.review_count || 0) >= 3,
         criteria_scores: post.criteria_scores || {},
@@ -214,6 +224,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const successStarRef = useRef<SVGPathElement>(null);
     const successCheckRef = useRef<SVGPathElement>(null);
     const [isSelfPost, setIsSelfPost] = useState(false);
+    const [showAuthOverlay, setShowAuthOverlay] = useState(false);
 
     // GSAP animation for review success card
     useEffect(() => {
@@ -250,7 +261,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             }
         }
     }, [hasReviewed]);
-    const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
     const [isFetchingReviews, setIsFetchingReviews] = useState(true);
     const [imageError, setImageError] = useState(false);
     const [isAiPromptExpanded, setIsAiPromptExpanded] = useState(false);
@@ -259,20 +269,50 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     // External Metadata (Badges, Hot Status)
     const badge = badgeMap[post.id];
     const isHot = hotPostIds.has(post.id);
-    const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
-    const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
+    const [loadError, setLoadError] = useState<Error | null>(null);
+    const [retryCount, setRetryCount] = useState(0);
+    const MAX_RETRIES = 1;
 
     // 1. Initial Data Load
     useEffect(() => {
         let isMounted = true;
-        setIsFetchingReviews(true);
+        
+        if (retryCount === 0) {
+           setIsFetchingReviews(true);
+           setLoadError(null);
+        }
 
         const loadData = async () => {
-            const reviews = await getReviewsByPostId(post.id);
+            try {
+                const reviews = await getReviewsByPostId(post.id);
+                if (isMounted) {
+                    setDbReviews(reviews);
+                    setIsFetchingReviews(false);
+                    setRetryCount(0);
 
-            if (isMounted) {
-                setDbReviews(reviews);
-                setIsFetchingReviews(false);
+                    // 1. Backend is the source of truth for "hasReviewed"
+                    const hasExistingReview = reviews.some(r => 
+                        currentAvatar && r.reviewer_id === currentAvatar.id
+                    );
+
+                    if (hasExistingReview) {
+                        setHasReviewed(true);
+                    }
+                }
+            } catch (err) {
+                const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+                    fallbackCode: 'RATER_NETWORK_003',
+                    fallbackMessage: 'Failed to load reviews.'
+                }));
+                if (isMounted) {
+                    if (retryCount < MAX_RETRIES) {
+                        setRetryCount(prev => prev + 1);
+                    } else {
+                        setLoadError(normalized);
+                        // Fast fallback on network error
+                        // Removing guest cache completely as per user request
+                    }
+                }
             }
         };
 
@@ -285,23 +325,69 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             setIsSelfPost(false);
         }
 
-        // Check device-based review history
-        if (hasReviewedPost(post.id)) {
-            setHasReviewed(true);
-        }
-
         return () => { isMounted = false; };
-    }, [post.id, currentAvatar, post.avatar_id]);
+    }, [post.id, currentAvatar?.id, post.avatar_id, retryCount]);
 
     // 2. Derive metrics locally when userReviews change (Optimistic UI)
     useEffect(() => {
         if (userReviews.length > 0) {
-            calculatePostMetrics(post.id, userReviews).then(setMetrics);
+            calculatePostMetrics(post.id, userReviews).then(freshMetrics => setMetrics(prev => ({ 
+                ...freshMetrics, 
+                view_count: Math.max(prev.view_count || 0, freshMetrics.view_count || 0) 
+            })));
         }
     }, [userReviews, post.id]);
 
+    // 3. View Tracking
+    const { trackView, containerRef: viewTrackerRef } = useViewTracker(post.id, () => {
+        setMetrics(prev => ({
+            ...prev,
+            view_count: (prev.view_count || 0) + 1
+        }));
+        optimisticUpdateMetrics(post.id, { view_count: (metrics.view_count || 0) + 1 });
+    });
+
+    // 4. Live Metrics Polling (YouTube approach)
+    // Polls the database every 30 seconds to fetch the latest view count & review metrics
+    // Ensures the active post page is always fresh, but doesn't overwhelm the DB like WebSockets would.
+    useEffect(() => {
+        let isMounted = true;
+        
+        const intervalId = setInterval(() => {
+            calculatePostMetrics(post.id).then(freshMetrics => {
+                if (!isMounted) return;
+                
+                setMetrics(prev => ({
+                    ...freshMetrics,
+                    // Ensure the view count never visually ticks down if the DB is lagging behind the local increment
+                    view_count: Math.max(prev.view_count || 0, freshMetrics.view_count || 0)
+                }));
+                
+                // Silently sync the latest polled data back to the global feed store
+                optimisticUpdateMetrics(post.id, {
+                    review_count: freshMetrics.review_count,
+                    view_count: freshMetrics.view_count,
+                    average_score: freshMetrics.average_score,
+                    criteria_scores: freshMetrics.criteria_scores,
+                });
+            }).catch(() => {
+                // Silently ignore polling errors so it doesn't disrupt the UI
+            });
+        }, 30000); // 30 seconds
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, [post.id]);
+
     const [isExpanded, setIsExpanded] = useState(false);
     const [sortBy, setSortBy] = useState('Recent');
+    
+    // Edit and Delete Review State
+    const [editingReview, setEditingReview] = useState<Review | null>(null);
+    const [reviewToDelete, setReviewToDelete] = useState<string | null>(null);
+
     const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
     const [isReportOpen, setIsReportOpen] = useState(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
@@ -488,25 +574,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const handleReviewSubmit = async (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewer_name: string) => {
         if (currentAvatar && post.avatar_id === currentAvatar.id) return;
 
-        const device_id = getDeviceId();
-        const hasDuplicate = allReviews.some(r =>
-            (currentAvatar && r.reviewer_id === currentAvatar.id) ||
-            (!currentAvatar && r.device_id === device_id)
-        );
-
-        if (hasDuplicate || hasReviewedPost(post.id)) {
+        if (hasReviewed) {
             showToast("You've already reviewed this post.", "error");
             return;
-        }
-
-        const now = Date.now();
-        const timestamps: number[] = JSON.parse(localStorage.getItem(RATE_LIMIT_KEY) || '[]');
-        const validTimestamps = timestamps.filter(t => now - t < 60000);
-
-        if (validTimestamps.length >= 5) {
-            setRateLimitMessage("You're reviewing too fast, slow down a bit.");
-            await new Promise(resolve => setTimeout(resolve, 30000));
-            setRateLimitMessage(null);
         }
 
         const newReview = {
@@ -516,55 +586,105 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             comment,
             reviewer_id: currentAvatar?.id,
             reviewer_name: currentAvatar ? currentAvatar.name : reviewer_name,
-            created_at: new Date().toISOString(),
-            device_id: device_id
+            created_at: new Date().toISOString()
         } as Review;
 
-        // Snapshot state for rollback
-        const previousReviews = [...userReviews];
-        const previousHasReviewed = hasReviewed;
-        const previousTimestamps = localStorage.getItem(RATE_LIMIT_KEY);
-        const previousMetrics = metrics;
-
-        // Apply Optimistic State
-        isFreshReviewRef.current = true;
-        setUserReviews([newReview, ...userReviews]);
-        setHasReviewed(true);
-        markPostAsReviewed(post.id);
-
-        const updatedTimestamps = [...validTimestamps, Date.now()];
-        localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(updatedTimestamps));
-
-        // Optimistically calculate new metrics and push to global context
         try {
-            const newEstimatedMetrics = await calculatePostMetrics(post.id, [newReview, ...userReviews]);
+            // Submit the review to the database first (Blocking UI)
+            const result = await submitReview(newReview);
+            
+            if (!result.ok) {
+                throw new Error(result.error);
+            }
+
+            // SUCCESS: Now apply updates strictly synchronized with the backend
+            
+            // 1. Merge the backend response to ensure full consistency
+            const finalReview = result.review ? {
+                ...newReview,
+                id: result.review.id,
+                created_at: result.review.created_at,
+                updated_at: result.review.updated_at
+            } : newReview;
+
+            // 2. Update React State
+            isFreshReviewRef.current = true;
+            setUserReviews([finalReview, ...userReviews]);
+            setHasReviewed(true);
+
+            // 3. (Removed local storage cache)
+
+            // 4. Calculate and update new global metrics
+            const newEstimatedMetrics = await calculatePostMetrics(post.id, [finalReview, ...userReviews]);
             optimisticUpdateMetrics(post.id, {
                 review_count: newEstimatedMetrics.review_count,
+                view_count: newEstimatedMetrics.view_count,
                 average_score: newEstimatedMetrics.average_score,
                 criteria_scores: newEstimatedMetrics.criteria_scores,
             });
 
-            // Submit the review to the database
-            const result = await submitReview(newReview);
-            if (!result.ok) {
-                throw new Error(result.error);
-            }
         } catch (err) {
             console.error('Failed to submit review:', err);
-            // Rollback State
-            setUserReviews(previousReviews);
-            setHasReviewed(previousHasReviewed);
-            if (previousTimestamps) {
-                localStorage.setItem(RATE_LIMIT_KEY, previousTimestamps);
+            // We just throw the error so the ReviewForm can catch it and display an inline message.
+            throw err;
+        }
+    };
+
+    const handleReviewUpdate = async (ratings: Partial<Record<keyof Review, number>>, comment: string, _reviewer_name: string) => {
+        if (!editingReview) return;
+        const oldReview = allReviews.find(r => r.id === editingReview.id);
+        if (!oldReview) return;
+
+        try {
+            const result = await updateReview(editingReview.id, { ratings, comment });
+            if (!result.ok) throw new Error(result.error);
+
+            // Update both userReviews (if created this session) and dbReviews (if fetched on mount)
+            const updated = { ...oldReview, ratings, comment };
+            setUserReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
+            setDbReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
+            
+            // Fetch fresh global metrics from DB (the server trigger handles recalculation instantly)
+            const freshMetrics = await calculatePostMetrics(post.id);
+            optimisticUpdateMetrics(post.id, {
+                review_count: freshMetrics.review_count,
+                view_count: freshMetrics.view_count,
+                average_score: freshMetrics.average_score,
+                criteria_scores: freshMetrics.criteria_scores,
+            });
+            
+            setEditingReview(null);
+            showToast("Review updated successfully", "success");
+        } catch (err: any) {
+            console.error('Failed to update review:', err);
+            throw err; // Form will handle it
+        }
+    };
+
+    const handleDeleteReview = async (reviewId: string) => {
+        try {
+            const result = await deleteReview(reviewId);
+            if (!result.ok) {
+                showToast(result.error, "error");
+                return;
             }
-            if (previousMetrics) {
-                optimisticUpdateMetrics(post.id, {
-                    review_count: previousMetrics.review_count,
-                    average_score: previousMetrics.average_score,
-                    criteria_scores: previousMetrics.criteria_scores,
-                });
-            }
-            showToast('Failed to submit review. Please try again.', "error");
+
+            setUserReviews(prev => prev.filter(r => r.id !== reviewId));
+            setDbReviews(prev => prev.filter(r => r.id !== reviewId));
+            
+            // Fetch fresh global metrics from DB (the server trigger handles recalculation instantly)
+            const freshMetrics = await calculatePostMetrics(post.id);
+            optimisticUpdateMetrics(post.id, {
+                review_count: freshMetrics.review_count,
+                view_count: freshMetrics.view_count,
+                average_score: freshMetrics.average_score,
+                criteria_scores: freshMetrics.criteria_scores,
+            });
+
+            showToast("Review deleted.", "success");
+            setReviewToDelete(null);
+        } catch (err: any) {
+            showToast("Failed to delete review", "error");
         }
     };
 
@@ -576,13 +696,14 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     return (
         <motion.div
+            ref={viewTrackerRef}
             initial={{ opacity: (isAdjacent || disableEntryAnimation) ? 1 : 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="w-full bg-white relative min-h-screen"
         >
-            <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-0 pb-8">
+            <div className="max-w-300 mx-auto px-4 sm:px-6 pt-0 pb-8">
 
                 {/* HEADER: Back Button & Navigation Controls */}
                 <div className="mb-8 flex items-center justify-between sticky top-0 bg-transparent pt-8 pb-2 z-50">
@@ -640,14 +761,15 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     <div className="md:col-span-7 space-y-6">
 
                         {/* 1. Image Preview */}
-                        <div
-                            className={`group relative w-full ${imageError ? 'aspect-video' : ''} rounded-[24px] overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
-                            onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
-                            onPointerDownCapture={(e) => {
-                                // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
-                                e.stopPropagation();
-                            }}
-                        >
+                        <div className="w-full md:flex md:justify-center">
+                            <div
+                                className={`group relative w-full md:w-fit ${imageError ? 'aspect-video' : ''} rounded-3xl overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                                onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
+                                onPointerDownCapture={(e) => {
+                                    // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
+                                    e.stopPropagation();
+                                }}
+                            >
                             {imageError ? (
                                 <ImageFallback
                                     src={post.image_url}
@@ -657,12 +779,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     onErrorChange={(err) => setImageError(err)}
                                 />
                             ) : (
-                                <div className="w-full relative">
+                                <>
                                     <MediaCarousel
                                         media={displayMedia}
                                         variant="detail"
-                                        className="w-full"
-                                        imageClassName="w-full h-auto transition-transform duration-500"
+                                        imageClassName="transition-transform duration-500"
                                         onErrorChange={(err) => setImageError(err)}
                                         onImageClick={(index) => {
                                             setFullscreenImageIndex(index);
@@ -674,7 +795,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             View Full Image
                                         </span>
                                     </div>
-                                </div>
+                                </>
                             )}
 
 
@@ -686,9 +807,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     buttonClassName="w-10 h-10 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
                                     iconSizeClass="w-5 h-5"
                                     onReport={() => setIsReportOpen(true)}
+                                    trackView={trackView}
                                 />
                             </div>
                         </div>
+                    </div>
 
                         {/* 2. Metadata Row */}
                         <div className="flex items-center justify-between">
@@ -752,37 +875,52 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             <h1 className="text-lg xs:text-xl font-semibold text-black leading-tight">
                                 {post.title}
                             </h1>
-                            <Tooltip
-                                content={
-                                    <p className="leading-relaxed text-center">
-                                        {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
-                                    </p>
-                                }
-                                position="top"
-                                align="end"
-                                width="w-[calc(100vw-3rem)] xs:w-64"
-                                triggerClassName="relative inline-flex items-center shrink-0"
-                            >
-                                <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
-                                    {isHot && (
-                                        <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
-                                            {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
-                                            <DotLottieReact
-                                                src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                                loop
-                                                autoplay
-                                                dotLottieRefCallback={(dotLottie) => {
-                                                    if (dotLottie) {
-                                                        dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
-                                                    }
-                                                }}
-                                                className="relative z-10 w-full h-full"
-                                            />
-                                        </div>
-                                    )}
-                                    {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
-                                </span>
-                            </Tooltip>
+                            <div className="flex items-center gap-3">
+                                {metrics?.view_count !== undefined && (
+                                    <Tooltip
+                                        content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
+                                        position="top"
+                                        align="end"
+                                        width="w-[calc(100vw-3rem)] xs:w-48"
+                                        triggerClassName="relative inline-flex items-center shrink-0"
+                                    >
+                                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                            <Eye className="w-4 h-4 mr-1.5" /> {metrics.view_count.toLocaleString()}
+                                        </span>
+                                    </Tooltip>
+                                )}
+                                <Tooltip
+                                    content={
+                                        <p className="leading-relaxed text-center">
+                                            {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
+                                        </p>
+                                    }
+                                    position="top"
+                                    align="end"
+                                    width="w-[calc(100vw-3rem)] xs:w-64"
+                                    triggerClassName="relative inline-flex items-center shrink-0"
+                                >
+                                    <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                        {isHot && (
+                                            <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
+                                                {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
+                                                <DotLottieReact
+                                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                                    loop
+                                                    autoplay
+                                                    dotLottieRefCallback={(dotLottie) => {
+                                                        if (dotLottie) {
+                                                            dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
+                                                        }
+                                                    }}
+                                                    className="relative z-10 w-full h-full"
+                                                />
+                                            </div>
+                                        )}
+                                        {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
+                                    </span>
+                                </Tooltip>
+                            </div>
                         </div>
 
                         {/* 4. Description */}
@@ -855,7 +993,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             exit={{ opacity: 0, height: 0 }}
                                             className="overflow-hidden"
                                         >
-                                            <div className="mt-2 bg-gray-50 border border-gray-100 rounded-[16px] p-4 relative group">
+                                            <div className="mt-2 bg-gray-50 border border-gray-100 rounded-2xl p-4 relative group">
                                                 <button
                                                     onClick={() => {
                                                         if (post.ai_prompt) {
@@ -940,13 +1078,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     {/* RIGHT COLUMN: Tabbed Rate / Pulse / Insights Hub */}
                     <div className="md:col-span-5 relative">
                         <div className="sticky top-24">
-                            {rateLimitMessage && (
-                                <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-[24px] text-amber-700 text-sm flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-                                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">⏳</div>
-                                    <p className="font-medium">{rateLimitMessage}</p>
-                                </div>
-                            )}
-
                             {/* Tab Bar */}
                             {(() => {
                                 const showPulse = shouldShowPulseTab(post.id, isSelfPost);
@@ -957,7 +1088,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 ];
 
                                 return (
-                                    <div className="bg-white border-2 border-gray-100 rounded-[24px]">
+                                    <div className="bg-white border-2 border-gray-100 rounded-3xl">
                                         {/* Tabs */}
                                         <div className="flex items-center border-b border-gray-100">
                                             {tabs.map((tab) => (
@@ -983,7 +1114,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     {activeTab === tab.key && (
                                                         <motion.div
                                                             layoutId="review-tab-underline"
-                                                            className="absolute bottom-0 left-3 right-3 h-[2px] bg-primary rounded-full"
+                                                            className="absolute bottom-0 left-3 right-3 h-0.5 bg-primary rounded-full"
                                                             transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
                                                         />
                                                     )}
@@ -1003,22 +1134,43 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                         transition={{ duration: 0.15 }}
                                                     >
                                                         {isSelfPost ? (
-                                                            <div className="bg-gray-50 p-12 rounded-[24px] text-center border-2 border-dashed border-gray-200">
+                                                            <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
                                                                 <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
                                                                 <h3 className="font-semibold text-lg mb-1 text-gray-700">Self-Review Locked</h3>
                                                                 <p className="text-sm text-gray-500">You cannot review your own post.</p>
                                                             </div>
-                                                        ) : !hasReviewed ? (
-                                                            <ReviewForm
-                                                                onSubmit={handleReviewSubmit}
-                                                                isLoggedIn={!!currentAvatar}
-                                                                initialName={currentAvatar?.name}
-                                                                postId={post.id}
-                                                                userId={currentAvatar?.id}
-                                                                postCategory={post.category}
-                                                            />
+                                                        ) : !currentAvatar ? (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: 16 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                className="py-8 px-3 bg-gray-50 rounded-[20px] border border-gray-100 flex flex-col items-center text-center"
+                                                            >
+                                                                <img
+                                                                    src="/icons/rater-logo-white-bg.svg"
+                                                                    alt="Rater"
+                                                                    className="w-12 h-12 mb-4"
+                                                                />
+                                                                <h3 className="text-md font-medium text-black mb-1.5">Have an opinion?</h3>
+                                                                <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
+                                                                    Create a profile to drop your rating, join the conversation, and influence the overall score.
+                                                                </p>
+                                                                <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
+                                                                    Create Profile
+                                                                </Button>
+                                                            </motion.div>
+                                                        ) : (!hasReviewed || editingReview) ? (
+                                                                <ReviewForm
+                                                                    onSubmit={editingReview ? handleReviewUpdate : handleReviewSubmit}
+                                                                    isLoggedIn={!!currentAvatar}
+                                                                    postId={post.id}
+                                                                    userId={currentAvatar?.id}
+                                                                    userName={currentAvatar?.name}
+                                                                    postCategory={post.category}
+                                                                    editingReview={editingReview}
+                                                                    onCancelEdit={() => setEditingReview(null)}
+                                                                />
                                                         ) : (
-                                                            <div className="bg-gray-50 p-10 rounded-[24px] text-center">
+                                                            <div className="bg-gray-50 p-10 rounded-3xl text-center">
                                                                 <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
                                                                     <svg className="w-7 h-7 filter" viewBox="0 0 83 80">
                                                                         <defs>
@@ -1123,11 +1275,19 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                     <div className="space-y-4">
                         {isFetchingReviews ? (
                             <div className="py-20 text-center text-gray-400 font-medium"><AmbientLoadingText /></div>
+                        ) : loadError ? (
+                            <div className="w-full">
+                               <AppErrorState
+                                 title="Failed to load reviews"
+                                 description={loadError.message || "We encountered an issue while loading reviews."}
+                                 onRetry={() => setRetryCount(0)}
+                               />
+                            </div>
                         ) : allReviews.length === 0 ? (
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="py-20 px-8 text-center bg-gray-50 rounded-[24px] border-2 border-dashed border-gray-200"
+                                className="py-20 px-8 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200"
                             >
                                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <Plus className="w-8 h-8 text-primary" />
@@ -1189,7 +1349,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span
-                                                        className={`font-medium text-base text-black truncate max-w-[150px] xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
+                                                        className={`font-medium text-base text-black truncate max-w-37.5 xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
                                                         onClick={(e) => {
                                                             if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                                 e.stopPropagation();
@@ -1214,15 +1374,60 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     </span>
                                                 </div>
                                             </div>
-                                            <span
-                                                className="text-xs text-gray-400 font-medium ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0"
-                                                title={fullTime}
-                                            >
-                                                {timeLabel}
-                                            </span>
+                                            <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
+                                                <span
+                                                    className="text-xs text-gray-400 font-medium"
+                                                    title={fullTime}
+                                                >
+                                                    {timeLabel}
+                                                </span>
+                                                {currentAvatar?.id === review.reviewer_id && (
+                                                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
+                                                        <button 
+                                                            onClick={() => {
+                                                                if (editingReview && editingReview.id !== review.id) {
+                                                                    if (!window.confirm("You have unsaved changes. Discard and edit this review instead?")) {
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                setEditingReview(review);
+                                                                setReviewToDelete(null);
+                                                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                            }}
+                                                            className="hover:text-primary transition-colors"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <span>•</span>
+                                                        {reviewToDelete === review.id ? (
+                                                            <div className="flex items-center gap-1 text-red-500">
+                                                                <span>Are you sure?</span>
+                                                                <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
+                                                                <span>/</span>
+                                                                <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
+                                                            </div>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => setReviewToDelete(review.id)}
+                                                                className="hover:text-red-500 transition-colors"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {review.comment && <p className="text-sm text-black leading-relaxed mb-4">{review.comment}</p>}
+                                        {review.comment && (
+                                            <div className="text-sm text-black leading-relaxed mb-4">
+                                                <div className="markdown-content text-sm wrap-break-word">
+                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                                        {review.comment}
+                                                    </ReactMarkdown>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div className="flex items-center gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100 mt-2">
                                             <div className="flex flex-wrap gap-3 xs:gap-4">
@@ -1392,6 +1597,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </>,
                 document.body
             )}
+            {showAuthOverlay && <AuthOverlay initialTab="signup" redirectOnSuccess={false} onClose={() => setShowAuthOverlay(false)} />}
         </motion.div>
     );
 }

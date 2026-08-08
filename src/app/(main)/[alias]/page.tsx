@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { notFound, useRouter } from 'next/navigation';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuthState } from '../../../context/AuthContext';
 import type { Avatar } from '../../../types';
 import { ProfileView } from '../../../components/ProfileView';
 
@@ -10,7 +10,7 @@ import { ProfileView } from '../../../components/ProfileView';
 
 export default function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const resolvedParams = use(params);
-  const { isLoading } = useAuth();
+  const { isLoading } = useAuthState();
   const router = useRouter();
 
   // Decode just in case

@@ -11,32 +11,14 @@ import type { Review } from '../types';
 export interface ReviewDraft {
   ratings: Partial<Record<keyof Review, number>>;
   comment: string;
-  name: string;
   updatedAt: number;
-}
-
-const GUEST_ID_KEY = 'rater_guest_session_id';
-
-/**
- * Gets or creates a stable guest session ID for the current browser session
- */
-export function getGuestSessionId(): string {
-  if (typeof window === 'undefined') return 'server';
-  
-  let guestId = sessionStorage.getItem(GUEST_ID_KEY);
-  if (!guestId) {
-    guestId = `guest_${Math.random().toString(36).substring(2, 15)}`;
-    sessionStorage.setItem(GUEST_ID_KEY, guestId);
-  }
-  return guestId;
 }
 
 /**
  * Builds the unique key for localStorage drafts
  */
-export function buildDraftKey(postId: string, userId?: string): string {
-  const identity = userId ? `user_${userId}` : getGuestSessionId();
-  return `review_draft:${postId}:${identity}`;
+export function buildDraftKey(postId: string, userId: string): string {
+  return `review_draft:${postId}:user_${userId}`;
 }
 
 /**
@@ -49,7 +31,7 @@ export function buildSnapshotKey(postId: string): string {
 /**
  * Saves a draft to localStorage
  */
-export function saveDraft(postId: string, userId: string | undefined, data: Omit<ReviewDraft, 'updatedAt'>) {
+export function saveDraft(postId: string, userId: string, data: Omit<ReviewDraft, 'updatedAt'>) {
   const key = buildDraftKey(postId, userId);
   const draft: ReviewDraft = {
     ...data,
@@ -61,7 +43,7 @@ export function saveDraft(postId: string, userId: string | undefined, data: Omit
 /**
  * Loads a draft from localStorage
  */
-export function loadDraft(postId: string, userId?: string): ReviewDraft | null {
+export function loadDraft(postId: string, userId: string): ReviewDraft | null {
   const key = buildDraftKey(postId, userId);
   const saved = localStorage.getItem(key);
   if (!saved) return null;
@@ -75,7 +57,7 @@ export function loadDraft(postId: string, userId?: string): ReviewDraft | null {
 /**
  * Deletes a draft from localStorage
  */
-export function deleteDraft(postId: string, userId?: string) {
+export function deleteDraft(postId: string, userId: string) {
   const key = buildDraftKey(postId, userId);
   localStorage.removeItem(key);
 }
@@ -114,16 +96,3 @@ export function deleteSnapshot(postId: string) {
   sessionStorage.removeItem(key);
 }
 
-/**
- * Migrates a guest draft to a user draft if it exists
- */
-export function migrateDraft(postId: string, guestId: string, userId: string) {
-  const guestKey = `review_draft:${postId}:${guestId}`;
-  const userKey = `review_draft:${postId}:user_${userId}`;
-  
-  const guestDraft = localStorage.getItem(guestKey);
-  if (guestDraft) {
-    localStorage.setItem(userKey, guestDraft);
-    localStorage.removeItem(guestKey);
-  }
-}

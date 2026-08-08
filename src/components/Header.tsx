@@ -13,7 +13,7 @@ import { CloudUpload, ListFilter, Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useAmbientPlaceholder } from '../hooks/useAmbientPlaceholder';
 import { AmbientPlaceholder } from './AmbientPlaceholder';
@@ -72,7 +72,7 @@ export function Header({
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
 
-  const { currentProfile } = useAuth();
+  const { currentProfile } = useAuthState();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 

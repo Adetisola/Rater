@@ -6,13 +6,14 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
+import { AppErrorState } from '@/components/AppErrorState';
 import type { Post, Avatar } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
 
 import { buildSearchIndexes, searchPosts } from '@/lib/algolia/search';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
 import { X } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuthState } from '@/context/AuthContext';
 import { getFeedPosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import useSWR from 'swr';
@@ -31,7 +32,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const { currentProfile, profileMap } = useAuth();
+  const { currentProfile, profileMap } = useAuthState();
   
   // Data State
   const [localRecentUpload, setLocalRecentUpload] = useState<string | null>(
@@ -122,10 +123,15 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     }
   }, [swrPosts, localRecentUpload]);
 
+  const [loadError, setLoadError] = useState<Error | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 1;
+
   const handleLoadMore = useCallback(async () => {
     // ... logic remains the same
     if (isFetchingPage || !hasMore || feedPostIds.length === 0) return;
     setIsFetchingPage(true);
+    setLoadError(null);
     
     // Use the created_at of the last fetched post as cursor
     const lastPostId = feedPostIds[feedPostIds.length - 1];
@@ -145,12 +151,23 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
         return [...prev, ...newIds];
       });
       setHasMore(hasMorePosts);
+      setRetryCount(0); // Reset on success
     } catch (err) {
-      console.error('Load more failed:', err);
+      const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(err, {
+        fallbackCode: 'RATER_NETWORK_001',
+        fallbackMessage: 'Failed to load more posts.'
+      }));
+      
+      if (retryCount < MAX_RETRIES) {
+        setRetryCount(prev => prev + 1);
+        setTimeout(() => handleLoadMore(), 1000); // Auto retry
+      } else {
+        setLoadError(normalized);
+      }
     } finally {
       setIsFetchingPage(false);
     }
-  }, [isFetchingPage, hasMore, feedPostIds]);
+  }, [isFetchingPage, hasMore, feedPostIds, retryCount]);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef(handleLoadMore);
@@ -261,6 +278,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     const processPosts = async () => {
         try {
             setIsProcessing(true);
+            setLoadError(null);
             let posts: Post[];
             const loadedPosts = feedPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
 
@@ -322,9 +340,14 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                 setLastProcessedSignature(currentSignature);
             }
         } catch (error) {
-            console.error('Failed to process posts:', error);
+            const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(error, {
+                fallbackCode: 'RATER_SEARCH_001',
+                fallbackMessage: 'Failed to process feed.'
+            }));
+            
             if (isMounted) {
                 setSortedPostIds([]);
+                setLoadError(normalized);
                 setLastProcessedSignature(currentSignature);
             }
         } finally {
@@ -459,7 +482,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               )}
               
               {urlQuery.trim().length >= 2 && !selectedAvatar && (
-                <div className="max-w-[1600px] mx-auto px-6 mb-5">
+                <div className="max-w-400 mx-auto px-6 mb-5">
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-sm text-gray-500 font-medium">Results for</span>
                     <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111] rounded-full">
@@ -501,7 +524,18 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
 
               {!isEffectivelyProcessing && (
                 <div className="max-w-400 mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
-                    {hasMore ? (
+                    {loadError ? (
+                        <div className="w-full">
+                           <AppErrorState 
+                             title="Failed to load posts"
+                             description={loadError.message || "We encountered an issue while loading more posts."}
+                             onRetry={() => {
+                               setRetryCount(0);
+                               handleLoadMore();
+                             }}
+                           />
+                        </div>
+                    ) : hasMore ? (
                         <div ref={bottomRef} className="h-10 w-full" />
                     ) : (
                         <>

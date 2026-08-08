@@ -5,32 +5,124 @@
  * Handles operations for Supabase Profiles.
  */
 
+import { cache } from 'react';
 import type { Avatar } from '@/types';
 import { supabase } from './supabase/client';
 import { normalizeUsername } from '@/utils/validation';
 
-// ─── Caches ───────────────────────────────────────────────────────────────────
+// ─── Client Cache API ──────────────────────────────────────────────────────────
 
-// Tiny memory cache to avoid redundant profile fetches across routes
-export const profileCache: Record<string, Avatar> = (globalThis as any).__profileCache || {};
-(globalThis as any).__profileCache = profileCache;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-const profileByUsernameCache: Record<string, Avatar> = (globalThis as any).__profileByUsernameCache || {};
-(globalThis as any).__profileByUsernameCache = profileByUsernameCache;
+interface CacheEntry {
+  data: Avatar;
+  timestamp: number;
+  /** True when fetched with the full column set (getProfileById / getProfileByUsername).
+   *  False for partial profiles populated from post/review joins. */
+  isComplete: boolean;
+}
 
-// Session cache mapping username -> email to avoid redundant lookups on login
-const usernameToEmailCache: Record<string, string> = (globalThis as any).__usernameToEmailCache || {};
-(globalThis as any).__usernameToEmailCache = usernameToEmailCache;
+// Client-only map. Server environments will not populate this, avoiding global memory leaks.
+const clientCache = new Map<string, CacheEntry>();
+const pendingPromises = new Map<string, Promise<Avatar | null>>();
 
-// Promise cache for deduplicating concurrent network requests
-const pendingProfilePromises: Record<string, Promise<Avatar | null> | undefined> = (globalThis as any).__pendingProfilePromises || {};
-(globalThis as any).__pendingProfilePromises = pendingProfilePromises;
+export const ProfileCache = {
+  /**
+   * Read a cached profile. Returns any cached data (complete or partial).
+   * UI components (PostCard, SearchResults, profileMap Proxy) use this for
+   * best-effort display without an extra network call.
+   */
+  get: (idOrUsername: string): Avatar | null => {
+    if (typeof window === 'undefined') return null; // Strict client-only cache
+    const key = idOrUsername.toLowerCase();
+    const entry = clientCache.get(key);
+    if (!entry) return null;
+    
+    // Check expiration
+    if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+      clientCache.delete(key);
+      return null;
+    }
+    return entry.data;
+  },
+
+  /**
+   * Read a cached profile only if it was stored as a complete entry.
+   * Used by getProfileById / getProfileByUsername so that partial profiles
+   * from post/review joins never short-circuit a full DB fetch.
+   */
+  getComplete: (idOrUsername: string): Avatar | null => {
+    if (typeof window === 'undefined') return null;
+    const key = idOrUsername.toLowerCase();
+    const entry = clientCache.get(key);
+    if (!entry || !entry.isComplete) return null;
+
+    if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+      clientCache.delete(key);
+      return null;
+    }
+    return entry.data;
+  },
+  
+  set: (profile: Partial<Avatar> & { id?: string }, isComplete = false) => {
+    if (typeof window === 'undefined' || !profile?.id) return;
+    const key = profile.id.toLowerCase();
+    
+    // Merge with existing data so partial updates don't erase fields
+    const existing = clientCache.get(key);
+    const mergedData = existing ? { ...existing.data, ...profile } as Avatar : profile as Avatar;
+    // Promote to complete if this write is complete, or preserve existing completeness
+    const nowComplete = isComplete || (existing?.isComplete ?? false);
+    
+    const entry: CacheEntry = { data: mergedData, timestamp: Date.now(), isComplete: nowComplete };
+    clientCache.set(key, entry);
+    if (mergedData.username) {
+      clientCache.set(mergedData.username.toLowerCase(), entry);
+    }
+  },
+  
+  invalidate: (idOrUsername: string) => {
+    if (typeof window === 'undefined') return;
+    const key = idOrUsername.toLowerCase();
+    const entry = clientCache.get(key);
+    if (entry) {
+      clientCache.delete(entry.data.id.toLowerCase());
+      if (entry.data.username) {
+         clientCache.delete(entry.data.username.toLowerCase());
+      }
+    }
+    clientCache.delete(key);
+  },
+  
+  clear: () => {
+    if (typeof window !== 'undefined') {
+      clientCache.clear();
+      pendingPromises.clear();
+    }
+  },
+
+  // Expose a safe readonly map for legacy synchronous access in UI (e.g. SearchResults)
+  // This map contains all currently valid cached profiles.
+  getSafeMap: (): Record<string, Avatar> => {
+    if (typeof window === 'undefined') return {};
+    const map: Record<string, Avatar> = {};
+    const now = Date.now();
+    clientCache.forEach((entry, key) => {
+        if (now - entry.timestamp <= CACHE_TTL_MS) {
+           map[key] = entry.data;
+        } else {
+           clientCache.delete(key);
+        }
+    });
+    return map;
+  }
+};
 
 export function populateProfileCache(profiles: Partial<Avatar>[]) {
   profiles.forEach(p => {
-    if (!p.id || !p.username) return;
-    profileCache[p.id] = { ...profileCache[p.id], ...(p as Avatar) };
-    profileByUsernameCache[p.username.toLowerCase()] = { ...profileByUsernameCache[p.username.toLowerCase()], ...(p as Avatar) };
+    if (p.id) {
+       ProfileCache.set(p, false); // Explicitly partial
+    }
   });
 }
 
@@ -38,58 +130,60 @@ export function populateProfileCache(profiles: Partial<Avatar>[]) {
 
 /**
  * Fetch a single profile by ID.
- * 1. Memory Cache (only if complete)
- * 2. Supabase `profiles` table
+ * 1. Client Cache — only if a COMPLETE entry exists (partial join data won't short-circuit)
+ * 2. In-flight promise deduplication (Client)
+ * 3. React cache() deduplication (Server)
+ * 4. Supabase `profiles` table
  */
-export async function getProfileById(id: string): Promise<Avatar | null> {
-  if (profileCache[id] && profileCache[id].created_at) return profileCache[id];
+export const getProfileById = cache(async (id: string): Promise<Avatar | null> => {
+  const cached = ProfileCache.getComplete(id);
+  if (cached) return cached;
 
-  const cacheKey = `id:${id}`;
-  if (pendingProfilePromises[cacheKey]) return pendingProfilePromises[cacheKey];
+  const promiseKey = `id:${id}`;
+  if (typeof window !== 'undefined' && pendingPromises.has(promiseKey)) {
+    return pendingPromises.get(promiseKey)!;
+  }
 
   const promise = (async () => {
-    // Check Supabase
     const { data, error } = await supabase
       .from('profiles')
       .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
       .eq('id', id)
       .single();
 
-    delete pendingProfilePromises[cacheKey];
+    if (typeof window !== 'undefined') pendingPromises.delete(promiseKey);
 
     if (!error && data) {
       const profile = data as Avatar;
-      // Merge with any existing partial data just in case
-      profileCache[id] = { ...profileCache[id], ...profile };
-      profileByUsernameCache[profile.username.toLowerCase()] = profileCache[id];
-      return profileCache[id];
+      ProfileCache.set(profile, true); // Mark as complete
+      return profile;
     }
-
-    // If we only have a partial profile, return that as a last resort
-    if (profileCache[id]) return profileCache[id];
 
     return null;
   })();
 
-  pendingProfilePromises[cacheKey] = promise;
+  if (typeof window !== 'undefined') {
+    pendingPromises.set(promiseKey, promise);
+  }
+
   return promise;
-}
+});
 
 /**
  * Fetch a single profile by username (for profile route rendering).
  */
-export async function getProfileByUsername(username: string): Promise<Avatar | null> {
+export const getProfileByUsername = cache(async (username: string): Promise<Avatar | null> => {
   const normalized = normalizeUsername(username);
   
-  if (profileByUsernameCache[normalized] && profileByUsernameCache[normalized].created_at) {
-    return profileByUsernameCache[normalized];
+  const cached = ProfileCache.getComplete(normalized);
+  if (cached) return cached;
+
+  const promiseKey = `username:${normalized}`;
+  if (typeof window !== 'undefined' && pendingPromises.has(promiseKey)) {
+    return pendingPromises.get(promiseKey)!;
   }
 
-  const cacheKey = `username:${normalized}`;
-  if (pendingProfilePromises[cacheKey]) return pendingProfilePromises[cacheKey];
-
   const promise = (async () => {
-    // Check Supabase
     const { data, error } = await supabase
       .from('profiles')
       .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
@@ -97,24 +191,23 @@ export async function getProfileByUsername(username: string): Promise<Avatar | n
       .limit(1)
       .maybeSingle();
 
-    delete pendingProfilePromises[cacheKey];
+    if (typeof window !== 'undefined') pendingPromises.delete(promiseKey);
 
     if (!error && data) {
       const profile = data as Avatar;
-      profileCache[profile.id] = { ...profileCache[profile.id], ...profile };
-      profileByUsernameCache[normalized] = profileCache[profile.id];
-      return profileCache[profile.id];
+      ProfileCache.set(profile, true); // Mark as complete
+      return profile;
     }
-
-    // If we only have a partial profile, return that as a last resort
-    if (profileByUsernameCache[normalized]) return profileByUsernameCache[normalized];
 
     return null;
   })();
 
-  pendingProfilePromises[cacheKey] = promise;
+  if (typeof window !== 'undefined') {
+    pendingPromises.set(promiseKey, promise);
+  }
+
   return promise;
-}
+});
 
 /**
  * Resolves a login identifier (email or username) to an email.
@@ -185,44 +278,35 @@ export async function checkUsernameAvailable(
 export async function persistProfileUpdate(
   userId: string,
   updates: Partial<Avatar>
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<{ ok: true; data: Avatar } | { ok: false; error: string }> {
   // Security safeguard: Strip sensitive fields that should never be updated directly via the client
   const safeUpdates = { ...updates };
   delete safeUpdates.is_admin;
-  delete safeUpdates.role;
   delete safeUpdates.is_blocked;
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .update(safeUpdates)
-    .eq('id', userId);
+    .eq('id', userId)
+    .select('id, username, email, show_email, name, role, avatar_url, bg_color, is_admin, bio, is_blocked, created_at, username_last_changed_at, previous_usernames, social_links, onboarding_completed')
+    .single();
 
   if (error) {
     return { ok: false, error: error.message };
   }
 
-  // Update memory caches
-  if (profileCache[userId]) {
-    const oldUsername = profileCache[userId].username.toLowerCase();
-    profileCache[userId] = { ...profileCache[userId], ...updates };
-    
-    // Update username cache if username changed
-    if (updates.username) {
-      delete profileByUsernameCache[oldUsername];
-      profileByUsernameCache[updates.username.toLowerCase()] = profileCache[userId];
-    } else {
-      profileByUsernameCache[oldUsername] = profileCache[userId];
-    }
+  if (!data) {
+    return { ok: false, error: "Profile update failed or unauthorized." };
   }
 
-  return { ok: true };
-}
+  const updatedProfile = data as Avatar;
 
-/**
- * Clear the profile cache (called on logout)
- */
-export function clearProfileCache(): void {
-  for (const key in profileCache) delete profileCache[key];
-  for (const key in profileByUsernameCache) delete profileByUsernameCache[key];
-  for (const key in usernameToEmailCache) delete usernameToEmailCache[key];
+  // Explicit cache invalidation & update
+  ProfileCache.invalidate(userId);
+  if (updates.username) {
+    ProfileCache.invalidate(updates.username);
+  }
+  ProfileCache.set(updatedProfile, true);
+
+  return { ok: true, data: updatedProfile };
 }

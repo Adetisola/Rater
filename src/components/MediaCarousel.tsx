@@ -12,6 +12,7 @@ interface MediaCarouselProps {
   onErrorChange?: (hasError: boolean) => void;
   onLoadChange?: (loaded: boolean) => void;
   onImageClick?: (index: number) => void;
+  onIndexChange?: (index: number) => void;
   externalIndex?: number;
 }
 
@@ -23,6 +24,7 @@ export function MediaCarousel({
   onErrorChange,
   onLoadChange,
   onImageClick,
+  onIndexChange,
   externalIndex
 }: MediaCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,12 +32,13 @@ export function MediaCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [coverHeight, setCoverHeight] = useState<number | null>(null);
+  const [coverWidth, setCoverWidth] = useState<number | null>(null);
   const coverImgRef = useRef<HTMLImageElement>(null);
 
   // If only one media, render simple version exactly as before
   if (media.length <= 1) {
     return (
-      <div className={cn("w-full h-full relative", className)}>
+      <div className={cn("relative", variant === 'thumbnail' ? 'w-full h-full' : 'w-fit h-auto', className)}>
         <OptimizedMedia 
           media={media[0]} 
           variant={variant} 
@@ -66,6 +69,10 @@ export function MediaCarousel({
       setCurrentIndex(index);
     }
   }, [currentIndex, media.length]);
+
+  useEffect(() => {
+    onIndexChange?.(currentIndex);
+  }, [currentIndex, onIndexChange]);
 
   // Sync from external index
   useEffect(() => {
@@ -113,6 +120,7 @@ export function MediaCarousel({
   const handleCoverLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     setCoverHeight(img.offsetHeight);
+    setCoverWidth(img.offsetWidth);
     onLoadChange?.(true);
   }, [variant, onLoadChange]);
 
@@ -122,6 +130,7 @@ export function MediaCarousel({
     const observer = new ResizeObserver(() => {
       if (coverImgRef.current) {
         setCoverHeight(coverImgRef.current.offsetHeight);
+        setCoverWidth(coverImgRef.current.offsetWidth);
       }
     });
     observer.observe(coverImgRef.current);
@@ -137,10 +146,13 @@ export function MediaCarousel({
 
   return (
     <div 
-      className={cn("relative w-full overflow-hidden", className)}
+      className={cn("relative overflow-hidden", className)}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      style={coverHeight ? { height: coverHeight } : undefined}
+      style={{
+        height: (variant === 'thumbnail' && coverHeight) ? coverHeight : coverHeight ? coverHeight : undefined,
+        width: variant === 'detail' && coverWidth ? coverWidth : undefined,
+      }}
     >
       
       {/* Scroll Container - Native snap for mobile, hidden scrollbar */}
@@ -154,7 +166,7 @@ export function MediaCarousel({
           <div 
             key={`${item.url}-${idx}`} 
             data-index={idx}
-            className="w-full h-full shrink-0 snap-center relative"
+            className={cn("w-full h-full shrink-0 snap-center snap-always relative", variant === 'detail' ? 'flex items-center justify-center' : '')}
           >
             {idx === 0 ? (
               <OptimizedMedia 
@@ -178,7 +190,7 @@ export function MediaCarousel({
                 loading="lazy"
                 className={cn(
                   imageClassName,
-                  'w-full h-full object-cover'
+                  variant === 'thumbnail' ? 'w-full h-full object-cover' : undefined
                 )} 
                 onLoad={() => { if (idx === 0) onLoadChange?.(true); }}
               />
@@ -193,9 +205,10 @@ export function MediaCarousel({
         ))}
       </div>
 
-      {/* Adaptive Navigation Pill - Bottom Right */}
+      {/* Desktop Navigation Pill - Bottom Right */}
       <div
         data-no-route-loader
+        className="hidden sm:inline-flex items-center justify-between bg-black/20 backdrop-blur-md text-white"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -206,12 +219,6 @@ export function MediaCarousel({
           right: 12,
           zIndex: 20,
           pointerEvents: 'auto',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
           borderRadius: 9999,
           height: 28,
           overflow: 'hidden',
@@ -219,7 +226,6 @@ export function MediaCarousel({
       >
         {/* Previous Arrow - slides in from left */}
         <div
-          className="hidden sm:flex"
           style={{
             width: showPrev ? 28 : 0,
             opacity: showPrev ? 1 : 0,
@@ -237,7 +243,7 @@ export function MediaCarousel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#000',
+              color: 'white',
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
@@ -254,7 +260,7 @@ export function MediaCarousel({
           style={{
             fontSize: 10,
             fontWeight: 600,
-            color: '#000',
+            color: 'white',
             letterSpacing: '0.06em',
             paddingLeft: showPrev ? 0 : 10,
             paddingRight: showNext ? 0 : 10,
@@ -270,7 +276,6 @@ export function MediaCarousel({
 
         {/* Next Arrow - slides in from right */}
         <div
-          className="hidden sm:flex"
           style={{
             width: showNext ? 28 : 0,
             opacity: showNext ? 1 : 0,
@@ -288,7 +293,7 @@ export function MediaCarousel({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#000',
+              color: 'white',
               cursor: 'pointer',
               border: 'none',
               background: 'transparent',
@@ -299,6 +304,20 @@ export function MediaCarousel({
             <ChevronRight size={14} strokeWidth={2.5} />
           </button>
         </div>
+      </div>
+
+      {/* Mobile Pagination Dots */}
+      <div 
+        className="absolute bottom-3 left-1/2 -translate-x-1/2 flex sm:hidden items-center gap-1.5 z-20 pointer-events-none bg-black/20 backdrop-blur-md px-2 py-1.5 rounded-full"
+      >
+        {media.map((_, idx) => (
+          <div 
+            key={idx}
+            className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+              idx === currentIndex ? 'bg-white' : 'bg-white/40'
+            }`}
+          />
+        ))}
       </div>
     </div>
   );

@@ -77,9 +77,8 @@ export interface Avatar {
 export interface Review {
   id: string;
   post_id: string;
-  reviewer_id?: string;
+  reviewer_id: string;
   reviewer_name?: string;
-  device_id?: string;
   ratings: Record<string, number>;
 
   comment?: string;
@@ -113,6 +112,7 @@ export interface Post {
   avatar_id: string;
   author?: Avatar; // Populated from DB joins so client doesn't hydration-mismatch
   review_count?: number;
+  view_count?: number;
   average_score?: number;
   criteria_scores?: Record<string, number>;
   is_deleted?: boolean;
@@ -129,6 +129,7 @@ export interface PostMetrics {
   post_id: string;
   average_score: number;
   review_count: number;
+  view_count?: number;
   rating_unlocked: boolean;
   /**
    * Per-criterion average scores.

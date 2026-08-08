@@ -10,7 +10,7 @@ import { Cloudinary } from '@cloudinary/url-gen';
 import { fill, scale } from '@cloudinary/url-gen/actions/resize';
 import { format, quality } from '@cloudinary/url-gen/actions/delivery';
 import { auto as fAuto } from '@cloudinary/url-gen/qualifiers/format';
-import { auto as qAuto } from '@cloudinary/url-gen/qualifiers/quality';
+import { auto as qAuto, autoBest } from '@cloudinary/url-gen/qualifiers/quality';
 import { blur } from '@cloudinary/url-gen/actions/effect';
 import { autoGravity } from '@cloudinary/url-gen/qualifiers/gravity';
 
@@ -21,6 +21,7 @@ const cld = new Cloudinary({
   },
   url: {
     secure: true,
+    analytics: false,
   },
 });
 
@@ -130,4 +131,18 @@ export function extractPublicId(url: string): string | null {
     console.error('Failed to extract public_id from Cloudinary URL:', url, e);
     return null;
   }
+}
+
+/**
+ * Generate a highly-optimized URL specifically for downloading.
+ * Caps the width at 2400px to save bandwidth while maintaining high quality,
+ * and forces JPEG format to ensure compatibility with the .jpg extension.
+ */
+export function generateDownloadUrl(publicId: string): string {
+  return cld
+    .image(publicId)
+    .resize(scale().width(2400)) // Cap width to 2400px
+    .format('jpg') // Force JPEG format
+    .delivery(quality(autoBest())) // High quality optimization
+    .toURL();
 }
