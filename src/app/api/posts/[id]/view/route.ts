@@ -33,8 +33,30 @@ export async function POST(
         );
         
         // Try to get authenticated user
-        const { data: { user } } = await supabase.auth.getUser();
-        let viewerId = user?.id || null;
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+        
+        let viewerId = null;
+        if (token) {
+            const { data: { user } } = await supabase.auth.getUser(token);
+            viewerId = user?.id || null;
+        } else {
+            const { data: { user } } = await supabase.auth.getUser();
+            viewerId = user?.id || null;
+        }
+        
+        // Exclude creator views server-side
+        if (viewerId) {
+            const { data: post } = await supabase
+                .from('posts')
+                .select('avatar_id')
+                .eq('id', postId)
+                .single();
+                
+            if (post?.avatar_id === viewerId) {
+                return NextResponse.json({ incremented: false, reason: 'creator' });
+            }
+        }
         
         // Handle guest session identity
         let guestSessionId = request.cookies.get('guest_session_id')?.value;

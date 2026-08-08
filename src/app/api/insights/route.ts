@@ -7,6 +7,7 @@ import { extractInsightSignals } from '@/utils/insightEngine';
 import type { ScoredReview, InsightSignals } from '@/utils/insightEngine';
 import type { Review, Category } from '@/types';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 // ─── Model Invocation ─────────────────────────────────────────────────────────
 
@@ -418,6 +419,7 @@ function parseJSONResponse(responseText: string) {
 // ─── Handler ─────────────────────────────────────────────────────────────────
 
 interface RequestBody {
+  postId: string;
   reviews: Review[];
   postCategory: Category;
   postTitle?: string;
@@ -452,7 +454,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: RequestBody = await request.json();
-    const { reviews, postCategory, postTitle, postDescription } = body;
+    const { postId, reviews, postCategory, postTitle, postDescription } = body;
 
     if (!reviews || reviews.length < 2) {
       return NextResponse.json(
@@ -516,12 +518,28 @@ export async function POST(request: NextRequest) {
 
     const parsed = parseJSONResponse(responseText);
 
-    return NextResponse.json({
+    const resultPayload = {
       summary: parsed.summary.slice(0, 500),
       strengths: parsed.strengths.slice(0, 3).map((s: string) => s.slice(0, 200)),
       areasToImprove: parsed.areasToImprove.slice(0, 3).map((s: string) => s.slice(0, 200)),
       model: usedModel,
-    });
+    };
+
+    // Cache the result using Service Role so everyone benefits, bypassing RLS
+    if (postId) {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      
+      await supabaseAdmin.from('insight_cache').upsert({
+        post_id: postId,
+        result: resultPayload,
+        review_count: reviews.length
+      }).catch(err => console.error('[Insights API] Failed to cache:', err));
+    }
+
+    return NextResponse.json(resultPayload);
   } catch (error: unknown) {
     console.error('[Insights API] Error:', error);
     return NextResponse.json({ error: 'Synthesis failed' }, { status: 500 });

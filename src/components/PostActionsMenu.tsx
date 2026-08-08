@@ -23,6 +23,7 @@ interface PostActionsMenuProps {
   iconSizeClass?: string;
   onReport?: () => void;
   isCardContext?: boolean;
+  trackView?: (trigger: 'viewport' | 'action') => void;
 }
 
 export function PostActionsMenu({
@@ -33,6 +34,7 @@ export function PostActionsMenu({
   iconSizeClass = "w-4 h-4",
   onReport,
   isCardContext,
+  trackView,
 }: PostActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -98,9 +100,11 @@ export function PostActionsMenu({
     e.stopPropagation();
     const handledNatively = await sharePost(post.id, post.title);
     if (handledNatively) {
+      trackView?.('action');
       setShareSuccess(true);
       setTimeout(() => setShareSuccess(false), 2000);
     } else {
+      trackView?.('action');
       setIsShareOverlayOpen(true);
     }
   };
@@ -109,6 +113,7 @@ export function PostActionsMenu({
     e.preventDefault();
     e.stopPropagation();
     const imageCount = (post.media && post.media.length > 0) ? post.media.length : (post.image_url ? 1 : 0);
+    trackView?.('action');
     
     if (imageCount > 1) {
       setIsDownloadOverlayOpen(true);
@@ -124,6 +129,7 @@ export function PostActionsMenu({
     e.stopPropagation();
     if (post.ai_prompt) {
       navigator.clipboard.writeText(post.ai_prompt);
+      trackView?.('action');
       showToast("Prompt copied to clipboard.", "success");
     }
     setIsOpen(false);
@@ -132,6 +138,7 @@ export function PostActionsMenu({
   const handleReport = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    trackView?.('action');
     if (onReport) {
       onReport();
     } else {

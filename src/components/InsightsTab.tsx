@@ -19,7 +19,7 @@ import gsap from 'gsap';
 import type { Review, Category } from '@/types';
 import { TrendingUp, TrendingDown, Sparkles, MessageCircle, RefreshCw, Loader2, AlertCircle, Info } from 'lucide-react';
 import { getReviewMode } from '@/config/reviewModes';
-import { getCachedInsight, setCachedInsight, type CachedInsight } from '@/utils/insightCache';
+import { getCachedInsight, type CachedInsight } from '@/utils/insightCache';
 import { Button } from './ui/Button';
 import { useAuthState } from '../context/AuthContext';
 import { AuthOverlay } from './AuthOverlay';
@@ -192,6 +192,7 @@ function useInsightSynthesis(
             ...(session?.access_token ? { 'Authorization': `Bearer ${session?.access_token}` } : {})
           },
           body: JSON.stringify({
+            postId,
             reviews,
             postCategory,
             postTitle,
@@ -219,7 +220,6 @@ function useInsightSynthesis(
         throw new Error('Invalid response shape');
       }
 
-      await setCachedInsight(postId, data, reviews.length);
       setResult(data);
       setModel(data.model || '');
       setState('done');

@@ -32,7 +32,7 @@ export async function getCachedInsight(postId: string, currentReviewCount: numbe
 
     // Check if review count has changed (new reviews invalidate cache)
     if (data.review_count !== currentReviewCount) {
-      await supabase.from('insight_cache').delete().eq('post_id', postId);
+      // The old cache is stale, but we let the backend handle the overwrite
       return null;
     }
 
@@ -42,22 +42,7 @@ export async function getCachedInsight(postId: string, currentReviewCount: numbe
   }
 }
 
-/**
- * Cache an LLM synthesis result.
- */
-export async function setCachedInsight(postId: string, result: CachedInsight, reviewCount: number): Promise<void> {
-  if (!supabase) return;
 
-  try {
-    await supabase.from('insight_cache').upsert({
-      post_id: postId,
-      result,
-      review_count: reviewCount
-    });
-  } catch {
-    // Fail silently
-  }
-}
 
 /**
  * Check if a valid cache exists without retrieving the full result.

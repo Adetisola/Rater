@@ -31,28 +31,11 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const { currentProfile } = useAuthState();
 
-  // Supabase Realtime synchronization for post metrics
-  useEffect(() => {
-    const channel = supabase.channel('public:posts')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'posts' },
-        (payload) => {
-          const newPostData = payload.new as Post;
-          usePostStore.getState().updatePostMetrics(newPostData.id, {
-            review_count: newPostData.review_count,
-            average_score: newPostData.average_score,
-            criteria_scores: newPostData.criteria_scores,
-            updated_at: newPostData.updated_at
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  // The global Supabase Realtime WebSocket listener was intentionally removed here.
+  // It was an unfiltered global listener that would broadcast every platform update to all users,
+  // causing massive scalability issues. 
+  // Live metric synchronization is now handled via localized component-level polling (e.g. in PostDetailContent)
+  // and Pull-to-Refresh on feeds.
 
   const updatePost = useCallback(async (postId: string, updates: Partial<Post>) => {
     if (!currentProfile) return false;

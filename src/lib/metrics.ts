@@ -22,13 +22,14 @@ export async function getPostMetrics(
 ): Promise<PostMetrics> {
   const { data } = await supabase
     .from('posts')
-    .select('review_count, average_score, criteria_scores')
+    .select('review_count, average_score, criteria_scores, view_count')
     .eq('id', postId)
     .single();
 
   const baseMetrics: PostMetrics = {
     post_id: postId,
     review_count: data?.review_count || 0,
+    view_count: data?.view_count || 0,
     average_score: data?.average_score || 0,
     rating_unlocked: (data?.review_count || 0) >= 3,
     criteria_scores: data?.criteria_scores || {},
@@ -69,6 +70,7 @@ export async function getPostMetrics(
   return {
     post_id: postId,
     review_count: totalReviews,
+    view_count: baseMetrics.view_count,
     average_score: Number(newAverage.toFixed(1)),
     rating_unlocked: totalReviews >= 3,
     criteria_scores: newCriteriaScores,

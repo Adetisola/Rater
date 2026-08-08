@@ -40,6 +40,7 @@ import { AuthOverlay } from '@/components/AuthOverlay';
 import { cn } from '../lib/utils';
 
 
+import { useViewTracker } from '@/hooks/useViewTracker';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
     ArrowLeft,
@@ -52,7 +53,8 @@ import {
     ChevronLeft,
     ChevronRight,
     Copy,
-    Check
+    Check,
+    Eye
 } from 'lucide-react';
 
 const REVIEWS_PER_PAGE = 5;
@@ -329,58 +331,53 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     // 2. Derive metrics locally when userReviews change (Optimistic UI)
     useEffect(() => {
         if (userReviews.length > 0) {
-            calculatePostMetrics(post.id, userReviews).then(setMetrics);
+            calculatePostMetrics(post.id, userReviews).then(freshMetrics => setMetrics(prev => ({ 
+                ...freshMetrics, 
+                view_count: Math.max(prev.view_count || 0, freshMetrics.view_count || 0) 
+            })));
         }
     }, [userReviews, post.id]);
 
-    // 3. View Tracking (2-second strict visibility timer)
+    // 3. View Tracking
+    const { trackView, containerRef: viewTrackerRef } = useViewTracker(post.id, () => {
+        setMetrics(prev => ({
+            ...prev,
+            view_count: (prev.view_count || 0) + 1
+        }));
+        optimisticUpdateMetrics(post.id, { view_count: (metrics.view_count || 0) + 1 });
+    });
+
+    // 4. Live Metrics Polling (YouTube approach)
+    // Polls the database every 30 seconds to fetch the latest view count & review metrics
+    // Ensures the active post page is always fresh, but doesn't overwhelm the DB like WebSockets would.
     useEffect(() => {
-        let timer: NodeJS.Timeout;
-        let hasFired = false;
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState !== 'visible' && !hasFired) {
-                clearTimeout(timer);
-            } else if (document.visibilityState === 'visible' && !hasFired) {
-                // Restart timer if they return to the tab
-                startTimer();
-            }
-        };
-
-        const fireViewEvent = () => {
-            if (hasFired || document.visibilityState !== 'visible') return;
-            hasFired = true;
-            
-            fetch(`/api/posts/${post.id}/view`, {
-                method: 'POST',
-                keepalive: true, // Crucial for reliability during page unloads
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.incremented) {
-                    setMetrics(prev => ({
-                        ...prev,
-                        view_count: (prev.view_count || 0) + 1
-                    }));
-                }
-            })
-            .catch(err => console.error("Failed to record view", err));
-        };
-
-        const startTimer = () => {
-            clearTimeout(timer);
-            timer = setTimeout(fireViewEvent, 2000);
-        };
-
-        if (document.visibilityState === 'visible') {
-            startTimer();
-        }
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        let isMounted = true;
+        
+        const intervalId = setInterval(() => {
+            calculatePostMetrics(post.id).then(freshMetrics => {
+                if (!isMounted) return;
+                
+                setMetrics(prev => ({
+                    ...freshMetrics,
+                    // Ensure the view count never visually ticks down if the DB is lagging behind the local increment
+                    view_count: Math.max(prev.view_count || 0, freshMetrics.view_count || 0)
+                }));
+                
+                // Silently sync the latest polled data back to the global feed store
+                optimisticUpdateMetrics(post.id, {
+                    review_count: freshMetrics.review_count,
+                    view_count: freshMetrics.view_count,
+                    average_score: freshMetrics.average_score,
+                    criteria_scores: freshMetrics.criteria_scores,
+                });
+            }).catch(() => {
+                // Silently ignore polling errors so it doesn't disrupt the UI
+            });
+        }, 30000); // 30 seconds
 
         return () => {
-            clearTimeout(timer);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            isMounted = false;
+            clearInterval(intervalId);
         };
     }, [post.id]);
 
@@ -621,6 +618,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             const newEstimatedMetrics = await calculatePostMetrics(post.id, [finalReview, ...userReviews]);
             optimisticUpdateMetrics(post.id, {
                 review_count: newEstimatedMetrics.review_count,
+                view_count: newEstimatedMetrics.view_count,
                 average_score: newEstimatedMetrics.average_score,
                 criteria_scores: newEstimatedMetrics.criteria_scores,
             });
@@ -650,6 +648,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             const freshMetrics = await calculatePostMetrics(post.id);
             optimisticUpdateMetrics(post.id, {
                 review_count: freshMetrics.review_count,
+                view_count: freshMetrics.view_count,
                 average_score: freshMetrics.average_score,
                 criteria_scores: freshMetrics.criteria_scores,
             });
@@ -677,6 +676,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             const freshMetrics = await calculatePostMetrics(post.id);
             optimisticUpdateMetrics(post.id, {
                 review_count: freshMetrics.review_count,
+                view_count: freshMetrics.view_count,
                 average_score: freshMetrics.average_score,
                 criteria_scores: freshMetrics.criteria_scores,
             });
@@ -696,6 +696,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     return (
         <motion.div
+            ref={viewTrackerRef}
             initial={{ opacity: (isAdjacent || disableEntryAnimation) ? 1 : 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
@@ -806,6 +807,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     buttonClassName="w-10 h-10 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
                                     iconSizeClass="w-5 h-5"
                                     onReport={() => setIsReportOpen(true)}
+                                    trackView={trackView}
                                 />
                             </div>
                         </div>
@@ -883,7 +885,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                         triggerClassName="relative inline-flex items-center shrink-0"
                                     >
                                         <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
-                                            👁 {metrics.view_count.toLocaleString()} {(metrics.view_count === 1) ? 'view' : 'views'}
+                                            <Eye className="w-4 h-4 mr-1.5" /> {metrics.view_count.toLocaleString()}
                                         </span>
                                     </Tooltip>
                                 )}
@@ -1419,7 +1421,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                                         {review.comment && (
                                             <div className="text-sm text-black leading-relaxed mb-4">
-                                                <div className="markdown-content text-sm break-words">
+                                                <div className="markdown-content text-sm wrap-break-word">
                                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                         {review.comment}
                                                     </ReactMarkdown>

@@ -10,12 +10,13 @@ import Link from 'next/link';
 import { ImageFallback } from './ImageFallback';
 import { MediaCarousel } from './MediaCarousel';
 import { generateResponsiveUrls, extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
+import { useViewTracker } from '@/hooks/useViewTracker';
 
 import { useAuthState } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { PostActionsMenu } from './PostActionsMenu';
 import { useNow } from '../context/TimeContext';
-import { Lock } from 'lucide-react';
+import { Lock, Eye } from 'lucide-react';
 import { Tooltip } from './ui/Tooltip';
 import { UserAvatar } from './UserAvatar';
 
@@ -39,6 +40,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const badge = usePostStore(state => state.badgeMap[postId]);
     const isHot = usePostStore(state => state.hotPostIds.has(postId));
 
+    const { trackView, containerRef } = useViewTracker(postId);
+
     const [hasError, setHasError] = useState(false);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
@@ -50,6 +53,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
         review_count: post?.review_count || 0,
         average_score: post?.average_score || 0,
         rating_unlocked: (post?.review_count || 0) >= 3,
+        view_count: post?.view_count || 0,
     };
     const metricsLoading = false;
     const router = useRouter();
@@ -137,6 +141,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
     return (
         <motion.div
+            ref={containerRef}
             layout
             initial={{ opacity: 1, scale: 1, height: 'auto' }}
             animate={
@@ -152,7 +157,10 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                 href={`/post/${post.id}`}
                         scroll={false}
                         className={`group ${!hasError ? 'group/card' : ''} relative break-inside-avoid block`}
-                        onClick={onClick}
+                        onClick={() => {
+                            trackView('action');
+                            if (onClick) onClick();
+                        }}
                     >
             <div className={`bg-[#ebebeb] p-1.5 rounded-3xl relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
                 {!hasError && bgUrl && (
@@ -228,6 +236,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             <PostActionsMenu
                                 post={post}
                                 isCardContext={true}
+                                trackView={trackView}
                                 className="absolute top-3 right-3 z-30 opacity-0 md:group-hover:opacity-100 max-md:opacity-100 transition-opacity duration-200"
                                 buttonClassName="w-8 h-8 border-none transition-all max-md:bg-black/20 max-md:backdrop-blur-md max-md:text-white md:bg-white md:backdrop-blur-md md:hover:bg-white/80 md:text-black"
                             />
@@ -290,44 +299,65 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         </div>
 
                         <div className="pt-2 sm:pt-1 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
-                            <Tooltip
-                                position="top"
-                                gapClass="pb-1"
-                                width="w-64"
-                                contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
-                                triggerClassName="group relative inline-flex items-center cursor-help py-1"
-                                content={
-                                    <p className="leading-relaxed text-center">
-                                        {isHot
-                                            ? "This design is getting high attention based on recent reviews"
-                                            : "Number of structured reviews this design has received"
-                                        }
-                                    </p>
-                                }
-                            >
-                                <div className="flex items-center gap-1 xs:gap-1.5">
-                                    <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4 md:h-4 md:-mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
-                                    <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
-                                        {metrics?.review_count || 0}
-                                        {isHot && (
-                                            <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
-                                                {!hotLottieLoaded && <span className="absolute text-[11px] md:text-[13px]">🔥</span>}
-                                                <DotLottieReact
-                                                    src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
-                                                    loop
-                                                    autoplay
-                                                    dotLottieRefCallback={(dotLottie) => {
-                                                        if (dotLottie) {
-                                                            dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
-                                                        }
-                                                    }}
-                                                    className="relative z-10 w-full h-full"
-                                                />
+                                <div className="flex items-center gap-3 xs:gap-3">
+                                    {/* View Count */}
+                                    {metrics?.view_count !== undefined && (
+                                        <Tooltip
+                                            position="top"
+                                            gapClass="pb-1"
+                                            width="w-48"
+                                            contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
+                                            triggerClassName="group/tooltip relative inline-flex items-center cursor-help py-1"
+                                            content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
+                                        >
+                                            <div className="flex items-center gap-1 xs:gap-1">
+                                                <Eye className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-black group-hover/card:text-white transition-colors" strokeWidth={1.5} />
+                                                <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors">
+                                                    {metrics?.view_count || 0}
+                                                </span>
                                             </div>
-                                        )}
-                                    </span>
+                                        </Tooltip>
+                                    )}
+                                    {/* Review Count */}
+                                    <Tooltip
+                                        position="top"
+                                        gapClass="pb-1"
+                                        width="w-64"
+                                        contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
+                                        triggerClassName="group/tooltip relative inline-flex items-center cursor-help py-1"
+                                        content={
+                                            <p className="leading-relaxed text-center">
+                                                {isHot
+                                                    ? "This design is getting high attention based on recent reviews"
+                                                    : "Number of structured reviews this design has received"
+                                                }
+                                            </p>
+                                        }
+                                    >
+                                        <div className="flex items-center gap-1 xs:gap-1">
+                                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4 md:h-4 md:-mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                            <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
+                                                {metrics?.review_count || 0}
+                                                {isHot && (
+                                                    <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
+                                                        {!hotLottieLoaded && <span className="absolute text-[11px] md:text-[13px]">🔥</span>}
+                                                        <DotLottieReact
+                                                            src="https://lottie.host/0051bccf-4dba-4f76-8d09-42856cd7e0a6/g2u4ipRES7.lottie"
+                                                            loop
+                                                            autoplay
+                                                            dotLottieRefCallback={(dotLottie) => {
+                                                                if (dotLottie) {
+                                                                    dotLottie.addEventListener('load', () => setHotLottieLoaded(true));
+                                                                }
+                                                            }}
+                                                            className="relative z-10 w-full h-full"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </span>
+                                        </div>
+                                    </Tooltip>
                                 </div>
-                            </Tooltip>
 
                             <div className="flex items-center gap-1.5 w-auto justify-end">
                                 {!metrics?.rating_unlocked ? (
