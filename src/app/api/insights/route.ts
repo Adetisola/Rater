@@ -532,11 +532,14 @@ export async function POST(request: NextRequest) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!
       );
       
-      await supabaseAdmin.from('insight_cache').upsert({
+      const { error } = await supabaseAdmin.from('insight_cache').upsert({
         post_id: postId,
         result: resultPayload,
         review_count: reviews.length
-      }).catch(err => console.error('[Insights API] Failed to cache:', err));
+      });
+      if (error) {
+        console.error('[Insights API] Failed to cache:', error);
+      }
     }
 
     return NextResponse.json(resultPayload);
