@@ -353,36 +353,40 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         optimisticUpdateMetrics(post.id, { view_count: (metrics.view_count || 0) + 1 });
     });
 
-    // 4. Live Metrics Polling (YouTube approach)
-    // Polls the database every 30 seconds to fetch the latest view count & review metrics
-    // Ensures the active post page is always fresh, but doesn't overwhelm the DB like WebSockets would.
+    // 4. Live Metrics Refresh (Event-driven)
+    // Refreshes the database metrics only when the user returns to the tab.
+    // This provides fresh data without constantly polling the DB in the background.
     useEffect(() => {
         let isMounted = true;
         
-        const intervalId = setInterval(() => {
-            calculatePostMetrics(post.id).then(freshMetrics => {
-                if (!isMounted) return;
-                
-                setMetrics(prev => ({
-                    ...freshMetrics,
-                    view_count: freshMetrics.view_count !== undefined ? freshMetrics.view_count : prev.view_count
-                }));
-                
-                // Silently sync the latest polled data back to the global feed store
-                optimisticUpdateMetrics(post.id, {
-                    review_count: freshMetrics.review_count,
-                    view_count: freshMetrics.view_count,
-                    average_score: freshMetrics.average_score,
-                    criteria_scores: freshMetrics.criteria_scores,
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') {
+                calculatePostMetrics(post.id).then(freshMetrics => {
+                    if (!isMounted) return;
+                    
+                    setMetrics(prev => ({
+                        ...freshMetrics,
+                        view_count: freshMetrics.view_count !== undefined ? freshMetrics.view_count : prev.view_count
+                    }));
+                    
+                    // Silently sync the latest polled data back to the global feed store
+                    optimisticUpdateMetrics(post.id, {
+                        review_count: freshMetrics.review_count,
+                        view_count: freshMetrics.view_count,
+                        average_score: freshMetrics.average_score,
+                        criteria_scores: freshMetrics.criteria_scores,
+                    });
+                }).catch(() => {
+                    // Silently ignore errors
                 });
-            }).catch(() => {
-                // Silently ignore polling errors so it doesn't disrupt the UI
-            });
-        }, 30000); // 30 seconds
+            }
+        };
+
+        document.addEventListener('visibilitychange', onVisible);
 
         return () => {
             isMounted = false;
-            clearInterval(intervalId);
+            document.removeEventListener('visibilitychange', onVisible);
         };
     }, [post.id]);
 

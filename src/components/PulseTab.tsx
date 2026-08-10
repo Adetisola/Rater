@@ -414,14 +414,14 @@ function PulseVotingView({ session: initialSession, avatarId, onVoted }: {
   const results = getPulseResults(session);
   const totalVotes = session.votes.length;
 
-  // Live countdown timer
+  // Live countdown timer (local only)
   useEffect(() => {
     if (!active) return;
     const interval = setInterval(() => {
       const remaining = getPulseTimeRemaining(session);
       setTimeRemaining(remaining);
       if (remaining === 'Expired') clearInterval(interval);
-    }, 30000); // update every 30s
+    }, 60000); // update every 60s
     return () => clearInterval(interval);
   }, [session, active]);
 

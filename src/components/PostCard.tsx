@@ -304,7 +304,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         </div>
 
                         <div className="pt-2 sm:pt-1 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
-                                <div className="flex items-center gap-3 xs:gap-3">
+                                <div className="flex items-center gap-2 xs:gap-3">
                                     {/* Review Count */}
                                     <Tooltip
                                         position="top"
@@ -322,7 +322,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         }
                                     >
                                         <div className="flex items-center gap-1 xs:gap-1">
-                                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-3.5 md:h-3.5 md:-mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-3.5 md:h-3.5 -mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                             <span className="text-xs md:text-xs font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
                                                 {metrics?.review_count || 0}
                                                 {isHot && (
@@ -379,20 +379,14 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                     </Tooltip>
                                 ) : (
                                     <>
-                                        <div className="flex gap-0.5">
-                                            {[1, 2, 3, 4, 5].map(i => {
-                                                const isActive = i <= Math.floor(metrics.average_score);
-                                                return (
-                                                    <img
-                                                        key={i}
-                                                        src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"}
-                                                        className={`w-3 h-3 sm:w-3 sm:h-3 ${isActive ? 'group-hover/card:brightness-0 group-hover/card:invert transition-all' : ''}`}
-                                                        alt=""
-                                                    />
-                                                );
-                                            })}
+                                        <div className="flex items-center">
+                                            <img
+                                                src="/icons/star-active.svg"
+                                                className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 group-hover/card:brightness-0 group-hover/card:invert transition-all"
+                                                alt="rating"
+                                            />
                                         </div>
-                                        <span className="text-sm md:text-[12px] md:-mt-0.4 font-medium text-black group-hover/card:text-white transition-colors">
+                                        <span className="text-sm md:text-[12px] font-medium text-black group-hover/card:text-white transition-colors">
                                             {metrics.average_score}
                                         </span>
                                     </>

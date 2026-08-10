@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import BrowseContent from '@/components/BrowseContent';
 import { getFeedPosts } from '@/lib/posts';
 
-export const dynamic = 'force-dynamic';
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 

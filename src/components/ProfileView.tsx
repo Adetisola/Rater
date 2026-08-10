@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuthState, useAuthActions } from '../context/AuthContext';
-import { getPostMetrics } from '@/lib/metrics';
 import { getProfilePosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
@@ -89,9 +88,10 @@ const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; is
 
 interface ProfileViewProps {
   avatarId: string;
+  initialProfile?: import('@/types').Avatar;
 }
 
-export function ProfileView({ avatarId }: ProfileViewProps) {
+export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
   const { currentProfile: me, profileMap } = useAuthState();
   const { updateProfile, checkUsernameAvailable } = useAuthActions();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
@@ -124,12 +124,13 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const bioInputRef = useRef<HTMLTextAreaElement>(null);
   const roleInputRef = useRef<HTMLInputElement>(null);
 
-  // Find the avatar to display — prefer cache, but fall back to a direct fetch
-  // when the cache only has a partial profile (e.g. from post/review joins)
+  // Find the avatar to display — prefer initialProfile (SSR), then cache, then fetch
   const cachedAvatar = profileMap[avatarId];
   const [fetchedAvatar, setFetchedAvatar] = useState<import('@/types').Avatar | null>(null);
 
   useEffect(() => {
+    // If SSR provided the profile, nothing to do
+    if (initialProfile) return;
     // If the cache already has complete data, nothing to do
     if (cachedAvatar?.created_at) return;
     // If we already have a fetched result, nothing to do
@@ -142,10 +143,10 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       });
     });
     return () => { mounted = false; };
-  }, [avatarId, cachedAvatar?.created_at, fetchedAvatar]);
+  }, [avatarId, cachedAvatar?.created_at, fetchedAvatar, initialProfile]);
 
-  // Use cached avatar when it has full data, otherwise fall back to fetched
-  const targetAvatar = (cachedAvatar?.created_at ? cachedAvatar : fetchedAvatar) ?? cachedAvatar;
+  // Use initialProfile when provided via SSR, otherwise cache, then fetched
+  const targetAvatar = initialProfile ?? (cachedAvatar?.created_at ? cachedAvatar : fetchedAvatar) ?? cachedAvatar;
 
   // Compute optimized avatar URL for the main profile header
   const optimizedAvatarUrl = useMemo(() => {
@@ -192,35 +193,25 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [avatarPostIds]);
 
-  // Async stats calculation
+  // Synchronous stats calculation
   useEffect(() => {
-    let isMounted = true;
+    let totalReviews = 0;
+    let totalScore = 0;
+    let ratedPosts = 0;
 
-    const computeStats = async () => {
-      let totalReviews = 0;
-      let totalScore = 0;
-      let ratedPosts = 0;
-
-      const metricsList = await Promise.all(avatarPosts.map(p => getPostMetrics(p.id)));
-
-      metricsList.forEach(metrics => {
-        totalReviews += metrics.review_count;
-        if (metrics.rating_unlocked) {
-          totalScore += metrics.average_score;
-          ratedPosts++;
-        }
-      });
-
-      if (isMounted) {
-        setStats({
-          totalReviews,
-          avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
-        });
+    avatarPosts.forEach(post => {
+      totalReviews += post.review_count || 0;
+      // We assume rating_unlocked is true if review_count >= 3, which is the current logic in metrics.ts
+      if ((post.review_count || 0) >= 3 && post.average_score) {
+        totalScore += post.average_score;
+        ratedPosts++;
       }
-    };
+    });
 
-    computeStats();
-    return () => { isMounted = false; };
+    setStats({
+      totalReviews,
+      avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
+    });
   }, [avatarPosts]);
 
   const joinedDate = useMemo(() => {

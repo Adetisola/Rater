@@ -40,7 +40,7 @@ function getAiToolLogo(toolId: string) {
   if (lobeId) {
     const isMonoOnly = lobeId === 'openai' || lobeId === 'midjourney' || lobeId === 'ideogram';
     const suffix = isMonoOnly ? '' : '-color';
-    return `https://unpkg.com/@lobehub/icons-static-svg@latest/icons/${lobeId}${suffix}.svg`;
+    return `/ai-tools/${lobeId}${suffix}.svg`;
   }
   return `/ai-tools/${toolId}.svg`;
 }

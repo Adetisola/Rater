@@ -193,7 +193,6 @@ function useInsightSynthesis(
           },
           body: JSON.stringify({
             postId,
-            reviews,
             postCategory,
             postTitle,
             postDescription
