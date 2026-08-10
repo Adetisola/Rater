@@ -8,6 +8,7 @@ import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
 import { Textarea } from './ui/Textarea';
+import { RichTextarea } from './ui/RichTextarea';
 import type { Post, Category } from '@/types';
 import { AI_TOOLS } from '@/types';
 import type { UploadProgressEvent } from '@/lib/cloudinary/uploads';
@@ -1001,16 +1002,13 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div className="space-y-2">
               <h3 className="font-medium text-[16px] text-black">Description</h3>
               <div className="relative">
-                <Textarea
+                <RichTextarea
                   placeholder="Description"
                   value={description}
                   maxLength={400}
                   onChange={(e) => setDescription(e.target.value)}
                   className="min-h-45 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 resize-none font-medium"
                 />
-                <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
-                  {description.length} / 400 chars
-                </div>
               </div>
             </div>
           </div>

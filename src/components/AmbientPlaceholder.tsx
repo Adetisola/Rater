@@ -92,11 +92,14 @@ export function AmbientPlaceholder({ text, transitionKey, visible }: AmbientPlac
 
   // Sync text for the visible layer if it changes without a key change
   useEffect(() => {
-    setLayers(prev =>
-      prev.map(l =>
+    setLayers(prev => {
+      const needsUpdate = prev.some(l => l.phase === 'visible' && l.text !== text);
+      if (!needsUpdate) return prev;
+      
+      return prev.map(l =>
         l.phase === 'visible' ? { ...l, text } : l
-      )
-    );
+      );
+    });
   }, [text]);
 
   if (!visible) return null;

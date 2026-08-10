@@ -29,7 +29,7 @@ function AuthCallbackContent() {
         if (!profile) {
           const metadata = user.user_metadata || {};
           const fullName = metadata.full_name || metadata.name || 'Anonymous User';
-          const avatarUrl = metadata.avatar_url || null;
+          const avatarUrl = metadata.avatar_url || metadata.picture || null;
 
           // Generate a unique temporary username using the reserved 'user_' prefix
           // Using a combination of timestamp and short id guarantees uniqueness and prevents squatting on good names.

@@ -45,6 +45,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const [hasError, setHasError] = useState(false);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const { profileMap } = useAuthState();
     
@@ -239,7 +240,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                 post={post}
                                 isCardContext={true}
                                 trackView={trackView}
-                                className="absolute top-3 right-3 z-30 opacity-0 md:group-hover:opacity-100 max-md:opacity-100 transition-opacity duration-200"
+                                onOpenChange={setIsMenuOpen}
+                                className={`absolute top-3 right-3 z-30 transition-opacity duration-200 ${isMenuOpen ? 'opacity-100' : 'opacity-0 md:group-hover/card:opacity-100 max-md:opacity-100'}`}
                                 buttonClassName="w-8 h-8 border-none transition-all max-md:bg-black/20 max-md:backdrop-blur-md max-md:text-white md:bg-white md:backdrop-blur-md md:hover:bg-white/80 md:text-black"
                             />
                         </div>
@@ -253,6 +255,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             <span
                                 className="text-[12px] text-muted font-medium group-hover/card:text-white/80 transition-colors shrink-0 ml-2"
                                 title={getFullTimestamp(post.created_at)}
+                                suppressHydrationWarning
                             >
                                 {formatTimestamp(post.created_at, now)}
                                 {isEdited && (
@@ -319,8 +322,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         }
                                     >
                                         <div className="flex items-center gap-1 xs:gap-1">
-                                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-4 md:h-4 md:-mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
-                                            <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
+                                            <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-3.5 md:h-3.5 md:-mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                            <span className="text-xs md:text-xs font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
                                                 {metrics?.review_count || 0}
                                                 {isHot && (
                                                     <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
@@ -353,8 +356,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                             content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
                                         >
                                             <div className="flex items-center gap-1 xs:gap-1">
-                                                <Eye className="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-black group-hover/card:text-white transition-colors" strokeWidth={1.5} />
-                                                <span className="text-xs md:text-sm font-medium text-black group-hover/card:text-white transition-colors">
+                                                <Eye className="w-3.5 h-3.5 md:w-4 md:h-4 text-black group-hover/card:text-white transition-colors" strokeWidth={1.3} />
+                                                <span className="text-xs md:text-xs font-medium text-black group-hover/card:text-white transition-colors">
                                                     {metrics?.view_count || 0}
                                                 </span>
                                             </div>
@@ -362,19 +365,17 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                     )}
                                 </div>
 
-                            <div className="flex items-center gap-1.5 w-auto justify-end">
+                            <div className="flex items-center gap-1.5 w-auto">
                                 {!metrics?.rating_unlocked ? (
                                     <Tooltip
                                         position="top"
-                                        align="end"
                                         gapClass="pb-1"
-                                        width="w-48"
                                         contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
                                         triggerClassName="group relative inline-flex items-center cursor-help flex items-center gap-1 pl-2 py-1"
                                         content={<p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>}
                                     >
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
-                                        <Lock className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                        <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                     </Tooltip>
                                 ) : (
                                     <>
@@ -385,13 +386,13 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                                     <img
                                                         key={i}
                                                         src={isActive ? "/icons/star-active.svg" : "/icons/star-inactive.svg"}
-                                                        className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${isActive ? 'group-hover/card:brightness-0 group-hover/card:invert transition-all' : ''}`}
+                                                        className={`w-3 h-3 sm:w-3 sm:h-3 ${isActive ? 'group-hover/card:brightness-0 group-hover/card:invert transition-all' : ''}`}
                                                         alt=""
                                                     />
                                                 );
                                             })}
                                         </div>
-                                        <span className="text-sm font-medium text-black group-hover/card:text-white transition-colors">
+                                        <span className="text-sm md:text-[12px] md:-mt-0.4 font-medium text-black group-hover/card:text-white transition-colors">
                                             {metrics.average_score}
                                         </span>
                                     </>

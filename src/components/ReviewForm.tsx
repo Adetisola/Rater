@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Button } from './ui/Button';
-import { Textarea } from './ui/Textarea';
+
 import { StarRating } from './ui/StarRating';
 
 import { Tooltip } from './ui/Tooltip';
@@ -19,6 +19,7 @@ import {
 import { useDebounce } from '../hooks/useDebounce';
 import type { Category } from '../types';
 import { getReviewMode } from '../config/reviewModes';
+import { RichTextarea } from './ui/RichTextarea';
 
 /**
  * Props for the ReviewForm component.
@@ -386,24 +387,15 @@ export function ReviewForm({
 
           <div>
             <div className="relative">
-              <Textarea
+              <RichTextarea
                 placeholder={userName ? `${userName}, what do you think?...` : "What do you think?..."}
                 value={comment}
                 onChange={(e) => {
-                  if (e.target.value.length <= 500) {
-                    setComment(e.target.value);
-                  }
+                  setComment(e.target.value);
                 }}
                 maxLength={500}
                 className="min-h-30 rounded-xl resize-none p-4 pb-8 focus-visible:border-primary font-sans"
               />
-              <div className={`absolute bottom-3 right-4 text-xs transition-colors font-medium pointer-events-none ${comment.length >= 500 ? 'text-red-500' : 'text-gray-400'
-                }`}>
-                {comment.length} / 500
-              </div>
-            </div>
-            <div className="mt-2 ml-2 text-[11px] font-medium text-gray-400 pointer-events-none">
-              Supports markdown: **bold**, *italic*, - list, https://link.com
             </div>
           </div>
         </div>

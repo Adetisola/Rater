@@ -68,6 +68,15 @@
   100% { transform: rotate(360deg); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 .mesh-gradient-layer {
   position: absolute;
   top: -50%;
@@ -284,3 +293,11 @@
   opacity: 1;
 }
 
+/* Tiptap Placeholder */
+.tiptap p.is-editor-empty:first-child::before {
+  color: #9ca3af;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

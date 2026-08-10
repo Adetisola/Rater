@@ -8,6 +8,7 @@ import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
 import { Grid, Heart, ArrowLeft } from 'lucide-react';
+import { RichTextarea } from '@/components/ui/RichTextarea';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
@@ -20,7 +21,9 @@ import { cn } from '../lib/utils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
-import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { type SocialLink } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
 import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
@@ -719,13 +722,11 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           <div className="max-w-lg mb-8 text-center md:text-left text-[15px] mx-auto md:mx-0 px-4 md:px-0">
             {editState !== 'idle' ? (
               <div className="relative group">
-                <textarea
-                  ref={bioInputRef}
+                <RichTextarea
+                  ref={bioInputRef as any}
                   value={editBio}
                   onChange={(e) => {
                     setEditBio(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
                   }}
                   disabled={editState === 'saving'}
                   placeholder="Tell people what you create..."
@@ -736,34 +737,14 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     editBio.length > 200 && "text-red-500 focus:border-red-300 focus:bg-red-50",
                     editState === 'saving' && "opacity-70 pointer-events-none"
                   )}
-                  rows={Math.max(3, editBio.split('\n').length)}
                 />
-                <div className="absolute right-6 bottom-2 text-[10px] font-medium text-gray-400 pointer-events-none pb-2 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
-                  {editBio.length}/200
-                </div>
               </div>
             ) : targetAvatar.bio || isMe ? (
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+              <div className="text-gray-600 leading-relaxed markdown-content [&_p]:my-1">
                 {targetAvatar.bio ? (
-                  getBioParts(targetAvatar.bio).map((part, i) => {
-                    if (typeof part === 'string') return part;
-                    const originalUrl = part.url;
-                    const displayUrl = formatDisplayUrl(originalUrl);
-                    const href = originalUrl.startsWith('http') ? originalUrl : `https://${originalUrl}`;
-                    return (
-                      <a
-                        key={i}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={originalUrl}
-                        className="bio-link"
-                      >
-                        {displayUrl}
-                        <span className="external-icon">↗</span>
-                      </a>
-                    );
-                  })
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {targetAvatar.bio}
+                  </ReactMarkdown>
                 ) : (
                   <button
                     onClick={() => startEditing('bio')}
@@ -772,7 +753,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     Say a little about yourself...
                   </button>
                 )}
-              </p>
+              </div>
             ) : null}
 
             {/* Smart Bio Links — Social Icon Row + Suggestion */}

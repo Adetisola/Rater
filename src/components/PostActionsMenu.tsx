@@ -24,6 +24,7 @@ interface PostActionsMenuProps {
   onReport?: () => void;
   isCardContext?: boolean;
   trackView?: (trigger: 'viewport' | 'action') => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export function PostActionsMenu({
@@ -35,6 +36,7 @@ export function PostActionsMenu({
   onReport,
   isCardContext,
   trackView,
+  onOpenChange,
 }: PostActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -43,6 +45,10 @@ export function PostActionsMenu({
   const [isDownloadOverlayOpen, setIsDownloadOverlayOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
 
   const { currentProfile } = useAuthState();
   const { setEditingPost } = usePosts();
