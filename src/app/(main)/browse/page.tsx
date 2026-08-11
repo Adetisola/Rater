@@ -1,8 +1,26 @@
+import type { Metadata } from "next";
 import { Suspense } from 'react';
 import BrowseContent from '@/components/BrowseContent';
 import { getFeedPosts } from '@/lib/posts';
 
-export const dynamic = 'force-dynamic';
+export const metadata: Metadata = {
+  title: "Browse",
+  description:
+    "Browse design critiques and feedback on Rater. Discover real-world design work, ratings, and constructive reviews from the community.",
+  alternates: {
+    canonical: "/browse",
+  },
+  openGraph: {
+    title: "Browse Designs | Rater",
+    description:
+      "Browse design critiques and feedback on Rater. Discover real-world design work, ratings, and constructive reviews from the community.",
+    url: "https://raterapp.site/browse",
+    type: "website",
+  },
+};
+
+
+
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 

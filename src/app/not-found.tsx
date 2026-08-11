@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
-import { Footer } from '@/components/Footer'
 
 /**
  * Global 404 Not Found page.
@@ -18,7 +17,6 @@ export default function NotFound() {
           </Button>
         </Link>
       </div>
-      <Footer />
     </div>
   )
 }

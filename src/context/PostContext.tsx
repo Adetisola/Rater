@@ -185,8 +185,32 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const unsub = usePostStore.subscribe((state, prevState) => {
-      // Very naive check: if any post changed, re-run badges
-      if (state.posts !== prevState.posts) {
+      if (state.posts === prevState.posts) return;
+
+      const prevPostIds = Object.keys(prevState.posts);
+      const currPostIds = Object.keys(state.posts);
+
+      let needsRecompute = false;
+
+      // Check if any posts were added or removed
+      if (prevPostIds.length !== currPostIds.length) {
+        needsRecompute = true;
+      } else {
+        // Check for relevant changes in existing posts
+        needsRecompute = currPostIds.some(id => {
+          const prev = prevState.posts[id];
+          const curr = state.posts[id];
+          if (!prev || !curr) return true;
+          
+          return (
+            prev.review_count !== curr.review_count ||
+            prev.average_score !== curr.average_score ||
+            prev.is_deleted !== curr.is_deleted
+          );
+        });
+      }
+
+      if (needsRecompute) {
         if (debounceTimer) clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
           const activePosts = Object.values(usePostStore.getState().posts).filter(p => !p.is_deleted);
@@ -200,6 +224,7 @@ export function PostProvider({ children }: { children: React.ReactNode }) {
         }, 600);
       }
     });
+
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       unsub();

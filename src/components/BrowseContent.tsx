@@ -359,7 +359,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
 
     processPosts();
     return () => { isMounted = false; };
-  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds, currentSignature]);
+  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds]); // intentionally removed currentSignature as a dependency
 
   return (
     <>

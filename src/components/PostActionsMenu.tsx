@@ -24,6 +24,7 @@ interface PostActionsMenuProps {
   onReport?: () => void;
   isCardContext?: boolean;
   trackView?: (trigger: 'viewport' | 'action') => void;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 export function PostActionsMenu({
@@ -35,6 +36,7 @@ export function PostActionsMenu({
   onReport,
   isCardContext,
   trackView,
+  onOpenChange,
 }: PostActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
@@ -44,34 +46,14 @@ export function PostActionsMenu({
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
+
   const { currentProfile } = useAuthState();
   const { setEditingPost } = usePosts();
   const menuRef = useRef<HTMLDivElement>(null);
   const moreBtnRef = useRef<HTMLButtonElement>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
-
-  const updateDropdownPosition = () => {
-    if (isOpen && moreBtnRef.current) {
-      const rect = moreBtnRef.current.getBoundingClientRect();
-      setDropdownPos({
-        top: rect.bottom + 4,
-        right: window.innerWidth - rect.right,
-      });
-    }
-  };
-
-  useEffect(() => {
-    updateDropdownPosition();
-    window.addEventListener('scroll', updateDropdownPosition, true);
-    window.addEventListener('resize', updateDropdownPosition);
-    return () => {
-      window.removeEventListener('scroll', updateDropdownPosition, true);
-      window.removeEventListener('resize', updateDropdownPosition);
-    };
-  }, [isOpen]);
-
-  const isOwner = currentProfile?.id === post.avatar_id;
-
   useEffect(() => {
     setMounted(true);
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
@@ -79,6 +61,10 @@ export function PostActionsMenu({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const isOwner = currentProfile?.id === post.avatar_id;
+
+
 
   // Close menu on outside click
   useEffect(() => {
@@ -349,23 +335,19 @@ export function PostActionsMenu({
           document.body
         )
       ) : (
-        mounted && createPortal(
-          <AnimatePresence>
-            {isOpen && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 4 }}
-                transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-2 w-max min-w-50 bg-white rounded-2xl overflow-hidden shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
-                style={{ top: dropdownPos.top, right: dropdownPos.right }}
-              >
-                {menuContent}
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 4 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 top-full mt-2 w-max min-w-48 bg-white rounded-2xl overflow-hidden shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
+            >
+              {menuContent}
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
 
       {/* Share Overlay for Desktop */}

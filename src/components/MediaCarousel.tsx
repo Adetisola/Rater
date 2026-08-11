@@ -127,10 +127,13 @@ export function MediaCarousel({
   // Recalculate cover height on resize
   useEffect(() => {
     if (!coverImgRef.current) return;
-    const observer = new ResizeObserver(() => {
-      if (coverImgRef.current) {
-        setCoverHeight(coverImgRef.current.offsetHeight);
-        setCoverWidth(coverImgRef.current.offsetWidth);
+    const observer = new ResizeObserver((entries) => {
+      if (coverImgRef.current && entries[0]) {
+        const newHeight = coverImgRef.current.offsetHeight;
+        const newWidth = coverImgRef.current.offsetWidth;
+        
+        setCoverHeight(prev => prev === newHeight ? prev : newHeight);
+        setCoverWidth(prev => prev === newWidth ? prev : newWidth);
       }
     });
     observer.observe(coverImgRef.current);
@@ -159,7 +162,7 @@ export function MediaCarousel({
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+        className="flex w-full h-full overflow-x-auto overflow-y-hidden snap-x snap-mandatory scrollbar-hide"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
       >
         {media.map((item, idx) => (

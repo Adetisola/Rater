@@ -108,10 +108,10 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
           fetchPriority={priority ? "high" : "auto"}
           decoding="async"
           className={cn(
-            "relative z-10 block transition-opacity duration-500",
+            "relative z-10 block transition-opacity duration-500 max-h-[150vh] md:max-h-[75vh]",
             !optimizedData || isLoaded ? "opacity-100" : "opacity-0"
           )}
-          style={{ maxWidth: '100%', maxHeight: '75vh', width: 'auto', height: 'auto' }}
+          style={{ maxWidth: '100%', width: 'auto', height: 'auto' }}
           {...props}
           onLoad={handleLoad}
           onError={handleError}

@@ -49,8 +49,12 @@ export async function middleware(request: NextRequest) {
     // Redirect to home if no session cookie at all.
     // SECURITY NOTE: This only checks existence of the cookie, not validity or admin status.
     // Full auth/admin check happens server-side in admin/layout.tsx.
-    // NOTE: 'sb-ubkimszybusvsydxgank-auth-token' is hardcoded and will break if the Supabase project changes.
-    const hasSession = request.cookies.has('sb-ubkimszybusvsydxgank-auth-token');
+    // The middleware is simply a cheap early gate, NOT the security boundary.
+    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+    const cookieName = projectRef ? `sb-${projectRef}-auth-token` : 'sb-ubkimszybusvsydxgank-auth-token'; // Fallback for dev safety
+    
+    // Check standard chunks as well in case Supabase SSR chunked it
+    const hasSession = request.cookies.has(cookieName) || request.cookies.has(`${cookieName}.0`);
     if (!hasSession) {
       return NextResponse.redirect(new URL('/', request.url));
     }

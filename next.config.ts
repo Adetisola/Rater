@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       { hostname: 'api.dicebear.com' },
       { hostname: 'img.icons8.com' },
       { hostname: 'lottie.host' },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
     ],
   },
   experimental: {

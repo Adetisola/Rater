@@ -21,7 +21,7 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
   const { profileMap } = useAuthState();
 
   const creator = profileMap[currentPost.avatar_id];
-  const creatorName = creator?.name || 'Creator';
+  const creatorName = creator?.name || currentPost.author?.name || 'Creator';
 
   // 1. Compute Category-based related posts (Tab 1)
   const relatedPosts = useMemo(() => {
@@ -105,8 +105,11 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
                 : "border-transparent text-gray-400 hover:text-gray-600"
             )}
           >
-            <User className="w-4 h-4" />
-            More from {creatorName}
+            <User className="w-4 h-4 shrink-0" />
+            <span className="flex items-center">
+                <span className="shrink-0 mr-1">More from</span>
+                <span className="truncate inline-block max-w-[100px] md:max-w-[200px]">{creatorName}</span>
+            </span>
           </button>
         </div>
       ) : hasRelated ? (
@@ -116,7 +119,7 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
         </h2>
       ) : (
         // Only creator posts exist: Render static "More from Creator" header
-        <h2 className="text-xl font-semibold text-black mb-8 px-2 xs:px-2 md:px-4 select-none">
+        <h2 className="text-xl font-semibold text-black mb-8 px-2 xs:px-2 md:px-4 select-none truncate">
           More from {creatorName}
         </h2>
       )}

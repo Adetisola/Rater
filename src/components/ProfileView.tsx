@@ -1,13 +1,13 @@
 "use client";
 
 import { useAuthState, useAuthActions } from '../context/AuthContext';
-import { getPostMetrics } from '@/lib/metrics';
 import { getProfilePosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
 import { Grid, Heart, ArrowLeft } from 'lucide-react';
+import { RichTextarea } from '@/components/ui/RichTextarea';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
@@ -20,7 +20,9 @@ import { cn } from '../lib/utils';
 import { useUsernameValidation } from '../hooks/useUsernameValidation';
 import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
-import { type SocialLink, getBioParts, formatDisplayUrl } from '../utils/socialLinksUtils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { type SocialLink } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
 import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
@@ -86,9 +88,10 @@ const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; is
 
 interface ProfileViewProps {
   avatarId: string;
+  initialProfile?: import('@/types').Avatar;
 }
 
-export function ProfileView({ avatarId }: ProfileViewProps) {
+export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
   const { currentProfile: me, profileMap } = useAuthState();
   const { updateProfile, checkUsernameAvailable } = useAuthActions();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
@@ -121,12 +124,13 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
   const bioInputRef = useRef<HTMLTextAreaElement>(null);
   const roleInputRef = useRef<HTMLInputElement>(null);
 
-  // Find the avatar to display — prefer cache, but fall back to a direct fetch
-  // when the cache only has a partial profile (e.g. from post/review joins)
+  // Find the avatar to display — prefer initialProfile (SSR), then cache, then fetch
   const cachedAvatar = profileMap[avatarId];
   const [fetchedAvatar, setFetchedAvatar] = useState<import('@/types').Avatar | null>(null);
 
   useEffect(() => {
+    // If SSR provided the profile, nothing to do
+    if (initialProfile) return;
     // If the cache already has complete data, nothing to do
     if (cachedAvatar?.created_at) return;
     // If we already have a fetched result, nothing to do
@@ -139,10 +143,10 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
       });
     });
     return () => { mounted = false; };
-  }, [avatarId, cachedAvatar?.created_at, fetchedAvatar]);
+  }, [avatarId, cachedAvatar?.created_at, fetchedAvatar, initialProfile]);
 
-  // Use cached avatar when it has full data, otherwise fall back to fetched
-  const targetAvatar = (cachedAvatar?.created_at ? cachedAvatar : fetchedAvatar) ?? cachedAvatar;
+  // Use initialProfile when provided via SSR, otherwise cache, then fetched
+  const targetAvatar = initialProfile ?? (cachedAvatar?.created_at ? cachedAvatar : fetchedAvatar) ?? cachedAvatar;
 
   // Compute optimized avatar URL for the main profile header
   const optimizedAvatarUrl = useMemo(() => {
@@ -189,35 +193,25 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
     return posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [avatarPostIds]);
 
-  // Async stats calculation
+  // Synchronous stats calculation
   useEffect(() => {
-    let isMounted = true;
+    let totalReviews = 0;
+    let totalScore = 0;
+    let ratedPosts = 0;
 
-    const computeStats = async () => {
-      let totalReviews = 0;
-      let totalScore = 0;
-      let ratedPosts = 0;
-
-      const metricsList = await Promise.all(avatarPosts.map(p => getPostMetrics(p.id)));
-
-      metricsList.forEach(metrics => {
-        totalReviews += metrics.review_count;
-        if (metrics.rating_unlocked) {
-          totalScore += metrics.average_score;
-          ratedPosts++;
-        }
-      });
-
-      if (isMounted) {
-        setStats({
-          totalReviews,
-          avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
-        });
+    avatarPosts.forEach(post => {
+      totalReviews += post.review_count || 0;
+      // We assume rating_unlocked is true if review_count >= 3, which is the current logic in metrics.ts
+      if ((post.review_count || 0) >= 3 && post.average_score) {
+        totalScore += post.average_score;
+        ratedPosts++;
       }
-    };
+    });
 
-    computeStats();
-    return () => { isMounted = false; };
+    setStats({
+      totalReviews,
+      avgRating: ratedPosts > 0 ? (totalScore / ratedPosts).toFixed(1) : '—'
+    });
   }, [avatarPosts]);
 
   const joinedDate = useMemo(() => {
@@ -719,13 +713,11 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
           <div className="max-w-lg mb-8 text-center md:text-left text-[15px] mx-auto md:mx-0 px-4 md:px-0">
             {editState !== 'idle' ? (
               <div className="relative group">
-                <textarea
-                  ref={bioInputRef}
+                <RichTextarea
+                  ref={bioInputRef as any}
                   value={editBio}
                   onChange={(e) => {
                     setEditBio(e.target.value);
-                    e.target.style.height = 'auto';
-                    e.target.style.height = `${e.target.scrollHeight}px`;
                   }}
                   disabled={editState === 'saving'}
                   placeholder="Tell people what you create..."
@@ -736,34 +728,14 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     editBio.length > 200 && "text-red-500 focus:border-red-300 focus:bg-red-50",
                     editState === 'saving' && "opacity-70 pointer-events-none"
                   )}
-                  rows={Math.max(3, editBio.split('\n').length)}
                 />
-                <div className="absolute right-6 bottom-2 text-[10px] font-medium text-gray-400 pointer-events-none pb-2 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
-                  {editBio.length}/200
-                </div>
               </div>
             ) : targetAvatar.bio || isMe ? (
-              <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+              <div className="text-gray-600 leading-relaxed markdown-content [&_p]:my-1">
                 {targetAvatar.bio ? (
-                  getBioParts(targetAvatar.bio).map((part, i) => {
-                    if (typeof part === 'string') return part;
-                    const originalUrl = part.url;
-                    const displayUrl = formatDisplayUrl(originalUrl);
-                    const href = originalUrl.startsWith('http') ? originalUrl : `https://${originalUrl}`;
-                    return (
-                      <a
-                        key={i}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={originalUrl}
-                        className="bio-link"
-                      >
-                        {displayUrl}
-                        <span className="external-icon">↗</span>
-                      </a>
-                    );
-                  })
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {targetAvatar.bio}
+                  </ReactMarkdown>
                 ) : (
                   <button
                     onClick={() => startEditing('bio')}
@@ -772,7 +744,7 @@ export function ProfileView({ avatarId }: ProfileViewProps) {
                     Say a little about yourself...
                   </button>
                 )}
-              </p>
+              </div>
             ) : null}
 
             {/* Smart Bio Links — Social Icon Row + Suggestion */}

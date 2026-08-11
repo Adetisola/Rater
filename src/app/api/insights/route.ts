@@ -420,7 +420,6 @@ function parseJSONResponse(responseText: string) {
 
 interface RequestBody {
   postId: string;
-  reviews: Review[];
   postCategory: Category;
   postTitle?: string;
   postDescription?: string;
@@ -454,7 +453,26 @@ export async function POST(request: NextRequest) {
 
   try {
     const body: RequestBody = await request.json();
-    const { postId, reviews, postCategory, postTitle, postDescription } = body;
+    const { postId, postCategory, postTitle, postDescription } = body;
+
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const { data: dbReviews, error } = await supabaseAdmin
+      .from('reviews')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+      
+    if (error || !dbReviews) {
+      console.error('[Insights API] Failed to fetch reviews:', error);
+      return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+    }
+    
+    const reviews = dbReviews as Review[];
 
     if (!reviews || reviews.length < 2) {
       return NextResponse.json(

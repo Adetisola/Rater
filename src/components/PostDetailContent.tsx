@@ -59,6 +59,12 @@ import {
 
 const REVIEWS_PER_PAGE = 5;
 
+const getVisibleTextLength = (markdown: string) => {
+    if (!markdown) return 0;
+    // Strip markdown links and images: [text](url) or ![alt](url) -> text/alt
+    return markdown.replace(/!?(?:\[([^\]]*)\])\([^)]+\)/g, '$1').length;
+};
+
 /**
  * Props for the PostDetailOverlay and PostDetailCore components.
  */
@@ -333,7 +339,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         if (userReviews.length > 0) {
             calculatePostMetrics(post.id, userReviews).then(freshMetrics => setMetrics(prev => ({ 
                 ...freshMetrics, 
-                view_count: Math.max(prev.view_count || 0, freshMetrics.view_count || 0) 
+                view_count: freshMetrics.view_count !== undefined ? freshMetrics.view_count : prev.view_count 
             })));
         }
     }, [userReviews, post.id]);
@@ -347,37 +353,40 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         optimisticUpdateMetrics(post.id, { view_count: (metrics.view_count || 0) + 1 });
     });
 
-    // 4. Live Metrics Polling (YouTube approach)
-    // Polls the database every 30 seconds to fetch the latest view count & review metrics
-    // Ensures the active post page is always fresh, but doesn't overwhelm the DB like WebSockets would.
+    // 4. Live Metrics Refresh (Event-driven)
+    // Refreshes the database metrics only when the user returns to the tab.
+    // This provides fresh data without constantly polling the DB in the background.
     useEffect(() => {
         let isMounted = true;
         
-        const intervalId = setInterval(() => {
-            calculatePostMetrics(post.id).then(freshMetrics => {
-                if (!isMounted) return;
-                
-                setMetrics(prev => ({
-                    ...freshMetrics,
-                    // Ensure the view count never visually ticks down if the DB is lagging behind the local increment
-                    view_count: Math.max(prev.view_count || 0, freshMetrics.view_count || 0)
-                }));
-                
-                // Silently sync the latest polled data back to the global feed store
-                optimisticUpdateMetrics(post.id, {
-                    review_count: freshMetrics.review_count,
-                    view_count: freshMetrics.view_count,
-                    average_score: freshMetrics.average_score,
-                    criteria_scores: freshMetrics.criteria_scores,
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') {
+                calculatePostMetrics(post.id).then(freshMetrics => {
+                    if (!isMounted) return;
+                    
+                    setMetrics(prev => ({
+                        ...freshMetrics,
+                        view_count: freshMetrics.view_count !== undefined ? freshMetrics.view_count : prev.view_count
+                    }));
+                    
+                    // Silently sync the latest polled data back to the global feed store
+                    optimisticUpdateMetrics(post.id, {
+                        review_count: freshMetrics.review_count,
+                        view_count: freshMetrics.view_count,
+                        average_score: freshMetrics.average_score,
+                        criteria_scores: freshMetrics.criteria_scores,
+                    });
+                }).catch(() => {
+                    // Silently ignore errors
                 });
-            }).catch(() => {
-                // Silently ignore polling errors so it doesn't disrupt the UI
-            });
-        }, 30000); // 30 seconds
+            }
+        };
+
+        document.addEventListener('visibilitychange', onVisible);
 
         return () => {
             isMounted = false;
-            clearInterval(intervalId);
+            document.removeEventListener('visibilitychange', onVisible);
         };
     }, [post.id]);
 
@@ -393,6 +402,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
     const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
+    const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(true);
+
+    useEffect(() => {
+        setIsFullscreenImageLoading(true);
+    }, [fullscreenImageIndex, isImageFullscreen]);
     const [zoomScale, setZoomScale] = useState(1);
     const [dragConstraints, setDragConstraints] = useState({ left: 0, right: 0, top: 0, bottom: 0 });
 
@@ -859,6 +873,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             <span
                                 className="text-xs font-medium text-gray-400"
                                 title={getFullTimestamp(post.created_at)}
+                                suppressHydrationWarning
                             >
                                 {formatTimestamp(post.created_at, now)}
                                 {post.edited_at && (
@@ -872,23 +887,10 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                         {/* 3. Title */}
                         <div className="flex items-center justify-between mb-2 gap-4">
-                            <h1 className="text-lg xs:text-xl font-semibold text-black leading-tight">
+                            <h1 className="text-lg xs:text-xl font-medium text-black leading-tight">
                                 {post.title}
                             </h1>
                             <div className="flex items-center gap-3">
-                                {metrics?.view_count !== undefined && (
-                                    <Tooltip
-                                        content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
-                                        position="top"
-                                        align="end"
-                                        width="w-[calc(100vw-3rem)] xs:w-48"
-                                        triggerClassName="relative inline-flex items-center shrink-0"
-                                    >
-                                        <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
-                                            <Eye className="w-4 h-4 mr-1.5" /> {metrics.view_count.toLocaleString()}
-                                        </span>
-                                    </Tooltip>
-                                )}
                                 <Tooltip
                                     content={
                                         <p className="leading-relaxed text-center">
@@ -900,7 +902,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     width="w-[calc(100vw-3rem)] xs:w-64"
                                     triggerClassName="relative inline-flex items-center shrink-0"
                                 >
-                                    <span className="text-sm font-medium sm:font-semibold text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                    <span className="text-sm font-medium sm:medium text-gray-800 flex items-center whitespace-nowrap cursor-help">
                                         {isHot && (
                                             <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                                 {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -920,26 +922,60 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                         {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
                                     </span>
                                 </Tooltip>
+                                {metrics?.view_count !== undefined && (
+                                    <Tooltip
+                                        content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
+                                        position="top"
+                                        align="end"
+                                        width="w-[calc(100vw-3rem)] xs:w-48"
+                                        triggerClassName="relative inline-flex items-center shrink-0"
+                                    >
+                                        <span className="text-sm font-medium sm:font-medium text-gray-800 flex items-center gap-1 whitespace-nowrap cursor-help">
+                                            <Eye className="w-4 h-4" /> {metrics.view_count.toLocaleString()}
+                                        </span>
+                                    </Tooltip>
+                                )}
                             </div>
                         </div>
 
                         {/* 4. Description */}
                         <div className="text-sm leading-relaxed text-gray-600">
-                            <span className={!isExpanded ? 'line-clamp-2' : ''}>
-                                {post.description}
-                                {isExpanded && post.description.length > 100 && (
+                            <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
+                                <div className="markdown-content">
+                                    <ReactMarkdown 
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            a: ({ node, href, children, ...props }) => {
+                                                let url = href || '';
+                                                // If it doesn't start with a protocol (http://, https://, mailto:, etc.) 
+                                                // and doesn't start with a slash, prepend https://
+                                                if (url && !url.match(/^[a-zA-Z]+:/) && !url.startsWith('/')) {
+                                                    url = 'https://' + url;
+                                                }
+                                                return (
+                                                    <a href={url} target="_blank" rel="noopener noreferrer" {...props}>
+                                                        {children}
+                                                    </a>
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        {post.description}
+                                    </ReactMarkdown>
+                                </div>
+                                {isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
                                     <button
                                         onClick={() => setIsExpanded(false)}
-                                        className="font-semibold text-gray-800 hover:text-primary transition-colors ml-1"
+                                        className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
                                     >
                                         Show less
                                     </button>
                                 )}
-                            </span>
-                            {!isExpanded && post.description.length > 100 && (
+                            </div>
+                            {!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
                                 <button
                                     onClick={() => setIsExpanded(true)}
-                                    className="font-semibold text-gray-800 hover:text-primary transition-colors"
+                                    className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
                                 >
                                     Read more
                                 </button>
@@ -1019,23 +1055,23 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         )}
 
                         {/* 5. Avatar & Rating */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4 w-full">
                             <Link
                                 href={`/@${currentAvatar && post.avatar_id === currentAvatar.id ? currentAvatar.username : (avatar?.username ?? post.avatar_id)}`}
                                 scroll={false}
-                                className="flex items-center gap-3 group/author"
+                                className="flex items-center gap-3 group/author min-w-0 flex-1"
                             >
                                 <UserAvatar 
                                     avatarUrl={avatar?.avatar_url} 
-                                    className="w-10 h-10 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
+                                    className="w-10 h-10 shrink-0 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
                                 />
                                 <div className="text-left flex flex-col min-w-0">
-                                    <span className="block text-sm font-semibold text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
+                                    <span className="block text-sm font-medium text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
                                     <span className="block text-[10px] text-gray-400 font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
                                 </div>
                             </Link>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 {!metrics?.rating_unlocked ? (
                                     <div className="relative group/lock cursor-help flex items-center gap-1.5 pl-2">
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
@@ -1046,17 +1082,17 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="flex gap-1">
+                                        <div className="flex gap-0.5 md:gap-1">
                                             {[1, 2, 3, 4, 5].map(i => (
                                                 <img
                                                     key={i}
                                                     src={i <= Math.floor(metrics.average_score) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"}
                                                     alt="star"
-                                                    className="w-5 h-5"
+                                                    className="w-4 h-4 md:w-5 md:h-5"
                                                 />
                                             ))}
                                         </div>
-                                        <span className="text-2xl font-semibold text-black">{metrics.average_score}</span>
+                                        <span className="text-lg md:text-xl font-semibold text-black">{metrics.average_score}</span>
                                     </>
                                 )}
                             </div>
@@ -1253,7 +1289,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 {/* BOTTOM SECTION: Reviews List */}
                 <div className="border-t border-gray-100 pt-8 xs:pt-15">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                        <h2 className="text-xl font-semibold text-black shrink-0">Reviews ({allReviews.length})</h2>
+                        <h2 className="text-lg font-medium text-black shrink-0">Reviews ({allReviews.length})</h2>
 
                         <div className="flex flex-wrap gap-2 sm:ml-auto">
                             {['Recent', 'Top', 'Critical', 'Oldest'].map((option) => (
@@ -1335,13 +1371,13 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 {review.reviewer_id && allAvatars[review.reviewer_id] ? (
                                                     <UserAvatar 
                                                         avatarUrl={allAvatars[review.reviewer_id].avatar_url} 
-                                                        className="w-8 h-8 hover:ring-1 ring-primary transition-all"
+                                                        className="w-7 h-7 hover:ring-1 ring-primary transition-all"
                                                         iconClassName="w-3/4 h-3/4"
                                                     />
                                                 ) : (
                                                     <UserAvatar 
                                                         avatarUrl={null} 
-                                                        className="w-8 h-8"
+                                                        className="w-7 h-7"
                                                         iconClassName="w-3/4 h-3/4"
                                                     />
                                                 )}
@@ -1349,7 +1385,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <span
-                                                        className={`font-medium text-base text-black truncate max-w-37.5 xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
+                                                        className={`font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
                                                         onClick={(e) => {
                                                             if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
                                                                 e.stopPropagation();
@@ -1378,6 +1414,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 <span
                                                     className="text-xs text-gray-400 font-medium"
                                                     title={fullTime}
+                                                    suppressHydrationWarning
                                                 >
                                                     {timeLabel}
                                                 </span>
@@ -1560,37 +1597,47 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                       const currentFullscreenPublicId = currentFullscreenItem?.public_id || (currentFullscreenRawUrl ? extractPublicId(currentFullscreenRawUrl) : null);
                       const fullscreenOptimizedSet = currentFullscreenPublicId ? generateResponsiveUrls(currentFullscreenPublicId) : null;
                       return (
-                        <motion.img
-                            ref={imgRef}
-                            src={fullscreenOptimizedSet?.src || currentFullscreenRawUrl}
-                            srcSet={fullscreenOptimizedSet?.srcSet}
-                            sizes="100vw"
-                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
-                            style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
-                            whileDrag={{ cursor: 'grabbing' }}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: zoomScale }}
-                            transition={{ duration: 0.25, ease: "easeOut" }}
-                            drag={zoomScale > 1 ? true : (displayMedia.length > 1 ? "x" : false)}
-                            dragConstraints={zoomScale > 1 ? dragConstraints : { left: 0, right: 0 }}
-                            dragMomentum={false}
-                            dragElastic={zoomScale > 1 ? 0 : 0.5}
-                            onDragEnd={(_e, info) => {
-                                if (zoomScale === 1 && displayMedia.length > 1) {
-                                    if (info.offset.x < -50 && fullscreenImageIndex < displayMedia.length - 1) {
-                                        setFullscreenImageIndex(prev => prev + 1);
-                                    } else if (info.offset.x > 50 && fullscreenImageIndex > 0) {
-                                        setFullscreenImageIndex(prev => prev - 1);
+                        <>
+                            {isFullscreenImageLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center z-[5]">
+                                    <div className="w-10 h-10 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                </div>
+                            )}
+                            <motion.img
+                                ref={imgRef}
+                                src={fullscreenOptimizedSet?.src || currentFullscreenRawUrl}
+                                srcSet={fullscreenOptimizedSet?.srcSet}
+                                sizes="100vw"
+                                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl relative z-10"
+                                style={{ x, y, cursor: zoomScale > 1 ? 'grab' : 'default' }}
+                                whileDrag={{ cursor: 'grabbing' }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: zoomScale }}
+                                transition={{ duration: 0.25, ease: "easeOut" }}
+                                drag={zoomScale > 1 ? true : (displayMedia.length > 1 ? "x" : false)}
+                                dragConstraints={zoomScale > 1 ? dragConstraints : { left: 0, right: 0 }}
+                                dragMomentum={false}
+                                dragElastic={zoomScale > 1 ? 0 : 0.5}
+                                onDragEnd={(_e, info) => {
+                                    if (zoomScale === 1 && displayMedia.length > 1) {
+                                        if (info.offset.x < -50 && fullscreenImageIndex < displayMedia.length - 1) {
+                                            setFullscreenImageIndex(prev => prev + 1);
+                                        } else if (info.offset.x > 50 && fullscreenImageIndex > 0) {
+                                            setFullscreenImageIndex(prev => prev - 1);
+                                        }
                                     }
-                                }
-                            }}
-                            onLoad={() => updateConstraints(zoomScale)}
-                            onPointerDown={() => {
-                                const now = Date.now();
-                                if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
-                                else { lastTapRef.current = now; }
-                            }}
-                        />
+                                }}
+                                onLoad={() => {
+                                    setIsFullscreenImageLoading(false);
+                                    updateConstraints(zoomScale);
+                                }}
+                                onPointerDown={() => {
+                                    const now = Date.now();
+                                    if (now - lastTapRef.current < 300) { setZoomScale(prev => prev > 1 ? 1 : ZOOM_IN_SCALE); lastTapRef.current = 0; }
+                                    else { lastTapRef.current = now; }
+                                }}
+                            />
+                        </>
                       );
                     })()}
                 </div>

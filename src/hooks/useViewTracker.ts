@@ -6,6 +6,11 @@ export function useViewTracker(postId: string, onIncrement?: () => void) {
     const viewState = useRef<'idle' | 'pending' | 'completed'>('idle');
     const containerRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(containerRef, { amount: 0.5 }); // 50% visibility
+    const onIncrementRef = useRef(onIncrement);
+
+    useEffect(() => {
+        onIncrementRef.current = onIncrement;
+    }, [onIncrement]);
 
     const trackView = useCallback(async (_trigger: 'viewport' | 'action') => {
         if (viewState.current !== 'idle') return;
@@ -26,44 +31,54 @@ export function useViewTracker(postId: string, onIncrement?: () => void) {
             const data = await res.json();
             
             if (data.incremented) {
-                if (onIncrement) onIncrement();
+                if (onIncrementRef.current) onIncrementRef.current();
             }
             viewState.current = 'completed';
         } catch (err) {
             console.error("Failed to record view", err);
             viewState.current = 'idle'; // Reset on error so it can retry
         }
-    }, [postId, onIncrement]);
+    }, [postId]);
 
-    // Viewport tracker
+    // Strict Viewport & Tab Visibility Tracker
     useEffect(() => {
         let timer: NodeJS.Timeout;
 
-        // If the component becomes 50% visible, start a 2-second timer
-        if (isInView && viewState.current === 'idle') {
+        const startTimer = () => {
+            if (timer) clearTimeout(timer);
             timer = setTimeout(() => {
-                // Check document visibility so background tabs don't trigger views
                 if (document.visibilityState === 'visible' && viewState.current === 'idle') {
                     trackView('viewport');
                 }
             }, 2000);
-        }
+        };
 
-        return () => {
+        const stopTimer = () => {
             if (timer) clearTimeout(timer);
         };
-    }, [isInView, trackView]);
 
-    // Handle tab visibility changes returning to an active tab
-    useEffect(() => {
+        // Initial check when `isInView` or dependencies change
+        if (isInView && document.visibilityState === 'visible' && viewState.current === 'idle') {
+            startTimer();
+        } else {
+            stopTimer();
+        }
+
+        // Handle tab visibility changes (canceling if hidden, restarting if visible)
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible' && isInView && viewState.current === 'idle') {
-                trackView('viewport');
+                startTimer();
+            } else {
+                stopTimer();
             }
         };
         
         document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+        
+        return () => {
+            stopTimer();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, [isInView, trackView]);
 
     return { trackView, containerRef };

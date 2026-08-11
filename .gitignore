@@ -32,3 +32,6 @@ dist-ssr
 .agents
 .antigravitycli
 docs
+
+# Scratch
+scratch/
