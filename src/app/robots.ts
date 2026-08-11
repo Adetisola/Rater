@@ -44,7 +44,7 @@ export default function robots(): MetadataRoute.Robots {
         ],
       },
     ],
-    sitemap: "https://raterapp.site/sitemap.xml",
-    host: "https://raterapp.site",
+    sitemap: "https://www.raterapp.site/sitemap.xml",
+    host: "https://www.raterapp.site",
   };
 }
