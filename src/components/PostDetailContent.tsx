@@ -942,7 +942,24 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         <div className="text-sm leading-relaxed text-gray-600">
                             <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
                                 <div className="markdown-content">
-                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    <ReactMarkdown 
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            a: ({ node, href, children, ...props }) => {
+                                                let url = href || '';
+                                                // If it doesn't start with a protocol (http://, https://, mailto:, etc.) 
+                                                // and doesn't start with a slash, prepend https://
+                                                if (url && !url.match(/^[a-zA-Z]+:/) && !url.startsWith('/')) {
+                                                    url = 'https://' + url;
+                                                }
+                                                return (
+                                                    <a href={url} target="_blank" rel="noopener noreferrer" {...props}>
+                                                        {children}
+                                                    </a>
+                                                );
+                                            }
+                                        }}
+                                    >
                                         {post.description}
                                     </ReactMarkdown>
                                 </div>
@@ -1038,15 +1055,15 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         )}
 
                         {/* 5. Avatar & Rating */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4 w-full">
                             <Link
                                 href={`/@${currentAvatar && post.avatar_id === currentAvatar.id ? currentAvatar.username : (avatar?.username ?? post.avatar_id)}`}
                                 scroll={false}
-                                className="flex items-center gap-3 group/author"
+                                className="flex items-center gap-3 group/author min-w-0 flex-1"
                             >
                                 <UserAvatar 
                                     avatarUrl={avatar?.avatar_url} 
-                                    className="w-10 h-10 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
+                                    className="w-10 h-10 shrink-0 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
                                 />
                                 <div className="text-left flex flex-col min-w-0">
                                     <span className="block text-sm font-medium text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
@@ -1054,7 +1071,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 </div>
                             </Link>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 shrink-0">
                                 {!metrics?.rating_unlocked ? (
                                     <div className="relative group/lock cursor-help flex items-center gap-1.5 pl-2">
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
@@ -1065,17 +1082,17 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="flex gap-1">
+                                        <div className="flex gap-0.5 md:gap-1">
                                             {[1, 2, 3, 4, 5].map(i => (
                                                 <img
                                                     key={i}
                                                     src={i <= Math.floor(metrics.average_score) ? "/icons/star-active-yellow.svg" : "/icons/star-inactive.svg"}
                                                     alt="star"
-                                                    className="w-5 h-5"
+                                                    className="w-4 h-4 md:w-5 md:h-5"
                                                 />
                                             ))}
                                         </div>
-                                        <span className="text-xl font-semibold text-black">{metrics.average_score}</span>
+                                        <span className="text-lg md:text-xl font-semibold text-black">{metrics.average_score}</span>
                                     </>
                                 )}
                             </div>

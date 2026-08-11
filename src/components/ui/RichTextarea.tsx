@@ -74,7 +74,7 @@ export const RichTextarea = React.forwardRef<HTMLTextAreaElement, RichTextareaPr
           autolink: true,
           protocols: ['http', 'https', 'mailto'],
           HTMLAttributes: {
-            class: 'text-primary hover:underline',
+            class: 'text-primary underline hover:opacity-80',
             rel: 'noopener noreferrer',
             target: '_blank',
           },
@@ -96,7 +96,7 @@ export const RichTextarea = React.forwardRef<HTMLTextAreaElement, RichTextareaPr
         attributes: {
           class: cn(
             "flex-col min-h-[120px] w-full rounded-xl border border-gray-200 bg-white px-4 pt-2 pb-3 ring-offset-white focus-visible:outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 resize-y transition-all font-sans text-sm outline-none",
-            "[&_p]:my-1 [&_p:first-child]:mt-0 [&_a]:text-primary [&_a:hover]:underline [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:leading-normal",
+            "[&_p]:my-1 [&_p:first-child]:mt-0 [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:leading-normal",
             className
           ),
           ...props as any,
@@ -139,7 +139,11 @@ export const RichTextarea = React.forwardRef<HTMLTextAreaElement, RichTextareaPr
 
     const setLink = () => {
       if (linkUrl) {
-        editor.chain().focus().extendMarkRange('link').setLink({ href: linkUrl }).run();
+        let finalUrl = linkUrl;
+        if (!finalUrl.match(/^[a-zA-Z]+:/) && !finalUrl.startsWith('/')) {
+            finalUrl = 'https://' + finalUrl;
+        }
+        editor.chain().focus().extendMarkRange('link').setLink({ href: finalUrl }).run();
       } else {
         editor.chain().focus().extendMarkRange('link').unsetLink().run();
       }
