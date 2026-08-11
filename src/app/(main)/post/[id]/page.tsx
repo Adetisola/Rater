@@ -126,9 +126,14 @@ export async function generateMetadata(
   return {
     title: ogTitle,
     description: ogDescription,
+    alternates: {
+      canonical: `/post/${id}`,
+    },
     openGraph: {
       title: ogTitle,
       description: ogDescription,
+      url: `https://raterapp.site/post/${id}`,
+      siteName: "Rater",
       images: images,
       type: "article",
     },

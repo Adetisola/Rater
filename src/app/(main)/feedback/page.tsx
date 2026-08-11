@@ -1,6 +1,10 @@
 export const metadata = {
-  title: 'Feedback - Rater',
+  title: 'Feedback',
   description: 'Help us improve Rater by sharing your feedback.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 import { FeedbackBoard } from '@/components/feedback/FeedbackBoard';

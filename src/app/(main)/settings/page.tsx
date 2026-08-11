@@ -1,7 +1,11 @@
 import { ConnectedAccounts } from '@/components/ConnectedAccounts';
 
 export const metadata = {
-  title: 'Settings - Rater',
+  title: 'Settings',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function SettingsPage() {

@@ -13,11 +13,49 @@ export async function generateMetadata({ params }: { params: Promise<{ alias: st
 
   const slug = decodedAlias.slice(1).toLowerCase();
   const profile = await getProfileByUsername(slug);
-  return { 
-    title: profile ? `${profile.name || profile.username} (@${profile.username})` : 'Profile', 
-    description: profile?.bio || 'Check out this profile on Rater.' 
+
+  if (!profile) {
+    return { title: 'Profile Not Found' };
+  }
+
+  const displayName = profile.name || `@${profile.username}`;
+  const title = `${displayName} (@${profile.username})`;
+  const description = profile.bio
+    ? profile.bio
+    : `View ${displayName}'s design work and critiques on Rater.`;
+  const canonicalPath = `/@${profile.username}`;
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    openGraph: {
+      title: `${title} — Rater`,
+      description,
+      url: `https://raterapp.site${canonicalPath}`,
+      type: "profile",
+      // Use the profile's avatar if available, otherwise fall back to site OG image
+      ...(profile.avatar_url
+        ? {
+            images: [
+              {
+                url: profile.avatar_url,
+                alt: displayName,
+              },
+            ],
+          }
+        : {}),
+    },
+    twitter: {
+      card: "summary",
+      title: `${title} — Rater`,
+      description,
+    },
   };
 }
+
 
 export default async function PremiumAvatarPage({ params }: { params: Promise<{ alias: string }> }) {
   const { alias } = await params;
