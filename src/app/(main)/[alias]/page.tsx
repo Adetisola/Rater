@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ alias: st
     openGraph: {
       title: `${title} — Rater`,
       description,
-      url: `https://raterapp.site${canonicalPath}`,
+      url: `https://www.raterapp.site${canonicalPath}`,
       type: "profile",
       // Use the profile's avatar if available, otherwise fall back to site OG image
       ...(profile.avatar_url

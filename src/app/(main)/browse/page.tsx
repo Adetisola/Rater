@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: "Browse Designs | Rater",
     description:
       "Browse design critiques and feedback on Rater. Discover real-world design work, ratings, and constructive reviews from the community.",
-    url: "https://raterapp.site/browse",
+    url: "https://www.raterapp.site/browse",
     type: "website",
   },
 };

@@ -3,7 +3,7 @@
  *
  * Injects Schema.org structured data into the page to help search engines
  * understand Rater's entity identity:
- *   Rater = Rater App = Rater — Design Critique Studio = https://raterapp.site
+ *   Rater = Rater App = Rater — Design Critique Studio = https://www.raterapp.site
  *
  * Two schemas are included — only using information verified to exist in the project:
  *   1. Organization — establishes Rater as a brand entity
@@ -13,7 +13,7 @@
  * download counts, or screenshots are included.
  */
 
-const PRODUCTION_URL = "https://raterapp.site";
+const PRODUCTION_URL = "https://www.raterapp.site";
 const LOGO_URL = `${PRODUCTION_URL}/icons/icon-512.png`;
 
 /** Organization — establishes the Rater brand entity with stable @id */

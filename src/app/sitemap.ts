@@ -1,7 +1,7 @@
 /**
  * Dynamic Sitemap — Next.js App Router convention
  *
- * Generates a sitemap.xml at https://raterapp.site/sitemap.xml
+ * Generates a sitemap.xml at https://www.raterapp.site/sitemap.xml
  *
  * Included:
  *   - Static public routes: /, /browse
@@ -23,7 +23,7 @@
 import type { MetadataRoute } from "next";
 import { supabase } from "@/lib/supabase/client";
 
-const PRODUCTION_URL = "https://raterapp.site";
+const PRODUCTION_URL = "https://www.raterapp.site";
 
 // Hourly revalidation — new content appears in the sitemap within ~1 hour
 // without requiring a full redeploy.

@@ -8,7 +8,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // metadataBase is required so that relative URLs in page-level metadata
   // (canonical, OG images, etc.) resolve correctly against the production domain.
-  metadataBase: new URL("https://raterapp.site"),
+  metadataBase: new URL("https://www.raterapp.site"),
 
   title: {
     // Default title for the homepage and any page that doesn't set its own.
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     title: "Rater — Design Critique Studio",
     description:
       "Rater is a design feedback platform where designers share their work, receive constructive critiques, and develop their visual judgment.",
-    url: "https://raterapp.site",
+    url: "https://www.raterapp.site",
     siteName: "Rater",
     images: [
       {

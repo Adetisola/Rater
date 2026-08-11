@@ -165,7 +165,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
 
             <div className="text-center mb-8">
               <p className="text-base font-semibold text-black mb-1">@{username}</p>
-              <p className="text-sm text-gray-500 font-medium">{typeof window !== 'undefined' ? window.location.host : 'raterapp.site'}/@{username}</p>
+              <p className="text-sm text-gray-500 font-medium">{typeof window !== 'undefined' ? window.location.host : 'www.raterapp.site'}/@{username}</p>
             </div>
 
             {/* Actions */}

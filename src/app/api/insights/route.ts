@@ -49,7 +49,7 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://raterapp.site',
+      'HTTP-Referer': 'https://www.raterapp.site',
       'X-Title': 'Rater Insights',
     },
     body: JSON.stringify({

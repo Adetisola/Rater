@@ -132,7 +132,7 @@ export async function generateMetadata(
     openGraph: {
       title: ogTitle,
       description: ogDescription,
-      url: `https://raterapp.site/post/${id}`,
+      url: `https://www.raterapp.site/post/${id}`,
       siteName: "Rater",
       images: images,
       type: "article",
