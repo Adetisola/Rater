@@ -6,7 +6,9 @@
 // Scroll is forced to top on mount to prevent flicker
 
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuthState } from '@/context/AuthContext';
 import { Hero } from './sections/Hero';
 
 const yellowMeshBg = '/assets/landing/Yellow mesh gradient background.jpg';
@@ -19,6 +21,16 @@ const HowItWorks = lazy(() => import('./sections/HowItWorks').then(m => ({ defau
 const StatusFooter = lazy(() => import('./sections/StatusFooter').then(m => ({ default: m.StatusFooter })));
 
 export function LandingPage() {
+  const router = useRouter();
+  const { currentProfile, isLoading: isAuthLoading } = useAuthState();
+
+  // Redirect to browse if user is already logged in
+  useEffect(() => {
+    if (!isAuthLoading && currentProfile) {
+      router.replace('/browse');
+    }
+  }, [isAuthLoading, currentProfile, router]);
+
   // Loading states
   const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
   const [domReady, setDomReady] = useState(false);
