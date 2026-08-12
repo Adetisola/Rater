@@ -19,6 +19,10 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
 }
 
 export async function middleware(request: NextRequest) {
+  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0];
+  const cookieName = projectRef ? `sb-${projectRef}-auth-token` : 'sb-ubkimszybusvsydxgank-auth-token'; // Fallback for dev safety
+  const hasSession = request.cookies.has(cookieName) || request.cookies.has(`${cookieName}.0`);
+
   // 1. Rate Limiting for API routes
   if (request.nextUrl.pathname.startsWith('/api/')) {
     if (ratelimit) {
@@ -43,18 +47,20 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. Block direct navigation to admin routes for non-admin users
+  // 2. Redirect logged-in users away from the landing page
+  if (request.nextUrl.pathname === '/') {
+    if (hasSession) {
+      return NextResponse.redirect(new URL('/browse', request.url));
+    }
+  }
+
+  // 3. Block direct navigation to admin routes for non-admin users
   // (Full auth check lives in the layout — middleware acts as first line of defense)
   if (request.nextUrl.pathname.startsWith('/admin')) {
     // Redirect to home if no session cookie at all.
     // SECURITY NOTE: This only checks existence of the cookie, not validity or admin status.
     // Full auth/admin check happens server-side in admin/layout.tsx.
     // The middleware is simply a cheap early gate, NOT the security boundary.
-    const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0];
-    const cookieName = projectRef ? `sb-${projectRef}-auth-token` : 'sb-ubkimszybusvsydxgank-auth-token'; // Fallback for dev safety
-    
-    // Check standard chunks as well in case Supabase SSR chunked it
-    const hasSession = request.cookies.has(cookieName) || request.cookies.has(`${cookieName}.0`);
     if (!hasSession) {
       return NextResponse.redirect(new URL('/', request.url));
     }
@@ -63,5 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/:path*'],
+  matcher: ['/', '/admin/:path*', '/api/:path*'],
 };
