@@ -22,6 +22,7 @@
 
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 import { sendWelcomeEmail } from '@/lib/email/events';
 import { globalLogger } from '@/lib/logger';
 
@@ -59,14 +60,38 @@ export async function POST(req: Request) {
 
   // 2. Route: profiles INSERT → WELCOME_USER
   if (table === 'profiles' && type === 'INSERT') {
-    const email = typeof record.email === 'string' ? record.email : null;
-    const name = typeof record.name === 'string' ? record.name : '';
+    let email = typeof record.email === 'string' && record.email ? record.email : null;
+    let name = typeof record.name === 'string' ? record.name : '';
+    const userId = typeof record.id === 'string' ? record.id : null;
+
+    // Fallback: If record.email is missing on initial INSERT, fetch from Supabase Auth admin using service role key
+    if (!email && userId) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      if (supabaseUrl && serviceRoleKey) {
+        try {
+          const adminClient = createClient(supabaseUrl, serviceRoleKey);
+          const { data: authUser } = await adminClient.auth.admin.getUserById(userId);
+          if (authUser?.user?.email) {
+            email = authUser.user.email;
+            if (!name && authUser.user.user_metadata?.name) {
+              name = authUser.user.user_metadata.name;
+            }
+          }
+        } catch (adminErr) {
+          globalLogger.error('[Webhook/Supabase] Failed to fetch email from Auth admin', {
+            userId,
+            error: adminErr instanceof Error ? adminErr.message : String(adminErr),
+          });
+        }
+      }
+    }
 
     if (!email) {
-      globalLogger.warn('[Webhook/Supabase] profiles INSERT received but record.email is missing', {
-        userId: record.id,
+      globalLogger.warn('[Webhook/Supabase] profiles INSERT received but email could not be resolved', {
+        userId,
       });
-      // Still return 200 — this isn't an error we can retry our way out of
       return NextResponse.json({ ok: true, message: 'No email on record — skipped' });
     }
 
@@ -74,7 +99,7 @@ export async function POST(req: Request) {
     // within the Vercel function lifetime. sendWelcomeEmail() never throws.
     await sendWelcomeEmail(email, name);
 
-    globalLogger.info('[Webhook/Supabase] WELCOME_USER triggered', { userId: record.id });
+    globalLogger.info('[Webhook/Supabase] WELCOME_USER triggered', { userId });
     return NextResponse.json({ ok: true, message: 'WELCOME_USER triggered' });
   }
 
