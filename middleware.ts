@@ -24,7 +24,9 @@ export async function middleware(request: NextRequest) {
   const hasSession = request.cookies.has(cookieName) || request.cookies.has(`${cookieName}.0`);
 
   // 1. Rate Limiting for API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  // Webhooks (/api/webhooks/*) are excluded — they are server-to-server calls
+  // authenticated via their own secret header, not user traffic.
+  if (request.nextUrl.pathname.startsWith('/api/') && !request.nextUrl.pathname.startsWith('/api/webhooks/')) {
     if (ratelimit) {
       // Use IP for rate limiting
       const ip = request.headers.get('x-forwarded-for') ?? 
