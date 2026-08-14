@@ -427,7 +427,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               {selectedAvatar && (
                 <div className="max-w-400 mx-auto px-6 mb-6">
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                    <span className="text-sm font-medium text-gray-600">Avatar:</span>
+                    <span className="text-sm font-medium text-gray-600">Creative:</span>
                     <span className="text-sm font-bold text-black">{selectedAvatar.name}</span>
                     <button 
                       onClick={clearAvatarFilter}
@@ -501,8 +501,8 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                     <span className="text-sm text-gray-400">
                       {isEffectivelyProcessing ? 'Searching...' : (
                         sortedPostIds.length === 0
-                          ? 'Nothing here yet'
-                          : `${sortedPostIds.length} post${sortedPostIds.length === 1 ? '' : 's'} found`
+                          ? 'No matching works found'
+                          : `${sortedPostIds.length} work${sortedPostIds.length === 1 ? '' : 's'} found`
                       )}
                     </span>
                   </div>
@@ -527,8 +527,8 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                     {loadError ? (
                         <div className="w-full">
                            <AppErrorState 
-                             title="Failed to load posts"
-                             description={loadError.message || "We encountered an issue while loading more posts."}
+                             title="Unable to load works"
+                             description={loadError.message || "We encountered an issue while loading more works."}
                              onRetry={() => {
                                setRetryCount(0);
                                handleLoadMore();
@@ -542,10 +542,10 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                             <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
                             <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
                                 {sortedPostIds.length > 0 
-                                ? "You've reached the end of the feed"
+                                ? "You've viewed all works"
                                 : sortedPostIds.length === 0 && urlQuery.trim() 
-                                    ? "Everybody still dey create"
-                                    : "Nothing here yet"}
+                                    ? "No matching works found."
+                                    : "No works in this collection yet."}
                             </p>
                         </>
                     )}

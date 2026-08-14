@@ -96,7 +96,6 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
 
   if (!mounted || !isOpen || images.length === 0) return null;
 
-  const hasDownloadedAny = downloadedIndices.length > 0;
   const allDownloaded = downloadedIndices.length === images.length;
 
   return createPortal(
@@ -219,7 +218,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                 onClick={onClose}
                 disabled={isDownloadingAll}
             >
-                {hasDownloadedAny ? "Done" : "Cancel"}
+                Close
             </Button>
         </div>
       </div>

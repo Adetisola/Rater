@@ -412,7 +412,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
         <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
           <Sparkles className="w-5 h-5 text-gray-300" />
         </div>
-        <p className="text-sm text-gray-400 font-medium">Insights appear after the first review</p>
+        <p className="text-sm text-gray-400 font-medium">Insights appear after the first critique.</p>
       </div>
     );
   }
@@ -429,7 +429,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
       {/* Overall Score */}
       <div className="text-center pb-1">
         <div className="text-2xl font-semibold text-black">{roundedOverall}</div>
-        <p className="text-xs text-gray-400 mt-0.5">Overall average from {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</p>
+        <p className="text-xs text-gray-400 mt-0.5">Overall Score from {reviews.length} {reviews.length === 1 ? 'critique' : 'critiques'}</p>
       </div>
 
       {/* Per-Criterion Breakdown */}
@@ -478,9 +478,9 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
             alt="Rater"
             className="w-12 h-12 mb-4"
           />
-          <h3 className="text-md font-medium text-black mb-1.5">Let's look deeper.</h3>
+          <h3 className="text-md font-medium text-black mb-1.5">Unlock Perception Insights</h3>
           <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
-            Create an avatar to unlock audience perception insights and see exactly how this work is landing.
+            Create a profile to unlock perception insights and see how this work is landing with the community.
           </p>
           <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
             Create Profile
@@ -575,7 +575,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                   content={
                     <>
                       <p className="leading-relaxed">
-                        Synthesized from <strong className="font-semibold">{reviews.length}</strong> user reviews, analyzing ratings and written feedback.
+                        Synthesized from <strong className="font-semibold">{reviews.length}</strong> community critiques, analyzing ratings and qualitative feedback.
                       </p>
                       <p className="text-[10px] text-gray-500 leading-relaxed border-t border-gray-100 pt-2 mt-2">
                         AI-generated insights may be imperfect. Learn more in the{' '}
@@ -601,7 +601,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
 
                 {model && (
                   <p className="text-[10px] text-gray-400">
-                    Powered by {model}
+                    Synthesized with {model}
                   </p>
                 )}
               </div>
@@ -634,7 +634,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
               <div className="flex items-start gap-2.5 py-3 px-4 bg-gray-50 rounded-2xl relative">
                 <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                 <p className="text-[13px] text-red-500 leading-relaxed pr-6">
-                  We couldn't pull the insights right now, your network dey stress.
+                  Unable to generate insights right now. Please check your connection and try again.
                 </p>
                 <button
                   type="button"

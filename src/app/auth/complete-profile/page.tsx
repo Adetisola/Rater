@@ -201,7 +201,7 @@ const { updateProfile } = useAuthActions();
                   <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <AtSign className="w-8 h-8 text-primary" />
                   </div>
-                  <h2 className="text-xl font-medium text-black mb-1">Choose your @username</h2>
+                  <h2 className="text-xl font-medium text-black mb-1">Claim your @username</h2>
                   <p className="text-gray-400 text-sm px-4">This will be your public @username. People can search and mention you with it.</p>
                 </div>
 

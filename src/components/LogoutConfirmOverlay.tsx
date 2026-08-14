@@ -45,7 +45,7 @@ export function LogoutConfirmOverlay({ onClose, onConfirm }: LogoutConfirmOverla
             <LogOut className="w-8 h-8 text-red-500" />
         </div>
 
-        <h2 className="text-2xl font-semibold mb-3 text-black">Confirm Logout</h2>
+        <h2 className="text-2xl font-semibold mb-3 text-black">Log out of Rater?</h2>
         <p className="text-gray-500 mb-8 leading-relaxed">
             Are you sure you want to log out? You'll need to sign back in to continue using your account.
         </p>
@@ -56,7 +56,7 @@ export function LogoutConfirmOverlay({ onClose, onConfirm }: LogoutConfirmOverla
                 variant="outline"
                 className="w-full h-12 rounded-full border-red-600 hover:bg-red-600 text-lg font-medium transition-all"
             >
-                Yes, Logout
+                Log Out
             </Button>
             <Button 
                 onClick={onClose}

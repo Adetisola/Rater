@@ -213,7 +213,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         gapClass="pt-1"
                                         width="w-48"
                                         contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
-                                        content={<p className="leading-relaxed text-center">Top 3 highest-rated posts this week</p>}
+                                        content={<p className="leading-relaxed text-center">Top 3 highest-rated works this week</p>}
                                     >
                                         <div className="bg-white text-black text-[10px] font-semibold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm cursor-help">
                                             <div className="w-6 h-6 -my-1 -ml-0.5 relative flex items-center justify-center shrink-0">
@@ -315,8 +315,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         content={
                                             <p className="leading-relaxed text-center">
                                                 {isHot
-                                                    ? "This design is getting high attention based on recent reviews"
-                                                    : "Number of structured reviews this design has received"
+                                                    ? "This work is receiving high attention based on recent critiques"
+                                                    : "Number of structured critiques this work has received"
                                                 }
                                             </p>
                                         }
@@ -372,7 +372,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         gapClass="pb-1"
                                         contentClassName="p-3 bg-white border-2 border-[#FEC312] text-black text-[11px] rounded-xl shadow-xl"
                                         triggerClassName="group relative inline-flex items-center cursor-help flex items-center gap-1 pl-2 py-1"
-                                        content={<p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>}
+                                        content={<p className="leading-relaxed text-center font-medium">Overall score unlocks after 3 critiques</p>}
                                     >
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                         <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />

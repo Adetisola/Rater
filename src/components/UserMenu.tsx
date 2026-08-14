@@ -96,7 +96,7 @@ const { logout } = useAuthActions();
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
                 >
                   <Edit2 size={18} className="text-gray-400" />
-                  Edit your Profile
+                  Edit Profile
                 </button>
               ) : (
                 <Link
@@ -105,7 +105,7 @@ const { logout } = useAuthActions();
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
                 >
                   <Edit2 size={18} className="text-gray-400" />
-                  Edit your Profile
+                  Edit Profile
                 </Link>
               )}
               
@@ -116,7 +116,7 @@ const { logout } = useAuthActions();
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
                 >
                   <User size={18} className="text-gray-400" />
-                  Profile
+                  View Profile
                 </Link>
               )}
               

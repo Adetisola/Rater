@@ -125,7 +125,7 @@ export function GlobalOverlays() {
               layout
               className="flex items-center gap-4 px-6 py-4 bg-[#111111] text-white rounded-2xl shadow-2xl border border-white/10 pointer-events-auto w-max max-w-full"
             >
-              <span className="text-sm font-medium">Post removed</span>
+              <span className="text-sm font-medium">Work removed</span>
               <div className="w-px h-4 bg-white/20" />
               <button 
                 onClick={handleUndo}

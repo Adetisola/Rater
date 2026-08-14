@@ -120,11 +120,11 @@ export function welcomeEmail({ firstName }: WelcomeEmailParams): {
 
           <!-- Body text -->
           <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7;">
-            We're excited to have you here. Rater is a place to share your creative work, get meaningful feedback, and grow as a creative.
+            We're excited to have you here. Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.
           </p>
 
           <p style="margin:0 0 32px;font-size:15px;color:#444444;line-height:1.7;">
-            Your journey starts here.
+            Judgment is built, not found.
           </p>
 
           <!-- CTA Button -->
@@ -136,7 +136,7 @@ export function welcomeEmail({ firstName }: WelcomeEmailParams): {
                   target="_blank"
                   style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
                 >
-                  Explore Rater &rarr;
+                  Enter the Studio &rarr;
                 </a>
               </td>
             </tr>
@@ -151,11 +151,11 @@ export function welcomeEmail({ firstName }: WelcomeEmailParams): {
 
 Welcome to Rater — Design Critique Studio!
 
-We're excited to have you here. Rater is a place to share your creative work, get meaningful feedback, and grow as a creative.
+We're excited to have you here. Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.
 
-Your journey starts here.
+Judgment is built, not found.
 
-Explore Rater: ${PRODUCTION_URL}/browse
+Enter the Studio: ${PRODUCTION_URL}/browse
 
 ---
 Rater — Design Critique Studio

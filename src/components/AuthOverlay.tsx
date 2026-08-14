@@ -67,12 +67,12 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
         <div className="flex border-b border-gray-100 shrink-0">
           <button
             onClick={() => setActiveTab('login')}
-            className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${activeTab === 'login' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+            className={`flex-1 py-6 text-sm font-medium tracking-wider transition-all relative ${activeTab === 'login' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
               }`}
           >
             <div className="flex items-center justify-center gap-2">
               <LogIn className="w-4 h-4" />
-              Login
+              Log In
             </div>
             {activeTab === 'login' && (
               <motion.div
@@ -83,12 +83,12 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
           </button>
           <button
             onClick={() => setActiveTab('signup')}
-            className={`flex-1 py-6 text-sm font-semibold uppercase tracking-wider transition-all relative ${activeTab === 'signup' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+            className={`flex-1 py-6 text-sm font-medium tracking-wider transition-all relative ${activeTab === 'signup' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
               }`}
           >
             <div className="flex items-center justify-center gap-2">
               <UserPlus className="w-4 h-4" />
-              Sign up
+              Sign Up
             </div>
             {activeTab === 'signup' && (
               <motion.div
@@ -128,8 +128,8 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                 className="w-full flex-1 flex flex-col items-center"
               >
                 <div className="text-center mb-2 shrink-0">
-                  <h2 className="text-2xl font-medium text-black">Create Avatar</h2>
-                  <p className="text-gray-500 text-sm mb-2">Join the community of Judges</p>
+                  <h2 className="text-2xl font-medium text-black">Create Profile</h2>
+                  <p className="text-gray-500 text-sm mb-2">Join Rater's design critique studio</p>
                 </div>
 
                 {/* Embedded Signup Form without the extra fixed overlay wrapper */}

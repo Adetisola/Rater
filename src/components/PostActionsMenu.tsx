@@ -171,7 +171,7 @@ export function PostActionsMenu({
           className={cn(menuItemClass, "text-gray-600")}
         >
           <Share2 className="w-4 h-4" />
-          Share Post
+          Share Work
         </button>
       )}
 
@@ -189,7 +189,7 @@ export function PostActionsMenu({
             className={cn(menuItemClass, "text-gray-600")}
           >
             <Edit2 className="w-4 h-4" />
-            Edit Post
+            Edit Work
           </button>
           <button
             type="button"
@@ -202,7 +202,7 @@ export function PostActionsMenu({
             className={cn(menuItemClass, "text-red-500 hover:bg-red-50")}
           >
             <Trash2 className="w-4 h-4" />
-            Remove Post
+            Remove Work
           </button>
           <div className="border-t border-gray-100 mx-3" />
           {post.ai_prompt && (
@@ -252,7 +252,7 @@ export function PostActionsMenu({
             className={cn(menuItemClass, "text-red-500 hover:bg-red-50")}
           >
             <Flag className="w-4 h-4" />
-            Report Post
+            Report Work
           </button>
         </>
       )}

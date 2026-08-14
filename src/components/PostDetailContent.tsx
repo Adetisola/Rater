@@ -919,7 +919,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                 />
                                             </div>
                                         )}
-                                        {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'review' : 'reviews'}
+                                        {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'critique' : 'critiques'}
                                     </span>
                                 </Tooltip>
                                 {metrics?.view_count !== undefined && (
@@ -1077,7 +1077,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
                                         <Lock className="w-4 h-4 text-gray-400 group-hover/lock:text-gray-500 transition-colors" />
                                         <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
-                                            <p className="leading-relaxed text-center font-medium">Rating Unlocks at 3 Reviews</p>
+                                            <p className="leading-relaxed text-center font-medium">Overall score unlocks after 3 critiques</p>
                                         </div>
                                     </div>
                                 ) : (
@@ -1132,7 +1132,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                     key={tab.key}
                                                     type="button"
                                                     onClick={() => setActiveTab(tab.key)}
-                                                    className={`relative flex-1 py-3.5 text-[13px] font-semibold transition-colors duration-150 flex items-center justify-center gap-1.5 ${activeTab === tab.key
+                                                    className={`relative flex-1 py-3.5 text-[13px] font-medium transition-colors duration-150 flex items-center justify-center gap-1.5 ${activeTab === tab.key
                                                         ? 'text-black'
                                                         : 'text-gray-400 hover:text-gray-600'
                                                         }`}
@@ -1172,8 +1172,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                         {isSelfPost ? (
                                                             <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
                                                                 <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
-                                                                <h3 className="font-semibold text-lg mb-1 text-gray-700">Self-Review Locked</h3>
-                                                                <p className="text-sm text-gray-500">You cannot review your own post.</p>
+                                                                <h3 className="font-semibold text-lg mb-1 text-gray-700">Self-Critique Locked</h3>
+                                                                <p className="text-sm text-gray-500">You cannot critique your own work.</p>
                                                             </div>
                                                         ) : !currentAvatar ? (
                                                             <motion.div
@@ -1186,9 +1186,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                                     alt="Rater"
                                                                     className="w-12 h-12 mb-4"
                                                                 />
-                                                                <h3 className="text-md font-medium text-black mb-1.5">Have an opinion?</h3>
+                                                                <h3 className="text-md font-medium text-black mb-1.5">Have feedback?</h3>
                                                                 <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
-                                                                    Create a profile to drop your rating, join the conversation, and influence the overall score.
+                                                                    Create a profile to submit a critique, join the conversation, and contribute to the overall score.
                                                                 </p>
                                                                 <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
                                                                     Create Profile
@@ -1241,8 +1241,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                                                         />
                                                                     </svg>
                                                                 </div>
-                                                                <h3 className="font-medium text-xl mb-2">Review added</h3>
-                                                                <p className="text-gray-500">Your thoughts are now part of the conversation.</p>
+                                                                <h3 className="font-medium text-xl mb-2">Critique submitted</h3>
+                                                                <p className="text-gray-500">Your critique has been added to this work.</p>
                                                             </div>
                                                         )}
                                                     </motion.div>
@@ -1289,7 +1289,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 {/* BOTTOM SECTION: Reviews List */}
                 <div className="border-t border-gray-100 pt-8 xs:pt-15">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                        <h2 className="text-lg font-medium text-black shrink-0">Reviews ({allReviews.length})</h2>
+                        <h2 className="text-lg font-medium text-black shrink-0">Critiques ({allReviews.length})</h2>
 
                         <div className="flex flex-wrap gap-2 sm:ml-auto">
                             {['Recent', 'Top', 'Critical', 'Oldest'].map((option) => (
@@ -1314,8 +1314,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         ) : loadError ? (
                             <div className="w-full">
                                <AppErrorState
-                                 title="Failed to load reviews"
-                                 description={loadError.message || "We encountered an issue while loading reviews."}
+                                 title="Unable to load critiques"
+                                 description={loadError.message || "We encountered an issue while loading critiques."}
                                  onRetry={() => setRetryCount(0)}
                                />
                             </div>
@@ -1328,9 +1328,9 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <Plus className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-semibold text-black mb-2">Be the first to rate this design</h3>
+                                <h3 className="text-xl font-semibold text-black mb-2">Be the first to critique this work</h3>
                                 <p className="text-gray-500 max-w-xs mx-auto text-[15px] leading-relaxed">
-                                    Your feedback helps the designer improve and helps the community find the best work.
+                                    Your critique helps the creator sharpen their craft and provides valuable insights for the studio.
                                 </p>
                             </motion.div>
                         ) : visibleReviews.map((review) => {
