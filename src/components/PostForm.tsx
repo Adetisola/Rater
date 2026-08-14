@@ -689,9 +689,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
     return (
       <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
         <Lock className="w-16 h-16 text-gray-200 mb-6" />
-        <h1 className="text-3xl font-semibold mb-4 text-black">Login Required</h1>
+        <h1 className="text-3xl font-semibold mb-4 text-black">Log in to Publish</h1>
         <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
-          You must be logged in to post your work and receive feedback from the community.
+          You must be logged in to publish your work and receive structured critique.
         </p>
         <div className="flex gap-4 mt-10">
           <Button
@@ -699,7 +699,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             variant="primary"
             onClick={() => setShowAuthOverlay(true)}
           >
-            Login / Sign up
+            Log In / Sign Up
           </Button>
         </div>
         {showAuthOverlay && <AuthOverlay onClose={() => setShowAuthOverlay(false)} />}
@@ -724,12 +724,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           />
         </div>
         <h1 className="text-2xl font-semibold mb-4 text-black">
-          {isEditing ? "Post Updated!" : "Post Submitted!"}
+          {isEditing ? "Work Updated!" : "Work Published!"}
         </h1>
         <div className="text-gray-500 max-w-md mx-auto leading-relaxed">
           {isEditing
             ? <AmbientSuccessText />
-            : <p>Your design is live! Redirecting you to the main feed to see your post...</p>}
+            : <p>Your work is live! Redirecting you to the studio feed...</p>}
         </div>
       </div>
     );
@@ -763,10 +763,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
         <div>
           <h1 className="text-3xl font-medium mb-1.5 text-black">
-            {isEditing ? "Edit your Work" : "Post your Work"}
+            {isEditing ? "Edit Work" : "Publish Work"}
           </h1>
           <p className="text-sm text-gray-400">
-            {isEditing ? "Update your design details." : "Finalize your design and prepare it for review."}
+            {isEditing ? "Update your work details." : "Share your creative work for structured critique."}
           </p>
         </div>
 
@@ -1019,7 +1019,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div className="relative">
               <Input
                 type="text"
-                placeholder="What kind of work is this?"
+                placeholder="Search or select a creative category..."
                 value={categoryInputValue}
                 onChange={(e) => {
                   setCategoryInputValue(e.target.value);
@@ -1109,7 +1109,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             </div>
             {categoryError && (
               <p className="text-red-500 text-sm font-medium animate-in fade-in slide-in-from-top-1">
-                Please select a valid category from the suggestions
+                Please select a category from the suggestions.
               </p>
             )}
           </div>
@@ -1287,7 +1287,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         </div>
                       </div>
                       <p className="text-xs text-gray-500 pt-1">
-                        Sharing your prompt helps others learn and grow. This is completely optional.
+                        Prompt sharing helps others study your creative process. Optional.
                       </p>
                     </div>
 
@@ -1306,14 +1306,14 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <CloudUpload className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-medium text-lg text-black">Show what you're cooking</h3>
+                <h3 className="font-medium text-lg text-black">Share your craft</h3>
               </div>
               <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                Share your creative work and get rated by the community.
+                Share your creative work and receive structured critique.
               </p>
               <ul className="space-y-3 mb-8">
                 {[
-                  "Up to 5 images per post (Max 8MB each)",
+                  "Up to 5 images per work (Max 8MB each)",
                   "Focus on visual work; UI, branding, or prints",
                   "Give it a sharp title to tell your story"
                 ].map((point, i) => (
@@ -1394,15 +1394,15 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         {uploadProgress?.stage === 'preparing' && 'Preparing...'}
                         {uploadProgress?.stage === 'compressing' && 'Compressing...'}
                         {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
-                          ? `Uploading ${uploadProgress.total} items... ${uploadProgress.percent}%`
-                          : uploadProgress?.stage === 'uploading' ? `Uploading... ${uploadProgress.percent}%` : null
+                          ? `Publishing work (${uploadProgress.total} items)... ${uploadProgress.percent}%`
+                          : uploadProgress?.stage === 'uploading' ? `Publishing... ${uploadProgress.percent}%` : null
                         }
                         {uploadProgress?.stage === 'saving' && 'Saving...'}
                         {uploadProgress?.stage === 'publishing' && 'Publishing...'}
                       </span>
                     </>
                   ) : (
-                    isEditing ? 'Update Post' : 'Post'
+                    isEditing ? 'Update Work' : 'Publish Work'
                   )}
                 </span>
               </button>
@@ -1535,15 +1535,15 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         {uploadProgress?.stage === 'preparing' && 'Preparing...'}
                         {uploadProgress?.stage === 'compressing' && 'Compressing...'}
                         {uploadProgress?.stage === 'uploading' && uploadProgress.total > 1
-                          ? `Uploading ${uploadProgress.total} items... ${uploadProgress.percent}%`
-                          : uploadProgress?.stage === 'uploading' ? `Uploading... ${uploadProgress.percent}%` : null
+                          ? `Publishing work (${uploadProgress.total} items)... ${uploadProgress.percent}%`
+                          : uploadProgress?.stage === 'uploading' ? `Publishing... ${uploadProgress.percent}%` : null
                         }
                         {uploadProgress?.stage === 'saving' && 'Saving...'}
                         {uploadProgress?.stage === 'publishing' && 'Publishing...'}
                       </span>
                     </>
                   ) : (
-                    isEditing ? 'Update Post' : 'Post'
+                    isEditing ? 'Update Work' : 'Publish Work'
                   )}
                 </span>
               </button>

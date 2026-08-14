@@ -42,8 +42,8 @@ export function OfflineStatus() {
             <WifiOff className="w-5 h-5 text-white" />
           </div>
           <div className="flex flex-col items-start">
-            <span className="text-base font-semibold">Connection is Bad</span>
-            <span className="text-sm font-medium text-white/60">Abi you no get Data</span>
+            <span className="text-base font-semibold">No internet connection</span>
+            <span className="text-sm font-medium text-white/60">Changes will sync when reconnected.</span>
           </div>
         </motion.div>
       )}

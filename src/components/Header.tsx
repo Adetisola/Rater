@@ -393,14 +393,14 @@ export function Header({
                     onClick={() => { setAuthTab('login'); setShowAuthOverlay(true); }}
                     className="hidden sm:flex items-center justify-center h-12 px-6 rounded-full font-medium text-[17px] text-black hover:bg-primary hover:text-white transition-all"
                   >
-                    Login
+                    Log In
                   </Button>
                   <Button
                     variant="primary"
                     onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
                     className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-white font-medium text-[17px]"
                   >
-                    Sign up
+                    Sign Up
                   </Button>
                 </div>
               )}
@@ -414,9 +414,9 @@ export function Header({
                   >
                     <CloudUpload strokeWidth={2.25} className="h-6 w-6 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
                     <span className="hidden text-[18px] sm:flex items-center">
-                      Post
+                      Publish
                       <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                        <span className="pl-1.5">your work</span>
+                        <span className="pl-1.5">Work</span>
                       </span>
                     </span>
                   </Button>
@@ -457,7 +457,7 @@ export function Header({
                 className="h-11 sm:h-12 rounded-full px-4 sm:px-5 text-base sm:text-lg font-medium gap-2 group transition-all duration-300"
               >
                 <CloudUpload strokeWidth={2.25} className="h-5 w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
-                <span className="flex items-center">Post</span>
+                <span className="flex items-center">Publish Work</span>
               </Button>
             )}
           </div>

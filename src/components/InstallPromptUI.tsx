@@ -64,7 +64,7 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
           />
         }
         title="Install Rater"
-        description="Install Rater for a cleaner, app-like experience"
+        description="Install Rater for quick studio access."
         actionButton={
           <button
             onClick={promptInstall}
@@ -87,7 +87,7 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
       aria-label="Install Rater"
     >
       <Download size={18} />
-      <span>Install App</span>
+      <span>Install Rater</span>
     </button>
   );
 }

@@ -120,11 +120,11 @@ export function welcomeEmail({ firstName }: WelcomeEmailParams): {
 
           <!-- Body text -->
           <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7;">
-            We're excited to have you here. Rater is a place to share your creative work, get meaningful feedback, and grow as a creative.
+            We're excited to have you here. Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.
           </p>
 
           <p style="margin:0 0 32px;font-size:15px;color:#444444;line-height:1.7;">
-            Your journey starts here.
+            Judgment is built, not found.
           </p>
 
           <!-- CTA Button -->
@@ -136,7 +136,7 @@ export function welcomeEmail({ firstName }: WelcomeEmailParams): {
                   target="_blank"
                   style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
                 >
-                  Explore Rater &rarr;
+                  Enter the Studio &rarr;
                 </a>
               </td>
             </tr>
@@ -151,11 +151,11 @@ export function welcomeEmail({ firstName }: WelcomeEmailParams): {
 
 Welcome to Rater — Design Critique Studio!
 
-We're excited to have you here. Rater is a place to share your creative work, get meaningful feedback, and grow as a creative.
+We're excited to have you here. Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.
 
-Your journey starts here.
+Judgment is built, not found.
 
-Explore Rater: ${PRODUCTION_URL}/browse
+Enter the Studio: ${PRODUCTION_URL}/browse
 
 ---
 Rater — Design Critique Studio
@@ -165,3 +165,90 @@ You received this email because you created a Rater account.`;
 
   return { subject, html, text };
 }
+
+// ─── RESET_PASSWORD Template ──────────────────────────────────────────────────
+
+interface ResetPasswordEmailParams {
+  confirmationUrl?: string;
+}
+
+export function resetPasswordEmail({ confirmationUrl = '{{ .ConfirmationURL }}' }: ResetPasswordEmailParams = {}): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const subject = 'Reset your Rater password';
+
+  const html = emailWrapper(`
+    <!-- Yellow accent top bar -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="height:4px;background-color:${brand.primary};border-radius:20px 20px 0 0;"></td>
+      </tr>
+    </table>
+
+    <!-- Body -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:40px 40px 32px;">
+
+          <!-- Heading -->
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:${brand.black};line-height:1.3;">
+            Reset your password
+          </p>
+
+          <p style="margin:0 0 20px;font-size:15px;color:#444444;line-height:1.7;">
+            We received a request to reset the password for your Rater account.
+          </p>
+
+          <p style="margin:0 0 28px;font-size:15px;color:#444444;line-height:1.7;">
+            Click the button below to choose a new password.
+          </p>
+
+          <!-- CTA Button -->
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-radius:100px;background-color:${brand.primary};">
+                <a
+                  href="${confirmationUrl}"
+                  target="_blank"
+                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
+                >
+                  Reset Password &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Security notice -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;border-top:1px solid ${brand.borderGray};padding-top:20px;">
+            <tr>
+              <td>
+                <p style="margin:0;font-size:13px;color:#777777;line-height:1.6;">
+                  If you didn't request a password reset, you can safely ignore this email. Your password won't change unless you use the link above.
+                </p>
+              </td>
+            </tr>
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  `);
+
+  const text = `Reset your password
+
+We received a request to reset the password for your Rater account.
+
+Click the link below to choose a new password:
+${confirmationUrl}
+
+If you didn't request a password reset, you can safely ignore this email. Your password won't change unless you use the link above.
+
+---
+Rater — Design Critique Studio
+${PRODUCTION_URL}`;
+
+  return { subject, html, text };
+}
+

@@ -75,14 +75,14 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
         {!isSubmitted ? (
             <>
                 {/* Header */}
-                <div className="text-center mb-8">
-                    <h2 className="text-2xl font-semibold text-black mb-2">Report this Post</h2>
-                    <p className="text-sm text-gray-500">Help us understand what's wrong with this post.</p>
+                <div className="text-center mb-6">
+                    <h2 className="text-2xl font-medium text-black mb-1">Report this Work</h2>
+                    <p className="text-sm text-gray-500">Help us understand what's wrong with this work.</p>
                 </div>
 
                 {/* Reason Dropdown */}
                 <div className="mb-6 relative">
-                    <label className="block text-sm font-semibold text-black mb-2">Reason for report</label>
+                    <label className="block text-sm font-medium text-black mb-2">Reason for report</label>
                     <button 
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -112,7 +112,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
 
                 {/* Details Textarea */}
                 <div className="mb-8">
-                    <label className="block text-sm font-semibold text-black mb-2">Tell us more (optional)</label>
+                    <label className="block text-sm font-medium text-black mb-2">Tell us more (optional)</label>
                     <div className="relative">
                         <textarea 
                             value={details}

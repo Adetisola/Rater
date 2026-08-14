@@ -45,9 +45,9 @@ export function FloatingPostButton() {
                         className="h-6 w-6 shrink-0 transition-colors group-hover:text-white" 
                     />
                     <span className="hidden sm:flex items-center text-lg font-medium text-black group-hover:text-white transition-colors">
-                        Post
+                        Publish
                         <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-30 xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                            <span className="pl-1.5 whitespace-nowrap">your work</span>
+                            <span className="pl-1.5 whitespace-nowrap">work</span>
                         </span>
                     </span>
                 </div>

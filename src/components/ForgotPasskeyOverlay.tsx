@@ -122,7 +122,7 @@ export function ForgotPasskeyOverlay({ onCancel }: ForgotPasskeyOverlayProps) {
                     variant="outline"
                     className="w-full h-12 rounded-full text-lg font-medium transition-all"
                   >
-                    Back to Login
+                    Back to Log In
                   </Button>
                   
                   <button
@@ -137,16 +137,16 @@ export function ForgotPasskeyOverlay({ onCancel }: ForgotPasskeyOverlayProps) {
             ) : (
               <form onSubmit={handleSend} className="flex flex-col items-center w-full animate-in slide-in-from-left-4 fade-in duration-300">
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl font-medium mb-2 text-black">Recover your Avatar</h2>
+                    <h2 className="text-2xl font-medium mb-2 text-black">Account Recovery</h2>
                     <p className="text-sm text-gray-500 max-w-[290px] mx-auto leading-relaxed">
-                        If you added an email when creating this avatar, we can help you recover access.
+                        Enter the email linked to your account to regain access.
                     </p>
                 </div>
 
                 <div className="w-full mb-6">
                      <Input 
                          type="email"
-                         placeholder="Enter the email linked to your avatar" 
+                         placeholder="Enter your account email" 
                          value={email}
                          onChange={(e) => {
                            setEmail(e.target.value);

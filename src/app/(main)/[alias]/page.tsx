@@ -82,7 +82,7 @@ export default async function PremiumAvatarPage({ params }: { params: Promise<{ 
       return (
         <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-white">
           <h2 className="text-2xl font-semibold mb-3 text-black">This profile doesn’t exist.</h2>
-          <p className="text-gray-500">Omo bro, you don lost 😂</p>
+          <p className="text-gray-500">The creative you're looking for could not be found or may have changed their @username.</p>
         </div>
       );
     }

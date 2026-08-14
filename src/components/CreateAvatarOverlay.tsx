@@ -319,7 +319,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             className="w-full flex flex-col items-center"
           >
             <div className="text-center mb-6 pt-2">
-              <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Avatar</h2>
+              <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Profile</h2>
 
               <div className="w-full max-w-sm mx-auto mb-2">
                 <Button
@@ -359,12 +359,12 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
                   {!avatarUploadState || (avatarUploadState !== 'uploading' && avatarUploadState !== 'success') ? (
                     avatarPreview ? (
-                      <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                      <img src={avatarPreview} alt="Profile Picture Preview" className="w-full h-full object-cover" />
                     ) : (
                       <UserRound className={`w-10 h-10 transition-colors ${avatarUploadState === 'error' ? 'text-red-300' : 'text-gray-400 group-hover:text-gray-500'}`} />
                     )
                   ) : avatarPreview && avatarUploadState === 'uploading' ? (
-                    <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover blur-sm" />
+                    <img src={avatarPreview} alt="Profile Picture Preview" className="w-full h-full object-cover blur-sm" />
                   ) : null}
 
                   {avatarUploadState === 'idle' && !avatarPreview && (
@@ -438,7 +438,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 ) : (
                   <div className="flex justify-between items-start px-2 mt-1">
                     <p className="text-[11px] text-gray-500 leading-tight pr-2">
-                      It's your display name(emojis allowed)
+                      Your display name across Rater (emojis supported).
                     </p>
                     {name.trim() && (
                       <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none flex items-center gap-1">
@@ -497,7 +497,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 <div className="relative">
                   <Input
                     type={showPasskey ? "text" : "password"}
-                    placeholder="Enter Passkey"
+                    placeholder="Create Password"
                     value={passkey}
                     onChange={(e) => setPasskey(e.target.value)}
                     onFocus={() => { }}
@@ -554,13 +554,13 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               <div className="space-y-1">
                 <Input
                   type={showPasskey ? "text" : "password"}
-                  placeholder="Confirm Passkey"
+                  placeholder="Confirm Password"
                   value={confirmPasskey}
                   onChange={(e) => setConfirmPasskey(e.target.value)}
                   className={`h-12 rounded-xl text-base px-4 transition-all outline-none border ${passkeyMismatch ? 'border-red-400 focus-visible:border-red-400' : 'border-gray-300 focus-visible:border-primary'
                     }`}
                 />
-                {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passkeys don't match</p>}
+                {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passwords don't match</p>}
               </div>
 
               <div className="pt-4 flex flex-col items-center justify-center gap-4 w-full">
@@ -589,13 +589,13 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               {onLogin && (
                 <div className="text-center pt-2">
                   <p className="text-sm text-gray-500">
-                    Already have an avatar?{' '}
+                    Already have an account?{' '}
                     <button
                       type="button"
                       onClick={onLogin}
-                      className="text-black font-semibold hover:text-primary"
+                      className="text-black font-medium hover:text-primary"
                     >
-                      Login
+                      Log in
                     </button>
                   </p>
                 </div>
@@ -617,7 +617,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
               <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <AtSign className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-xl font-medium text-black mb-1">Claim your username</h2>
+              <h2 className="text-xl font-medium text-black mb-1">Claim your @username</h2>
               <p className="text-gray-400 text-sm">This is your unique identity on Rater</p>
             </div>
 

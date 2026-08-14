@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | Rater",
   },
   description:
-    "Rater is a design feedback platform where designers share their work, receive constructive critiques, and develop their visual judgment.",
+    "Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.",
 
   manifest: "/manifest.json",
 
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Rater — Design Critique Studio",
     description:
-      "Rater is a design feedback platform where designers share their work, receive constructive critiques, and develop their visual judgment.",
+      "Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.",
     url: "https://www.raterapp.site",
     siteName: "Rater",
     images: [
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Rater — Design Critique Studio",
     description:
-      "Rater is a design feedback platform where designers share their work, receive constructive critiques, and develop their visual judgment.",
+      "Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.",
     images: ["/og-image.png"],
   },
 };

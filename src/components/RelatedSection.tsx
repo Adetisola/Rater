@@ -114,12 +114,12 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
         </div>
       ) : hasRelated ? (
         // Only category posts exist: Render static "More Like This" header
-        <h2 className="text-xl font-semibold text-black mb-8 px-2 xs:px-2 md:px-4 select-none">
+        <h2 className="text-lg font-medium text-black mb-8 px-2 xs:px-2 md:px-4 select-none">
           Related
         </h2>
       ) : (
         // Only creator posts exist: Render static "More from Creator" header
-        <h2 className="text-xl font-semibold text-black mb-8 px-2 xs:px-2 md:px-4 select-none truncate">
+        <h2 className="text-lg font-medium text-black mb-6 px-2 xs:px-2 md:px-4 select-none truncate">
           More from {creatorName}
         </h2>
       )}

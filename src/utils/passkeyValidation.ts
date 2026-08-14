@@ -258,12 +258,12 @@ function generateHints(passkey: string, config: PasskeyConfig): string[] {
   }
   
   if (containsUserInfo(passkey, config.userName, config.email)) {
-    hints.push('Avoid using your name or email in the passkey');
+    hints.push('Avoid using your name or email in your password');
   }
   
   // Positive encouragement if strong
   if (hints.length === 0 && length >= config.recommendedLength && groupCount >= 3) {
-    hints.push('Great passkey! 💪');
+    hints.push('Strong password! 💪');
   }
   
   return hints;

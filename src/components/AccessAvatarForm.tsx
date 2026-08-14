@@ -102,7 +102,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
     if (success) {
       onSuccess();
     } else {
-      setError(`That ${loginMode === 'username' ? 'username' : 'email'} and passkey don't match. If you originally signed up with Google, try Continue with Google instead.`);
+      setError(`That ${loginMode === 'username' ? 'username' : 'email'} and password don't match. If you originally signed up with Google, try Continue with Google instead.`);
     }
 
     setIsLoading(false);
@@ -165,7 +165,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                 }}
                 className="text-[11px] font-medium text-gray-400 hover:text-primary transition-colors"
               >
-                {loginMode === 'username' ? 'Use email instead' : 'Login with username'}
+                {loginMode === 'username' ? 'Use email instead' : 'Log in with username'}
               </button>
             </div>
             <div className="relative">
@@ -193,11 +193,11 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-gray-600 tracking-wider ml-1">Passkey</label>
+            <label className="text-xs font-semibold text-gray-600 tracking-wider ml-1">Password</label>
             <div className="relative">
               <Input
                 type={showPasskey ? "text" : "password"}
-                placeholder="Enter your passkey"
+                placeholder="Enter your password"
                 value={passkey}
                 onChange={(e) => setPasskey(e.target.value)}
                 className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-normal"
@@ -220,7 +220,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                 className="text-xs font-medium text-gray-500 hover:text-primary transition-colors"
                 disabled={isLoading}
               >
-                Forgot passkey?
+                Forgot password?
               </button>
             </div>
           </div>
@@ -242,10 +242,10 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
 
       <div className="text-center pt-2">
         <p className="text-sm text-gray-500">
-          Don't have an avatar?{' '}
+          Don't have a profile?{' '}
           <button
             onClick={onCreateNew}
-            className="text-black font-semibold hover:text-primary"
+            className="text-black font-medium hover:text-primary"
             disabled={isLoading}
           >
             Create one
@@ -253,7 +253,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
         </p>
       </div>
 
-      {/* Forgot Passkey Overlay */}
+      {/* Forgot Password Overlay */}
       {showForgotOverlay && (
         <ForgotPasskeyOverlay
           onCancel={() => setShowForgotOverlay(false)}

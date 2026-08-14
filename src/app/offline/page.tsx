@@ -34,7 +34,7 @@ export default function Offline() {
           You are offline
         </h2>
         <p className="text-lg text-gray-500 mb-8 max-w-sm mx-auto">
-          Connection looks unstable. Check your network or go buy Data 😂
+          You appear to be offline. Check your network connection and retry.
         </p>
 
         {/* Action Button */}
@@ -43,7 +43,7 @@ export default function Offline() {
           onClick={() => window.location.reload()}
           className="h-12 px-8 text-lg rounded-full shadow-lg hover:scale-105 transition-transform"
         >
-          Try Again
+          Retry
         </Button>
 
       </div>

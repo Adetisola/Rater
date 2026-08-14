@@ -86,7 +86,7 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
                 <Trash2 className="w-8 h-8 text-red-500" />
               </div>
               
-              <h3 className="text-2xl font-semibold text-black mb-2">Remove this post?</h3>
+              <h3 className="text-2xl font-medium text-black mb-1">Remove this Work?</h3>
               <p className="text-gray-500 leading-relaxed mb-8">
                 You can undo this briefly afterward.
               </p>
@@ -99,7 +99,7 @@ export function DeletePostOverlay({ postId, onClose }: DeletePostOverlayProps) {
                   disabled={isDeleting}
                   isLoading={isDeleting}
                 >
-                  Yes
+                  Remove Work
                 </Button>
                 <Button 
                   variant="ghost" 

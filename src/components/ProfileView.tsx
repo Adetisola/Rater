@@ -354,9 +354,9 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
         <h2 className="text-2xl font-semibold mb-4">This profile doesn't exist.</h2>
-        <p className="text-gray-500 mb-8">Omo bro you don lost 😂</p>
+        <p className="text-gray-500 mb-8">The creative you're looking for could not be found or may have changed their @username.</p>
         <Link href="/browse" scroll={false}>
-          <Button variant="outline" className="h-12 rounded-full px-8 text-lg">Back to Browse</Button>
+          <Button variant="outline" className="h-12 rounded-full px-8 text-lg">Return to Browse</Button>
         </Link>
       </div>
     );
@@ -439,7 +439,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
               >
                 {!isConfirmingRemove ? (
                   <>
-                    <Tooltip content="Change Avatar" position="top">
+                    <Tooltip content="Change Profile Picture" position="top">
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         className="p-2 rounded-full bg-white/20 hover:bg-primary text-white transition-all transform hover:scale-110"
@@ -448,7 +448,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       </button>
                     </Tooltip>
                     {targetAvatar.avatar_url && (
-                      <Tooltip content="Remove Avatar" position="top">
+                      <Tooltip content="Remove Profile Picture" position="top">
                         <button
                           onClick={handleAvatarRemove}
                           className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
@@ -635,7 +635,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                   {/* Helper text */}
                   {(!usernameValidation.message || usernameValidation.status === 'unchanged' || usernameValidation.status === 'idle') && (
                     <p className="text-[11px] text-gray-400 ml-6 mt-0.5">
-                      Usernames are unique and used in your profile link. You can change this every 14 days.
+                      Usernames are unique and used in your profile link. You can change your @username every 14 days.
                     </p>
                   )}
                 </div>
@@ -791,7 +791,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                 >
                   <div className="flex items-center md:mt-2 gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-medium text-gray-500">
                     <span className="text-sm leading-none">💡</span>
-                    <span>Tip: Paste your social links in your bio to add them as social links e.g. www.instagram.com/yourusername</span>
+                    <span>Tip: Paste links in your bio to display them on your profile (e.g. www.instagram.com/username)</span>
                   </div>
                 </motion.div>
               )}
@@ -836,19 +836,19 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
               <span className="block text-2xl text-black">
                 <AnimatedMetric value={avatarPosts.length} />
               </span>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Posts</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Works</span>
             </div>
             <div className="text-center md:text-left pr-8 border-r border-gray-100">
               <span className="block text-2xl text-black">
                 <AnimatedMetric value={stats.totalReviews} />
               </span>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Reviews</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Critiques</span>
             </div>
             <div className="text-center md:text-left">
               <span className="block text-2xl text-black">
                 <AnimatedMetric value={stats.avgRating} isFloat />
               </span>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Avg Rating</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Overall Score</span>
             </div>
           </div>
         </div>
@@ -884,7 +884,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
           )}
         >
           <Grid className="w-4 h-4" />
-          {isMe ? "My Posts" : "Posts"}
+          {isMe ? "My Works" : "Works"}
         </button>
         {isMe && (
           <button
@@ -923,11 +923,11 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             ) : (
               <div className="py-20 text-center bg-gray-50 rounded-4xl border-2 border-dashed border-gray-200">
                 <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                <h3 className="text-xl font-medium mb-2">No posts yet</h3>
-                <p className="text-gray-500 mb-8">{isMe ? "Start your journey by posting your first design!" : "This avatar hasn't posted anything yet."}</p>
+                <h3 className="text-xl font-medium mb-2">No works published yet</h3>
+                <p className="text-gray-500 mb-8">{isMe ? "Publish your first creative work to receive structured critique." : "This creative hasn't published any work yet."}</p>
                 {isMe && (
                   <Link href="/submit" scroll={false}>
-                    <Button variant="primary" className="text-lg rounded-full">Post your work</Button>
+                    <Button variant="primary" className="text-lg rounded-full">Publish Work</Button>
                   </Link>
                 )}
               </div>
@@ -947,7 +947,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             </div>
             <h3 className="text-3xl font-semibold mb-4 text-black">Coming Soon!</h3>
             <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
-              You'll soon be able to save your favorite designs on the platform to build your own inspiration board.
+              You'll soon be able to bookmark your favorite works to build your personal inspiration board.
             </p>
             <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-gray-100 rounded-full">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />

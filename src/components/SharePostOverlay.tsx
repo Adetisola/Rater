@@ -60,8 +60,8 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
       {/* Modal Content */}
       <div className="w-full max-w-md bg-white rounded-[32px] p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 text-center">
         
-        <h2 className="text-2xl font-semibold text-black mb-2">Share this Post</h2>
-        <p className="text-sm text-gray-500 mb-2">Help others review or learn from this design.</p>
+        <h2 className="text-xl font-medium text-black mb-1">Share this Work</h2>
+        <p className="text-sm text-gray-500 mb-4">Invite others to critique or study this work.</p>
 
         {/* URL Input */}
         <div className="flex items-center gap-2 border-2 border-[#111111] rounded-xl px-4 py-3 mb-6">
@@ -119,7 +119,7 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
             </button>
         </div>
         
-        <p className="text-[10px] text-gray-400 italic">Shared posts are public.</p>
+        <p className="text-[10px] text-gray-400 italic">Shared works are public.</p>
 
       </div>
     </div>,

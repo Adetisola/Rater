@@ -82,7 +82,7 @@ export function ConnectedAccounts() {
             <Button
               variant="outline"
               disabled={isOnlyGoogle}
-              title={isOnlyGoogle ? "You must have a password or passkey to disconnect Google." : "Disconnect Google"}
+              title={isOnlyGoogle ? "You must have a password set to disconnect Google." : "Disconnect Google"}
               className="h-10 text-sm font-medium text-red-500 hover:text-red-600 hover:bg-red-50 border-gray-200"
               onClick={async () => {
                 if (isOnlyGoogle) return;
