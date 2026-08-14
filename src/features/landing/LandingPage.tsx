@@ -12,7 +12,8 @@ import { useAuthState } from '@/context/AuthContext';
 import { Hero } from './sections/Hero';
 
 const yellowMeshBg = '/assets/landing/Yellow mesh gradient background.jpg';
-const loaderLogoAnim = '/assets/icons/Rater Logo Black Animation.svg';
+const loaderLogoAnim = '/icons/rater-logo-black-animation.svg';
+const loaderLogoFallback = '/icons/rater-logo-black-bg.svg';
 
 // Code-split non-critical sections (Hero stays eagerly loaded)
 const WhatIsRater = lazy(() => import('./sections/WhatIsRater').then(m => ({ default: m.WhatIsRater })));
@@ -161,13 +162,21 @@ export function LandingPage() {
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="fixed top-0 left-0 w-full h-screen bg-white z-99999 flex flex-col items-center justify-center gap-6"
           >
-            {/* Logo Wrapper */}
-            <object 
-              data={loaderLogoAnim} 
-              type="image/svg+xml" 
-              className="w-[80px] h-[80px] md:w-[92px] md:h-[92px] mb-2" 
-              aria-label="Loading Rater"
-            />
+            {/* Logo Wrapper with Animated SVG & Instant Fallback */}
+            <div className="w-[80px] h-[80px] md:w-[92px] md:h-[92px] mb-2 flex items-center justify-center relative">
+              <object 
+                data={loaderLogoAnim} 
+                type="image/svg+xml" 
+                className="w-full h-full pointer-events-none select-none block" 
+                aria-label="Loading Rater"
+              >
+                <img 
+                  src={loaderLogoFallback} 
+                  alt="Rater" 
+                  className="w-full h-full object-contain pointer-events-none select-none" 
+                />
+              </object>
+            </div>
 
             {/* Progress/Text Group */}
             <div className="flex flex-col items-center gap-2">
