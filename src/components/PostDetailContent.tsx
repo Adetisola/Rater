@@ -16,7 +16,6 @@ import { useNavigationStore } from '@/store/navigationStore';
 import { useNow } from '@/context/TimeContext';
 import { AppErrorState } from '@/components/AppErrorState';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { PostActionsMenu } from './PostActionsMenu';
 import { sharePost } from '../lib/postActions';
@@ -37,13 +36,13 @@ import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 import { showToast } from './GlobalOverlays';
 import { AuthOverlay } from '@/components/AuthOverlay';
+import { useRouter } from 'next/navigation';
 import { cn } from '../lib/utils';
 
 
 import { useViewTracker } from '@/hooks/useViewTracker';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
-    ArrowLeft,
     Download,
     Share2,
     X,
@@ -198,6 +197,7 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
 export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
+    const router = useRouter();
     const { optimisticUpdateMetrics } = usePosts();
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
@@ -206,9 +206,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const posts = usePostStore(state => state.posts);
     const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuthState();
     const now = useNow();
-    const router = useRouter();
-
-    const handleClose = onClose || (() => router.back());
 
     // Data State
     const modeConfig = getReviewMode(post.category);
@@ -225,7 +222,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     // UI State
     const [hasReviewed, setHasReviewed] = useState(false);
-    const headerOpacity = 1;
     const isFreshReviewRef = useRef(false);
     const successStarRef = useRef<SVGPathElement>(null);
     const successCheckRef = useRef<SVGPathElement>(null);
@@ -725,56 +721,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="w-full bg-white relative min-h-screen"
         >
-            <div className="max-w-300 mx-auto px-4 sm:px-6 pt-0 pb-8">
-
-                {/* HEADER: Back Button & Navigation Controls */}
-                <div className="mb-8 flex items-center justify-between sticky top-0 bg-transparent pt-8 pb-2 z-50">
-                    {/* Gradient Blur Background Layer */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '-32px',
-                            bottom: '-10px',
-                            left: '-24px',
-                            right: '-24px',
-                            opacity: headerOpacity,
-                            background: 'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 85%, rgba(255, 255, 255, 0) 100%)',
-                            zIndex: -1,
-                            pointerEvents: 'none',
-                            transition: 'opacity 0.1s ease-out'
-                        }}
-                    ></div>
-                    <Button
-                        variant="secondary"
-                        onClick={handleClose}
-                        className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-black" />
-                        Back
-                    </Button>
-
-                    {/* Desktop Navigation Controls */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <Button
-                            variant="secondary"
-                            onClick={handlePrev}
-                            disabled={!prevPostId}
-                            className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
-                            aria-label="Previous post"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-black" />
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            onClick={handleNext}
-                            disabled={!nextPostId}
-                            className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
-                            aria-label="Next post"
-                        >
-                            <ChevronRight className="w-5 h-5 text-black" />
-                        </Button>
-                    </div>
-                </div>
+            <div className="max-w-300 mx-auto px-4 sm:px-6 pt-4 md:pt-6 pb-8">
 
                 {/* MAIN GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-15 relative">

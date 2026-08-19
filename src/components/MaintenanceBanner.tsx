@@ -27,7 +27,7 @@ export function MaintenanceBanner() {
   }
 
   return (
-    <div className="bg-black text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between z-50 relative border-b border-white/10 shadow-sm animate-in slide-in-from-top duration-300">
+    <div className="sticky top-0 z-[60] w-full bg-black text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between border-b border-white/10 shadow-sm animate-in slide-in-from-top duration-300">
       <div className="flex items-center gap-2 max-w-5xl mx-auto flex-1 justify-center px-4">
         <Megaphone size={14} className="text-primary shrink-0" />
         <span className="leading-snug">{bannerData.message}</span>

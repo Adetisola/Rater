@@ -1,40 +1,45 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { Button } from './ui/Button';
 import { FilterDropdown } from './FilterDropdown';
 import { SearchResults } from './SearchResults';
 import { Tooltip } from './ui/Tooltip';
 import { useDebounce } from '../hooks/useDebounce';
 import { type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
-import { searchAll } from '../lib/algolia/search';
+import { searchAll, buildSearchIndexes } from '../lib/algolia/search';
 import type { Post, Avatar, Category } from '@/types';
-import { CloudUpload, ListFilter, Search, X } from 'lucide-react';
+import { CATEGORIES } from '@/constants/categories';
+import { ListFilter, Search, X, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams, useParams } from 'next/navigation';
 import { useAuthState } from '../context/AuthContext';
 import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useAmbientPlaceholder } from '../hooks/useAmbientPlaceholder';
+import { useNavigationHistory } from '../hooks/useNavigationHistory';
+import { useNavigationStore } from '../store/navigationStore';
+import { usePostStore } from '../store/postStore';
 import { AmbientPlaceholder } from './AmbientPlaceholder';
 import { AuthOverlay } from './AuthOverlay';
 import { UserMenu } from './UserMenu';
+import { MobileSearchOverlay } from './MobileSearchOverlay';
 
 /**
- * Props for the Header component.
+ * Optional props for the Header component when used with custom handlers.
  */
-interface HeaderProps {
-  onPostClick: () => void;
+export interface HeaderProps {
+  onPostClick?: () => void;
   onLogoClick?: () => void;
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
+  onBack?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   onSearchSubmit?: (query: string) => void;
-  sortBy: string;
-  onSortChange: (sort: string) => void;
-  selectedCategories: string[];
-  onCategoryChange: (categories: string[]) => void;
+  sortBy?: string;
+  onSortChange?: (sort: string) => void;
+  selectedCategories?: string[];
+  onCategoryChange?: (categories: string[]) => void;
   hideControls?: boolean;
-
   onPostSelect?: (post: Post) => void;
   onAvatarSelect?: (avatar: Avatar) => void;
   onReset?: () => void;
@@ -42,40 +47,161 @@ interface HeaderProps {
   onMobileSearchOpen?: (activeId: string) => void;
 }
 
-/**
- * The main application header.
- * Handles search input, category filtering, authentication state display,
- * and navigation controls. Includes responsive layouts for mobile, tablet, and desktop.
- */
-export function Header({
-  onPostClick,
+function HeaderContent({
+  onPostClick: _onPostClick,
   onLogoClick,
-  searchQuery,
-  onSearchChange,
-  onSearchSubmit,
-  sortBy,
-  onSortChange,
-  selectedCategories,
-  onCategoryChange,
+  onBack,
+  searchQuery: externalSearchQuery,
+  onSearchChange: externalOnSearchChange,
+  onSearchSubmit: externalOnSearchSubmit,
+  sortBy: externalSortBy,
+  onSortChange: externalOnSortChange,
+  selectedCategories: externalSelectedCategories,
+  onCategoryChange: externalOnCategoryChange,
   hideControls = false,
-
   onPostSelect,
   onAvatarSelect,
   onReset,
-  searchIndexes,
-  onMobileSearchOpen
+  searchIndexes: externalSearchIndexes,
+  onMobileSearchOpen,
 }: HeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname() || '';
+  const searchParams = useSearchParams();
+  const params = useParams();
+
+  const isBrowsePage = pathname === '/browse' || pathname === '/browse/';
+  const isPostPage = pathname.startsWith('/post/');
+
+  const { currentProfile, profileMap } = useAuthState();
+  const { hasMeaningfulHistory, goBack } = useNavigationHistory();
+
+  // Internal Navigation Store for Post Page Prev/Next navigation
+  const currentPostId = isPostPage ? (params?.id as string) || pathname.replace('/post/', '').split('/')[0] : '';
+  const nextPostId = useNavigationStore(state => currentPostId ? state.getNextPostId(currentPostId) : null);
+  const prevPostId = useNavigationStore(state => currentPostId ? state.getPrevPostId(currentPostId) : null);
+  const hasPostNavigation = Boolean(prevPostId || nextPostId);
+
+  // Search & Filter State (synced with URL / internal state if external props not provided)
+  const urlQuery = searchParams?.get('q') || '';
+  const urlSort = searchParams?.get('sort') || 'balanced';
+  const urlCatString = searchParams?.getAll('cat').join(',') || '';
+  const urlCategories = useMemo(() => urlCatString ? urlCatString.split(',') : [], [urlCatString]);
+
+  const [internalSearchQuery, setInternalSearchQuery] = useState(urlQuery);
+  const [internalSortBy, setInternalSortBy] = useState(urlSort);
+  const [internalSelectedCategories, setInternalSelectedCategories] = useState<string[]>(urlCategories);
+
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
+  const sortBy = externalSortBy !== undefined ? externalSortBy : internalSortBy;
+  const selectedCategories = externalSelectedCategories !== undefined ? externalSelectedCategories : internalSelectedCategories;
+
+  // Sync internal search state when URL changes on Browse
+  useEffect(() => {
+    if (isBrowsePage) {
+      setInternalSearchQuery(urlQuery);
+      setInternalSortBy(urlSort);
+      setInternalSelectedCategories(urlCategories);
+    }
+  }, [urlQuery, urlSort, urlCategories, isBrowsePage]);
+
+  // URL sync helper when navigating from other pages or updating browse filters
+  const updateUrlParams = (updates: Record<string, string | string[] | null>) => {
+    const p = new URLSearchParams(searchParams?.toString() || '');
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || (Array.isArray(value) && value.length === 0) || value === '') {
+        p.delete(key);
+      } else if (Array.isArray(value)) {
+        p.delete(key);
+        value.forEach(v => p.append(key, v));
+      } else {
+        p.set(key, value);
+      }
+    });
+    const newQuery = p.toString();
+    const targetUrl = newQuery ? `/browse?${newQuery}` : '/browse';
+    
+    if (isBrowsePage) {
+      const isOnlyQueryUpdate = Object.keys(updates).length === 1 && 'q' in updates;
+      if (isOnlyQueryUpdate) {
+        router.replace(targetUrl, { scroll: false });
+      } else {
+        router.push(targetUrl, { scroll: false });
+      }
+    } else {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.push(targetUrl, { scroll: false });
+    }
+  };
+
+  const handleSearchChange = (query: string) => {
+    if (externalOnSearchChange) {
+      externalOnSearchChange(query);
+    } else {
+      setInternalSearchQuery(query);
+    }
+  };
+
+  const handleSearchSubmit = (query: string) => {
+    if (externalOnSearchSubmit) {
+      externalOnSearchSubmit(query);
+    } else {
+      updateUrlParams({ q: query || null });
+    }
+  };
+
+  const handleSortChange = (sort: string) => {
+    if (externalOnSortChange) {
+      externalOnSortChange(sort);
+    } else {
+      setInternalSortBy(sort);
+      if (isBrowsePage) {
+        updateUrlParams({ sort: sort === 'balanced' ? null : sort });
+      }
+    }
+  };
+
+  const handleCategoryChange = (categories: string[]) => {
+    if (externalOnCategoryChange) {
+      externalOnCategoryChange(categories);
+    } else {
+      setInternalSelectedCategories(categories);
+      if (isBrowsePage) {
+        updateUrlParams({ cat: categories });
+      } else {
+        updateUrlParams({ cat: categories });
+      }
+    }
+  };
+
+  const handleResetFilters = () => {
+    if (onReset) {
+      onReset();
+    } else {
+      setInternalSearchQuery('');
+      setInternalSortBy('balanced');
+      setInternalSelectedCategories([]);
+      updateUrlParams({ q: null, sort: null, cat: [] });
+    }
+  };
+
+  // Search Indexes
+  const allPosts = usePostStore(state => state.posts);
+  const searchIndexes = useMemo(() => {
+    if (externalSearchIndexes) return externalSearchIndexes;
+    const postList = Object.values(allPosts);
+    return buildSearchIndexes(postList, profileMap, CATEGORIES);
+  }, [externalSearchIndexes, allPosts, profileMap]);
+
+  // UI state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [showWidgets, setShowWidgets] = useState(!hideControls);
-  const [opacityTrigger, setOpacityTrigger] = useState(!hideControls);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [mobileSearchLayoutId, setMobileSearchLayoutId] = useState<string>('tablet-search-pill');
 
-  const { currentProfile } = useAuthState();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
-
   const { recentItems, addSearch, addAvatar, addPost, addCategory, removeItem, clearAll } = useRecentSearches();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const blurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,22 +211,22 @@ export function Header({
     isFocused: isSearchFocused,
     inputValue: searchQuery,
     hasCategories: selectedCategories.length > 0,
-    enabled: true, // always enabled — visibility gated by CSS (desktop only)
+    enabled: true,
   });
 
-  // Data state
+  // Data state for search
   const [searchResults, setSearchResults] = useState<SectionedSearchResults>({ avatars: [], posts: [], categories: [] });
   const [isSearching, setIsSearching] = useState(false);
 
   // Debounce search query
   const debouncedQuery = useDebounce(searchQuery, 200);
 
-  // Perform async sectioned search
+  // Perform async search
   useEffect(() => {
     let isMounted = true;
 
     const doSearch = async () => {
-      if (!searchIndexes || !debouncedQuery || debouncedQuery.trim().length < 2) {
+      if (!debouncedQuery || debouncedQuery.trim().length < 2) {
         setSearchResults({ avatars: [], posts: [], categories: [] });
         return;
       }
@@ -122,7 +248,6 @@ export function Header({
     return () => { isMounted = false; };
   }, [searchIndexes, debouncedQuery]);
 
-  // Check results
   const hasResults = searchResults.avatars.length > 0 ||
     searchResults.posts.length > 0 ||
     searchResults.categories.length > 0;
@@ -144,7 +269,7 @@ export function Header({
     }
   }, [debouncedQuery, hasResults, isRecentMode, recentItems.length, isSearchFocused]);
 
-  // Handle avatar click
+  // Handle avatar click in search results
   const handleAvatarClick = (avatar: Avatar) => {
     addAvatar(avatar.id);
     setShowSearchResults(false);
@@ -159,22 +284,27 @@ export function Header({
     }
   };
 
-  // Handle post click
+  // Handle post click in search results
   const handlePostClick = (post: Post) => {
     addPost(post.id);
-    onPostSelect?.(post);
     setShowSearchResults(false);
     searchInputRef.current?.blur();
+    if (onPostSelect) {
+      onPostSelect(post);
+    } else {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.push(`/post/${post.id}`, { scroll: false });
+    }
   };
 
-  // Handle category click
+  // Handle category click in search results
   const handleCategoryClick = (category: Category) => {
     addCategory(category);
     setShowSearchResults(false);
     const newCats = !selectedCategories.includes(category)
       ? [...selectedCategories, category]
       : selectedCategories;
-    onCategoryChange(newCats);
+    handleCategoryChange(newCats);
   };
 
   const handleCloseSearch = () => {
@@ -185,69 +315,105 @@ export function Header({
   };
 
   const handleSoftCloseSearch = () => {
-    setShowSearchResults(false); // soft close preserves DOM focus but drops results
+    setShowSearchResults(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       if (searchQuery.trim().length > 0) addSearch(searchQuery.trim());
-      onSearchSubmit?.(searchQuery.trim());
+      handleSearchSubmit(searchQuery.trim());
       setShowSearchResults(false);
       searchInputRef.current?.blur();
     } else if (e.key === 'Escape') {
       setShowSearchResults(false);
       searchInputRef.current?.blur();
-      onSearchChange('');
+      handleSearchChange('');
     }
   };
 
-  useEffect(() => {
-    let t1: ReturnType<typeof setTimeout>;
-    let t2: ReturnType<typeof setTimeout>;
-    if (hideControls) {
-      setOpacityTrigger(false);
-      setShowWidgets(false);
-    } else {
-      t1 = setTimeout(() => {
-        setShowWidgets(true);
-        t2 = setTimeout(() => setOpacityTrigger(true), 50);
-      }, 700);
+  // Prev / Next Navigation Handlers
+  const handlePrevPost = (e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (prevPostId) {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.replace(`/post/${prevPostId}`, { scroll: false });
     }
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [hideControls]);
+  };
+
+  const handleNextPost = (e?: React.MouseEvent) => {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
+    if (nextPostId) {
+      window.dispatchEvent(new Event('app-navigation-start'));
+      router.replace(`/post/${nextPostId}`, { scroll: false });
+    }
+  };
+
+  // Left Section Handlers
+  const handleLogoClick = () => {
+    if (onLogoClick) {
+      onLogoClick();
+    } else if (isBrowsePage) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleBackClick = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      goBack();
+    }
+  };
+
+  // Dynamic Left Zone Decision:
+  // - Browse page: ALWAYS Rater logo
+  // - Other pages: Back button if meaningful internal navigation context exists, otherwise Rater logo
+  const showBackButton = !isBrowsePage && hasMeaningfulHistory;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
       <div className={`relative max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center gap-2 sm:gap-3 md:gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
 
-        <div className={`absolute top-1/2 -translate-y-1/2 z-10 transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${hideControls ? 'left-1/2 -translate-x-1/2' : 'left-3 sm:left-4 md:left-6 translate-x-0'}`}>
-          {(!currentProfile || hideControls) ? (
+        {/* ========================================================================= */}
+        {/* [ ZONE 1: LEFT ] - Logo or Back Button                                     */}
+        {/* ========================================================================= */}
+        <div className="flex items-center shrink-0 z-10">
+          {showBackButton ? (
+            <Button
+              variant="secondary"
+              onClick={handleBackClick}
+              className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50 h-10 sm:h-12 shrink-0 transition-all active:scale-95"
+            >
+              <ArrowLeft className="w-5 h-5 text-black" />
+              Back
+            </Button>
+          ) : (
             <Link
               href="/browse"
               scroll={false}
-              onClick={onLogoClick}
-              className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative"
+              onClick={handleLogoClick}
+              className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative shrink-0"
+              aria-label="Rater Home"
             >
-              <img src="/icons/rater-logo-transparent-bg-stroked.svg" alt="Rater Logo" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0" />
-              <img src="/icons/rater-logo-black-bg.svg" alt="Rater Logo Hover" className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100" />
+              <img
+                src="/icons/rater-logo-transparent-bg-stroked.svg"
+                alt="Rater Logo"
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0"
+              />
+              <img
+                src="/icons/rater-logo-black-bg.svg"
+                alt="Rater Logo Hover"
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+              />
             </Link>
-          ) : (
-            <UserMenu />
           )}
         </div>
 
+        {/* ========================================================================= */}
+        {/* [ ZONE 2: CENTER ] - Desktop Search Bar (Exact Canonical Browse Style)     */}
+        {/* ========================================================================= */}
         {!hideControls && (
-          <div className="shrink-0 invisible pointer-events-none" aria-hidden="true">
-            {(!currentProfile) ? (
-              <div className="w-[44px] h-[44px] sm:w-12 sm:h-12" />
-            ) : (
-              <div className="w-10 h-10 rounded-full" />
-            )}
-          </div>
-        )}
-
-        {showWidgets && (
-          <div className={`hidden min-[769px]:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="hidden min-[769px]:flex flex-1 min-w-0 max-w-3xl relative z-50 transition-opacity duration-500 opacity-100">
             <div className="relative w-full group">
               <div className={`relative w-full transition-opacity duration-200 ${isFilterOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 z-10 transition-opacity pointer-events-none ${isSearching ? 'opacity-20' : 'opacity-40 group-focus-within:opacity-100'}`} />
@@ -263,7 +429,7 @@ export function Header({
                         onClick={(e) => {
                           e.stopPropagation();
                           const newCats = selectedCategories.filter(c => c !== cat);
-                          onCategoryChange(newCats);
+                          handleCategoryChange(newCats);
                         }}
                         className="p-0.5 rounded-full hover:bg-gray-200 transition-colors"
                       >
@@ -277,7 +443,7 @@ export function Header({
                       ref={searchInputRef}
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => onSearchChange(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       onFocus={() => {
                         if (blurTimeoutRef.current) { clearTimeout(blurTimeoutRef.current); blurTimeoutRef.current = null; }
                         setIsSearchFocused(true);
@@ -292,7 +458,7 @@ export function Header({
                         if (e.key === 'Backspace' && searchQuery === '' && selectedCategories.length > 0) {
                           const newCats = [...selectedCategories];
                           newCats.pop();
-                          onCategoryChange(newCats);
+                          handleCategoryChange(newCats);
                         }
                       }}
                       placeholder=""
@@ -316,8 +482,8 @@ export function Header({
                           exit={{ opacity: 0, scale: 0.8 }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSearchChange('');
-                            onSearchSubmit?.('');
+                            handleSearchChange('');
+                            handleSearchSubmit('');
                             searchInputRef.current?.focus();
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
@@ -331,6 +497,7 @@ export function Header({
                   <button
                     onClick={() => setIsFilterOpen(true)}
                     className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
+                    aria-label="Filter options"
                   >
                     <ListFilter className="h-5 w-5" />
                   </button>
@@ -349,8 +516,8 @@ export function Header({
                 recentItems={recentItems}
                 onRecentSearchClick={(q) => {
                   addSearch(q);
-                  onSearchChange(q);
-                  onSearchSubmit?.(q);
+                  handleSearchChange(q);
+                  handleSearchSubmit(q);
                   handleCloseSearch();
                 }}
                 onRemoveRecentItem={removeItem}
@@ -361,112 +528,172 @@ export function Header({
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}
                 searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
+                onSearchChange={handleSearchChange}
                 sortBy={sortBy}
-                onSortChange={onSortChange}
+                onSortChange={handleSortChange}
                 selectedCategories={selectedCategories}
-                onCategoryChange={onCategoryChange}
-                onReset={onReset}
-                onSearchSubmit={onSearchSubmit}
+                onCategoryChange={handleCategoryChange}
+                onReset={handleResetFilters}
+                onSearchSubmit={handleSearchSubmit}
                 className="top-0 left-0 w-full shadow-2xl"
               />
             </div>
           </div>
         )}
 
-        {showWidgets && (
-          <div className={`flex items-center gap-2 shrink-0 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
+        {/* ========================================================================= */}
+        {/* [ ZONE 3: RIGHT ] - Contextual Controls & Auth                             */}
+        {/* ========================================================================= */}
+        {!hideControls && (
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 z-10">
+
+            {/* Mobile Search Circle Trigger (< 480px) */}
             <motion.button
               layoutId="mobile-search-circle"
-              onClick={() => onMobileSearchOpen?.('mobile-search-circle')}
+              onClick={() => {
+                if (onMobileSearchOpen) {
+                  onMobileSearchOpen('mobile-search-circle');
+                } else {
+                  setMobileSearchLayoutId('mobile-search-circle');
+                  setIsMobileSearchOpen(true);
+                }
+              }}
               className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-primary bg-white hover:bg-primary transition-all shrink-0 group overflow-hidden"
               style={{ borderRadius: 9999 }}
+              aria-label="Open mobile search"
             >
               <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
             </motion.button>
 
-            <div className="flex items-center gap-2">
-              {currentProfile ? null : (
+            {/* Tablet Search Pill Trigger (480px - 768px) */}
+            <div className="hidden xs:flex min-[769px]:hidden items-center">
+              <motion.button
+                layoutId="tablet-search-pill"
+                onClick={() => {
+                  if (onMobileSearchOpen) {
+                    onMobileSearchOpen('tablet-search-pill');
+                  } else {
+                    setMobileSearchLayoutId('tablet-search-pill');
+                    setIsMobileSearchOpen(true);
+                  }
+                }}
+                className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
+                style={{ borderRadius: 9999 }}
+                aria-label="Open tablet search"
+              >
+                <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
+                  <img src="/icons/search.svg" alt="Search" className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" />
+                  <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
+                    {selectedCategories.length > 0 ? (
+                      <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap overflow-hidden">
+                        <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedCategories[0]}</span>
+                        {selectedCategories.length > 1 && <span className="ml-1 text-gray-500 shrink-0">+{selectedCategories.length - 1}</span>}
+                      </span>
+                    ) : (
+                      <span className="text-sm font-sans text-gray-400 truncate w-full text-left">
+                        {searchQuery || "Search..."}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+
+            {/* Contextual Prev / Next Controls on Post Page */}
+            {isPostPage && hasPostNavigation && (
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={handlePrevPost}
+                  disabled={!prevPostId}
+                  className="w-10 h-10 sm:w-11 sm:h-11 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all shrink-0 active:scale-95"
+                  aria-label="Previous post"
+                >
+                  <ChevronLeft className="w-5 h-5 text-black" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleNextPost}
+                  disabled={!nextPostId}
+                  className="w-10 h-10 sm:w-11 sm:h-11 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all shrink-0 active:scale-95"
+                  aria-label="Next post"
+                >
+                  <ChevronRight className="w-5 h-5 text-black" />
+                </Button>
+              </div>
+            )}
+
+            {/* Profile Button (Logged in) */}
+            {currentProfile ? (
+              <div className="flex items-center">
+                <UserMenu variant="nav" align="right" />
+              </div>
+            ) : (
+              /* Auth Buttons (Logged out - shown on all pages or when prev/next navigation is hidden on post page) */
+              (!isPostPage || !hasPostNavigation) && (
                 <div className="flex items-center gap-2">
                   <Button
                     variant='outline'
                     onClick={() => { setAuthTab('login'); setShowAuthOverlay(true); }}
-                    className="hidden sm:flex items-center justify-center h-12 px-6 rounded-full font-medium text-[17px] text-black hover:bg-primary hover:text-white transition-all"
+                    className="hidden sm:flex items-center justify-center h-10 sm:h-12 px-5 sm:px-6 rounded-full font-medium text-[16px] sm:text-[17px] text-black hover:bg-primary hover:text-white transition-all"
                   >
                     Log In
                   </Button>
                   <Button
                     variant="primary"
                     onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
-                    className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-white font-medium text-[17px]"
+                    className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-white font-medium text-[16px] sm:text-[17px]"
                   >
                     Sign Up
                   </Button>
                 </div>
-              )}
-
-              {currentProfile && (
-                <div className="relative ml-1 sm:ml-2 flex xs:hidden min-[769px]:flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={onPostClick}
-                    className="w-[45px] sm:w-auto h-[44px] sm:h-12 rounded-full px-3 sm:px-5 text-base sm:text-xl font-medium gap-1 sm:gap-2 group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap z-10"
-                  >
-                    <CloudUpload strokeWidth={2.25} className="h-6 w-6 sm:h-5 sm:w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
-                    <span className="hidden text-[18px] sm:flex items-center">
-                      Publish
-                      <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-[110px] xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                        <span className="pl-1.5">Work</span>
-                      </span>
-                    </span>
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {showWidgets && (
-          <div className={`hidden xs:flex min-[769px]:hidden flex-1 justify-end items-center gap-3 relative z-40 transition-opacity duration-500 ${opacityTrigger ? 'opacity-100' : 'opacity-0'}`}>
-            <motion.button
-              layoutId="tablet-search-pill"
-              onClick={() => onMobileSearchOpen?.('tablet-search-pill')}
-              className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
-              style={{ borderRadius: 9999 }}
-            >
-              <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
-                <img src="/icons/search.svg" alt="Search" className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" />
-                <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
-                  {selectedCategories.length > 0 ? (
-                    <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap overflow-hidden">
-                      <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedCategories[0]}</span>
-                      {selectedCategories.length > 1 && <span className="ml-1 text-gray-500 shrink-0">+{selectedCategories.length - 1}</span>}
-                    </span>
-                  ) : (
-                    <span className="text-sm font-sans text-gray-400 truncate w-full text-left">
-                      {searchQuery || "Search..."}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </motion.button>
-            {currentProfile && (
-              <Button
-                variant="outline"
-                onClick={onPostClick}
-                className="h-11 sm:h-12 rounded-full px-4 sm:px-5 text-base sm:text-lg font-medium gap-2 group transition-all duration-300"
-              >
-                <CloudUpload strokeWidth={2.25} className="h-5 w-5 shrink-0 transition-all group-hover:brightness-0 group-hover:invert" />
-                <span className="flex items-center">Publish Work</span>
-              </Button>
+              )
             )}
+
           </div>
         )}
       </div>
 
+      {/* Auth Modal */}
       <AnimatePresence>
         {showAuthOverlay && <AuthOverlay initialTab={authTab} onClose={() => setShowAuthOverlay(false)} />}
       </AnimatePresence>
+
+      {/* Mobile Search Overlay */}
+      {!onMobileSearchOpen && (
+        <MobileSearchOverlay
+          isOpen={isMobileSearchOpen}
+          onClose={() => setIsMobileSearchOpen(false)}
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onSearchSubmit={handleSearchSubmit}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          selectedCategories={selectedCategories}
+          onCategoryChange={handleCategoryChange}
+          onReset={handleResetFilters}
+          searchIndexes={searchIndexes}
+          activeLayoutId={mobileSearchLayoutId}
+        />
+      )}
     </header>
   );
 }
+
+/**
+ * Universal Header Component wrapped in Suspense for Next.js App Router searchParams stability.
+ */
+export function Header(props: HeaderProps) {
+  return (
+    <Suspense fallback={
+      <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center justify-between min-h-[48px]">
+          <div className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl" />
+        </div>
+      </header>
+    }>
+      <HeaderContent {...props} />
+    </Suspense>
+  );
+}
+export default Header;

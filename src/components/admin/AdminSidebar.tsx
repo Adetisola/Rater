@@ -92,14 +92,23 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
       {/* Brand Header */}
       <div className="p-6 border-b border-gray-100 flex items-center justify-between">
         <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 bg-black text-white rounded-xl flex items-center justify-center font-black text-base shadow-sm group-hover:scale-105 transition-transform">
-            R
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 relative">
+            <img
+              src="/icons/rater-logo-transparent-bg-stroked.svg"
+              alt="Rater Logo"
+              className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0"
+            />
+            <img
+              src="/icons/rater-logo-black-bg.svg"
+              alt="Rater Logo Hover"
+              className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+            />
           </div>
           <div>
-            <div className="text-base font-bold text-gray-900 tracking-tight leading-none">
+            <div className="text-base font-semibold text-gray-900 tracking-tight leading-none">
               Rater
             </div>
-            <div className="text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">
+            <div className="text-[10px] font-semibold text-primary tracking-wider mt-0.5">
               Admin Panel
             </div>
           </div>
@@ -118,7 +127,7 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-        <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 px-3">
+        <div className="text-xs font-semibold text-gray-400 tracking-wider mb-3 px-3">
           Management
         </div>
 

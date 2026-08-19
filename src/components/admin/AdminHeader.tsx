@@ -47,7 +47,7 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
             Admin
           </Link>
           <ChevronRight size={14} className="text-gray-300" />
-          <span className="font-bold text-gray-900">{sectionTitle}</span>
+          <span className="font-semibold text-gray-900">{sectionTitle}</span>
         </div>
       </div>
 

@@ -3,9 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Header } from '@/components/Header';
 import { MasonryGrid } from '@/components/MasonryGrid';
-import { MobileSearchOverlay } from '@/components/MobileSearchOverlay';
 import { AppErrorState } from '@/components/AppErrorState';
 import type { Post, Avatar } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
@@ -198,7 +196,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   const avatarId = searchParams.get('avatar');
 
   // Local state for fast typing in search
-  const [searchQuery, setSearchQuery] = useState(urlQuery);
+  const [, setSearchQuery] = useState(urlQuery);
 
   // Results state
   const [sortedPostIds, setSortedPostIds] = useState<string[]>([]);
@@ -217,9 +215,6 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     if (!avatarId) return null;
     return profileMap[avatarId] || null;
   }, [avatarId, profileMap]);
-
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [searchLayoutId, setSearchLayoutId] = useState<string>('tablet-search-pill');
 
   // Logic dependencies
   const postsSearchSignature = feedPostIds.join(',');
@@ -256,20 +251,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
     updateUrl({ cat: cats, q: null });
   };
   
-  const handleAvatarSelect = (avatar: Avatar) => {
-    const href = currentProfile && avatar.id === currentProfile.id 
-      ? `/@${currentProfile.username}` 
-      : `/@${avatar.username}`;
-    window.dispatchEvent(new Event('app-navigation-start'));
-    router.push(href, { scroll: false });
-  };
-  
   const clearAvatarFilter = () => updateUrl({ avatar: null });
-
-  const resetFilters = () => {
-    setSearchQuery('');
-    updateUrl({ sort: null, cat: [], avatar: null, q: null });
-  };
 
   // Async filtering and sorting engine
   useEffect(() => {
@@ -363,57 +345,6 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
 
   return (
     <>
-      <Header 
-        onPostClick={() => {
-          window.dispatchEvent(new Event('app-navigation-start'));
-          router.push('/submit', { scroll: false });
-        }} 
-        onLogoClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSearchSubmit={handleSearchSubmit}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        selectedCategories={selectedCategories}
-        onCategoryChange={handleCategoryChange}
-        hideControls={false}
-        onPostSelect={(post) => {
-          window.dispatchEvent(new Event('app-navigation-start'));
-          router.push(`/post/${post.id}`, { scroll: false });
-        }}
-        onAvatarSelect={handleAvatarSelect}
-        onReset={resetFilters}
-        searchIndexes={searchIndexes}
-        onMobileSearchOpen={(id) => {
-          if (id) setSearchLayoutId(id);
-          setIsMobileSearchOpen(true);
-        }}
-      />
-
-      <MobileSearchOverlay
-        isOpen={isMobileSearchOpen}
-        onClose={() => setIsMobileSearchOpen(false)}
-        activeLayoutId={searchLayoutId}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onSearchSubmit={handleSearchSubmit}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        selectedCategories={selectedCategories}
-        onCategoryChange={handleCategoryChange}
-        onPostSelect={(post) => {
-          window.dispatchEvent(new Event('app-navigation-start'));
-          router.push(`/post/${post.id}`, { scroll: false });
-          setIsMobileSearchOpen(false);
-        }}
-        onAvatarSelect={(avatar) => {
-          handleAvatarSelect(avatar);
-          setIsMobileSearchOpen(false);
-        }}
-        onReset={resetFilters}
-        searchIndexes={searchIndexes}
-      />
-      
       <main className="flex-1 w-full pt-2">
         <AnimatePresence mode="wait">
             <motion.div 

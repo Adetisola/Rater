@@ -21,7 +21,7 @@ interface AuthState {
 }
 
 interface AuthActions {
-  login: (identifier: string, passkey: string) => Promise<boolean>;
+  login: (identifier: string, passkey: string) => Promise<{ ok: boolean; error?: string }>;
   signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string) => Promise<{ ok: boolean; error?: string }>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginWithGoogle: () => Promise<void>;
@@ -60,12 +60,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeSession();
 
-    // 2. Auth State Listener
+    // 2. Auth State Listener — also enforces block status on session events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setCurrentProfile(null);
       } else if (session?.user?.id) {
         const profile = await getProfileById(session.user.id);
+        if (profile?.is_blocked) {
+          // Blocked users are immediately ejected, even if they have a valid token
+          await supabase.auth.signOut();
+          setCurrentProfile(null);
+          return;
+        }
         if (profile) setCurrentProfile(profile);
       }
     });
@@ -76,16 +82,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (identifier: string, passkey: string): Promise<boolean> => {
+  const login = useCallback(async (identifier: string, passkey: string): Promise<{ ok: boolean; error?: string }> => {
     const email = await resolveIdentifierToEmail(identifier, passkey);
-    if (!email) return false;
+    if (!email) return { ok: false };
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: passkey
     });
 
-    return !error;
+    if (error || !data.user) return { ok: false };
+
+    // Enforce block: fetch profile and reject if account is suspended
+    const profile = await getProfileById(data.user.id);
+    if (profile?.is_blocked) {
+      await supabase.auth.signOut();
+      return { ok: false, error: 'Your account has been suspended. Please contact support if you believe this is a mistake.' };
+    }
+
+    return { ok: true };
   }, []);
 
   const signup = useCallback(async (

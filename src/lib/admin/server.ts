@@ -298,6 +298,11 @@ export async function updateUserModeration(
     throw new Error(`Failed to update profile moderation: ${error.message}`);
   }
 
+  // If blocking, force-revoke all active sessions for the user immediately
+  if (updates.is_blocked === true) {
+    await adminSupabase.auth.admin.signOut(userId, 'global');
+  }
+
   await logAdminAction(adminProfile.id, 'update_user_moderation', 'profile', userId, updates);
 
   return { ok: true, profile: data as unknown as Avatar };

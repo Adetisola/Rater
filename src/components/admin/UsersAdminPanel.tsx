@@ -172,7 +172,7 @@ export function UsersAdminPanel() {
       {/* Page Title & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
             User Management
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -262,7 +262,7 @@ export function UsersAdminPanel() {
                       <div className="flex items-center gap-3">
                         <UserAvatar avatarUrl={user.avatar_url} className="w-9 h-9" />
                         <div>
-                          <div className="font-bold text-gray-900 flex items-center gap-1.5">
+                          <div className="font-semibold text-gray-900 flex items-center gap-1.5">
                             {user.name}
                             {user.is_admin && (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-primary/20 text-black">
@@ -311,17 +311,17 @@ export function UsersAdminPanel() {
                             setIsEditingRole(false);
                             setNewRole(user.role || '');
                           }}
-                          className="h-8 px-3 text-xs font-bold rounded-xl hover:bg-gray-100"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl"
                         >
                           View
                         </Button>
                         <Button
                           variant="outline"
                           onClick={() => handleToggleBlock(user)}
-                          className={`h-8 px-3 text-xs font-bold rounded-xl ${
+                          className={`h-8 px-3 text-xs font-semibold rounded-xl ${
                             user.is_blocked
                               ? 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                              : 'text-red-700 hover:bg-red-50 border-red-200'
+                              : 'text-red-700 border-red-200'
                           }`}
                         >
                           {user.is_blocked ? 'Unblock' : 'Block'}

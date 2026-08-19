@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthState, useAuthActions } from '../context/AuthContext';
-import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2 } from 'lucide-react';
+import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2, CloudUpload } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
 import { QRCodeOverlay } from './QRCodeOverlay';
@@ -119,6 +119,18 @@ const { logout } = useAuthActions();
                   View Profile
                 </Link>
               )}
+              
+              <Link
+                href="/submit"
+                onClick={() => {
+                  setIsOpen(false);
+                  window.dispatchEvent(new Event('app-navigation-start'));
+                }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+              >
+                <CloudUpload size={18} className="text-gray-400" />
+                Publish Work
+              </Link>
               
               <button
                 onClick={() => { setIsOpen(false); setShowQrCode(true); }}

@@ -135,7 +135,6 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
         >
           <MasonryGrid
             postIds={activePosts.map(p => p.id)}
-            maxColumns={4}
           />
         </motion.div>
       </AnimatePresence>
