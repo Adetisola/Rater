@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { AppErrorState } from '@/components/AppErrorState';
-import type { Post, Avatar } from '@/types';
+import type { Post } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
 
 import { buildSearchIndexes, searchPosts } from '@/lib/algolia/search';

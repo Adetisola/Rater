@@ -1,19 +1,15 @@
 "use client";
 
-import { useAuthState, useAuthActions } from '../context/AuthContext';
+import { useAuthState } from '../context/AuthContext';
 import { getProfilePosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
-import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
-import { Grid, Heart } from 'lucide-react';
+import { Grid, Heart, Check, Edit2, Camera, X, QrCode, Loader2 } from 'lucide-react';
 import { RichTextarea } from '@/components/ui/RichTextarea';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { AuthOverlay } from './AuthOverlay';
-import { UserMenu } from './UserMenu';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode, User } from 'lucide-react';
 import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -22,11 +18,9 @@ import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { type SocialLink } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
 import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
-import { Loader2 } from 'lucide-react';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
