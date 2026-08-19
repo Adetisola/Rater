@@ -1,4 +1,4 @@
-import { useState, useEffect, RefObject } from 'react';
+import { useState, useEffect, type RefObject } from 'react';
 
 // The minimum ideal width a column should be before the grid considers adding a new one.
 // Matches the standard browse feed card sizing (~210px–280px).
