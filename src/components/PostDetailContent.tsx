@@ -70,7 +70,7 @@ interface PostDetailOverlayProps {
  * Responsive wrapper for the post detail view.
  * Handles mobile swipe-to-navigate gestures while delegating rendering to PostDetailCore.
  */
-export function PostDetailContent({ post, onClose, initialIsMobile = false }: PostDetailOverlayProps) {
+export function PostDetailContent({ post, initialIsMobile = false }: PostDetailOverlayProps) {
     const [isMobile, setIsMobile] = useState(initialIsMobile);
 
     // Hydrate the store with the server-provided post data
@@ -139,10 +139,10 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
         };
     }, [pageX]);
 
-    const [isSwipeDisabled, setIsSwipeDisabled] = useState(false);
+    const [isSwipeDisabled] = useState(false);
 
     if (!isMobile) {
-        return <PostDetailCore post={displayPost} onClose={onClose} />;
+        return <PostDetailCore post={displayPost} />;
     }
 
     return (
@@ -166,7 +166,7 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
 
                 {/* Current Post */}
                 <div className="w-screen shrink-0 relative z-10">
-                    <PostDetailCore post={displayPost} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
+                    <PostDetailCore post={displayPost} />
                 </div>
 
                 {/* Next Post */}
@@ -184,7 +184,7 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
  * The core detail view for a post, displaying images, metadata, metrics, and the review form.
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
-export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
+export function PostDetailCore({ post, isAdjacent }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
     const router = useRouter();
     const { optimisticUpdateMetrics } = usePosts();
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
