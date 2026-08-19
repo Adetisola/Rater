@@ -1,36 +1,19 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { MasonryGrid } from '@/components/MasonryGrid';
 import { AppErrorState } from '@/components/AppErrorState';
 import type { Post } from '@/types';
-import { CATEGORIES } from '@/constants/categories';
-
-import { buildSearchIndexes, searchPosts } from '@/lib/algolia/search';
 import { curatedFreshnessSort } from '@/logic/curatedSort';
-import { X } from 'lucide-react';
-import { useAuthState } from '@/context/AuthContext';
 import { getFeedPosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import useSWR from 'swr';
 
-const SORT_LABELS: Record<string, string> = {
-  balanced: '✨Balanced',
-  highest_rated: 'Top',
-  most_reviewed: 'Hot',
-  newest: 'Recent',
-};
-
-
 const EMPTY_ARRAY: Post[] = [];
 
 export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialPosts?: Post[] }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { currentProfile, profileMap } = useAuthState();
   
   // Data State
   const [localRecentUpload, setLocalRecentUpload] = useState<string | null>(
