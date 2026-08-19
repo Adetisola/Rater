@@ -428,7 +428,7 @@ export function UsersAdminPanel() {
 
               {/* Account Metadata */}
               <div className="space-y-3">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <div className="text-xs font-bold text-gray-400 tracking-wider">
                   Account Info
                 </div>
 
@@ -460,7 +460,7 @@ export function UsersAdminPanel() {
 
               {/* Role Title Management */}
               <div className="space-y-3">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                <div className="text-xs font-bold text-gray-400 tracking-wider flex items-center justify-between">
                   <span>Role Title</span>
                   {!isEditingRole && (
                     <button
@@ -507,7 +507,7 @@ export function UsersAdminPanel() {
 
               {/* Moderation Actions */}
               <div className="space-y-3 pt-2">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                <div className="text-xs font-bold text-gray-400 tracking-wider">
                   Moderation Controls
                 </div>
 
@@ -517,8 +517,8 @@ export function UsersAdminPanel() {
                     onClick={() => handleToggleBlock(selectedUser)}
                     className={`w-full h-11 rounded-2xl text-xs font-bold justify-between px-4 ${
                       selectedUser.is_blocked
-                        ? 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                        : 'text-red-700 hover:bg-red-50 border-red-200'
+                        ? 'text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 border-emerald-200'
+                        : 'text-red-700 hover:text-red-900 hover:bg-red-50 border-red-200'
                     }`}
                   >
                     <span>{selectedUser.is_blocked ? 'Unblock User Account' : 'Block User from Platform'}</span>
@@ -531,7 +531,7 @@ export function UsersAdminPanel() {
                     className="w-full h-11 rounded-2xl text-xs font-bold justify-between px-4 text-gray-700 hover:bg-gray-50 border-gray-200"
                   >
                     <span>{selectedUser.is_admin ? 'Revoke Administrator Access' : 'Promote to Administrator'}</span>
-                    <ShieldCheck size={16} className={selectedUser.is_admin ? 'text-primary' : 'text-gray-400'} />
+                    <ShieldCheck size={16} className={selectedUser.is_admin ? 'text-primary' : 'text-black'} />
                   </Button>
                 </div>
               </div>

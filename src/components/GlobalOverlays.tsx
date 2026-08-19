@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 import { EditPostOverlay } from './EditPostOverlay';
 import { DeletePostOverlay } from './DeletePostOverlay';
+import { SuspendedAccountOverlay } from './SuspendedAccountOverlay';
 import { usePosts } from '../context/PostContext';
+import { useAuthState, useAuthActions } from '../context/AuthContext';
 import { InstallPromptUI } from './InstallPromptUI';
 import { OfflineStatus } from './OfflineStatus';
 
@@ -69,6 +71,8 @@ export function GlobalOverlays() {
   const [undoPostId, setUndoPostId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { undoDelete } = usePosts();
+  const { isSuspended } = useAuthState();
+  const { dismissSuspendedNotice } = useAuthActions();
 
   useEffect(() => {
     triggerDelete = (id: string) => setDeletePostId(id);
@@ -109,6 +113,7 @@ export function GlobalOverlays() {
     <>
       <EditPostOverlay />
       <DeletePostOverlay postId={deletePostId} onClose={() => setDeletePostId(null)} />
+      <SuspendedAccountOverlay isOpen={isSuspended} onClose={dismissSuspendedNotice} />
       <InstallPromptUI />
       <OfflineStatus />
       

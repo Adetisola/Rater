@@ -18,6 +18,7 @@ interface AuthState {
   currentProfile: Avatar | null;
   profileMap: Record<string, Avatar>; // Kept for backwards compatibility until M3
   isLoading: boolean;
+  isSuspended: boolean;
 }
 
 interface AuthActions {
@@ -28,6 +29,7 @@ interface AuthActions {
   connectGoogle: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   checkUsernameAvailable: (username: string, excludeAvatarId?: string) => Promise<boolean>;
+  dismissSuspendedNotice: () => void;
 }
 
 const AuthStateContext = createContext<AuthState | undefined>(undefined);
@@ -36,8 +38,23 @@ const AuthActionsContext = createContext<AuthActions | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentProfile, setCurrentProfile] = useState<Avatar | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSuspended, setIsSuspended] = useState(false);
 
-  // 1. Initial Session Check (Flicker-free)
+  const dismissSuspendedNotice = useCallback(() => {
+    setIsSuspended(false);
+  }, []);
+
+  const handleBlockedEviction = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Signout during eviction (ignoring):", err);
+    }
+    setCurrentProfile(null);
+    setIsSuspended(true);
+  }, []);
+
+  // 1. Initial Session Check (Flicker-free & block-aware)
   useEffect(() => {
     let mounted = true;
 
@@ -47,6 +64,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user?.id) {
           const profile = await getProfileById(session.user.id);
+          if (profile?.is_blocked) {
+            await supabase.auth.signOut();
+            if (mounted) {
+              setCurrentProfile(null);
+              setIsSuspended(true);
+            }
+            return;
+          }
           if (mounted && profile) {
             setCurrentProfile(profile);
           }
@@ -70,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Blocked users are immediately ejected, even if they have a valid token
           await supabase.auth.signOut();
           setCurrentProfile(null);
+          setIsSuspended(true);
           return;
         }
         if (profile) setCurrentProfile(profile);
@@ -81,6 +107,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // 3. Multi-tier Session Enforcement for Active Logged-In User
+  useEffect(() => {
+    if (!currentProfile?.id) return;
+
+    const profileId = currentProfile.id;
+
+    // A. Realtime subscription for prompt push eviction
+    const channel = supabase
+      .channel(`profile-block-watch:${profileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profileId}`,
+        },
+        (payload) => {
+          if (payload.new && (payload.new as { is_blocked?: boolean }).is_blocked) {
+            handleBlockedEviction();
+          }
+        }
+      )
+      .subscribe();
+
+    // B. Re-verification query helper
+    const checkBlockStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_blocked')
+          .eq('id', profileId)
+          .single();
+
+        if (!error && data?.is_blocked) {
+          handleBlockedEviction();
+        }
+      } catch (err) {
+        console.warn("Block status verification check failed:", err);
+      }
+    };
+
+    // C. Window focus & tab visibility listeners
+    const handleFocus = () => checkBlockStatus();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkBlockStatus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // D. 60-Second fallback poll
+    const pollInterval = setInterval(checkBlockStatus, 60000);
+
+    return () => {
+      channel.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(pollInterval);
+    };
+  }, [currentProfile?.id, handleBlockedEviction]);
 
   const login = useCallback(async (identifier: string, passkey: string): Promise<{ ok: boolean; error?: string }> => {
     const email = await resolveIdentifierToEmail(identifier, passkey);
@@ -97,6 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const profile = await getProfileById(data.user.id);
     if (profile?.is_blocked) {
       await supabase.auth.signOut();
+      setIsSuspended(true);
       return { ok: false, error: 'Your account has been suspended. Please contact support if you believe this is a mistake.' };
     }
 
@@ -230,8 +321,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const stateValue = useMemo(() => ({
     currentProfile,
     profileMap: safeProfileMap,
-    isLoading
-  }), [currentProfile, safeProfileMap, isLoading]);
+    isLoading,
+    isSuspended
+  }), [currentProfile, safeProfileMap, isLoading, isSuspended]);
 
   const actionsValue = useMemo(() => ({
     login,
@@ -240,8 +332,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUsernameAvailable: dbCheckUsername,
     loginWithGoogle,
     connectGoogle,
-    logout
-  }), [login, signup, updateProfile, loginWithGoogle, connectGoogle, logout]);
+    logout,
+    dismissSuspendedNotice
+  }), [login, signup, updateProfile, loginWithGoogle, connectGoogle, logout, dismissSuspendedNotice]);
 
   return (
     <AuthStateContext.Provider value={stateValue}>
