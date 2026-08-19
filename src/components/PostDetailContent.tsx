@@ -139,7 +139,7 @@ export function PostDetailContent({ post, initialIsMobile = false }: PostDetailO
         };
     }, [pageX]);
 
-    const [isSwipeDisabled] = useState(false);
+    const [isSwipeDisabled, setIsSwipeDisabled] = useState(false);
 
     if (!isMobile) {
         return <PostDetailCore post={displayPost} />;
@@ -166,7 +166,7 @@ export function PostDetailContent({ post, initialIsMobile = false }: PostDetailO
 
                 {/* Current Post */}
                 <div className="w-screen shrink-0 relative z-10">
-                    <PostDetailCore post={displayPost} />
+                    <PostDetailCore post={displayPost} onDisableSwipe={setIsSwipeDisabled} />
                 </div>
 
                 {/* Next Post */}
@@ -184,7 +184,7 @@ export function PostDetailContent({ post, initialIsMobile = false }: PostDetailO
  * The core detail view for a post, displaying images, metadata, metrics, and the review form.
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
-export function PostDetailCore({ post, isAdjacent }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
+export function PostDetailCore({ post, isAdjacent, onDisableSwipe }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
     const router = useRouter();
     const { optimisticUpdateMetrics } = usePosts();
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
