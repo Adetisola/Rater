@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, FileUp, CloudUpload, Loader2, Trash2 } from 'lucide-react';
+import { Button } from './ui/Button';
+import { Check, FileUp, Lock, CloudUpload, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
+import { Textarea } from './ui/Textarea';
 import { RichTextarea } from './ui/RichTextarea';
 import type { Post, Category } from '@/types';
 import { AI_TOOLS } from '@/types';
@@ -15,6 +17,7 @@ import { useAuthState } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { AuthOverlay } from './AuthOverlay';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import Link from 'next/link';
 import { AmbientSuccessText } from './AmbientSuccessText';
 import { showToast } from './GlobalOverlays';
 import { compressImage } from '@/lib/image/compress';
