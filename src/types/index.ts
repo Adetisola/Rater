@@ -226,3 +226,66 @@ import type { Database } from './supabase';
 export type FeedbackRequest = Database['public']['Views']['feedback_requests_with_stats']['Row'];
 export type FeedbackComment = Database['public']['Tables']['feedback_comments']['Row'];
 export type FeedbackVote = Database['public']['Tables']['feedback_votes']['Row'];
+
+// ─── Moderation & Reports ───────────────────────────────────────────────────
+
+export type ReportTargetType = 'post' | 'profile';
+export type ReportStatus = 'pending' | 'under_review' | 'resolved' | 'dismissed';
+
+export interface Report {
+  id: string;
+  reporter_id: string | null;
+  target_type: ReportTargetType;
+  target_id: string;
+  reason: string;
+  details: string | null;
+  status: ReportStatus;
+  action_taken: string | null;
+  admin_notes: string | null;
+  resolved_by: string | null;
+  created_at: string;
+  updated_at: string;
+  reporter?: Avatar | null;
+  target_post?: Post | null;
+  target_profile?: Avatar | null;
+}
+
+export interface AdminAuditLog {
+  id: string;
+  admin_id: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  details: Record<string, any> | null;
+  created_at: string;
+  admin?: Avatar | null;
+}
+
+export interface PlatformSetting {
+  key: string;
+  value: Record<string, any>;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface AdminDashboardStats {
+  totalProfiles: number;
+  totalPosts: number;
+  totalReviews: number;
+  totalViews: number;
+  pendingReports: number;
+  activeFeedback: number;
+  profilesLast7Days: number;
+  postsLast7Days: number;
+  reviewsLast7Days: number;
+  recentActivity: Array<{
+    id: string;
+    type: 'post' | 'report' | 'feedback' | 'user';
+    title: string;
+    subtitle: string;
+    timestamp: string;
+    link: string;
+    status?: string;
+  }>;
+}
+

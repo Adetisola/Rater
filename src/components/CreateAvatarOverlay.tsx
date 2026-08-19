@@ -203,9 +203,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
       
-      if (response.ok && !data.available) {
+      if (response.ok && data && !data.available) {
         setEmailError('Email is already registered');
         setIsSubmitting(false);
         return;

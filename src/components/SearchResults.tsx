@@ -185,7 +185,7 @@ export function SearchResults({
         {results.categories.length > 0 && (
           <div className="border-b border-gray-100">
             <div className="px-4 py-2 bg-gray-50">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Categories</span>
+              <span className="text-xs font-semibold text-gray-500 tracking-wide">Categories</span>
             </div>
             <div className="p-2">
               {results.categories.map(({ category }) => (
@@ -242,7 +242,7 @@ export function SearchResults({
 }
 
 // ============================================================================
-// AVATAR RESULT ITEM
+// PROFILE RESULT ITEM
 // ============================================================================
 
 /**
@@ -266,20 +266,20 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
-      {/* Avatar */}
+      {/* Profile */}
       <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
       
       {/* Name */}
       <div className="flex-1 min-w-0">
         <span className="font-semibold text-sm text-black">{avatar.name}</span>
-        <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
+        <p className="text-xs text-gray-400">{avatar.role || 'User'}</p>
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// POST RESULT ITEM
+// WORK RESULT ITEM
 // ============================================================================
 
 /**

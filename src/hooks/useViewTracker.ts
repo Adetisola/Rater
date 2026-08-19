@@ -13,6 +13,7 @@ export function useViewTracker(postId: string, onIncrement?: () => void) {
     }, [onIncrement]);
 
     const trackView = useCallback(async (_trigger: 'viewport' | 'action') => {
+        if (!postId || postId === 'undefined') return;
         if (viewState.current !== 'idle') return;
         viewState.current = 'pending';
 
@@ -28,7 +29,17 @@ export function useViewTracker(postId: string, onIncrement?: () => void) {
                 headers,
                 keepalive: true, // Crucial for reliability during page unloads
             });
-            const data = await res.json();
+
+            if (!res.ok) {
+                viewState.current = 'idle';
+                return;
+            }
+
+            const data = await res.json().catch(() => null);
+            if (!data) {
+                viewState.current = 'idle';
+                return;
+            }
             
             if (data.incremented) {
                 if (onIncrementRef.current) onIncrementRef.current();

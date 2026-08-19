@@ -161,7 +161,7 @@ const { logout } = useAuthActions();
               
               {currentProfile.is_admin && (
                 <Link
-                  href="/admin"
+                  href="/admin/dashboard"
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/5 text-primary transition-colors font-bold text-sm mt-1"
                 >

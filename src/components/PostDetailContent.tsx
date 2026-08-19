@@ -231,6 +231,14 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const successCheckRef = useRef<SVGPathElement>(null);
     const [isSelfPost, setIsSelfPost] = useState(false);
     const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+    const critiquesSectionRef = useRef<HTMLDivElement>(null);
+
+    const scrollToCritiques = () => {
+        critiquesSectionRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    };
 
     // GSAP animation for review success card
     useEffect(() => {
@@ -894,7 +902,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 <Tooltip
                                     content={
                                         <p className="leading-relaxed text-center">
-                                            {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
+                                            {isHot ? "This work is receiving high attention based on recent critiques" : "Number of structured critiques this work has received"}
                                         </p>
                                     }
                                     position="top"
@@ -902,7 +910,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     width="w-[calc(100vw-3rem)] xs:w-64"
                                     triggerClassName="relative inline-flex items-center shrink-0"
                                 >
-                                    <span className="text-sm font-medium sm:medium text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                    <button
+                                        type="button"
+                                        onClick={scrollToCritiques}
+                                        aria-label="Scroll to critiques"
+                                        className="text-sm font-medium text-gray-800 hover:text-primary transition-colors flex items-center whitespace-nowrap cursor-pointer focus:outline-none"
+                                    >
                                         {isHot && (
                                             <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                                 {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -920,7 +933,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             </div>
                                         )}
                                         {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'critique' : 'critiques'}
-                                    </span>
+                                    </button>
                                 </Tooltip>
                                 {metrics?.view_count !== undefined && (
                                     <Tooltip
@@ -1100,11 +1113,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                         {isReportOpen && (
                             <ReportPostOverlay
+                                postId={post.id}
                                 onClose={() => setIsReportOpen(false)}
-                                onSubmit={(reason, details) => {
-                                    console.log('Report submitted:', reason, details);
-                                    setIsReportOpen(false);
-                                }}
                             />
                         )}
 
@@ -1287,7 +1297,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </div>
 
                 {/* BOTTOM SECTION: Reviews List */}
-                <div className="border-t border-gray-100 pt-8 xs:pt-15">
+                <div ref={critiquesSectionRef} id="critiques-section" className="border-t border-gray-100 pt-8 xs:pt-15 scroll-mt-6 sm:scroll-mt-10">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
                         <h2 className="text-lg font-medium text-black shrink-0">Critiques ({allReviews.length})</h2>
 

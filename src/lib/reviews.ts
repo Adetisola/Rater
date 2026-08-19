@@ -90,9 +90,9 @@ export async function submitReview(
       body: JSON.stringify(review)
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      return { ok: false, error: data.error || 'Failed to submit review' };
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data) {
+      return { ok: false, error: data?.error || 'Failed to submit review' };
     }
 
     return { ok: true, review: data.review as Review };

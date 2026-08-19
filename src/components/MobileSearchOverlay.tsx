@@ -382,7 +382,7 @@ export function MobileSearchOverlay({
             {searchResults.categories.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Categories</span>
+                  <span className="text-xs font-bold text-gray-500 tracking-wide">Categories</span>
                 </div>
                 <div className="p-2">
                   {searchResults.categories.map(({ category }) => (
@@ -399,7 +399,7 @@ export function MobileSearchOverlay({
             {searchResults.avatars.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Avatars</span>
+                  <span className="text-xs font-bold text-gray-500 tracking-wide">Creatives</span>
                 </div>
                 <div className="p-2">
                   {searchResults.avatars.map(({ avatar }) => (
@@ -416,7 +416,7 @@ export function MobileSearchOverlay({
             {searchResults.posts.length > 0 && (
               <div>
                 <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Posts</span>
+                  <span className="text-xs font-bold text-gray-500 tracking-wide">Works</span>
                 </div>
                 <div className="p-2">
                   {searchResults.posts.map((result) => (

@@ -361,11 +361,8 @@ export function PostActionsMenu({
       {/* Report Overlay for PostCard UI */}
       {isReportOverlayOpen && (
         <ReportPostOverlay 
-          onClose={() => setIsReportOverlayOpen(false)}
-          onSubmit={(reason, details) => {
-            console.log('Report submitted:', reason, details);
-            setIsReportOverlayOpen(false);
-          }}
+          postId={post.id}
+          onClose={() => setIsReportOverlayOpen(false)} 
         />
       )}
 

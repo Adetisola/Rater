@@ -78,6 +78,7 @@ import { PWARegistry } from "../components/PWARegistry";
 import { ScrollRestorationProvider } from "../components/ScrollRestorationProvider";
 import { GlobalErrorBoundary } from "../components/GlobalErrorBoundary";
 import { StructuredData } from "../components/StructuredData";
+import { MaintenanceBanner } from "../components/MaintenanceBanner";
 
 export default function RootLayout({
   children,
@@ -96,6 +97,7 @@ export default function RootLayout({
                   <PWARegistry />
                   <GlobalRouteLoader />
                   <GlobalOverlays />
+                  <MaintenanceBanner />
                   {children}
                 </ScrollRestorationProvider>
               </TimeProvider>

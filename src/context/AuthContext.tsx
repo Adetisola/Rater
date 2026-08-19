@@ -12,6 +12,7 @@ import {
 } from '@/lib/profiles';
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
+import { getPlatformSettingPublic } from '@/lib/admin/server';
 
 interface AuthState {
   currentProfile: Avatar | null;
@@ -95,6 +96,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     username?: string, 
     role?: string
   ): Promise<{ ok: boolean; error?: string }> => {
+    // 0. Platform gate check
+    try {
+      const signupSetting = await getPlatformSettingPublic('signup_enabled');
+      if (signupSetting && signupSetting.enabled === false) {
+        return { ok: false, error: 'New user registrations are currently disabled.' };
+      }
+    } catch {
+      // Allow fallback if setting query fails
+    }
+
     // 1. Pre-flight format validation
     const validationError = validateSignupInput(username || name, email, passkey);
     if (validationError) return { ok: false, error: validationError };

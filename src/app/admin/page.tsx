@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
-export default function AdminDashboard() {
-  redirect('/admin/feedback');
+
+export default function AdminIndexPage() {
+  redirect('/admin/dashboard');
 }

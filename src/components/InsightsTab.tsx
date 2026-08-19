@@ -209,7 +209,10 @@ function useInsightSynthesis(
           throw new Error(`API error ${response.status}: ${errBody.error || 'Unknown'}`);
         }
 
-        data = await response.json();
+        data = await response.json().catch(() => null);
+        if (!data) {
+          throw new Error('Invalid JSON response from server');
+        }
         break;
       }
 
