@@ -42,6 +42,19 @@ import { cn } from '../lib/utils';
 
 import { useViewTracker } from '@/hooks/useViewTracker';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
+import {
+    Download,
+    Share2,
+    X,
+    Plus,
+    Minus,
+    Lock,
+    ChevronLeft,
+    ChevronRight,
+    Copy,
+    Check,
+    Eye
+} from 'lucide-react';
 
 
 const REVIEWS_PER_PAGE = 5;
