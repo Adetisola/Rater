@@ -9,6 +9,7 @@ import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronD
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
 import { QRCodeOverlay } from './QRCodeOverlay';
+import { showSettings } from './GlobalOverlays';
 
 interface UserMenuProps {
   trigger?: React.ReactNode;
@@ -140,42 +141,37 @@ const { logout } = useAuthActions();
                 Share Profile
               </button>
               
-              {process.env.NODE_ENV === 'development' && (
-                <>
-                  <Link
-                    href="/settings"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
-                  >
-                    <Settings size={18} className="text-gray-400" />
-                    Settings
-                  </Link>
-                  
-                  <Link
-                    href="/feedback"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
-                  >
-                    <MessageSquarePlus size={18} className="text-gray-400" />
-                    Feedback
-                  </Link>
-                  
-                  <Link
-                    href="/legal/terms"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
-                  >
-                    <Scale size={18} className="text-gray-400" />
-                    Legal
-                  </Link>
-                </>
-              )}
+              <button
+                onClick={() => { setIsOpen(false); showSettings(); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm text-left"
+              >
+                <Settings size={18} className="text-gray-400" />
+                Settings
+              </button>
+              
+              <Link
+                href="/feedback"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+              >
+                <MessageSquarePlus size={18} className="text-gray-400" />
+                Feedback
+              </Link>
+              
+              <Link
+                href="/legal/community-guidelines"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
+              >
+                <Scale size={18} className="text-gray-400" />
+                Guidelines & Legal
+              </Link>
               
               {currentProfile.is_admin && (
                 <Link
                   href="/admin/dashboard"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/5 text-primary transition-colors font-bold text-sm mt-1"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/5 text-primary transition-colors font-medium text-sm mt-1"
                 >
                   <ShieldAlert size={18} className="text-primary" />
                   Admin Dashboard
