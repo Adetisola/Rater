@@ -13,7 +13,8 @@ import {
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
 import { getPlatformSettingPublic } from '@/lib/admin/server';
-import { SESSION_KEYS } from '@/hooks/useReferralCapture';
+import { SESSION_KEYS, getAttributionItem, clearAttributionStorage } from '@/hooks/useReferralCapture';
+import { recordSignupAttribution } from '@/lib/server/attribution';
 import { normalizeCampaignSlug, normalizeSourceDetail } from '@/utils/attributionNormalize';
 
 interface AuthState {
@@ -232,7 +233,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, error: 'Username is already taken.' };
     }
 
-    // 3. Supabase Auth Signup
+    // 3. Read marketing attribution & referral from storage (first-touch)
+    let attributionSource: string | null = null;
+    let attributionDetail: string | null = null;
+    let attributionCampaign: string | null = null;
+    let attributionReferrer: string | null = null;
+
+    try {
+      if (typeof window !== 'undefined') {
+        const rawSource = getAttributionItem(SESSION_KEYS.SOURCE);
+        const rawDetail = getAttributionItem(SESSION_KEYS.DETAIL);
+        const rawCampaign = getAttributionItem(SESSION_KEYS.CAMPAIGN);
+        const rawReferrer = getAttributionItem(SESSION_KEYS.REFERRER);
+
+        if (rawSource) attributionSource = normalizeSourceDetail(rawSource);
+        if (rawDetail) attributionDetail = normalizeSourceDetail(rawDetail);
+        if (rawCampaign) attributionCampaign = normalizeCampaignSlug(rawCampaign);
+        if (rawReferrer) attributionReferrer = rawReferrer.trim();
+      }
+    } catch (storageErr) {
+      console.warn('Failed to read attribution from storage:', storageErr);
+    }
+
+    // 4. Supabase Auth Signup (pass attribution in metadata so handle_new_user trigger populates it automatically)
     const { data: authData, error } = await supabase.auth.signUp({
       email,
       password: passkey,
@@ -243,6 +266,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role || 'user',
           bg_color: '#FEC312',
           onboarding_completed: true,
+          avatar_url: avatar_url || null,
+          acquisition_source: attributionSource || null,
+          acquisition_detail: attributionDetail || null,
+          campaign_tag: attributionCampaign || null,
+          referred_by: attributionReferrer || null,
         }
       }
     });
@@ -251,57 +279,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, error: error.message };
     }
 
-    // 4. Capture marketing attribution & referral from sessionStorage (first-touch)
+    // 5. Explicitly record attribution via elevated server action as reliable fallback
     if (authData.user) {
-      const profileUpdates: Record<string, any> = {};
-      if (avatar_url) profileUpdates.avatar_url = avatar_url;
-
-      try {
-        if (typeof window !== 'undefined') {
-          const rawSource = sessionStorage.getItem(SESSION_KEYS.SOURCE);
-          const rawDetail = sessionStorage.getItem(SESSION_KEYS.DETAIL);
-          const rawCampaign = sessionStorage.getItem(SESSION_KEYS.CAMPAIGN);
-          const rawReferrer = sessionStorage.getItem(SESSION_KEYS.REFERRER);
-
-          if (rawSource) {
-            const normalizedSource = normalizeSourceDetail(rawSource);
-            if (normalizedSource) profileUpdates.acquisition_source = normalizedSource;
-          }
-
-          if (rawDetail) {
-            const normalizedDetail = normalizeSourceDetail(rawDetail);
-            if (normalizedDetail) profileUpdates.acquisition_detail = normalizedDetail;
-          }
-
-          if (rawCampaign) {
-            const normalizedCampaign = normalizeCampaignSlug(rawCampaign);
-            if (normalizedCampaign) profileUpdates.campaign_tag = normalizedCampaign;
-          }
-
-          if (rawReferrer && rawReferrer.trim() !== authData.user.id) {
-            profileUpdates.referred_by = rawReferrer.trim();
-          }
-
-          // Clear sessionStorage attribution keys so future signups/sessions are clean
-          sessionStorage.removeItem(SESSION_KEYS.SOURCE);
-          sessionStorage.removeItem(SESSION_KEYS.DETAIL);
-          sessionStorage.removeItem(SESSION_KEYS.CAMPAIGN);
-          sessionStorage.removeItem(SESSION_KEYS.REFERRER);
-        }
-      } catch (storageErr) {
-        console.warn('Failed to read/clear attribution from sessionStorage:', storageErr);
-      }
-
-      if (Object.keys(profileUpdates).length > 0) {
+      if (attributionSource || attributionDetail || attributionCampaign || attributionReferrer) {
         try {
-          await supabase
-            .from('profiles')
-            .update(profileUpdates)
-            .eq('id', authData.user.id);
-        } catch (updateErr) {
-          console.error('Failed to save profile attribution:', updateErr);
+          await recordSignupAttribution(authData.user.id, {
+            source: attributionSource,
+            detail: attributionDetail,
+            campaign: attributionCampaign,
+            referrer: attributionReferrer,
+          });
+        } catch (recordErr) {
+          console.error('Failed to record signup attribution via server action:', recordErr);
         }
       }
+
+      // Clear storage attribution keys so future signups/sessions are clean
+      clearAttributionStorage();
 
       // Re-fetch to guarantee state is synced
       ProfileCache.invalidate(authData.user.id);

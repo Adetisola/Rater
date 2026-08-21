@@ -16,7 +16,8 @@ import {
   KeyRound, 
   Loader2,
   CheckCircle2,
-  Edit2
+  Edit2,
+  Sparkles
 } from 'lucide-react';
 import { useAuthState } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase/client';
@@ -24,7 +25,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
 import { ConnectedAccounts } from './ConnectedAccounts';
-import { showToast } from './GlobalOverlays';
+import { showToast, showInviteModal } from './GlobalOverlays';
 import { deleteOwnAccount } from '@/lib/account/server';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -325,6 +326,55 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     ) : (
                       <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 text-xs text-amber-800">
                         Please sign in to manage account settings.
+                      </div>
+                    )}
+
+                    {/* Personal Referral Invite Link */}
+                    {currentProfile && (
+                      <div className="p-4.5 rounded-2xl bg-white border border-gray-100 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                              <Sparkles size={16} className="text-primary" />
+                              Personal Invite Link
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Invite fellow designers and friends to join Rater.
+                            </p>
+                          </div>
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              onClose();
+                              showInviteModal();
+                            }}
+                            className="h-8 px-3 text-xs font-semibold rounded-xl"
+                          >
+                            Open Card
+                          </Button>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1">
+                          <input
+                            type="text"
+                            readOnly
+                            value={typeof window !== 'undefined' ? `${window.location.origin}/invite/@${currentProfile.username}` : ''}
+                            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-gray-800 select-all focus:outline-none"
+                          />
+                          <Button
+                            variant="primary"
+                            onClick={async () => {
+                              if (typeof window !== 'undefined') {
+                                const url = `${window.location.origin}/invite/@${currentProfile.username}`;
+                                await navigator.clipboard.writeText(url);
+                                showToast('Invite link copied to clipboard!', 'success');
+                              }
+                            }}
+                            className="h-9 px-3.5 rounded-xl text-xs font-bold shrink-0 bg-black text-white hover:bg-gray-800"
+                          >
+                            Copy
+                          </Button>
+                        </div>
                       </div>
                     )}
 

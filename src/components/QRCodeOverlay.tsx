@@ -3,23 +3,30 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Copy, Check } from 'lucide-react';
+import { X, Download, Copy, Check, User, Sparkles } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 
 interface QRCodeOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   username: string;
-  avatarUrl?: string; // We can use this to optionally put a logo in the center if we want
+  avatarUrl?: string;
+  initialMode?: 'profile' | 'invite';
 }
 
-export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOverlayProps) {
+export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMode = 'profile' }: QRCodeOverlayProps) {
   const [mounted, setMounted] = useState(false);
+  const [mode, setMode] = useState<'profile' | 'invite'>(initialMode);
   const [copied, setCopied] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const [processedAvatar, setProcessedAvatar] = useState<string | undefined>(undefined);
   
-  const profileUrl = typeof window !== 'undefined' ? `${window.location.origin}/@${username}` : '';
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const activeUrl = mode === 'invite' ? `${origin}/invite/@${username}` : `${origin}/@${username}`;
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode, isOpen]);
 
   useEffect(() => {
     if (avatarUrl) {
@@ -27,7 +34,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
       img.crossOrigin = "anonymous";
       img.src = avatarUrl;
       img.onload = () => {
-        const size = 200; // Resolution of the logo
+        const size = 200;
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
@@ -40,13 +47,12 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
         ctx.fillStyle = "#ffffff";
         ctx.fill();
 
-        // Create circular clip for the image (slightly smaller for the border effect)
+        // Create circular clip for the image
         ctx.save();
         ctx.beginPath();
         ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2);
         ctx.clip();
 
-        // Draw image with "cover" logic to avoid squashing
         const imgAspect = img.width / img.height;
         let drawWidth = size;
         let drawHeight = size;
@@ -88,7 +94,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(profileUrl);
+      await navigator.clipboard.writeText(activeUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -107,7 +113,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
       
     const downloadLink = document.createElement("a");
     downloadLink.href = pngUrl;
-    downloadLink.download = `rater-${username}.png`;
+    downloadLink.download = `rater-${mode}-${username}.png`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
@@ -127,27 +133,55 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-sm bg-white rounded-[32px] p-6 shadow-2xl overflow-hidden flex flex-col items-center border border-gray-100"
+            className="relative w-full max-w-sm bg-white rounded-4xl p-6 shadow-2xl overflow-hidden flex flex-col items-center border border-gray-100"
           >
             {/* Header */}
-            <div className="w-full flex justify-between items-center mb-6">
-              <h3 className="font-medium text-lg text-black">Share Profile</h3>
+            <div className="w-full flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-lg text-black">
+                {mode === 'invite' ? 'Invite Referral Link' : 'Share Profile'}
+              </h3>
               <button 
                 onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-gray-50"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-gray-50 text-gray-500"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mode Switcher */}
+            <div className="w-full flex bg-gray-100 p-1 rounded-2xl mb-5 border border-gray-200/80">
+              <button
+                onClick={() => setMode('profile')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  mode === 'profile'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-500 hover:text-black'
+                }`}
+              >
+                <User size={13} />
+                <span>Profile</span>
+              </button>
+              <button
+                onClick={() => setMode('invite')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  mode === 'invite'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-500 hover:text-black'
+                }`}
+              >
+                <Sparkles size={13} />
+                <span>Invite Link</span>
               </button>
             </div>
 
             {/* QR Code */}
             <div 
               ref={canvasRef}
-              className="bg-white p-4 rounded-3xl border-2 border-gray-100 shadow-sm mb-6"
+              className="bg-white p-4 rounded-3xl border-2 border-gray-100 shadow-sm mb-4"
             >
               <QRCodeCanvas 
-                value={profileUrl}
-                size={220}
+                value={activeUrl}
+                size={200}
                 bgColor={"#ffffff"}
                 fgColor={"#111111"}
                 level={"Q"}
@@ -156,37 +190,40 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl }: QRCodeOv
                     src: processedAvatar,
                     x: undefined,
                     y: undefined,
-                    height: 52,
-                    width: 52,
+                    height: 48,
+                    width: 48,
                     excavate: true,
                 } : undefined}
               />
             </div>
 
-            <div className="text-center mb-8">
-              <p className="text-base font-semibold text-black mb-1">@{username}</p>
-              <p className="text-sm text-gray-500 font-medium">{typeof window !== 'undefined' ? window.location.host : 'www.raterapp.site'}/@{username}</p>
+            <div className="text-center mb-6 w-full px-2">
+              <p className="text-sm font-semibold text-black mb-0.5 truncate">@{username}</p>
+              <p className="text-xs text-gray-500 font-mono truncate select-all">{activeUrl}</p>
+              {mode === 'invite' && (
+                <p className="text-[11px] text-amber-800 bg-amber-50 rounded-xl p-2 mt-2 font-medium">
+                  When a designer signs up using this link, you will be recognized as their referrer.
+                </p>
+              )}
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 w-full">
+            <div className="flex gap-2.5 w-full">
               <button 
                 onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-gray-100 hover:bg-gray-200 text-black font-semibold text-sm transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-black font-semibold text-xs transition-colors"
               >
                 {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
                 {copied ? "Copied" : "Copy Link"}
               </button>
               <button 
                 onClick={handleDownload}
-                className="flex-[1.5] flex items-center justify-center gap-2 py-3.5 rounded-full bg-primary hover:bg-[#e6b00f] text-white font-semibold text-sm transition-colors shadow-sm shadow-primary/20"
+                className="flex-[1.3] flex items-center justify-center gap-2 py-3 rounded-2xl bg-black hover:bg-gray-800 text-white font-semibold text-xs transition-colors shadow-sm"
               >
                 <Download className="w-4 h-4" />
-                Download PNG
+                Download QR
               </button>
             </div>
-            
-            <div className="absolute top-0 right-0 p-8 w-32 h-32 bg-linear-to-bl from-primary/10 to-transparent -mr-16 -mt-16 rounded-full pointer-events-none" />
           </motion.div>
         </div>
       )}

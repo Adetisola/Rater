@@ -9,7 +9,7 @@
  * the Supabase Service Role client.
  */
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
@@ -90,6 +90,24 @@ function getAdminSupabase() {
       },
     }
   );
+}
+
+/**
+ * Derives the active application base URL from environment or request headers.
+ */
+async function getAppBaseUrl(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '');
+  }
+  try {
+    const headersList = await headers();
+    const host = headersList.get('x-forwarded-host') || headersList.get('host');
+    const proto = headersList.get('x-forwarded-proto') || (host?.startsWith('localhost') ? 'http' : 'https');
+    if (host) {
+      return `${proto}://${host}`;
+    }
+  } catch {}
+  return 'https://www.raterapp.site';
 }
 
 /**
@@ -810,7 +828,7 @@ export async function getCampaign(id: string): Promise<{ campaign: Campaign; lin
     throw new Error(`Failed to fetch campaign links: ${linksError.message}`);
   }
 
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.raterapp.site';
+  const appBaseUrl = await getAppBaseUrl();
 
   const formattedLinks: CampaignLink[] = (links || []).map((l) => ({
     id: l.id,
@@ -971,7 +989,7 @@ export async function createCampaignLink(
     detail: cleanDetail,
   });
 
-  const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.raterapp.site';
+  const appBaseUrl = await getAppBaseUrl();
   const trackingUrl = `${appBaseUrl}/?source=${encodeURIComponent(cleanSource)}${cleanDetail ? `&detail=${encodeURIComponent(cleanDetail)}` : ''}&campaign=${encodeURIComponent(campaign.slug)}`;
 
   return {

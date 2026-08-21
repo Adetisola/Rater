@@ -91,3 +91,42 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_share_events_created_at ON share_events(created_at);
 CREATE INDEX IF NOT EXISTS idx_share_events_user_id    ON share_events(user_id);
 CREATE INDEX IF NOT EXISTS idx_share_events_post_id    ON share_events(post_id);
+
+-- ── Trigger update: copy raw_user_meta_data attribution on signup ────────
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (
+    id, 
+    username, 
+    email, 
+    name, 
+    role, 
+    bg_color, 
+    is_blocked,
+    acquisition_source,
+    acquisition_detail,
+    campaign_tag,
+    referred_by
+  )
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'username', 'user_' || substring(NEW.id::text from 1 for 8)),
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', 'New Member'),
+    NEW.raw_user_meta_data->>'role',
+    COALESCE(NEW.raw_user_meta_data->>'bg_color', '#FEC312'),
+    false,
+    NULLIF(TRIM(NEW.raw_user_meta_data->>'acquisition_source'), ''),
+    NULLIF(TRIM(NEW.raw_user_meta_data->>'acquisition_detail'), ''),
+    NULLIF(TRIM(NEW.raw_user_meta_data->>'campaign_tag'), ''),
+    CASE 
+      WHEN NEW.raw_user_meta_data->>'referred_by' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' 
+      THEN (NEW.raw_user_meta_data->>'referred_by')::uuid 
+      ELSE NULL 
+    END
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+

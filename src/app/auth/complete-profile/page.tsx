@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUsernameValidation } from '@/hooks/useUsernameValidation';
 import { generateAvailableUsernameAsync } from '@/utils/usernameUtils';
 import { checkUsernameAvailable } from '@/lib/profiles';
+import { getAttributionItem, clearAttributionStorage, SESSION_KEYS } from '@/hooks/useReferralCapture';
+import { recordSignupAttribution } from '@/lib/server/attribution';
 
 const SUGGESTED_ROLES = [
   'Logo Designer', 'Brand Designer', 'UI Designer', 'UX Designer',
@@ -115,6 +117,28 @@ const { updateProfile } = useAuthActions();
     }
   };
 
+  const syncAttribution = async () => {
+    if (!currentProfile?.id) return;
+    try {
+      const rawSource = getAttributionItem(SESSION_KEYS.SOURCE);
+      const rawDetail = getAttributionItem(SESSION_KEYS.DETAIL);
+      const rawCampaign = getAttributionItem(SESSION_KEYS.CAMPAIGN);
+      const rawReferrer = getAttributionItem(SESSION_KEYS.REFERRER);
+
+      if (rawSource || rawDetail || rawCampaign || rawReferrer) {
+        await recordSignupAttribution(currentProfile.id, {
+          source: rawSource,
+          detail: rawDetail,
+          campaign: rawCampaign,
+          referrer: rawReferrer,
+        });
+        clearAttributionStorage();
+      }
+    } catch (err) {
+      console.warn('Failed to sync attribution during onboarding:', err);
+    }
+  };
+
   const handleRoleSubmit = async () => {
     const role = selectedRole.trim();
     if (!role) return;
@@ -126,6 +150,7 @@ const { updateProfile } = useAuthActions();
     const result = await updateProfile({ role, onboarding_completed: true });
     
     if (result.ok) {
+      await syncAttribution();
       router.replace('/browse');
     } else {
       setError(result.error || 'Failed to complete profile. Please try again.');
@@ -141,6 +166,7 @@ const { updateProfile } = useAuthActions();
     const result = await updateProfile({ onboarding_completed: true });
     
     if (result.ok) {
+      await syncAttribution();
       router.replace('/browse');
     } else {
       setError(result.error || 'Failed to complete profile. Please try again.');

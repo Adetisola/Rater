@@ -188,6 +188,16 @@ export function CampaignManagement() {
     }
   };
 
+  const getTrackingUrl = (link: CampaignLink) => {
+    const slug = activeCampaign?.slug || '';
+    if (typeof window !== 'undefined' && window.location.origin) {
+      const origin = window.location.origin;
+      const detailParam = link.detail ? `&detail=${encodeURIComponent(link.detail)}` : '';
+      return `${origin}/?source=${encodeURIComponent(link.source)}${detailParam}&campaign=${encodeURIComponent(slug)}`;
+    }
+    return link.tracking_url || '';
+  };
+
   const copyToClipboard = (text: string, key: string) => {
     if (typeof navigator !== 'undefined') {
       navigator.clipboard.writeText(text);
@@ -557,7 +567,7 @@ export function CampaignManagement() {
                           <div className="flex items-center gap-2">
                             <Button
                               variant="secondary"
-                              onClick={() => link.tracking_url && copyToClipboard(link.tracking_url, link.id)}
+                              onClick={() => copyToClipboard(getTrackingUrl(link), link.id)}
                               className="h-7 px-2.5 rounded-lg text-xs inline-flex items-center gap-1.5 font-semibold"
                             >
                               {copiedKey === link.id ? (
@@ -584,11 +594,9 @@ export function CampaignManagement() {
                           </div>
                         </div>
 
-                        {link.tracking_url && (
-                          <div className="p-2 bg-gray-50 rounded-lg text-[11px] font-mono text-gray-500 break-all select-all">
-                            {link.tracking_url}
-                          </div>
-                        )}
+                        <div className="p-2 bg-gray-50 rounded-lg text-[11px] font-mono text-gray-500 break-all select-all">
+                          {getTrackingUrl(link)}
+                        </div>
                       </div>
                     ))}
                   </div>

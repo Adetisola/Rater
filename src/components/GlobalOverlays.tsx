@@ -7,6 +7,7 @@ import { EditPostOverlay } from './EditPostOverlay';
 import { DeletePostOverlay } from './DeletePostOverlay';
 import { SuspendedAccountOverlay } from './SuspendedAccountOverlay';
 import { SettingsOverlay, type SettingsTab } from './SettingsOverlay';
+import { InviteModal } from './InviteModal';
 import { usePosts } from '../context/PostContext';
 import { useAuthState, useAuthActions } from '../context/AuthContext';
 import { InstallPromptUI } from './InstallPromptUI';
@@ -33,6 +34,18 @@ let triggerDelete: (postId: string) => void = () => {};
  */
 export function showDeleteConfirmation(postId: string) {
   triggerDelete(postId);
+}
+
+/**
+ * Global singleton-like mechanism to trigger the Invite Designers overlay.
+ */
+let triggerInvite: () => void = () => {};
+
+/**
+ * Programmatically opens the Invite Designers overlay.
+ */
+export function showInviteModal() {
+  triggerInvite();
 }
 
 /**
@@ -101,6 +114,7 @@ export function GlobalOverlays() {
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [undoPostId, setUndoPostId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { undoDelete } = usePosts();
@@ -126,6 +140,7 @@ export function GlobalOverlays() {
 
   useEffect(() => {
     triggerDelete = (id: string) => setDeletePostId(id);
+    triggerInvite = () => setIsInviteOpen(true);
     
     triggerUndoToast = (id: string) => {
       setUndoPostId(id);
@@ -179,6 +194,7 @@ export function GlobalOverlays() {
       <DeletePostOverlay postId={deletePostId} onClose={() => setDeletePostId(null)} />
       <SuspendedAccountOverlay isOpen={isSuspended} onClose={dismissSuspendedNotice} />
       <SettingsOverlay isOpen={isSettingsOpen} initialTab={settingsTab} onClose={handleCloseSettings} />
+      <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
       <InstallPromptUI />
       <OfflineStatus />
       

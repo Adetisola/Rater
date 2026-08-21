@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthState, useAuthActions } from '../context/AuthContext';
-import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2, CloudUpload } from 'lucide-react';
+import { LogOut, Settings, MessageSquarePlus, Scale, User, ShieldAlert, ChevronDown, QrCode, MoreHorizontal, Edit2, CloudUpload, UserPlus } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
 import { QRCodeOverlay } from './QRCodeOverlay';
-import { showSettings } from './GlobalOverlays';
+import { showSettings, showInviteModal } from './GlobalOverlays';
 
 interface UserMenuProps {
   trigger?: React.ReactNode;
@@ -133,6 +133,19 @@ const { logout } = useAuthActions();
                 Publish Work
               </Link>
               
+              <button
+                onClick={() => { setIsOpen(false); showInviteModal(); }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm text-left group/invite"
+              >
+                <div className="flex items-center gap-3">
+                  <UserPlus size={18} className="text-gray-400 group-hover/invite:text-black transition-colors" />
+                  <span>Invite Designers</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-primary/20 text-black">
+                  Invite
+                </span>
+              </button>
+
               <button
                 onClick={() => { setIsOpen(false); setShowQrCode(true); }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-sm"
