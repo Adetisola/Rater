@@ -11,8 +11,8 @@ import { usePostStore } from '../store/postStore';
 import type { RecentItemData } from '../hooks/useRecentSearches';
 
 import { UserAvatar } from './UserAvatar';
+import { PostThumbnail } from './PostThumbnail';
 import Link from 'next/link';
-import { extractPublicId, generateThumbnail } from '@/lib/cloudinary/transforms';
 
 /**
  * Props for the SearchResults dropdown component.
@@ -267,7 +267,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       {/* Profile */}
-      <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
+      <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10" />
       
       {/* Name */}
       <div className="flex-1 min-w-0">
@@ -309,17 +309,12 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start cursor-pointer"
     >
       {/* Thumbnail */}
-      <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-        <img 
-          src={
-            (post.image_url && extractPublicId(post.image_url))
-              ? generateThumbnail(extractPublicId(post.image_url)!, 56, 40)
-              : post.image_url
-          } 
-          alt="" 
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <PostThumbnail
+        imageUrl={post.image_url}
+        preset="POST_SEARCH_THUMB"
+        className="rounded-lg"
+        alt={post.title}
+      />
       
       {/* Content */}
       <div className="flex-1 min-w-0">

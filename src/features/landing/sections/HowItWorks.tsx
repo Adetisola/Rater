@@ -118,6 +118,7 @@ export function HowItWorks() {
             width={1200}
             height={600}
             loading="lazy"
+            decoding="async"
             className="w-full h-auto block"
             aria-hidden="true"
           />

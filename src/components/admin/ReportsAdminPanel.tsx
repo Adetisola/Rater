@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/UserAvatar';
+import { PostThumbnail } from '@/components/PostThumbnail';
 import { ConfirmDialog } from './ConfirmDialog';
 import { getReports, updateReportStatus, updatePostModeration, updateUserModeration } from '@/lib/admin/server';
 import type { Report, ReportStatus } from '@/types';
@@ -143,7 +144,7 @@ export function ReportsAdminPanel() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
             Reports & Safety Queue
             <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700">
               {totalCount} Reports
@@ -274,15 +275,12 @@ export function ReportsAdminPanel() {
 
                   {report.target_type === 'post' && report.target_post && (
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                      <div className="w-14 h-14 rounded-xl bg-gray-200 overflow-hidden shrink-0">
-                        {report.target_post.image_url && (
-                          <img
-                            src={report.target_post.image_url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
+                      <PostThumbnail
+                        publicId={report.target_post.media?.[0]?.public_id}
+                        imageUrl={report.target_post.image_url}
+                        preset="POST_THUMBNAIL_SM"
+                        alt={report.target_post.title}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-gray-900 truncate">
                           {report.target_post.title}
@@ -304,7 +302,7 @@ export function ReportsAdminPanel() {
 
                   {report.target_type === 'profile' && report.target_profile && (
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                      <UserAvatar avatarUrl={report.target_profile.avatar_url} className="w-10 h-10" />
+                      <UserAvatar avatarUrl={report.target_profile.avatar_url} size="sm" className="w-10 h-10" />
                       <div className="min-w-0 flex-1">
                         <div className="text-sm font-bold text-gray-900">
                           {report.target_profile.name}

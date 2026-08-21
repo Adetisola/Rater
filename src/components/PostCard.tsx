@@ -290,6 +290,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                         >
                             <UserAvatar 
                                 avatarUrl={avatar?.avatar_url} 
+                                size="xs"
                                 className="w-5 h-5 md:w-5 md:h-5 ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0" 
                                 iconClassName="w-3/4 h-3/4"
                             />

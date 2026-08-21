@@ -65,6 +65,8 @@ export function AdminHeader({ onToggleMobileMenu }: AdminHeaderProps) {
           <div className="flex items-center gap-2.5 pl-3 border-l border-gray-100">
             <UserAvatar
               avatarUrl={currentProfile.avatar_url}
+              size="xs"
+              priority={true}
               className="w-8 h-8 ring-2 ring-primary/20"
             />
             <div className="hidden md:block text-left">

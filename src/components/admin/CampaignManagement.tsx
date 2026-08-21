@@ -222,7 +222,7 @@ export function CampaignManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
             Campaign Management
           </h1>
           <p className="text-sm text-gray-500 mt-1">

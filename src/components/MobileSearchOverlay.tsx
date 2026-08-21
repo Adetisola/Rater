@@ -15,6 +15,7 @@ import { useRecentSearches } from '../hooks/useRecentSearches';
 import { useNavigationStore } from '../store/navigationStore';
 import { Search } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
+import { PostThumbnail } from './PostThumbnail';
 
 // Maps internal sort keys → display labels for active filter pills
 const SORT_OPTION_LABELS: Record<string, string> = {
@@ -473,7 +474,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
-      <UserAvatar avatarUrl={avatar.avatar_url} className="w-10 h-10" />
+      <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10" />
       <div className="flex-1 min-w-0">
         <span className="font-bold text-sm text-black">{avatar.name}</span>
         <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
@@ -493,13 +494,12 @@ function PostResultItem({ post, onClick }: PostResultItemProps) {
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
     >
-      <div className="w-14 h-10 rounded-lg overflow-hidden shrink-0 bg-gray-100">
-        <img 
-          src={post.image_url} 
-          alt="" 
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <PostThumbnail
+        imageUrl={post.image_url}
+        preset="POST_SEARCH_THUMB"
+        className="rounded-lg"
+        alt={post.title}
+      />
       <div className="flex-1 min-w-0">
         <h4 className="font-bold text-sm text-black truncate">{post.title}</h4>
         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{post.description}</p>

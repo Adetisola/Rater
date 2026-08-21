@@ -1024,6 +1024,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                             >
                                 <UserAvatar 
                                     avatarUrl={avatar?.avatar_url} 
+                                    size="sm"
+                                    priority={true}
                                     className="w-10 h-10 shrink-0 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
                                 />
                                 <div className="text-left flex flex-col min-w-0">
@@ -1329,12 +1331,14 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                 {review.reviewer_id && allAvatars[review.reviewer_id] ? (
                                                     <UserAvatar 
                                                         avatarUrl={allAvatars[review.reviewer_id].avatar_url} 
+                                                        size="xs"
                                                         className="w-7 h-7 hover:ring-1 ring-primary transition-all"
                                                         iconClassName="w-3/4 h-3/4"
                                                     />
                                                 ) : (
                                                     <UserAvatar 
                                                         avatarUrl={null} 
+                                                        size="xs"
                                                         className="w-7 h-7"
                                                         iconClassName="w-3/4 h-3/4"
                                                     />

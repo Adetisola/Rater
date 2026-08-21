@@ -59,7 +59,7 @@ export function SettingsAdminPanel() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+        <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
           Platform Settings
         </h1>
         <p className="text-sm text-gray-500 mt-1">

@@ -17,6 +17,9 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/UserAvatar';
+import { PostThumbnail } from '@/components/PostThumbnail';
+import { OptimizedMedia } from '@/components/OptimizedMedia';
+import { MediaCarousel } from '@/components/MediaCarousel';
 import { ConfirmDialog } from './ConfirmDialog';
 import { getAdminPosts, updatePostModeration, hardDeletePostAdmin } from '@/lib/admin/server';
 import type { Post } from '@/types';
@@ -204,7 +207,7 @@ export function PostsAdminPanel() {
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
             Post Moderation
           </h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -267,7 +270,7 @@ export function PostsAdminPanel() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/75 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              <tr className="bg-gray-50/75 border-b border-gray-100 text-[11px] font-semibold text-gray-400 tracking-wider">
                 <th className="px-6 py-4">Post & Media</th>
                 <th className="px-6 py-4">Author</th>
                 <th className="px-6 py-4">Category</th>
@@ -305,27 +308,15 @@ export function PostsAdminPanel() {
                     {/* Thumbnail & Title */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-2xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200 relative">
-                          {post.image_url ? (
-                            <img
-                              src={post.image_url}
-                              alt={post.title}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
-                              <ImageIcon size={20} />
-                            </div>
-                          )}
-                          {Array.isArray(post.media) && post.media.length > 1 && (
-                            <span className="absolute bottom-1 right-1 px-1 rounded bg-black/70 text-[9px] font-bold text-white">
-                              +{post.media.length - 1}
-                            </span>
-                          )}
-                        </div>
+                        <PostThumbnail
+                          publicId={post.media?.[0]?.public_id}
+                          imageUrl={post.image_url}
+                          preset="POST_THUMBNAIL_SM"
+                          badgeCount={post.media?.length}
+                          alt={post.title}
+                        />
                         <div className="min-w-0">
-                          <div className="font-bold text-gray-900 truncate max-w-xs flex items-center gap-1.5">
+                          <div className="font-medium text-gray-900 truncate max-w-xs flex items-center gap-1.5">
                             {post.title}
                             {post.uses_ai && (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-50 text-purple-700">
@@ -345,7 +336,7 @@ export function PostsAdminPanel() {
                     <td className="px-6 py-4">
                       {post.author ? (
                         <div className="flex items-center gap-2">
-                          <UserAvatar avatarUrl={post.author.avatar_url} className="w-6 h-6" />
+                          <UserAvatar avatarUrl={post.author.avatar_url} size="xs" className="w-6 h-6" />
                           <div className="text-xs font-semibold text-gray-700">
                             @{post.author.username}
                           </div>
@@ -483,23 +474,23 @@ export function PostsAdminPanel() {
 
             {/* Media Gallery Preview */}
             <div className="mb-6">
-              <div className="rounded-2xl overflow-hidden bg-gray-900 max-h-80 flex items-center justify-center border border-gray-200">
-                <img
-                  src={previewPost.image_url}
-                  alt={previewPost.title}
-                  className="max-h-80 w-auto object-contain mx-auto"
-                />
-              </div>
-              {Array.isArray(previewPost.media) && previewPost.media.length > 1 && (
-                <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-2 custom-scrollbar">
-                  {previewPost.media.map((m, idx) => (
-                    <img
-                      key={idx}
-                      src={m.url}
-                      alt=""
-                      className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0"
-                    />
-                  ))}
+              {Array.isArray(previewPost.media) && previewPost.media.length > 0 ? (
+                <div className="rounded-2xl overflow-hidden bg-gray-900 border border-gray-200">
+                  <MediaCarousel media={previewPost.media} variant="detail" className="max-h-80" />
+                </div>
+              ) : previewPost.image_url ? (
+                <div className="rounded-2xl overflow-hidden bg-gray-900 border border-gray-200 flex items-center justify-center max-h-80">
+                  <OptimizedMedia
+                    media={{ url: previewPost.image_url, type: 'image' }}
+                    variant="detail"
+                    priority={true}
+                    alt={previewPost.title}
+                    className="max-h-80 w-auto object-contain mx-auto"
+                  />
+                </div>
+              ) : (
+                <div className="rounded-2xl bg-gray-100 p-8 flex items-center justify-center text-gray-400">
+                  <ImageIcon size={32} />
                 </div>
               )}
             </div>

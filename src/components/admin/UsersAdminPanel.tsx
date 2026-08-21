@@ -305,7 +305,7 @@ export function UsersAdminPanel() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <UserAvatar avatarUrl={user.avatar_url} className="w-9 h-9" />
+                        <UserAvatar avatarUrl={user.avatar_url} size="xs" className="w-9 h-9" />
                         <div>
                           <div className="font-semibold text-gray-900 flex items-center gap-1.5">
                             {user.name}

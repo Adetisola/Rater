@@ -24,7 +24,7 @@ import remarkGfm from 'remark-gfm';
 import { type SocialLink } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
-import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
+import { optimizeAvatarUrl } from '@/lib/cloudinary/transforms';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -148,12 +148,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
 
   // Compute optimized avatar URL for the main profile header
   const optimizedAvatarUrl = useMemo(() => {
-    if (!targetAvatar?.avatar_url) return null;
-    const publicId = extractPublicId(targetAvatar.avatar_url);
-    if (publicId) {
-      return generateThumbnail(publicId, 400, 400); // slightly larger for profile header
-    }
-    return targetAvatar.avatar_url;
+    return optimizeAvatarUrl(targetAvatar?.avatar_url, 'lg');
   }, [targetAvatar?.avatar_url]);
 
   // Username validation hook (wired to checkUsernameAvailable from AuthContext)
@@ -400,12 +395,17 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
               >
                 <img
                   src={optimizedAvatarUrl || targetAvatar.avatar_url}
+                  width={136}
+                  height={136}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   className={cn(
                     "w-full h-full object-cover transition-transform duration-500",
                     !isUploadingAvatar && "group-hover/avatar:scale-110",
                     isUploadingAvatar && "opacity-50 blur-sm"
                   )}
-                  alt=""
+                  alt={targetAvatar.name || "Profile avatar"}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </button>

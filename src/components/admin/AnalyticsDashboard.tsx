@@ -135,7 +135,7 @@ export function AnalyticsDashboard() {
       {/* Top Header & Refresh & Global Date Filter */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
         <div>
-          <h1 className="text-2xl sm:text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
             <BarChart2 className="w-6 h-6 text-black" />
             Growth & Activation Analytics
           </h1>

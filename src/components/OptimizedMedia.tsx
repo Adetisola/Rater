@@ -1,10 +1,10 @@
 import React, { forwardRef, useMemo } from 'react';
 import type { MediaAsset } from '@/types';
 import { cn } from '@/lib/utils';
-import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transforms';
+import { getOptimizedMediaUrls, extractPublicId } from '@/lib/cloudinary/transforms';
 
 interface OptimizedMediaProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  media: MediaAsset;
+  media: (Partial<MediaAsset> & { url: string; type?: 'image' | 'video' }) | MediaAsset;
   variant?: 'thumbnail' | 'detail';
   priority?: boolean;
 }
@@ -12,7 +12,8 @@ interface OptimizedMediaProps extends React.ImgHTMLAttributes<HTMLImageElement> 
 /**
  * OptimizedMedia
  * 
- * Generic media wrapper integrating Cloudinary transforms.
+ * Generic media wrapper consuming the centralized Cloudinary transformation engine.
+ * Delivers responsive srcSet configurations with natural composition preservation.
  */
 export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(function OptimizedMedia({ 
   media, 
@@ -38,7 +39,6 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
   );
   
   if (media.type === 'video') {
-    // Future-proofing for video support
     return (
       <video 
         src={media.url} 
@@ -53,8 +53,8 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
   const optimizedData = useMemo(() => {
     const publicId = media.public_id || (media.url ? extractPublicId(media.url) : null);
     if (!publicId) return null;
-    return generateResponsiveUrls(publicId);
-  }, [media.public_id, media.url]);
+    return getOptimizedMediaUrls({ publicId, url: media.url }, variant === 'detail' ? 'POST_DETAIL' : 'POST_CARD');
+  }, [media.public_id, media.url, variant]);
 
   const src = optimizedData ? optimizedData.src : media.url;
   const srcSet = optimizedData ? optimizedData.srcSet : undefined;
@@ -68,7 +68,7 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
   
   const sizes = variant === 'thumbnail'
     ? "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-    : "(max-width: 768px) 100vw, 800px";
+    : "(max-width: 768px) 100vw, 1200px";
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setIsLoaded(true);

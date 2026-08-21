@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download } from 'lucide-react';
 import { Tooltip } from './ui/Tooltip';
+import { optimizeAvatarUrl } from '@/lib/cloudinary/transforms';
 
 interface FullscreenAvatarOverlayProps {
   isOpen: boolean;
@@ -73,9 +74,12 @@ export function FullscreenAvatarOverlay({ isOpen, onClose, avatarUrl, name }: Fu
             onClick={(e) => e.stopPropagation()}
           >
             <img 
-                src={avatarUrl} 
+                src={optimizeAvatarUrl(avatarUrl, 'lg') || avatarUrl} 
                 className="w-full h-full object-cover select-none"
                 alt={name}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
             />
             
             {/* Action Button - Matching Post Detail Page style */}
