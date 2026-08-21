@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { normalizeCampaignSlug, normalizeSourceDetail } from '@/utils/attributionNormalize';
 
 export const SESSION_KEYS = {
@@ -52,50 +51,58 @@ export function clearAttributionStorage() {
  * overwritten by subsequent campaign or source links in the same session prior to signup.
  */
 export function useReferralCapture() {
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    try {
-      const rawSource = searchParams?.get('source') || new URLSearchParams(window.location.search).get('source');
-      const rawDetail = searchParams?.get('detail') || new URLSearchParams(window.location.search).get('detail');
-      const rawCampaign = searchParams?.get('campaign') || new URLSearchParams(window.location.search).get('campaign');
-      const rawReferrer = searchParams?.get('referrer') || new URLSearchParams(window.location.search).get('referrer');
+    const captureParams = () => {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const rawSource = searchParams.get('source');
+        const rawDetail = searchParams.get('detail');
+        const rawCampaign = searchParams.get('campaign');
+        const rawReferrer = searchParams.get('referrer');
 
-      // 1. Marketing Source (first-touch)
-      if (rawSource) {
-        const normalized = normalizeSourceDetail(rawSource);
-        if (normalized) {
-          setFirstTouchItem(SESSION_KEYS.SOURCE, normalized);
+        // 1. Marketing Source (first-touch)
+        if (rawSource) {
+          const normalized = normalizeSourceDetail(rawSource);
+          if (normalized) {
+            setFirstTouchItem(SESSION_KEYS.SOURCE, normalized);
+          }
         }
-      }
 
-      // 2. Marketing Detail (first-touch)
-      if (rawDetail) {
-        const normalized = normalizeSourceDetail(rawDetail);
-        if (normalized) {
-          setFirstTouchItem(SESSION_KEYS.DETAIL, normalized);
+        // 2. Marketing Detail (first-touch)
+        if (rawDetail) {
+          const normalized = normalizeSourceDetail(rawDetail);
+          if (normalized) {
+            setFirstTouchItem(SESSION_KEYS.DETAIL, normalized);
+          }
         }
-      }
 
-      // 3. Campaign Tag (first-touch)
-      if (rawCampaign) {
-        const normalized = normalizeCampaignSlug(rawCampaign);
-        if (normalized) {
-          setFirstTouchItem(SESSION_KEYS.CAMPAIGN, normalized);
+        // 3. Campaign Tag (first-touch)
+        if (rawCampaign) {
+          const normalized = normalizeCampaignSlug(rawCampaign);
+          if (normalized) {
+            setFirstTouchItem(SESSION_KEYS.CAMPAIGN, normalized);
+          }
         }
-      }
 
-      // 4. Referral UUID (first-touch)
-      if (rawReferrer) {
-        const cleanReferrer = rawReferrer.trim();
-        if (cleanReferrer) {
-          setFirstTouchItem(SESSION_KEYS.REFERRER, cleanReferrer);
+        // 4. Referral UUID (first-touch)
+        if (rawReferrer) {
+          const cleanReferrer = rawReferrer.trim();
+          if (cleanReferrer) {
+            setFirstTouchItem(SESSION_KEYS.REFERRER, cleanReferrer);
+          }
         }
+      } catch {
+        // Storage might be restricted in private/sandbox mode
       }
-    } catch {
-      // Storage might be restricted in private/sandbox mode
-    }
-  }, [searchParams]);
+    };
+
+    captureParams();
+
+    window.addEventListener('popstate', captureParams);
+    return () => {
+      window.removeEventListener('popstate', captureParams);
+    };
+  }, []);
 }
