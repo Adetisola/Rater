@@ -2,21 +2,17 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  Megaphone, 
   Plus, 
   Search, 
   Copy, 
   Check, 
-  ExternalLink, 
   Trash2, 
   Edit3, 
   Link as LinkIcon, 
   RefreshCw, 
   X,
   Play,
-  Pause,
-  CheckCircle2,
-  Share2
+  Pause
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { 

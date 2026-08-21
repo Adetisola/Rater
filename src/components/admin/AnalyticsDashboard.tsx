@@ -15,12 +15,10 @@ import {
   Share2, 
   HelpCircle, 
   UserPlus, 
-  Unlock, 
   ArrowRight, 
   Megaphone, 
   Percent, 
   Timer, 
-  Inbox, 
   BarChart2,
   CheckCircle2
 } from 'lucide-react';
