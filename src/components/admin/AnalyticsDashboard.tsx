@@ -330,7 +330,7 @@ export function AnalyticsDashboard() {
             <div className="text-[11px] text-gray-400 mt-2">Reached canonical unlock</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-amber-100/80 bg-amber-50/20 shadow-sm relative group">
+          <div className="p-5 rounded-3xl border border-amber-100/80 bg-amber-50/20 shadow-sm relative group">
             <div className="flex items-center justify-between text-xs text-amber-800 font-semibold mb-2">
               <span>Awaiting First Review</span>
               <Tooltip text="Operational metric: Count of posts in period with exactly 0 reviews. Needs community feedback." />

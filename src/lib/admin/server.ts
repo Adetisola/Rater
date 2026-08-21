@@ -29,7 +29,10 @@ import type {
   CoreLoopMetrics,
   RatingLiquidityMetrics,
   GrowthLoopCohortData,
+  GrowthLoopCohortStage,
   AcquisitionBreakdownData,
+  AcquisitionSourceRow,
+  ReferralAcquisitionStats,
   RetentionMetrics,
   CampaignBreakdownRow,
   SharingMetrics
@@ -779,9 +782,6 @@ export async function getCampaigns(): Promise<Campaign[]> {
       username: c.creator.username,
       name: c.creator.name,
       avatar_url: c.creator.avatar_url,
-      email: '',
-      is_blocked: false,
-      created_at: '',
     } : null,
   }));
 }
@@ -900,7 +900,7 @@ export async function updateCampaign(
   const { profile: adminProfile } = await verifyAdminSession();
   const adminSupabase = getAdminSupabase();
 
-  const payload: Record<string, any> = {
+  const payload: Database['public']['Tables']['campaigns']['Update'] = {
     updated_at: new Date().toISOString(),
   };
 
@@ -1019,7 +1019,7 @@ export async function updateUserAttribution(
   const { profile: adminProfile } = await verifyAdminSession();
   const adminSupabase = getAdminSupabase();
 
-  const payload: Record<string, any> = {};
+  const payload: Database['public']['Tables']['profiles']['Update'] = {};
 
   if (updates.acquisition_source !== undefined) {
     payload.acquisition_source = updates.acquisition_source ? normalizeSourceDetail(updates.acquisition_source) : null;

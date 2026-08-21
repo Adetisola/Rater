@@ -307,7 +307,12 @@ export interface Campaign {
   created_at: string;
   updated_at: string;
   links_count?: number;
-  creator?: Avatar | null;
+  creator?: {
+    id: string;
+    username: string;
+    name: string;
+    avatar_url?: string | null;
+  } | null;
 }
 
 export interface CampaignLink {
