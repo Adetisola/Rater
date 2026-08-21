@@ -850,7 +850,7 @@ function TrendCard({
 }) {
   const current = metric?.current ?? 0;
   const previous = metric?.previous ?? 0;
-  const changePct = metric?.changePct;
+  const changePct = metric?.changePct ?? null;
 
   const isPositive = changePct !== null && changePct > 0;
   const isNegative = changePct !== null && changePct < 0;
@@ -869,7 +869,7 @@ function TrendCard({
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs">
-        {changePct !== null && changePct !== undefined ? (
+        {changePct !== null ? (
           <span className={`font-semibold flex items-center gap-0.5 ${
             isPositive ? 'text-emerald-600' : isNegative ? 'text-red-500' : 'text-gray-400'
           }`}>
