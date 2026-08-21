@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Button } from './ui/Button';
 import { cn } from '../lib/utils';
+import { logShareEvent } from '@/lib/server/shareEvents';
 const whatsappIcon = '/icons/icons8-whatsapp.svg';
 const xIcon = '/icons/icons8-x.svg';
 const linkedinIcon = '/icons/icons8-linkedin.svg';
@@ -29,6 +30,24 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
   const handleCopy = () => {
     navigator.clipboard.writeText(shareUrl);
     setCopied(true);
+    logShareEvent(post_id, 'copy_link').catch(() => {});
+  };
+
+  const handleSocialShare = (platform: 'whatsapp' | 'x' | 'linkedin') => {
+    logShareEvent(post_id, platform).catch(() => {});
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const text = encodeURIComponent('Check out this design on Rater!');
+    let target = '';
+    if (platform === 'whatsapp') {
+      target = `https://api.whatsapp.com/send?text=${text}%20${encodedUrl}`;
+    } else if (platform === 'x') {
+      target = `https://x.com/intent/tweet?text=${text}&url=${encodedUrl}`;
+    } else if (platform === 'linkedin') {
+      target = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+    }
+    if (target) {
+      window.open(target, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const [mounted, setMounted] = useState(false);
@@ -108,13 +127,28 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
 
         {/* Social Icons */}
         <div className="flex justify-center gap-6 mb-4">
-            <button className="hover:scale-105 transition-transform">
+            <button 
+                type="button"
+                onClick={() => handleSocialShare('whatsapp')}
+                className="hover:scale-105 transition-transform"
+                title="Share on WhatsApp"
+            >
                 <img src={whatsappIcon} className="h-12" alt="WhatsApp" />
             </button>
-            <button className="hover:scale-105 transition-transform">
+            <button 
+                type="button"
+                onClick={() => handleSocialShare('x')}
+                className="hover:scale-105 transition-transform"
+                title="Share on X"
+            >
                 <img src={xIcon} className="h-12" alt="X" />
             </button>
-            <button className="hover:scale-105 transition-transform">
+            <button 
+                type="button"
+                onClick={() => handleSocialShare('linkedin')}
+                className="hover:scale-105 transition-transform"
+                title="Share on LinkedIn"
+            >
                 <img src={linkedinIcon} className="h-14" alt="LinkedIn" />
             </button>
         </div>

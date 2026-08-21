@@ -12,7 +12,9 @@ import {
   Settings, 
   ArrowLeft,
   X,
-  ExternalLink
+  ExternalLink,
+  BarChart2,
+  Megaphone
 } from 'lucide-react';
 import { useAuthState } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase/client';
@@ -51,6 +53,16 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
       label: 'Dashboard', 
       href: '/admin/dashboard', 
       icon: LayoutDashboard 
+    },
+    { 
+      label: 'Analytics', 
+      href: '/admin/analytics', 
+      icon: BarChart2 
+    },
+    { 
+      label: 'Campaigns', 
+      href: '/admin/campaigns', 
+      icon: Megaphone 
     },
     { 
       label: 'Users', 

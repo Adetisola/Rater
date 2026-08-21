@@ -88,6 +88,79 @@ export type Database = {
           },
         ]
       }
+      campaign_links: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          detail: string | null
+          id: string
+          source: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          source: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_links_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           name: string
@@ -546,9 +619,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          acquisition_detail: string | null
+          acquisition_source: string | null
           avatar_url: string | null
           bg_color: string | null
           bio: string | null
+          campaign_tag: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -558,6 +634,7 @@ export type Database = {
           onboarding_completed: boolean | null
           passkey: string | null
           previous_usernames: string[] | null
+          referred_by: string | null
           role: string | null
           show_email: boolean | null
           social_links: Json | null
@@ -566,9 +643,12 @@ export type Database = {
           username_last_changed_at: string | null
         }
         Insert: {
+          acquisition_detail?: string | null
+          acquisition_source?: string | null
           avatar_url?: string | null
           bg_color?: string | null
           bio?: string | null
+          campaign_tag?: string | null
           created_at?: string | null
           email?: string | null
           id: string
@@ -578,6 +658,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           passkey?: string | null
           previous_usernames?: string[] | null
+          referred_by?: string | null
           role?: string | null
           show_email?: boolean | null
           social_links?: Json | null
@@ -586,9 +667,12 @@ export type Database = {
           username_last_changed_at?: string | null
         }
         Update: {
+          acquisition_detail?: string | null
+          acquisition_source?: string | null
           avatar_url?: string | null
           bg_color?: string | null
           bio?: string | null
+          campaign_tag?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -598,6 +682,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           passkey?: string | null
           previous_usernames?: string[] | null
+          referred_by?: string | null
           role?: string | null
           show_email?: boolean | null
           social_links?: Json | null
@@ -605,7 +690,15 @@ export type Database = {
           username?: string
           username_last_changed_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
@@ -743,6 +836,52 @@ export type Database = {
           {
             foreignKeyName: "reviews_reviewer_id_fkey"
             columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      share_events: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          share_method: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          share_method?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          share_method?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_events_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_metrics"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "share_events_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_events_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

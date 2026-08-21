@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/UserAvatar';
 import { ConfirmDialog } from './ConfirmDialog';
-import { getAdminUsers, updateUserModeration } from '@/lib/admin/server';
+import { getAdminUsers, updateUserModeration, updateUserAttribution } from '@/lib/admin/server';
 import type { Avatar } from '@/types';
 import { format } from 'date-fns';
 
@@ -38,6 +38,13 @@ export function UsersAdminPanel() {
   // Edit Role inline
   const [isEditingRole, setIsEditingRole] = useState(false);
   const [newRole, setNewRole] = useState('');
+
+  // Attribution Edit State
+  const [isEditingAttribution, setIsEditingAttribution] = useState(false);
+  const [editSource, setEditSource] = useState('');
+  const [editDetail, setEditDetail] = useState('');
+  const [editCampaign, setEditCampaign] = useState('');
+  const [editReferredBy, setEditReferredBy] = useState('');
 
   // Confirmation Modal State
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -167,6 +174,48 @@ export function UsersAdminPanel() {
     }
   };
 
+  const handleOpenUser = (user: Avatar) => {
+    setSelectedUser(user);
+    setIsEditingRole(false);
+    setNewRole(user.role || '');
+    setIsEditingAttribution(false);
+    setEditSource(user.acquisition_source || '');
+    setEditDetail(user.acquisition_detail || '');
+    setEditCampaign(user.campaign_tag || '');
+    setEditReferredBy(user.referred_by || '');
+  };
+
+  const handleSaveAttribution = async () => {
+    if (!selectedUser) return;
+    setIsActionLoading(true);
+    try {
+      const res = await updateUserAttribution(selectedUser.id, {
+        acquisition_source: editSource || null,
+        acquisition_detail: editDetail || null,
+        campaign_tag: editCampaign || null,
+        referred_by: editReferredBy || null,
+      });
+
+      if (res.ok) {
+        const updatedFields = {
+          acquisition_source: editSource || null,
+          acquisition_detail: editDetail || null,
+          campaign_tag: editCampaign || null,
+          referred_by: editReferredBy || null,
+        };
+        setSelectedUser(prev => prev ? { ...prev, ...updatedFields } : null);
+        setUsers(prev => prev.map(u => u.id === selectedUser.id ? { ...u, ...updatedFields } : u));
+        setIsEditingAttribution(false);
+      } else {
+        alert(res.error || 'Failed to update attribution');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to update attribution');
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in duration-300">
       {/* Page Title & Search Bar */}
@@ -252,11 +301,7 @@ export function UsersAdminPanel() {
                   <tr 
                     key={user.id} 
                     className="hover:bg-gray-50/60 transition-colors cursor-pointer"
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setIsEditingRole(false);
-                      setNewRole(user.role || '');
-                    }}
+                    onClick={() => handleOpenUser(user)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -306,11 +351,7 @@ export function UsersAdminPanel() {
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="outline"
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setIsEditingRole(false);
-                            setNewRole(user.role || '');
-                          }}
+                          onClick={() => handleOpenUser(user)}
                           className="h-8 px-3 text-xs font-semibold rounded-xl"
                         >
                           View
@@ -501,6 +542,114 @@ export function UsersAdminPanel() {
                 ) : (
                   <div className="p-3 bg-gray-50 rounded-xl text-xs font-semibold text-gray-700">
                     {selectedUser.role || 'No custom role assigned (Default: Member)'}
+                  </div>
+                )}
+              </div>
+
+              {/* Growth & Attribution Metadata */}
+              <div className="space-y-3">
+                <div className="text-xs font-bold text-gray-400 tracking-wider flex items-center justify-between">
+                  <span>Growth & Attribution</span>
+                  {!isEditingAttribution && (
+                    <button
+                      onClick={() => setIsEditingAttribution(true)}
+                      className="text-primary hover:underline inline-flex items-center gap-1 font-bold text-[11px]"
+                    >
+                      <Edit2 size={11} />
+                      Override
+                    </button>
+                  )}
+                </div>
+
+                {isEditingAttribution ? (
+                  <div className="bg-amber-50/40 p-4 rounded-2xl border border-amber-200/60 space-y-3 text-xs">
+                    <div className="text-[10px] text-amber-800 font-semibold uppercase tracking-wider">
+                      Attribution Override (Admin Correction)
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Acquisition Source</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. instagram, tiktok, discord, direct"
+                        value={editSource}
+                        onChange={(e) => setEditSource(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Source Detail</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. @designwithme, event-name"
+                        value={editDetail}
+                        onChange={(e) => setEditDetail(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Campaign Tag</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. first-1000, get-rated"
+                        value={editCampaign}
+                        onChange={(e) => setEditCampaign(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Referred By (User UUID)</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. UUID of referrer profile"
+                        value={editReferredBy}
+                        onChange={(e) => setEditReferredBy(e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black font-mono"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        variant="primary"
+                        onClick={handleSaveAttribution}
+                        disabled={isActionLoading}
+                        className="h-8 px-3 text-xs font-bold rounded-xl bg-black text-white hover:bg-gray-800"
+                      >
+                        Save Correction
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsEditingAttribution(false)}
+                        className="h-8 px-2 text-xs text-gray-500 rounded-xl"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 p-4 rounded-2xl space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Marketing Source</span>
+                      <span className="font-semibold text-gray-900 uppercase tracking-wide">
+                        {selectedUser.acquisition_source || 'Direct / Organic'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Source Detail</span>
+                      <span className="font-mono text-gray-700 text-[11px]">
+                        {selectedUser.acquisition_detail || '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Campaign Tag</span>
+                      <span className="font-mono text-gray-700 text-[11px]">
+                        {selectedUser.campaign_tag || '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-500">Referred By</span>
+                      <span className="font-mono text-[10px] text-gray-700 truncate max-w-[170px]">
+                        {selectedUser.referred_by || 'None'}
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>

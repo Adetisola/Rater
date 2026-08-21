@@ -13,6 +13,8 @@ import {
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
 import { getPlatformSettingPublic } from '@/lib/admin/server';
+import { SESSION_KEYS } from '@/hooks/useReferralCapture';
+import { normalizeCampaignSlug, normalizeSourceDetail } from '@/utils/attributionNormalize';
 
 interface AuthState {
   currentProfile: Avatar | null;
@@ -249,13 +251,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, error: error.message };
     }
 
-    // 3. Save the base64 avatar directly to the profile table
-    if (avatar_url && authData.user) {
-      await supabase
-        .from('profiles')
-        .update({ avatar_url })
-        .eq('id', authData.user.id);
-        
+    // 4. Capture marketing attribution & referral from sessionStorage (first-touch)
+    if (authData.user) {
+      const profileUpdates: Record<string, any> = {};
+      if (avatar_url) profileUpdates.avatar_url = avatar_url;
+
+      try {
+        if (typeof window !== 'undefined') {
+          const rawSource = sessionStorage.getItem(SESSION_KEYS.SOURCE);
+          const rawDetail = sessionStorage.getItem(SESSION_KEYS.DETAIL);
+          const rawCampaign = sessionStorage.getItem(SESSION_KEYS.CAMPAIGN);
+          const rawReferrer = sessionStorage.getItem(SESSION_KEYS.REFERRER);
+
+          if (rawSource) {
+            const normalizedSource = normalizeSourceDetail(rawSource);
+            if (normalizedSource) profileUpdates.acquisition_source = normalizedSource;
+          }
+
+          if (rawDetail) {
+            const normalizedDetail = normalizeSourceDetail(rawDetail);
+            if (normalizedDetail) profileUpdates.acquisition_detail = normalizedDetail;
+          }
+
+          if (rawCampaign) {
+            const normalizedCampaign = normalizeCampaignSlug(rawCampaign);
+            if (normalizedCampaign) profileUpdates.campaign_tag = normalizedCampaign;
+          }
+
+          if (rawReferrer && rawReferrer.trim() !== authData.user.id) {
+            profileUpdates.referred_by = rawReferrer.trim();
+          }
+
+          // Clear sessionStorage attribution keys so future signups/sessions are clean
+          sessionStorage.removeItem(SESSION_KEYS.SOURCE);
+          sessionStorage.removeItem(SESSION_KEYS.DETAIL);
+          sessionStorage.removeItem(SESSION_KEYS.CAMPAIGN);
+          sessionStorage.removeItem(SESSION_KEYS.REFERRER);
+        }
+      } catch (storageErr) {
+        console.warn('Failed to read/clear attribution from sessionStorage:', storageErr);
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        try {
+          await supabase
+            .from('profiles')
+            .update(profileUpdates)
+            .eq('id', authData.user.id);
+        } catch (updateErr) {
+          console.error('Failed to save profile attribution:', updateErr);
+        }
+      }
+
       // Re-fetch to guarantee state is synced
       ProfileCache.invalidate(authData.user.id);
       const updated = await getProfileById(authData.user.id);

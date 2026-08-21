@@ -79,6 +79,7 @@ import { ScrollRestorationProvider } from "../components/ScrollRestorationProvid
 import { GlobalErrorBoundary } from "../components/GlobalErrorBoundary";
 import { StructuredData } from "../components/StructuredData";
 import { MaintenanceBanner } from "../components/MaintenanceBanner";
+import { ReferralCapture } from "../components/ReferralCapture";
 
 export default function RootLayout({
   children,
@@ -91,6 +92,7 @@ export default function RootLayout({
         <StructuredData />
         <GlobalErrorBoundary>
           <AuthProvider>
+            <ReferralCapture />
             <PostProvider>
               <TimeProvider>
                 <ScrollRestorationProvider>
