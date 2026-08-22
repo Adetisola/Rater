@@ -29,6 +29,7 @@ import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
 import { QRCodeOverlay } from './QRCodeOverlay';
 import { showSettings, showInviteModal } from './GlobalOverlays';
+import { cn } from '@/lib/utils';
 
 interface UserMenuProps {
   trigger?: React.ReactNode;
@@ -47,10 +48,21 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
   const [showHelpSubmenu, setShowHelpSubmenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showQrCode, setShowQrCode] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const helpTriggerRef = useRef<HTMLButtonElement>(null);
   const firstSubmenuItemRef = useRef<HTMLAnchorElement>(null);
+
+  // Detect mobile screen width (< 768px)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Close all menu states cleanly
   const handleCloseAll = useCallback(() => {
@@ -92,12 +104,12 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, showHelpSubmenu, handleCloseAll]);
 
-  // Focus first item when Help submenu opens
+  // Focus first item when Help submenu opens on desktop
   useEffect(() => {
-    if (showHelpSubmenu) {
+    if (showHelpSubmenu && !isMobile) {
       firstSubmenuItemRef.current?.focus();
     }
-  }, [showHelpSubmenu]);
+  }, [showHelpSubmenu, isMobile]);
 
   if (!currentProfile) return null;
 
@@ -146,19 +158,22 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-2 w-[260px] bg-white rounded-2xl shadow-xl border border-gray-100/80 overflow-visible z-100`}
+            className={cn(
+              "absolute top-full mt-2 w-[260px] bg-white rounded-2xl shadow-xl border border-gray-100/80 overflow-visible z-100",
+              align === 'right' ? 'right-0' : 'left-0'
+            )}
             role="menu"
             aria-label="User navigation menu"
           >
             {/* Desktop / Mobile Container Wrapper */}
-            <div className="relative overflow-hidden rounded-2xl">
+            <div className="relative overflow-hidden rounded-2xl bg-white">
               
-              {/* MAIN MENU PANEL */}
+              {/* MAIN MENU PANEL (slides only on mobile, stays static on desktop) */}
               <motion.div
                 initial={false}
-                animate={{ x: showHelpSubmenu ? '-100%' : '0%' }}
+                animate={{ x: isMobile && showHelpSubmenu ? '-100%' : '0%' }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
-                className="w-full flex-col"
+                className="w-full flex flex-col"
               >
                 {/* 1. Interactive Profile Header Card */}
                 {variant === 'nav' && (
@@ -254,19 +269,24 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     <span>Settings</span>
                   </button>
 
-                  {/* Help & Resources Click Trigger */}
+                  {/* Help & Resources Trigger Button */}
                   <button
                     ref={helpTriggerRef}
                     onClick={() => setShowHelpSubmenu(!showHelpSubmenu)}
                     aria-expanded={showHelpSubmenu}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/help"
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors text-xs text-left group/help",
+                      showHelpSubmenu && !isMobile 
+                        ? "bg-gray-100 text-gray-900 font-semibold" 
+                        : "hover:bg-gray-50 text-gray-700 font-medium"
+                    )}
                     role="menuitem"
                   >
                     <div className="flex items-center gap-2.5">
-                      <LifeBuoy size={16} className="text-gray-400 group-hover/help:text-black transition-colors" />
+                      <LifeBuoy size={16} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-black" : "text-gray-400 group-hover/help:text-black")} />
                       <span>Help & Resources</span>
                     </div>
-                    <ChevronRight size={14} className="text-gray-300 group-hover/help:text-gray-600 transition-colors" />
+                    <ChevronRight size={14} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-gray-700" : "text-gray-300 group-hover/help:text-gray-600")} />
                   </button>
                 </div>
 
@@ -301,188 +321,195 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                 </div>
               </motion.div>
 
-              {/* MOBILE DRILL-DOWN SUBVIEW */}
-              <motion.div
-                initial={false}
-                animate={{ x: showHelpSubmenu ? '0%' : '100%' }}
-                transition={{ duration: 0.2, ease: "easeInOut" }}
-                className="absolute inset-0 bg-white flex flex-col md:hidden z-20"
-              >
-                {/* Back Button Header */}
-                <div className="p-2 border-b border-gray-100 flex items-center">
-                  <button
-                    onClick={() => setShowHelpSubmenu(false)}
-                    className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:text-black rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <ChevronLeft size={16} />
-                    <span>Back to Menu</span>
-                  </button>
-                </div>
-
-                {/* Mobile Submenu Items */}
-                <div className="p-1.5 space-y-3 overflow-y-auto max-h-[340px]">
-                  {/* Support & Feedback */}
-                  <div className="space-y-0.5">
-                    <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Support & Feedback
-                    </p>
-                    <a
-                      href="mailto:support@raterapp.site"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                    >
-                      <Mail size={16} className="text-gray-400" />
-                      <span>Contact Support</span>
-                    </a>
-                    <Link
-                      href="/feedback"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                    >
-                      <MessageSquarePlus size={16} className="text-gray-400" />
-                      <span>Give Feedback & Bugs</span>
-                    </Link>
-                  </div>
-
-                  {/* Resources */}
-                  <div className="space-y-0.5 border-t border-gray-100 pt-2">
-                    <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Resources
-                    </p>
-                    <Link
-                      href="/legal/community-guidelines"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                    >
-                      <BookOpen size={16} className="text-gray-400" />
-                      <span>Community Guidelines</span>
-                    </Link>
-                    <Link
-                      href="/legal/ai-insights"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                    >
-                      <Sparkles size={16} className="text-gray-400" />
-                      <span>AI Insights Disclosure</span>
-                    </Link>
-                  </div>
-
-                  {/* Legal */}
-                  <div className="space-y-0.5 border-t border-gray-100 pt-2">
-                    <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Legal
-                    </p>
-                    <Link
-                      href="/legal/terms"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                    >
-                      <FileText size={16} className="text-gray-400" />
-                      <span>Terms of Service</span>
-                    </Link>
-                    <Link
-                      href="/legal/privacy"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                    >
-                      <Lock size={16} className="text-gray-400" />
-                      <span>Privacy Policy</span>
-                    </Link>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* DESKTOP SIDE FLYOUT SUBMENU */}
-            <AnimatePresence>
-              {showHelpSubmenu && (
+              {/* MOBILE DRILL-DOWN SUBVIEW (Rendered strictly on mobile < 768px) */}
+              {isMobile && (
                 <motion.div
-                  initial={{ opacity: 0, x: -8, scale: 0.98 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -6, scale: 0.98 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className={`hidden md:block absolute ${align === 'right' ? 'right-full mr-2' : 'left-full ml-2'} top-0 w-[240px] bg-white rounded-2xl shadow-xl border border-gray-100/80 p-1.5 z-105`}
-                  role="menu"
-                  aria-label="Help & Resources submenu"
+                  initial={false}
+                  animate={{ x: showHelpSubmenu ? '0%' : '100%' }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-white flex flex-col z-20"
                 >
-                  {/* Support & Feedback */}
-                  <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-gray-100">
-                    <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Support & Feedback
-                    </p>
-                    <a
-                      ref={firstSubmenuItemRef}
-                      href="mailto:support@raterapp.site"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                      role="menuitem"
+                  {/* Back Button Header */}
+                  <div className="p-2 border-b border-gray-100 flex items-center">
+                    <button
+                      onClick={() => setShowHelpSubmenu(false)}
+                      className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:text-black rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      <Mail size={16} className="text-gray-400" />
-                      <span>Contact Support</span>
-                    </a>
-                    <Link
-                      href="/feedback"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                      role="menuitem"
-                    >
-                      <MessageSquarePlus size={16} className="text-gray-400" />
-                      <span>Give Feedback & Bugs</span>
-                    </Link>
+                      <ChevronLeft size={16} />
+                      <span>Back to Menu</span>
+                    </button>
                   </div>
 
-                  {/* Resources */}
-                  <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-gray-100">
-                    <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Resources
-                    </p>
-                    <Link
-                      href="/legal/community-guidelines"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                      role="menuitem"
-                    >
-                      <BookOpen size={16} className="text-gray-400" />
-                      <span>Community Guidelines</span>
-                    </Link>
-                    <Link
-                      href="/legal/ai-insights"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                      role="menuitem"
-                    >
-                      <Sparkles size={16} className="text-gray-400" />
-                      <span>AI Insights Disclosure</span>
-                    </Link>
-                  </div>
+                  {/* Mobile Submenu Items */}
+                  <div className="p-1.5 space-y-3 overflow-y-auto max-h-[340px]">
+                    {/* Support & Feedback */}
+                    <div className="space-y-0.5">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Support & Feedback
+                      </p>
+                      <a
+                        href="mailto:support@raterapp.site"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      >
+                        <Mail size={16} className="text-gray-400" />
+                        <span>Contact Support</span>
+                      </a>
+                      <Link
+                        href="/feedback"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      >
+                        <MessageSquarePlus size={16} className="text-gray-400" />
+                        <span>Give Feedback & Bugs</span>
+                      </Link>
+                    </div>
 
-                  {/* Legal */}
-                  <div className="space-y-0.5">
-                    <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                      Legal
-                    </p>
-                    <Link
-                      href="/legal/terms"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                      role="menuitem"
-                    >
-                      <FileText size={16} className="text-gray-400" />
-                      <span>Terms of Service</span>
-                    </Link>
-                    <Link
-                      href="/legal/privacy"
-                      onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
-                      role="menuitem"
-                    >
-                      <Lock size={16} className="text-gray-400" />
-                      <span>Privacy Policy</span>
-                    </Link>
+                    {/* Resources */}
+                    <div className="space-y-0.5 border-t border-gray-100 pt-2">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Resources
+                      </p>
+                      <Link
+                        href="/legal/community-guidelines"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      >
+                        <BookOpen size={16} className="text-gray-400" />
+                        <span>Community Guidelines</span>
+                      </Link>
+                      <Link
+                        href="/legal/ai-insights"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      >
+                        <Sparkles size={16} className="text-gray-400" />
+                        <span>AI Insights Disclosure</span>
+                      </Link>
+                    </div>
+
+                    {/* Legal */}
+                    <div className="space-y-0.5 border-t border-gray-100 pt-2">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Legal
+                      </p>
+                      <Link
+                        href="/legal/terms"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      >
+                        <FileText size={16} className="text-gray-400" />
+                        <span>Terms of Service</span>
+                      </Link>
+                      <Link
+                        href="/legal/privacy"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      >
+                        <Lock size={16} className="text-gray-400" />
+                        <span>Privacy Policy</span>
+                      </Link>
+                    </div>
                   </div>
                 </motion.div>
               )}
-            </AnimatePresence>
+            </div>
+
+            {/* DESKTOP SIDE FLYOUT SUBMENU (Rendered strictly on desktop md+) */}
+            {!isMobile && (
+              <AnimatePresence>
+                {showHelpSubmenu && (
+                  <motion.div
+                    initial={{ opacity: 0, x: align === 'right' ? 8 : -8, scale: 0.98 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: align === 'right' ? 8 : -8, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className={cn(
+                      "absolute top-0 w-[240px] bg-white rounded-2xl shadow-xl border border-gray-100/80 p-1.5 z-105",
+                      align === 'right' ? 'right-full mr-2' : 'left-full ml-2'
+                    )}
+                    role="menu"
+                    aria-label="Help & Resources submenu"
+                  >
+                    {/* Support & Feedback */}
+                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-gray-100">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Support & Feedback
+                      </p>
+                      <a
+                        ref={firstSubmenuItemRef}
+                        href="mailto:support@raterapp.site"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        role="menuitem"
+                      >
+                        <Mail size={16} className="text-gray-400" />
+                        <span>Contact Support</span>
+                      </a>
+                      <Link
+                        href="/feedback"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        role="menuitem"
+                      >
+                        <MessageSquarePlus size={16} className="text-gray-400" />
+                        <span>Give Feedback & Bugs</span>
+                      </Link>
+                    </div>
+
+                    {/* Resources */}
+                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-gray-100">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Resources
+                      </p>
+                      <Link
+                        href="/legal/community-guidelines"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        role="menuitem"
+                      >
+                        <BookOpen size={16} className="text-gray-400" />
+                        <span>Community Guidelines</span>
+                      </Link>
+                      <Link
+                        href="/legal/ai-insights"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        role="menuitem"
+                      >
+                        <Sparkles size={16} className="text-gray-400" />
+                        <span>AI Insights Disclosure</span>
+                      </Link>
+                    </div>
+
+                    {/* Legal */}
+                    <div className="space-y-0.5">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Legal
+                      </p>
+                      <Link
+                        href="/legal/terms"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        role="menuitem"
+                      >
+                        <FileText size={16} className="text-gray-400" />
+                        <span>Terms of Service</span>
+                      </Link>
+                      <Link
+                        href="/legal/privacy"
+                        onClick={handleCloseAll}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        role="menuitem"
+                      >
+                        <Lock size={16} className="text-gray-400" />
+                        <span>Privacy Policy</span>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
