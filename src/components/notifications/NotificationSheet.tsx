@@ -1,0 +1,180 @@
+"use client";
+
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, CheckCheck, Settings, ExternalLink, Loader2 } from 'lucide-react';
+import type { Notification } from '@/types';
+import { NotificationItem } from './NotificationItem';
+import { NotificationEmptyState } from './NotificationEmptyState';
+import { showSettings } from '../GlobalOverlays';
+import { cn } from '@/lib/utils';
+
+interface NotificationSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  notifications: Notification[];
+  unreadCount: number;
+  isLoading: boolean;
+  activeFilter: 'all' | 'unread';
+  onFilterChange: (filter: 'all' | 'unread') => void;
+  onMarkAsRead: (id: string) => void;
+  onMarkAllAsRead: () => void;
+}
+
+export function NotificationSheet({
+  isOpen,
+  onClose,
+  notifications,
+  unreadCount,
+  isLoading,
+  activeFilter,
+  onFilterChange,
+  onMarkAsRead,
+  onMarkAllAsRead,
+}: NotificationSheetProps) {
+  // Prevent body scroll when sheet is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-150 md:hidden">
+        {/* Backdrop */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+        />
+
+        {/* Sheet Container */}
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+          className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden z-10"
+        >
+          {/* Drag Handle Bar */}
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 shrink-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-lg text-gray-900 tracking-tight">Notifications</h3>
+              {unreadCount > 0 && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-primary/20 text-gray-900">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={onMarkAllAsRead}
+                  className="p-2 text-xs text-gray-600 hover:text-black hover:bg-gray-100 rounded-full transition-colors flex items-center gap-1 font-semibold"
+                >
+                  <CheckCheck size={16} />
+                  <span>Mark read</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  onClose();
+                  showSettings('notifications');
+                }}
+                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                aria-label="Notification settings"
+              >
+                <Settings size={17} />
+              </button>
+              <button
+                onClick={onClose}
+                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Tab Switcher */}
+          <div className="flex items-center px-6 py-2.5 bg-gray-50/80 border-b border-gray-100 shrink-0 gap-2">
+            <button
+              onClick={() => onFilterChange('all')}
+              className={cn(
+                "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center",
+                activeFilter === 'all'
+                  ? "bg-white text-gray-900 shadow-xs border border-gray-200/60"
+                  : "text-gray-500 hover:text-gray-800"
+              )}
+            >
+              All
+            </button>
+            <button
+              onClick={() => onFilterChange('unread')}
+              className={cn(
+                "flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5",
+                activeFilter === 'unread'
+                  ? "bg-white text-gray-900 shadow-xs border border-gray-200/60"
+                  : "text-gray-500 hover:text-gray-800"
+              )}
+            >
+              <span>Unread</span>
+              {unreadCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-primary" />
+              )}
+            </button>
+          </div>
+
+          {/* Scrollable Notification List */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1.5 min-h-[220px]">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+                <Loader2 className="w-7 h-7 animate-spin mb-2 text-primary" />
+                <span className="text-xs font-medium">Loading notifications...</span>
+              </div>
+            ) : notifications.length === 0 ? (
+              <NotificationEmptyState filter={activeFilter} onCloseParent={onClose} />
+            ) : (
+              notifications.map((item) => (
+                <NotificationItem
+                  key={item.id}
+                  notification={item}
+                  onRead={onMarkAsRead}
+                  onCloseParent={onClose}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Footer Link to Full Page */}
+          <div className="p-4 border-t border-gray-100 bg-gray-50/50 text-center shrink-0">
+            <Link
+              href="/notifications"
+              onClick={onClose}
+              className="inline-flex items-center justify-center w-full py-3 rounded-2xl bg-white border border-gray-200/80 text-xs font-bold text-gray-900 shadow-2xs gap-1.5"
+            >
+              <span>View full notification history</span>
+              <ExternalLink size={13} className="opacity-60" />
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}

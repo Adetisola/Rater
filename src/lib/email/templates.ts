@@ -252,3 +252,261 @@ ${PRODUCTION_URL}`;
   return { subject, html, text };
 }
 
+// ─── RATING_UNLOCKED Template ────────────────────────────────────────────────
+
+interface MilestoneEmailParams {
+  firstName?: string | null;
+  workTitle?: string;
+  actionUrl: string;
+}
+
+export function ratingUnlockedEmail({ firstName, workTitle, actionUrl }: MilestoneEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const displayName = firstName?.trim() || 'there';
+  const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+  const subject = `Your Work ${titleClean} has a score`;
+
+  const html = emailWrapper(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="height:4px;background-color:${brand.primary};border-radius:20px 20px 0 0;"></td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:${brand.black};line-height:1.3;">
+            Your Work has a score 🎉
+          </p>
+          <p style="margin:0 0 20px;font-size:15px;color:#444444;line-height:1.7;">
+            Hi ${displayName},
+          </p>
+          <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7;">
+            <strong>${titleClean}</strong> has received 3 Critiques from the community. Your Overall Score and individual Criteria Scores are now unlocked in the Studio.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-radius:100px;background-color:${brand.primary};">
+                <a
+                  href="${actionUrl}"
+                  target="_blank"
+                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
+                >
+                  See Your Score &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `);
+
+  const text = `Hi ${displayName},
+
+Your Work ${titleClean} has received 3 Critiques. Your Overall Score and Criteria Scores are now unlocked!
+
+See Your Score: ${actionUrl}
+
+---
+Rater — Design Critique Studio`;
+
+  return { subject, html, text };
+}
+
+// ─── INSIGHTS_READY Template ─────────────────────────────────────────────────
+
+export function insightsReadyEmail({ firstName, workTitle, actionUrl }: MilestoneEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const displayName = firstName?.trim() || 'there';
+  const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+  const subject = `New Insights ready for ${titleClean}`;
+
+  const html = emailWrapper(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="height:4px;background-color:${brand.primary};border-radius:20px 20px 0 0;"></td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:${brand.black};line-height:1.3;">
+            Insights ready ✨
+          </p>
+          <p style="margin:0 0 20px;font-size:15px;color:#444444;line-height:1.7;">
+            Hi ${displayName},
+          </p>
+          <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7;">
+            Patterns and synthesis across community critiques are now available for <strong>${titleClean}</strong>. Discover what the studio observed about clarity, aesthetics, and purpose.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-radius:100px;background-color:${brand.primary};">
+                <a
+                  href="${actionUrl}"
+                  target="_blank"
+                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
+                >
+                  Explore Insights &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `);
+
+  const text = `Hi ${displayName},
+
+New Insights are ready for ${titleClean}. Patterns across community feedback have been synthesized.
+
+Explore Insights: ${actionUrl}
+
+---
+Rater — Design Critique Studio`;
+
+  return { subject, html, text };
+}
+
+// ─── TOP_RATED Template ──────────────────────────────────────────────────────
+
+export function topRatedEmail({ firstName, workTitle, actionUrl }: MilestoneEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const displayName = firstName?.trim() || 'there';
+  const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+  const subject = `Congratulations! ${titleClean} is now Top Rated on Rater 🏆`;
+
+  const html = emailWrapper(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="height:4px;background-color:${brand.primary};border-radius:20px 20px 0 0;"></td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:${brand.black};line-height:1.3;">
+            Top Rated in the Studio 🏆
+          </p>
+          <p style="margin:0 0 20px;font-size:15px;color:#444444;line-height:1.7;">
+            Hi ${displayName},
+          </p>
+          <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7;">
+            Outstanding craft! <strong>${titleClean}</strong> has earned the active Top Rated badge for high standing and exceptional critique scores in the Studio.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-radius:100px;background-color:${brand.primary};">
+                <a
+                  href="${actionUrl}"
+                  target="_blank"
+                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
+                >
+                  View in Studio &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `);
+
+  const text = `Hi ${displayName},
+
+Congratulations! Your Work ${titleClean} has earned the active Top Rated badge in the Studio!
+
+View in Studio: ${actionUrl}
+
+---
+Rater — Design Critique Studio`;
+
+  return { subject, html, text };
+}
+
+// ─── GENERIC NOTIFICATION Template ───────────────────────────────────────────
+
+interface GenericNotificationEmailParams {
+  firstName?: string | null;
+  title: string;
+  message: string;
+  actionLabel?: string;
+  actionUrl: string;
+}
+
+export function notificationGenericEmail({
+  firstName,
+  title,
+  message,
+  actionLabel = 'View on Rater',
+  actionUrl,
+}: GenericNotificationEmailParams): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  const displayName = firstName?.trim() || 'there';
+  const subject = title;
+
+  const html = emailWrapper(`
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="height:4px;background-color:${brand.primary};border-radius:20px 20px 0 0;"></td>
+      </tr>
+    </table>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:40px 40px 32px;">
+          <p style="margin:0 0 8px;font-size:24px;font-weight:700;color:${brand.black};line-height:1.3;">
+            ${title}
+          </p>
+          <p style="margin:0 0 20px;font-size:15px;color:#444444;line-height:1.7;">
+            Hi ${displayName},
+          </p>
+          <p style="margin:0 0 24px;font-size:15px;color:#444444;line-height:1.7;">
+            ${message}
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="border-radius:100px;background-color:${brand.primary};">
+                <a
+                  href="${actionUrl}"
+                  target="_blank"
+                  style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:${brand.black};text-decoration:none;border-radius:100px;letter-spacing:-0.01em;"
+                >
+                  ${actionLabel} &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  `);
+
+  const text = `Hi ${displayName},
+
+${title}
+
+${message}
+
+${actionLabel}: ${actionUrl}
+
+---
+Rater — Design Critique Studio`;
+
+  return { subject, html, text };
+}
+
+

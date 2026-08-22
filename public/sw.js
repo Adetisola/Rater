@@ -216,3 +216,50 @@ self.addEventListener('fetch', (event) => {
   }
 
 });
+
+// --- 7. Web Push Notification Handling ---
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body || 'You have a new update on Rater.',
+      icon: data.icon || '/icons/icon-192.png',
+      badge: data.badge || '/icons/icon-192.png',
+      data: {
+        url: data.targetUrl || '/browse',
+        id: data.id,
+      },
+      tag: data.groupKey || undefined,
+      renotify: Boolean(data.groupKey),
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Rater', options)
+    );
+  } catch (err) {
+    console.error('[ServiceWorker] Push event error:', err);
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // If a client window is already open at the target URL, focus it
+      for (const client of windowClients) {
+        if (client.url === targetUrl && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Otherwise open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

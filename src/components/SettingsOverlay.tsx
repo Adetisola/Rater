@@ -6,6 +6,7 @@ import {
   X, 
   Sliders, 
   User, 
+  Bell,
   HelpCircle, 
   ExternalLink, 
   Mail, 
@@ -27,10 +28,19 @@ import { UserAvatar } from './UserAvatar';
 import { ConnectedAccounts } from './ConnectedAccounts';
 import { showToast, showInviteModal } from './GlobalOverlays';
 import { deleteOwnAccount } from '@/lib/account/server';
+import { cn } from '@/lib/utils';
+import { 
+  getNotificationPreferences, 
+  updateNotificationPreferences, 
+  registerPushSubscription, 
+  unregisterPushSubscription, 
+  isPushSubscribedOnDevice 
+} from '@/lib/notifications/client';
+import type { NotificationPreferences } from '@/types';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export type SettingsTab = 'general' | 'account' | 'help';
+export type SettingsTab = 'general' | 'account' | 'notifications' | 'help';
 
 interface SettingsOverlayProps {
   isOpen: boolean;
@@ -58,11 +68,59 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Notification Preferences State
+  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [isPushSubscribed, setIsPushSubscribed] = useState(false);
+  const [isPushLoading, setIsPushLoading] = useState(false);
+
+  // Load notification preferences
+  useEffect(() => {
+    if (isOpen && currentProfile?.id) {
+      getNotificationPreferences(currentProfile.id).then((prefs) => {
+        if (prefs) setPreferences(prefs);
+      });
+      isPushSubscribedOnDevice().then((status) => {
+        setIsPushSubscribed(status);
+      });
+    }
+  }, [isOpen, currentProfile?.id]);
+
+  const handlePreferenceToggle = async (key: keyof Omit<NotificationPreferences, 'id' | 'profile_id' | 'created_at' | 'updated_at'>) => {
+    if (!currentProfile || !preferences) return;
+    const updatedValue = !preferences[key];
+    const newPrefs = { ...preferences, [key]: updatedValue };
+    setPreferences(newPrefs);
+    await updateNotificationPreferences(currentProfile.id, { [key]: updatedValue });
+    showToast('Preference saved', 'info');
+  };
+
+  const handlePushToggle = async () => {
+    if (!currentProfile) return;
+    setIsPushLoading(true);
+    try {
+      if (isPushSubscribed) {
+        await unregisterPushSubscription(currentProfile.id);
+        setIsPushSubscribed(false);
+        showToast('Push notifications disabled on this device', 'info');
+      } else {
+        const res = await registerPushSubscription(currentProfile.id);
+        if (res.ok) {
+          setIsPushSubscribed(true);
+          showToast('Push notifications enabled for this device!', 'success');
+        } else {
+          showToast(res.error || 'Failed to enable push notifications', 'error');
+        }
+      }
+    } finally {
+      setIsPushLoading(false);
+    }
+  };
+
   // Sync with searchParams on open
   useEffect(() => {
     if (isOpen) {
       const tabParam = searchParams.get('tab') as SettingsTab;
-      if (tabParam && ['general', 'account', 'help'].includes(tabParam)) {
+      if (tabParam && ['general', 'account', 'notifications', 'help'].includes(tabParam)) {
         setActiveTab(tabParam);
       } else if (initialTab) {
         setActiveTab(initialTab);
@@ -186,6 +244,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
             {[
               { id: 'general', label: 'General', icon: Sliders },
               { id: 'account', label: 'Account', icon: User },
+              { id: 'notifications', label: 'Notifications', icon: Bell },
               { id: 'help', label: 'Help', icon: HelpCircle },
             ].map(tab => {
               const Icon = tab.icon;
@@ -210,10 +269,11 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
           {/* Body: Two-Column layout on desktop */}
           <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
             {/* Desktop Left Sidebar */}
-            <div className="hidden sm:flex flex-col w-48 border-r border-gray-100 p-3 gap-1 bg-gray-50/50 shrink-0">
+            <div className="hidden sm:flex flex-col w-52 border-r border-gray-100 p-3 gap-1 bg-gray-50/50 shrink-0">
               {[
                 { id: 'general', label: 'General', icon: Sliders },
                 { id: 'account', label: 'Account', icon: User },
+                { id: 'notifications', label: 'Notifications', icon: Bell },
                 { id: 'help', label: 'Help', icon: HelpCircle },
               ].map(tab => {
                 const Icon = tab.icon;
@@ -546,6 +606,228 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           </div>
                         )}
                       </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {activeTab === 'notifications' && (
+                  <motion.div
+                    key="notifications"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="space-y-6"
+                  >
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 mb-1">Notification Preferences</h3>
+                      <p className="text-xs text-gray-500">
+                        Choose how and when Rater notifies you about critiques, scores, and milestones.
+                      </p>
+                    </div>
+
+                    {/* Delivery Channels */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery Channels</p>
+                      
+                      <div className="space-y-2.5">
+                        {/* In-App Notifications */}
+                        <div className="p-4 rounded-2xl bg-white border border-gray-100 flex items-center justify-between gap-4 shadow-2xs">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">In-App Notifications</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Realtime bell alerts and unread counters in the app header.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.in_app_enabled ?? true}
+                            onClick={() => handlePreferenceToggle('in_app_enabled')}
+                            className={cn(
+                              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.in_app_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.in_app_enabled ?? true) ? "translate-x-5" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Web Push Notifications */}
+                        <div className="p-4 rounded-2xl bg-white border border-gray-100 space-y-3 shadow-2xs">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">Web Push Notifications</p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                Instant browser alerts even when Rater isn&apos;t actively focused.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={preferences?.push_enabled ?? true}
+                              onClick={() => handlePreferenceToggle('push_enabled')}
+                              className={cn(
+                                "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                                (preferences?.push_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                  (preferences?.push_enabled ?? true) ? "translate-x-5" : "translate-x-0"
+                                )}
+                              />
+                            </button>
+                          </div>
+
+                          {/* Device Registration Trigger */}
+                          <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                            <span className="text-xs text-gray-600 font-medium">
+                              Device status: <span className={cn("font-bold", isPushSubscribed ? "text-green-600" : "text-amber-600")}>
+                                {isPushSubscribed ? "Active on this device" : "Not enabled on this device"}
+                              </span>
+                            </span>
+                            <Button
+                              variant="outline"
+                              disabled={isPushLoading}
+                              onClick={handlePushToggle}
+                              className="h-8 px-3 text-xs font-bold rounded-xl"
+                            >
+                              {isPushLoading && <Loader2 size={12} className="animate-spin mr-1.5" />}
+                              <span>{isPushSubscribed ? "Disable on Device" : "Enable on Device"}</span>
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Email Notifications */}
+                        <div className="p-4 rounded-2xl bg-white border border-gray-100 flex items-center justify-between gap-4 shadow-2xs">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">Milestone Emails</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              High-signal emails for score unlocks, insights synthesis, and badges.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.email_enabled ?? true}
+                            onClick={() => handlePreferenceToggle('email_enabled')}
+                            className={cn(
+                              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.email_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.email_enabled ?? true) ? "translate-x-5" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notification Types */}
+                    <div className="space-y-3 pt-2">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Activity Alerts</p>
+                      
+                      <div className="space-y-2.5">
+                        {/* Critiques & Reviews */}
+                        <div className="p-4 rounded-2xl bg-white border border-gray-100 flex items-center justify-between gap-4 shadow-2xs">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">Critiques on your Work</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              When a creative shares feedback and scores on your published Work.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_critiques ?? true}
+                            onClick={() => handlePreferenceToggle('notify_critiques')}
+                            className={cn(
+                              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_critiques ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_critiques ?? true) ? "translate-x-5" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Milestones & Unlocks */}
+                        <div className="p-4 rounded-2xl bg-white border border-gray-100 flex items-center justify-between gap-4 shadow-2xs">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">Score Unlocks & Badges</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              When your Work unlocks its Overall Score (3 Critiques) or earns Top Rated.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_milestones ?? true}
+                            onClick={() => handlePreferenceToggle('notify_milestones')}
+                            className={cn(
+                              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_milestones ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_milestones ?? true) ? "translate-x-5" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Insights */}
+                        <div className="p-4 rounded-2xl bg-white border border-gray-100 flex items-center justify-between gap-4 shadow-2xs">
+                          <div>
+                            <p className="text-sm font-bold text-gray-900">Insights Syntheses</p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              When AI-driven pattern summaries and perception insights are synthesized.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_insights ?? true}
+                            onClick={() => handlePreferenceToggle('notify_insights')}
+                            className={cn(
+                              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_insights ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_insights ?? true) ? "translate-x-5" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* System Bypass Notice */}
+                    <div className="p-3.5 rounded-2xl bg-gray-50/80 border border-gray-200/60 flex items-start gap-3">
+                      <ShieldCheck className="w-5 h-5 text-gray-500 shrink-0 mt-0.5" />
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        Security notices, password resets, and critical account moderation alerts always bypass preferences to protect your profile.
+                      </p>
                     </div>
                   </motion.div>
                 )}

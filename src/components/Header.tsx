@@ -23,6 +23,7 @@ import { usePostStore } from '../store/postStore';
 import { AmbientPlaceholder } from './AmbientPlaceholder';
 import { AuthOverlay } from './AuthOverlay';
 import { UserMenu } from './UserMenu';
+import { NotificationBell } from './notifications/NotificationBell';
 import { MobileSearchOverlay } from './MobileSearchOverlay';
 
 /**
@@ -623,9 +624,10 @@ function HeaderContent({
               </div>
             )}
 
-            {/* Profile Button (Logged in) */}
+            {/* Profile & Notification Controls (Logged in) */}
             {currentProfile ? (
-              <div className="flex items-center">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <NotificationBell />
                 <UserMenu variant="nav" align="right" />
               </div>
             ) : (

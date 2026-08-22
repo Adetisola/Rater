@@ -559,6 +559,31 @@ export async function POST(request: NextRequest) {
       });
       if (error) {
         console.error('[Insights API] Failed to cache:', error);
+      } else {
+        // Dispatch INSIGHTS_READY notification to post author
+        try {
+          const { data: post } = await supabaseAdmin
+            .from('posts')
+            .select('avatar_id, title')
+            .eq('id', postId)
+            .single();
+
+          if (post?.avatar_id) {
+            const { NotificationEngine } = await import('@/lib/notifications/engine');
+            await NotificationEngine.dispatch({
+              eventType: 'INSIGHTS_READY',
+              recipientProfileId: post.avatar_id,
+              targetEntityId: postId,
+              idempotencyKey: `insights:${postId}:${reviews.length}`,
+              groupKey: `post_insights:${postId}`,
+              metadata: {
+                workTitle: post.title || postTitle,
+              },
+            });
+          }
+        } catch (notifErr) {
+          console.warn('[Insights API] Failed to dispatch INSIGHTS_READY notification (non-blocking):', notifErr);
+        }
       }
     }
 

@@ -203,16 +203,7 @@ export interface PulseSession {
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
-export interface Notification {
-  id: string;
-  avatar_id: string;
-  actor_id?: string;
-  type: 'new_review' | 'badge_awarded' | 'pulse_vote' | 'system' | string;
-  post_id?: string;
-  message?: string;
-  is_read: boolean;
-  created_at: string;
-}
+export * from './notifications';
 
 // ─── Insight Output ───────────────────────────────────────────────────────────
 
