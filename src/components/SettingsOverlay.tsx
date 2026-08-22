@@ -18,9 +18,13 @@ import {
   Loader2,
   CheckCircle2,
   Edit2,
-  Sparkles
+  Sparkles,
+  Download,
+  Smartphone,
+  Share2
 } from 'lucide-react';
 import { useAuthState } from '@/context/AuthContext';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -67,6 +71,21 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
   const [deleteConfirmationText, setDeleteConfirmationText] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // PWA Install State
+  const { isInstalled, isIOS, installApp } = usePWAInstall();
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
+
+  const handleInstallApp = async () => {
+    const res = await installApp();
+    if (res.outcome === 'accepted') {
+      showToast('Rater app installed successfully!', 'success');
+    } else if (res.outcome === 'ios' || isIOS) {
+      setShowIOSGuide(prev => !prev);
+    } else if (res.outcome === 'unsupported') {
+      showToast('Use your browser menu to "Install Rater" or "Add to Home Screen"', 'info');
+    }
+  };
 
   // Notification Preferences State
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
@@ -337,6 +356,70 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <span className="text-xs font-semibold text-gray-600">{theme}</span>
                           </div>
                         ))}
+                      </div>
+                    </div>
+
+                    {/* App & Experience: PWA Install */}
+                    <div className="space-y-3 pt-2">
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900 mb-1">App & Experience</h3>
+                        <p className="text-xs text-gray-500">Install Rater for offline access, fast loading, and home screen launch.</p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-white border border-gray-100 shadow-2xs space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="flex items-start gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-amber-50 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                              <Smartphone size={20} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">Install Rater App</p>
+                              <p className="text-xs text-gray-500 mt-0.5 max-w-sm">
+                                Fast launch from your home screen or desktop dock with full-screen studio view.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="shrink-0">
+                            {isInstalled ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 text-green-700 border border-green-200/80 text-xs font-bold">
+                                <CheckCircle2 size={14} />
+                                <span>Installed</span>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="primary"
+                                onClick={handleInstallApp}
+                                className="h-9 px-4 rounded-xl text-xs font-bold text-white flex items-center gap-1.5 shadow-2xs"
+                              >
+                                <Download size={14} />
+                                <span>{isIOS ? "How to Install" : "Install App"}</span>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* iOS Safari Installation Guide */}
+                        {showIOSGuide && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="pt-3 border-t border-gray-100"
+                          >
+                            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-primary/20 text-xs text-gray-700 space-y-1.5">
+                              <p className="font-bold text-gray-900 flex items-center gap-1.5">
+                                <Share2 size={14} className="text-primary" />
+                                <span>Installing on iOS (Safari):</span>
+                              </p>
+                              <ol className="list-decimal list-inside space-y-1 text-gray-600 pl-1">
+                                <li>Tap the <strong className="text-gray-900">Share</strong> button at the bottom of Safari.</li>
+                                <li>Scroll down and tap <strong className="text-gray-900">&quot;Add to Home Screen&quot;</strong>.</li>
+                                <li>Tap <strong className="text-gray-900">Add</strong> in the top right to complete.</li>
+                              </ol>
+                            </div>
+                          </motion.div>
+                        )}
                       </div>
                     </div>
                   </motion.div>

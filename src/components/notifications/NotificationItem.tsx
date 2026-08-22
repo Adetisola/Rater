@@ -1,6 +1,6 @@
 "use client";
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   MessageSquare, 
   Sparkles, 
@@ -27,6 +27,8 @@ export function NotificationItem({
   onRead,
   onCloseParent,
 }: NotificationItemProps) {
+  const router = useRouter();
+
   const getCategoryIcon = (category?: string, type?: string) => {
     const t = type || '';
     const c = category || '';
@@ -49,12 +51,21 @@ export function NotificationItem({
     }
   };
 
-  const handleClick = () => {
+  const handleClick = (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     if (onRead && !notification.is_read) {
       onRead(notification.id);
     }
     if (onCloseParent) {
       onCloseParent();
+    }
+    const targetUrl = notification.action_url || '/browse';
+    if (targetUrl.startsWith('mailto:') || targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+      window.location.href = targetUrl;
+    } else {
+      router.push(targetUrl);
     }
   };
 
@@ -108,19 +119,12 @@ export function NotificationItem({
           {notification.message}
         </p>
 
-        {/* Action Link & Unread Indicator */}
-        <div className="flex items-center justify-between pt-0.5">
-          <Link
-            href={notification.action_url}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-900 group-hover:text-black group-hover:underline underline-offset-2 transition-all"
-          >
+        {/* Action Button & Unread Indicator */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/15 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
             <span>{notification.action_label || 'View'}</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform text-gray-800" />
+          </div>
 
           {!notification.is_read && (
             <span className="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20 shrink-0" />

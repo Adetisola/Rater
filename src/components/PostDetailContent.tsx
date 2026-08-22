@@ -1249,7 +1249,9 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                 {/* BOTTOM SECTION: Reviews List */}
                 <div ref={critiquesSectionRef} id="critiques-section" className="border-t border-gray-100 pt-8 xs:pt-15 scroll-mt-6 sm:scroll-mt-10">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                        <h2 className="text-lg font-medium text-black shrink-0">Critiques ({allReviews.length})</h2>
+                        <h2 className="text-lg font-medium text-black shrink-0">
+                            Critiques ({isFetchingReviews ? (metrics.review_count ?? post.review_count ?? 0) : allReviews.length})
+                        </h2>
 
                         <div className="flex flex-wrap gap-2 sm:ml-auto">
                             {['Recent', 'Top', 'Critical', 'Oldest'].map((option) => (

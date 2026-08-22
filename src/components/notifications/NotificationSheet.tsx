@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCheck, Settings, ExternalLink, Loader2 } from 'lucide-react';
@@ -33,6 +34,12 @@ export function NotificationSheet({
   onMarkAsRead,
   onMarkAllAsRead,
 }: NotificationSheetProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Prevent body scroll when sheet is open
   useEffect(() => {
     if (isOpen) {
@@ -45,9 +52,9 @@ export function NotificationSheet({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <div className="fixed inset-0 z-150 md:hidden">
         {/* Backdrop */}
@@ -175,6 +182,7 @@ export function NotificationSheet({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
