@@ -27,18 +27,23 @@ export function NotificationItem({
   onRead,
   onCloseParent,
 }: NotificationItemProps) {
-  const getCategoryIcon = (category: string, type: string) => {
-    if (type.includes('TOP_RATED')) return <Trophy className="w-3.5 h-3.5 text-amber-500" />;
-    if (type.includes('INSIGHTS')) return <Sparkles className="w-3.5 h-3.5 text-amber-500" />;
-    if (type.includes('RATING_UNLOCKED')) return <CheckCircle className="w-3.5 h-3.5 text-green-500" />;
-    if (category === 'system') return <ShieldAlert className="w-3.5 h-3.5 text-red-500" />;
-    if (category === 'activity') return <MessageSquare className="w-3.5 h-3.5 text-primary" />;
+  const getCategoryIcon = (category?: string, type?: string) => {
+    const t = type || '';
+    const c = category || '';
+    if (t.includes('TOP_RATED')) return <Trophy className="w-3.5 h-3.5 text-amber-500" />;
+    if (t.includes('INSIGHTS')) return <Sparkles className="w-3.5 h-3.5 text-amber-500" />;
+    if (t.includes('RATING_UNLOCKED')) return <CheckCircle className="w-3.5 h-3.5 text-green-500" />;
+    if (c === 'system') return <ShieldAlert className="w-3.5 h-3.5 text-red-500" />;
+    if (c === 'activity') return <MessageSquare className="w-3.5 h-3.5 text-primary" />;
     return <Layers className="w-3.5 h-3.5 text-gray-500" />;
   };
 
-  const getFormattedTime = (dateStr: string) => {
+  const getFormattedTime = (dateStr?: string) => {
+    if (!dateStr) return 'recently';
     try {
-      return formatDistanceToNowStrict(new Date(dateStr), { addSuffix: true });
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 'recently';
+      return formatDistanceToNowStrict(d, { addSuffix: true });
     } catch {
       return 'recently';
     }

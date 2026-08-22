@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
       .from('notifications')
       .select(`
         *,
-        actor:profiles!actor_id(id, name, username, avatar_url),
-        post:posts!post_id(id, title, image_url, category)
+        actor:profiles!notifications_actor_id_fkey(id, name, username, avatar_url),
+        post:posts!notifications_post_id_fkey(id, title, image_url, category)
       `)
       .eq('profile_id', user.id)
       .order('created_at', { ascending: false })

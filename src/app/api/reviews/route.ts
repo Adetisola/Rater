@@ -69,6 +69,18 @@ export async function POST(req: NextRequest) {
       return jsonError(error.message || 'Database error', 500);
     }
 
+    // 5. Dispatch In-App & Multi-Channel Notifications (Non-blocking)
+    try {
+      const { normalizeReviewInsertEvent } = await import('@/lib/notifications/normalizers');
+      const { NotificationEngine } = await import('@/lib/notifications/engine');
+      const events = await normalizeReviewInsertEvent(reviewData);
+      if (events.length > 0) {
+        await NotificationEngine.dispatchBatch(events);
+      }
+    } catch (notifErr) {
+      console.warn('[API/reviews] Failed to dispatch notifications (non-blocking):', notifErr);
+    }
+
     return NextResponse.json({ ok: true, review: reviewData }, { status: 200 });
   } catch (error: any) {
     console.error('API /reviews POST error:', error);

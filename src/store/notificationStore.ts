@@ -2,6 +2,12 @@ import { create } from 'zustand';
 import type { Notification } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 import { getNotifications, getUnreadCount, markAsRead as apiMarkAsRead, markAllAsRead as apiMarkAllAsRead } from '@/lib/notifications/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+
+// Module-level singleton to prevent duplicate subscription collision crashes across components
+let activeRealtimeChannel: RealtimeChannel | null = null;
+let activeRealtimeProfileId: string | null = null;
+let realtimeSubscriberCount = 0;
 
 interface NotificationStoreState {
   notifications: Notification[];
@@ -155,66 +161,114 @@ export const useNotificationStore = create<NotificationStoreState>((set, get) =>
   subscribeToRealtime: (profileId: string) => {
     if (!supabase || !profileId) return () => {};
 
-    const channelName = `profile-notifications:${profileId}`;
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `profile_id=eq.${profileId}`,
-        },
-        async (payload) => {
-          const newRow = payload.new as Notification;
-          if (!newRow) return;
-
-          // Fetch full enriched notification with joined actor and post
-          const enrichedList = await getNotifications(profileId, { limit: 1, offset: 0 });
-          const enrichedItem = enrichedList.find((item) => item.id === newRow.id) || newRow;
-
-          const { notifications, unreadCount, activeFilter } = get();
-
-          // Deduplicate if already present locally
-          if (notifications.some((n) => n.id === newRow.id)) return;
-
-          const shouldIncludeInView = activeFilter === 'all' || (activeFilter === 'unread' && !enrichedItem.is_read);
-
-          set({
-            notifications: shouldIncludeInView ? [enrichedItem, ...notifications] : notifications,
-            unreadCount: unreadCount + 1,
-          });
+    // 1. If already subscribed to this exact profile, increment ref count and return cleanup
+    if (activeRealtimeChannel && activeRealtimeProfileId === profileId) {
+      realtimeSubscriberCount++;
+      return () => {
+        realtimeSubscriberCount--;
+        if (realtimeSubscriberCount <= 0 && activeRealtimeChannel) {
+          supabase.removeChannel(activeRealtimeChannel);
+          activeRealtimeChannel = null;
+          activeRealtimeProfileId = null;
+          realtimeSubscriberCount = 0;
         }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `profile_id=eq.${profileId}`,
-        },
-        (payload) => {
-          const updatedRow = payload.new as Notification;
-          if (!updatedRow) return;
+      };
+    }
 
-          const { notifications } = get();
-          set({
-            notifications: notifications.map((n) =>
-              n.id === updatedRow.id ? { ...n, ...updatedRow } : n
-            ),
-          });
+    // 2. If active for a different profile, cleanup first
+    if (activeRealtimeChannel) {
+      supabase.removeChannel(activeRealtimeChannel);
+      activeRealtimeChannel = null;
+      activeRealtimeProfileId = null;
+      realtimeSubscriberCount = 0;
+    }
+
+    try {
+      const channelName = `profile-notifications-${profileId}-${Date.now()}`;
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+            filter: `profile_id=eq.${profileId}`,
+          },
+          async (payload) => {
+            const newRow = payload.new as Notification;
+            if (!newRow) return;
+
+            try {
+              // Fetch full enriched notification with joined actor and post
+              const enrichedList = await getNotifications(profileId, { limit: 1, offset: 0 });
+              const enrichedItem = enrichedList.find((item) => item.id === newRow.id) || newRow;
+
+              const { notifications, unreadCount, activeFilter } = get();
+
+              // Deduplicate if already present locally
+              if (notifications.some((n) => n.id === newRow.id)) return;
+
+              const shouldIncludeInView = activeFilter === 'all' || (activeFilter === 'unread' && !enrichedItem.is_read);
+
+              set({
+                notifications: shouldIncludeInView ? [enrichedItem, ...notifications] : notifications,
+                unreadCount: unreadCount + 1,
+              });
+            } catch (err) {
+              console.error('[NotificationStore] Error handling incoming notification:', err);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notifications',
+            filter: `profile_id=eq.${profileId}`,
+          },
+          (payload) => {
+            const updatedRow = payload.new as Notification;
+            if (!updatedRow) return;
+
+            const { notifications } = get();
+            set({
+              notifications: notifications.map((n) =>
+                n.id === updatedRow.id ? { ...n, ...updatedRow } : n
+              ),
+            });
+          }
+        );
+
+      channel.subscribe();
+
+      activeRealtimeChannel = channel;
+      activeRealtimeProfileId = profileId;
+      realtimeSubscriberCount = 1;
+
+      return () => {
+        realtimeSubscriberCount--;
+        if (realtimeSubscriberCount <= 0 && activeRealtimeChannel) {
+          supabase.removeChannel(activeRealtimeChannel);
+          activeRealtimeChannel = null;
+          activeRealtimeProfileId = null;
+          realtimeSubscriberCount = 0;
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      };
+    } catch (err) {
+      console.error('[NotificationStore] Failed to establish realtime subscription:', err);
+      return () => {};
+    }
   },
 
   reset: () => {
+    if (activeRealtimeChannel) {
+      supabase.removeChannel(activeRealtimeChannel);
+      activeRealtimeChannel = null;
+      activeRealtimeProfileId = null;
+      realtimeSubscriberCount = 0;
+    }
     set({
       notifications: [],
       unreadCount: 0,

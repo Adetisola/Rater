@@ -8,7 +8,7 @@ import { NotificationEmptyState } from '@/components/notifications/NotificationE
 import { showSettings } from '@/components/GlobalOverlays';
 import { Button } from '@/components/ui/Button';
 import { CheckCheck, Settings, Loader2, Bell } from 'lucide-react';
-import { isToday, isYesterday, isThisWeek, parseISO } from 'date-fns';
+import { isToday, isYesterday, isThisWeek, parseISO, isValid } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { Notification } from '@/types';
 
@@ -46,9 +46,19 @@ export default function NotificationsPage() {
     const thisWeek: Notification[] = [];
     const earlier: Notification[] = [];
 
-    notifications.forEach((item) => {
+    (notifications || []).forEach((item) => {
+      if (!item) return;
       try {
+        if (!item.created_at) {
+          earlier.push(item);
+          return;
+        }
         const date = parseISO(item.created_at);
+        if (!isValid(date)) {
+          earlier.push(item);
+          return;
+        }
+
         if (isToday(date)) {
           today.push(item);
         } else if (isYesterday(date)) {
