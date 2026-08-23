@@ -13,7 +13,7 @@ export const LEGAL_PAGES = [
     description: 'Rating standards, critique code of conduct, and moderation.',
   },
   {
-    title: 'AI Insights Disclosure',
+    title: 'AI & Insights',
     href: '/legal/ai-insights',
     icon: Sparkles,
     description: 'Perception modeling, synthesis ethics, and IP protection.',
@@ -37,17 +37,17 @@ export function LegalNav() {
 
   return (
     <>
-      {/* Mobile Sticky Horizontal Navigation */}
-      <div className="lg:hidden sticky top-16 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2.5 bg-white/95 backdrop-blur-md border-b border-gray-100 mb-6 overflow-x-auto custom-scrollbar">
-        <div className="flex items-center gap-1.5 min-w-max">
+      {/* Mobile Sticky Horizontal Navigation (Clean & Contained, No Bleed Leaks) */}
+      <div className="lg:hidden sticky top-14 z-30 w-full max-w-full py-2 bg-white/95 backdrop-blur-md border border-gray-100 rounded-2xl mb-4 px-2 shadow-2xs overflow-hidden">
+        <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5 px-1">
           <Link
             href="/browse"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-black hover:bg-gray-100/70 transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-black hover:bg-gray-100/70 transition-colors shrink-0"
           >
             <ArrowLeft size={13} />
             <span>App</span>
           </Link>
-          <div className="w-px h-4 bg-gray-200 mx-0.5" />
+          <div className="w-px h-4 bg-gray-200 mx-0.5 shrink-0" />
           {LEGAL_PAGES.map((page) => {
             const Icon = page.icon;
             const isActive = pathname === page.href;
@@ -56,13 +56,13 @@ export function LegalNav() {
                 key={page.href}
                 href={page.href}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all whitespace-nowrap shrink-0",
                   isActive
-                    ? "bg-gray-100 text-gray-900 font-bold shadow-2xs border border-gray-200/60"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    ? "bg-gray-900 text-white font-semibold shadow-2xs"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 font-medium"
                 )}
               >
-                <Icon size={13} className={isActive ? "text-black" : "text-gray-400"} />
+                <Icon size={13} className={isActive ? "text-primary" : "text-gray-400"} />
                 <span>{page.title}</span>
               </Link>
             );
@@ -124,7 +124,7 @@ export function LegalNav() {
           </p>
           <a
             href="mailto:support@raterapp.site?subject=Legal%20or%20Guidelines%20Inquiry"
-            className="inline-flex items-center justify-center w-full py-1.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200/80 text-gray-800 text-[11px] font-semibold transition-colors"
+            className="inline-flex items-center justify-center w-full py-1.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200/80 text-gray-800 text-[11px] font-semibold transition-colors break-all"
           >
             support@raterapp.site
           </a>

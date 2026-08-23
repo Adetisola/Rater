@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { FileText, ShieldCheck, Lock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Lock } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Terms of Service | Rater',
@@ -11,10 +11,10 @@ export const metadata: Metadata = {
 
 export default function TermsOfServicePage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6 w-full max-w-full min-w-0">
       {/* Header Banner */}
       <div>
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex flex-wrap items-center gap-2 mb-1.5">
           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-black uppercase tracking-wider">
             Legal Agreement
           </span>
@@ -33,7 +33,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           1. Eligibility
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-700 leading-relaxed">
             You must be at least 13 years old, or the minimum age required in your country, to use Rater.
           </p>
@@ -48,7 +48,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           2. Accounts
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 leading-relaxed">
             You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. You must not:
           </p>
@@ -69,7 +69,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           3. User Content & Creator Ownership
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <div className="flex items-center gap-2">
             <Lock size={15} className="text-emerald-600" />
             <p className="text-xs font-bold text-gray-900">You Retain Full Ownership</p>
@@ -91,7 +91,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           4. Reviews and Feedback
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 font-medium">
             Rater is built for thoughtful creative feedback. When using the review system, you agree to:
           </p>
@@ -113,7 +113,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           5. AI-Generated Insights
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2.5">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2.5">
           <p className="text-xs text-gray-700 leading-relaxed">
             Rater may use artificial intelligence to summarize community feedback and identify recurring themes from ratings, reviews, and other signals.
           </p>
@@ -131,7 +131,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           6. Acceptable Use
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 font-medium">You agree not to:</p>
           <ul className="text-xs text-gray-600 space-y-1.5 list-disc list-inside pl-1">
             <li>upload unlawful, infringing, fraudulent, harmful, or abusive content,</li>
@@ -150,7 +150,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           7. Public Profiles and Visibility
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-700 leading-relaxed">
             Unless otherwise stated, your profile information, uploaded work, ratings, reviews, and public activity may be visible to other users of the Service.
           </p>
@@ -165,7 +165,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           8. Intellectual Property
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-700 leading-relaxed">
             Rater, including its branding, design, software, and original content, belongs to Rater or its licensors and is protected by applicable intellectual property laws.
           </p>
@@ -180,7 +180,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           9. Service Changes
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs">
           <p className="text-xs text-gray-600 leading-relaxed">
             We may update, modify, suspend, or discontinue features of the Service at any time, with or without notice, to improve the platform or for operational reasons.
           </p>
@@ -192,9 +192,9 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           10. Suspension and Termination
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-600 leading-relaxed">
-            We may suspend, restrict, or terminate access to the Service if we believe you have violated these Terms, our Community Guidelines, or if your actions threaten the safety, integrity, or operation of the platform. We may also remove content that violates these Terms.
+            We may suspend, restrict, or terminate access to the Service if we believe you have violated these Terms, our Community Guidelines, or if your actions threaten the safety, integrity, or operation of the platform. We may also remove content that violates these Terms. You may also terminate your account at any time via <strong className="text-gray-900">Settings &gt; Account &gt; Delete Account</strong>.
           </p>
         </div>
       </div>
@@ -204,7 +204,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           11. Disclaimer
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-700 leading-relaxed">
             The Service is provided “as is” and “as available.”
           </p>
@@ -219,7 +219,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           12. Limitation of Liability
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs">
           <p className="text-xs text-gray-600 leading-relaxed">
             To the fullest extent permitted by law, Rater and its team will not be liable for indirect, incidental, special, consequential, or punitive damages arising from your use of the Service or reliance on content, reviews, ratings, or AI-generated insights.
           </p>
@@ -231,7 +231,7 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           13. Changes to These Terms
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-600 leading-relaxed">
             We may update these Terms from time to time. If we make material changes, we will notify users by reasonable means, such as through the Service or by updating the Effective Date above.
           </p>
@@ -246,10 +246,10 @@ export default function TermsOfServicePage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           14. Contact
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs">
           <p className="text-xs text-gray-600 leading-relaxed">
             If you have questions about these Terms, contact us directly at{' '}
-            <a href="mailto:support@raterapp.site" className="text-gray-900 font-semibold underline hover:text-primary">
+            <a href="mailto:support@raterapp.site" className="text-gray-900 font-semibold underline hover:text-primary break-all">
               support@raterapp.site
             </a>.
           </p>

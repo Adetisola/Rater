@@ -1,4 +1,6 @@
-**Effective Date:** July 5, 2026
+# Rater Terms of Service
+
+**Effective Date:** August 2026
 
 Welcome to Rater.
 
@@ -29,7 +31,7 @@ We may suspend or terminate accounts that violate these Terms or our Community G
 
 ---
 
-## 3. User Content
+## 3. User Content & Creator Ownership
 
 You retain ownership of the creative work, images, text, reviews, and other content you submit to Rater (“User Content”).
 
@@ -105,7 +107,7 @@ We may update, modify, suspend, or discontinue features of the Service at any ti
 
 We may suspend, restrict, or terminate access to the Service if we believe you have violated these Terms, our Community Guidelines, or if your actions threaten the safety, integrity, or operation of the platform.
 
-We may also remove content that violates these Terms.
+We may also remove content that violates these Terms. You may also terminate your account at any time via **Settings > Account > Delete Account**.
 
 ---
 
@@ -133,4 +135,4 @@ Your continued use of the Service after updated Terms become effective means you
 
 ## 14. Contact
 
-If you have questions about these Terms, contact us through the official support channels provided on Rater.
+If you have questions about these Terms, contact us directly at [support@raterapp.site](mailto:support@raterapp.site).

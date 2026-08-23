@@ -1,4 +1,8 @@
-**Effective Date:** July 5, 2026
+# Rater Community Guidelines
+
+**Effective Date:** August 2026
+
+These Community Guidelines explain the kind of culture we want to build on Rater.
 
 Rater is for creatives, reviewers, and people who want to help work get better. The point is to critique the work, not attack the person.
 
@@ -108,3 +112,9 @@ We may remove content, limit features, suspend accounts, or take other action if
 Rater works best when people are thoughtful, fair, and direct.
 
 If you would not want the same comment under your own work, do not post it under someone else’s.
+
+---
+
+## Contact
+
+If you have questions about these Community Guidelines or need to report a violation, reach out to our team at [support@raterapp.site](mailto:support@raterapp.site).

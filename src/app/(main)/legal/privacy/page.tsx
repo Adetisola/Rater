@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Lock, ShieldCheck, Database, Bell, UserCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Rater',
@@ -11,10 +10,10 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6 w-full max-w-full min-w-0">
       {/* Header Banner */}
       <div>
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="flex flex-wrap items-center gap-2 mb-1.5">
           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/20 text-black uppercase tracking-wider">
             Privacy & Data Policy
           </span>
@@ -33,7 +32,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           1. Information We Collect
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-4">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-4">
           <p className="text-xs text-gray-700 font-medium">We may collect the following categories of information:</p>
 
           <div className="space-y-3 pt-1">
@@ -89,7 +88,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           2. How We Use Information
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 font-medium">We use personal information to:</p>
           <ul className="text-xs text-gray-600 space-y-1.5 list-disc list-inside pl-1">
             <li>provide and operate the Service,</li>
@@ -111,7 +110,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           3. AI Processing
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2.5">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2.5">
           <p className="text-xs text-gray-700 leading-relaxed">
             Rater uses automated systems, including AI models, to help summarize review data and identify recurring themes.
           </p>
@@ -129,7 +128,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           4. How We Share Information
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 font-medium">We may share information:</p>
           <ul className="text-xs text-gray-600 space-y-1.5 list-disc list-inside pl-1">
             <li>with service providers that help us operate the platform,</li>
@@ -149,7 +148,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           5. Public Information
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 leading-relaxed">
             Depending on your settings and how the Service is used, the following may be visible to other users:
           </p>
@@ -174,7 +173,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           6. Data Retention
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2.5">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2.5">
           <p className="text-xs text-gray-700 leading-relaxed">
             We keep personal information only as long as needed to:
           </p>
@@ -196,7 +195,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           7. Security
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-700 leading-relaxed">
             We use reasonable technical and organizational safeguards to protect personal information. No method of storage or transmission is completely secure, however, so we cannot guarantee absolute security.
           </p>
@@ -208,7 +207,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           8. Your Rights and Choices
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-3">
           <p className="text-xs text-gray-700 leading-relaxed">
             Depending on where you live, you may have rights to:
           </p>
@@ -221,7 +220,7 @@ export default function PrivacyPolicyPage() {
             <li>request a copy of certain data.</li>
           </ul>
           <p className="text-xs text-gray-600 leading-relaxed pt-1">
-            You may also update your profile information or trigger permanent account deletion directly in the Service under Settings.
+            You may also update your profile information or delete your account permanently directly within the Service (<strong className="text-gray-900">Settings &gt; Account &gt; Delete Account</strong>).
           </p>
         </div>
       </div>
@@ -231,7 +230,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           9. Children’s Privacy
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-600 leading-relaxed">
             Rater is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe a child has provided personal information, contact us so we can review and take appropriate action. COPPA applies to services directed to children under 13 or when operators have actual knowledge they are collecting personal information from a child under 13.
           </p>
@@ -243,7 +242,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           10. International Use
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-600 leading-relaxed">
             If you use Rater from outside the country where our servers or service providers are located, your information may be processed in other jurisdictions with different data protection laws.
           </p>
@@ -255,7 +254,7 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           11. Changes to This Policy
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-600 leading-relaxed">
             We may update this Privacy Policy from time to time. If we make material changes, we will update the Effective Date and may notify you through the Service or other reasonable means.
           </p>
@@ -267,10 +266,10 @@ export default function PrivacyPolicyPage() {
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">
           12. Contact
         </p>
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-2xs space-y-2">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-6 shadow-2xs space-y-2">
           <p className="text-xs text-gray-600 leading-relaxed">
             If you have questions about this Privacy Policy or your personal data, contact us directly at{' '}
-            <a href="mailto:support@raterapp.site" className="text-gray-900 font-semibold underline hover:text-primary">
+            <a href="mailto:support@raterapp.site" className="text-gray-900 font-semibold underline hover:text-primary break-all">
               support@raterapp.site
             </a>.
           </p>

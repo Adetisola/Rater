@@ -1,4 +1,6 @@
-**Effective Date:** July 5, 2026
+# Rater Privacy Policy
+
+**Effective Date:** August 2026
 
 This Privacy Policy explains how Rater collects, uses, stores, shares, and protects personal information when you use the Service.
 
@@ -18,7 +20,7 @@ When you create an account, we may collect:
 * username,
 * email address,
 * password or authentication information,
-* profile image or avatar,
+* profile image,
 * role or bio,
 * social links you choose to provide.
 
@@ -139,7 +141,7 @@ Depending on where you live, you may have rights to:
 * withdraw consent where applicable,
 * request a copy of certain data.
 
-You may also be able to update your profile information directly in the Service.
+You may also update your profile information or delete your account permanently directly within the Service (**Settings > Account > Delete Account**).
 
 ---
 
@@ -163,4 +165,10 @@ We may update this Privacy Policy from time to time. If we make material changes
 
 ## 12. Contact
 
-If you have questions about this Privacy Policy or your personal data, contact us through the official support channels provided on Rater.
+If you have questions about this Privacy Policy or your personal data, contact us directly at [support@raterapp.site](mailto:support@raterapp.site).
+
+---
+
+## Note on Transparency
+
+A layered privacy notice is often the clearest approach for users: a short, visible summary with links to more detailed sections. Rater follows this pattern in-product via our Legal & Resources Hub.
