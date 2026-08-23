@@ -24,7 +24,6 @@ import { Button } from './ui/Button';
 import { useAuthState } from '../context/AuthContext';
 import { AuthOverlay } from './AuthOverlay';
 import { supabase } from '@/lib/supabase/client';
-import { LegalModal } from './LegalModal';
 import { Tooltip } from './ui/Tooltip';
 
 // ─── Criterion Score Analysis ────────────────────────────────────────────────
@@ -370,11 +369,6 @@ interface InsightsTabProps {
 export function InsightsTab({ reviews, postCategory, postTitle, postDescription, postId }: InsightsTabProps) {
   const { currentProfile } = useAuthState();
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
-  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
-    isOpen: false,
-    title: '',
-    docUrl: ''
-  });
 
   const { criteria, overallAverage } = useMemo(
     () => analyzeCriteria(reviews, postCategory),
@@ -582,13 +576,14 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                       </p>
                       <p className="text-[10px] text-gray-500 leading-relaxed border-t border-gray-100 pt-2 mt-2">
                         AI-generated insights may be imperfect. Learn more in the{' '}
-                        <button 
-                          type="button"
-                          onClick={() => setLegalModal({ isOpen: true, title: 'AI & Insights Policy', docUrl: '/legal/Rater AI & Insights Policy.md' })}
-                          className="font-semibold text-gray-600 hover:text-black transition-colors"
+                        <a 
+                          href="/legal/ai-insights"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-gray-600 hover:text-black transition-colors underline"
                         >
                           AI &amp; Insights Policy
-                        </button>.
+                        </a>.
                       </p>
                     </>
                   }
@@ -691,12 +686,6 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
       )}
 
       {showAuthOverlay && <AuthOverlay initialTab="signup" redirectOnSuccess={false} onClose={() => setShowAuthOverlay(false)} />}
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
-        title={legalModal.title}
-        docUrl={legalModal.docUrl}
-      />
     </motion.div>
   );
 }

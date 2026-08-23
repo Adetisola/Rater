@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
-import { LegalModal } from './LegalModal';
 import { createReport } from '@/lib/admin/server';
 
 interface ReportPostOverlayProps {
@@ -30,19 +29,10 @@ export function ReportPostOverlay({ postId, onClose, onSubmit }: ReportPostOverl
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
-    isOpen: false,
-    title: '',
-    docUrl: ''
-  });
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const openLegal = (title: string, docUrl: string) => {
-    setLegalModal({ isOpen: true, title, docUrl });
-  };
 
   const handleSubmit = async () => {
     if (reason === 'Select') return;
@@ -163,7 +153,7 @@ export function ReportPostOverlay({ postId, onClose, onSubmit }: ReportPostOverl
                 <div className="mb-6">
                     <p className="text-[12px] text-gray-500 text-center leading-relaxed">
                         Reports are reviewed according to our{' '}
-                        <button type="button" onClick={() => openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md')} className="font-semibold text-gray-600 hover:text-black transition-colors">Community Guidelines</button>.
+                        <a href="/legal/community-guidelines" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-600 hover:text-black transition-colors underline">Community Guidelines</a>.
                     </p>
                 </div>
                 <div className="flex items-center justify-center gap-4">
@@ -208,13 +198,6 @@ export function ReportPostOverlay({ postId, onClose, onSubmit }: ReportPostOverl
         )}
 
       </div>
-      
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
-        title={legalModal.title}
-        docUrl={legalModal.docUrl}
-      />
     </div>,
     document.body
   );

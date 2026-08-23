@@ -1,41 +1,43 @@
 "use client";
 
-import { useState } from 'react';
-import { LegalModal } from './LegalModal';
+import Link from 'next/link';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
-    isOpen: false,
-    title: '',
-    docUrl: ''
-  });
-
-  const openLegal = (title: string, docUrl: string) => {
-    setLegalModal({ isOpen: true, title, docUrl });
-  };
   
   return (
-    <footer className="w-full py-8 mt-auto flex flex-col items-center justify-center gap-2">
-      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[11px] font-medium text-gray-400">
-        <span className="tracking-widest">Rater ©{currentYear}. All Rights Reserved.</span>
-        <span className="hidden sm:inline text-gray-300">•</span>
-        <button onClick={() => openLegal('Terms of Service', '/legal/Rater Terms of Service.md')} className="hover:text-black transition-colors uppercase tracking-wider">Terms</button>
+    <footer className="w-full py-8 mt-auto flex flex-col items-center justify-center gap-2.5 px-4">
+      {/* Top row: Legal & Resource Links */}
+      <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs font-medium text-gray-500">
+        <Link href="/legal/community-guidelines" className="hover:text-black transition-colors">
+          Guidelines
+        </Link>
         <span className="text-gray-300">•</span>
-        <button onClick={() => openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md')} className="hover:text-black transition-colors uppercase tracking-wider">Privacy</button>
+        <Link href="/legal/ai-insights" className="hover:text-black transition-colors">
+          AI & Insights
+        </Link>
         <span className="text-gray-300">•</span>
-        <button onClick={() => openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md')} className="hover:text-black transition-colors uppercase tracking-wider">Community</button>
+        <Link href="/legal/terms" className="hover:text-black transition-colors">
+          Terms
+        </Link>
         <span className="text-gray-300">•</span>
-        <button onClick={() => openLegal('AI & Insights Policy', '/legal/Rater AI & Insights Policy.md')} className="hover:text-black transition-colors uppercase tracking-wider">AI Policy</button>
+        <Link href="/legal/privacy" className="hover:text-black transition-colors">
+          Privacy
+        </Link>
+        <span className="text-gray-300">•</span>
+        <Link href="/feedback" className="hover:text-black transition-colors">
+          Feedback
+        </Link>
+        <span className="text-gray-300">•</span>
+        <a href="mailto:support@raterapp.site" className="hover:text-black transition-colors">
+          Contact Support
+        </a>
       </div>
 
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
-        title={legalModal.title}
-        docUrl={legalModal.docUrl}
-      />
+      {/* Bottom row: Copyright */}
+      <p className="text-[11px] text-gray-400 font-medium tracking-wide">
+        Rater ©{currentYear}. All Rights Reserved.
+      </p>
     </footer>
   );
 }
-
