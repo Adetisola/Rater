@@ -220,7 +220,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
               <button 
                 type="button"
                 onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gray-100/90 hover:bg-gray-200/90 text-gray-900 font-bold text-xs transition-all active:scale-[0.98]"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gray-100/90 hover:bg-gray-200/90 text-gray-900 font-semibold text-xs transition-all active:scale-[0.98]"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? "Copied" : "Copy Link"}</span>
@@ -228,7 +228,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
               <button 
                 type="button"
                 onClick={handleDownload}
-                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-xs transition-all shadow-xs active:scale-[0.98]"
+                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold text-xs transition-all shadow-xs active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
                 <span>Download PNG</span>

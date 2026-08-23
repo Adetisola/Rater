@@ -118,17 +118,11 @@ export function NotificationItem({
           {notification.message}
         </p>
 
-        {/* Action Button & Unread Indicator */}
+        {/* Action Button */}
         <div className="flex items-center justify-between pt-0.5">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
             <span>{notification.action_label || 'View'}</span>
           </div>
-
-          {!notification.is_read && (
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20 shrink-0" />
-            </div>
-          )}
         </div>
       </div>
 

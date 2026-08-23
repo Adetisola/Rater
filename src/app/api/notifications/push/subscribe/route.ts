@@ -1,32 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-function getAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key);
+async function createRouteSupabase() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Handled when response is already streaming
+          }
+        },
+      },
+    }
+  );
+}
+
+async function getAuthenticatedUser(req: NextRequest, supabase: Awaited<ReturnType<typeof createRouteSupabase>>) {
+  // Check Authorization Bearer header first if present as fallback
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : undefined;
+
+  if (token) {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (!error && user) return user;
+  }
+
+  // Primary: Read authenticated session from cookies
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (!error && user) return user;
+
+  return null;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const adminClient = getAdminClient();
-    if (!adminClient) {
-      return NextResponse.json({ error: 'Supabase admin client not configured' }, { status: 500 });
+    const supabase = await createRouteSupabase();
+    const user = await getAuthenticatedUser(req, supabase);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Authentication required' }, { status: 401 });
     }
 
     const body = await req.json();
-    const { profileId, endpoint, p256dh, auth, userAgent } = body;
+    const { endpoint, p256dh, auth, userAgent } = body;
 
-    if (!profileId || !endpoint || !p256dh || !auth) {
+    if (!endpoint || !p256dh || !auth) {
       return NextResponse.json({ error: 'Missing required push subscription fields' }, { status: 400 });
     }
 
-    const { error } = await adminClient
+    // Bind strictly to the authenticated user ID — client-supplied profileId is ignored completely
+    const { error } = await supabase
       .from('push_subscriptions')
       .upsert(
         {
-          profile_id: profileId,
+          profile_id: user.id,
           endpoint,
           p256dh,
           auth,
@@ -48,22 +86,25 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const adminClient = getAdminClient();
-    if (!adminClient) {
-      return NextResponse.json({ error: 'Supabase admin client not configured' }, { status: 500 });
+    const supabase = await createRouteSupabase();
+    const user = await getAuthenticatedUser(req, supabase);
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized: Authentication required' }, { status: 401 });
     }
 
     const body = await req.json();
-    const { profileId, endpoint } = body;
+    const { endpoint } = body;
 
-    if (!profileId || !endpoint) {
-      return NextResponse.json({ error: 'Missing profileId or endpoint' }, { status: 400 });
+    if (!endpoint) {
+      return NextResponse.json({ error: 'Missing endpoint' }, { status: 400 });
     }
 
-    const { error } = await adminClient
+    // Only allow deleting subscriptions belonging to the authenticated user
+    const { error } = await supabase
       .from('push_subscriptions')
       .delete()
-      .eq('profile_id', profileId)
+      .eq('profile_id', user.id)
       .eq('endpoint', endpoint);
 
     if (error) {
