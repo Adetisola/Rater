@@ -80,8 +80,10 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
     const res = await installApp();
     if (res.outcome === 'accepted') {
       showToast('Rater app installed successfully!', 'success');
-    } else {
+    } else if (res.outcome === 'guide') {
       showInstallAppModal();
+    } else if (res.outcome === 'unavailable') {
+      showToast('To install, open your browser menu (⋮ or Share) and select "Install" or "Add to Home Screen".', 'info');
     }
   };
 
