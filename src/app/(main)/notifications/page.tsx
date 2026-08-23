@@ -108,7 +108,7 @@ export default function NotificationsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-950 tracking-tight flex items-center gap-3">
+          <h1 className="text-xl font-semibold text-gray-950 tracking-tight flex items-center gap-3">
             <span>Notifications</span>
             {unreadCount > 0 && (
               <span className="px-3 py-0.5 rounded-full text-xs font-black bg-primary/20 text-gray-900">

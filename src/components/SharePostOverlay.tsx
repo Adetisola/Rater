@@ -153,7 +153,7 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
             </button>
         </div>
         
-        <p className="text-[10px] text-gray-400 italic">Shared works are public.</p>
+        <p className="text-[10px] text-gray-400">Shared works are public.</p>
 
       </div>
     </div>,

@@ -7,8 +7,7 @@ import {
   Trophy, 
   CheckCircle, 
   ShieldAlert, 
-  Layers, 
-  ArrowRight
+  Layers
 } from 'lucide-react';
 import type { Notification } from '@/types';
 import { UserAvatar } from '../UserAvatar';
@@ -73,7 +72,7 @@ export function NotificationItem({
     <div
       onClick={handleClick}
       className={cn(
-        "group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer shadow-2xs",
+        "group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
         notification.is_read
           ? "bg-white hover:bg-gray-50/90 border-gray-100"
           : "bg-amber-50/25 hover:bg-amber-50/50 border-primary/25 ring-1 ring-primary/10"
@@ -121,9 +120,8 @@ export function NotificationItem({
 
         {/* Action Button & Unread Indicator */}
         <div className="flex items-center justify-between pt-0.5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
             <span>{notification.action_label || 'View'}</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform text-gray-800" />
           </div>
 
           {!notification.is_read && (
@@ -136,11 +134,11 @@ export function NotificationItem({
 
       {/* Right Compact Post Thumbnail (if linked to a Work) */}
       {notification.post?.image_url && (
-        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200/80 shadow-2xs group-hover:border-primary/40 transition-colors mt-0.5">
+        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200/80 shadow-2xs mt-0.5">
           <img
             src={notification.post.image_url}
             alt={notification.post.title || "Work preview"}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         </div>

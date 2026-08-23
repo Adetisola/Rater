@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Copy, Check, User, Sparkles } from 'lucide-react';
+import { X, Download, Copy, Check, User, Users } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { cn } from '@/lib/utils';
 
@@ -139,7 +139,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
           >
             {/* Header */}
             <div className="w-full flex justify-between items-center mb-4">
-              <h3 className="font-bold text-base text-gray-950 tracking-tight">
+              <h3 className="font-medium text-base text-gray-950 tracking-tight">
                 {mode === 'invite' ? 'Invite Referral Link' : 'Share Profile'}
               </h3>
               <button 
@@ -152,14 +152,14 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
             </div>
 
             {/* Mode Switcher Pills */}
-            <div className="w-full flex bg-gray-100/70 p-1 rounded-full mb-5 border border-gray-200/50">
+            <div className="w-full flex bg-gray-100/70 p-1 rounded-full mb-5">
               <button
                 type="button"
                 onClick={() => setMode('profile')}
                 className={cn(
                   "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200",
                   mode === 'profile'
-                    ? "bg-white text-gray-950 shadow-2xs border border-gray-200/50"
+                    ? "bg-white text-gray-950 border border-gray-200/50"
                     : "text-gray-500 hover:text-gray-950"
                 )}
               >
@@ -172,11 +172,11 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
                 className={cn(
                   "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200",
                   mode === 'invite'
-                    ? "bg-white text-gray-950 shadow-2xs border border-gray-200/50"
+                    ? "bg-white text-gray-950 border border-gray-200/50"
                     : "text-gray-500 hover:text-gray-950"
                 )}
               >
-                <Sparkles size={13} className={mode === 'invite' ? "text-amber-500" : "text-gray-400"} />
+                <Users size={13} className={mode === 'invite' ? "text-gray-950" : "text-gray-400"} />
                 <span>Invite Link</span>
               </button>
             </div>
@@ -184,7 +184,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
             {/* QR Code Container */}
             <div 
               ref={canvasRef}
-              className="bg-white p-4.5 rounded-3xl border-2 border-gray-100 shadow-2xs mb-4"
+              className="bg-white p-4.5 rounded-3xl border border-gray-100 mb-4"
             >
               <QRCodeCanvas 
                 value={activeUrl}
@@ -206,10 +206,10 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
 
             {/* User details and clean URL */}
             <div className="text-center mb-6 w-full px-2">
-              <p className="text-sm font-bold text-gray-950 mb-0.5 truncate">@{username}</p>
+              <p className="text-sm font-medium text-gray-950 mb-0.5 truncate">@{username}</p>
               <p className="text-xs text-gray-500 font-medium truncate select-all">{displayUrl}</p>
               {mode === 'invite' && (
-                <p className="text-[11px] text-amber-900 bg-amber-50/80 border border-amber-200/50 rounded-2xl p-2.5 mt-2.5 font-medium leading-relaxed">
+                <p className="text-[11px] text-gray-500 font-medium leading-relaxed mt-2 px-1">
                   When a designer joins with this link, you will be credited as their referrer.
                 </p>
               )}
@@ -228,7 +228,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
               <button 
                 type="button"
                 onClick={handleDownload}
-                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-primary/90 text-black font-bold text-xs transition-all shadow-xs active:scale-[0.98]"
+                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-primary/90 text-white font-bold text-xs transition-all shadow-xs active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
                 <span>Download PNG</span>

@@ -65,7 +65,7 @@ export function NotificationPopover({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-base text-gray-900 tracking-tight">Notifications</h3>
+            <h3 className="font-medium text-base text-gray-900 tracking-tight">Notifications</h3>
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-primary/20 text-gray-900">
                 {unreadCount}
@@ -79,7 +79,7 @@ export function NotificationPopover({
                 onClick={onMarkAllAsRead}
                 className="p-1.5 text-xs text-gray-500 hover:text-black hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-1 font-medium"
                 title="Mark all as read"
-              >
+              > 
                 <CheckCheck size={15} />
                 <span className="text-[11px]">Mark read</span>
               </button>

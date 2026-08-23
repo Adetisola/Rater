@@ -81,7 +81,7 @@ export function NotificationSheet({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 shrink-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-lg text-gray-900 tracking-tight">Notifications</h3>
+              <h3 className="font-medium text-lg text-gray-900 tracking-tight">Notifications</h3>
               {unreadCount > 0 && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-primary/20 text-gray-900">
                   {unreadCount}

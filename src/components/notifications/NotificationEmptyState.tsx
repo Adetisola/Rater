@@ -1,6 +1,6 @@
 "use client";
 
-import { BellOff, Sparkles } from 'lucide-react';
+import { BellOff } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '../ui/Button';
 
@@ -14,13 +14,17 @@ export function NotificationEmptyState({ filter = 'all', onCloseParent }: Notifi
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div className="w-14 h-14 rounded-3xl bg-amber-50/60 border border-primary/20 flex items-center justify-center mb-4 shadow-sm">
-        {isUnreadFilter ? (
-          <Sparkles className="w-6 h-6 text-primary" />
-        ) : (
+      {isUnreadFilter ? (
+        <img 
+          src="/icons/rater-logo-white-bg.svg" 
+          alt="Rater" 
+          className="w-10 h-10 object-contain mb-3.5" 
+        />
+      ) : (
+        <div className="w-10 h-10 flex items-center justify-center mb-3.5">
           <BellOff className="w-6 h-6 text-gray-400" />
-        )}
-      </div>
+        </div>
+      )}
 
       <h4 className="text-sm font-bold text-gray-900 mb-1">
         {isUnreadFilter ? 'All caught up!' : 'No notifications yet'}
