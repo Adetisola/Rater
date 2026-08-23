@@ -128,7 +128,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                   type="text"
                   readOnly
                   value={inviteUrl}
-                  className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-mono text-gray-900 select-all focus:outline-none"
+                  className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium text-gray-800 select-all focus:outline-none"
                 />
                 <Button
                   variant="primary"

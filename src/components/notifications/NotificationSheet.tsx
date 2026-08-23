@@ -119,31 +119,33 @@ export function NotificationSheet({
             </div>
           </div>
 
-          {/* Tab Switcher */}
-          <div className="flex items-center px-6 py-2.5 bg-gray-50/80 border-b border-gray-100 shrink-0 gap-2">
+          {/* Filter Tabs */}
+          <div className="flex items-center px-6 py-3 bg-white border-b border-gray-100 shrink-0 gap-2">
             <button
+              type="button"
               onClick={() => onFilterChange('all')}
               className={cn(
-                "flex-1 py-2 rounded-xl text-xs font-bold transition-all text-center",
+                "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200",
                 activeFilter === 'all'
-                  ? "bg-white text-gray-900 shadow-xs border border-gray-200/60"
-                  : "text-gray-500 hover:text-gray-800"
+                  ? "bg-primary/10 border-primary/40 text-black font-semibold"
+                  : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
               )}
             >
               All
             </button>
             <button
+              type="button"
               onClick={() => onFilterChange('unread')}
               className={cn(
-                "flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5",
+                "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5",
                 activeFilter === 'unread'
-                  ? "bg-white text-gray-900 shadow-xs border border-gray-200/60"
-                  : "text-gray-500 hover:text-gray-800"
+                  ? "bg-primary/10 border-primary/40 text-black font-semibold"
+                  : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
               )}
             >
               <span>Unread</span>
               {unreadCount > 0 && (
-                <span className="w-2 h-2 rounded-full bg-primary" />
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
               )}
             </button>
           </div>

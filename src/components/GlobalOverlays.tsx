@@ -8,6 +8,7 @@ import { DeletePostOverlay } from './DeletePostOverlay';
 import { SuspendedAccountOverlay } from './SuspendedAccountOverlay';
 import { SettingsOverlay, type SettingsTab } from './SettingsOverlay';
 import { InviteModal } from './InviteModal';
+import { InstallAppModal } from './InstallAppModal';
 import { usePosts } from '../context/PostContext';
 import { useAuthState, useAuthActions } from '../context/AuthContext';
 import { InstallPromptUI } from './InstallPromptUI';
@@ -46,6 +47,18 @@ let triggerInvite: () => void = () => {};
  */
 export function showInviteModal() {
   triggerInvite();
+}
+
+/**
+ * Global singleton-like mechanism to trigger the Install App modal overlay.
+ */
+let triggerInstallModal: () => void = () => {};
+
+/**
+ * Programmatically opens the Install App modal overlay.
+ */
+export function showInstallAppModal() {
+  triggerInstallModal();
 }
 
 /**
@@ -115,6 +128,7 @@ export function GlobalOverlays() {
   const [undoPostId, setUndoPostId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isInstallOpen, setIsInstallOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { undoDelete } = usePosts();
@@ -141,6 +155,7 @@ export function GlobalOverlays() {
   useEffect(() => {
     triggerDelete = (id: string) => setDeletePostId(id);
     triggerInvite = () => setIsInviteOpen(true);
+    triggerInstallModal = () => setIsInstallOpen(true);
     
     triggerUndoToast = (id: string) => {
       setUndoPostId(id);
@@ -195,6 +210,7 @@ export function GlobalOverlays() {
       <SuspendedAccountOverlay isOpen={isSuspended} onClose={dismissSuspendedNotice} />
       <SettingsOverlay isOpen={isSettingsOpen} initialTab={settingsTab} onClose={handleCloseSettings} />
       <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
+      <InstallAppModal isOpen={isInstallOpen} onClose={() => setIsInstallOpen(false)} />
       <InstallPromptUI />
       <OfflineStatus />
       

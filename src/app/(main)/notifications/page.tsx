@@ -104,7 +104,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
@@ -146,31 +146,33 @@ export default function NotificationsPage() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-gray-100/80 rounded-2xl w-fit mb-6 border border-gray-200/50">
+      <div className="flex items-center gap-2 mb-6">
         <button
+          type="button"
           onClick={() => setActiveFilter('all')}
           className={cn(
-            "px-4 py-1.5 rounded-xl text-xs font-bold transition-all",
+            "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200",
             activeFilter === 'all'
-              ? "bg-white text-gray-900 shadow-xs border border-gray-200/60"
-              : "text-gray-500 hover:text-gray-800"
+              ? "bg-primary/10 border-primary/40 text-black font-semibold"
+              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
           )}
         >
-          All Notifications
+          All
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveFilter('unread')}
           className={cn(
-            "px-4 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
+            "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5",
             activeFilter === 'unread'
-              ? "bg-white text-gray-900 shadow-xs border border-gray-200/60"
-              : "text-gray-500 hover:text-gray-800"
+              ? "bg-primary/10 border-primary/40 text-black font-semibold"
+              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
           )}
         >
           <span>Unread</span>
           {unreadCount > 0 && (
-            <span className="w-2 h-2 rounded-full bg-primary" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary" />
           )}
         </button>
       </div>
@@ -186,14 +188,19 @@ export default function NotificationsPage() {
           <NotificationEmptyState filter={activeFilter} />
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-7">
           {groupedNotifications.map((group) => (
-            <div key={group.label} className="space-y-3">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider px-2">
-                {group.label}
-              </h3>
+            <div key={group.label} className="space-y-2.5">
+              <div className="flex items-center gap-2 px-1 mb-1">
+                <h3 className="text-xs font-bold text-gray-800 tracking-tight">
+                  {group.label}
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">
+                  {group.items.length}
+                </span>
+              </div>
 
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden p-2 space-y-1">
+              <div className="space-y-2.5">
                 {group.items.map((item) => (
                   <NotificationItem
                     key={item.id}

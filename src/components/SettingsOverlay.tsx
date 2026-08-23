@@ -21,7 +21,6 @@ import {
   Sparkles,
   Download,
   Smartphone,
-  Share2,
   FileText,
   Lock
 } from 'lucide-react';
@@ -32,7 +31,7 @@ import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
 import { ConnectedAccounts } from './ConnectedAccounts';
-import { showToast, showInviteModal } from './GlobalOverlays';
+import { showToast, showInviteModal, showInstallAppModal } from './GlobalOverlays';
 import { deleteOwnAccount } from '@/lib/account/server';
 import { cn } from '@/lib/utils';
 import { 
@@ -75,17 +74,14 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // PWA Install State
-  const { isInstalled, isIOS, installApp } = usePWAInstall();
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const { isInstalled, installApp } = usePWAInstall();
 
   const handleInstallApp = async () => {
     const res = await installApp();
     if (res.outcome === 'accepted') {
       showToast('Rater app installed successfully!', 'success');
-    } else if (res.outcome === 'ios' || isIOS) {
-      setShowIOSGuide(prev => !prev);
-    } else if (res.outcome === 'unsupported') {
-      showToast('Use your browser menu to "Install Rater" or "Add to Home Screen"', 'info');
+    } else {
+      showInstallAppModal();
     }
   };
 
@@ -329,7 +325,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Appearance Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Appearance</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Appearance</p>
                       
                       <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between gap-4">
@@ -363,7 +359,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* App & Experience Section (PWA) */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">App & Experience</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">App & Experience</p>
 
                       <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between gap-4">
@@ -381,7 +377,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                           <div className="shrink-0">
                             {isInstalled ? (
-                              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-[11px] font-semibold">
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs font-semibold">
                                 <CheckCircle2 size={13} />
                                 <span>Installed</span>
                               </div>
@@ -389,36 +385,14 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               <Button
                                 variant="primary"
                                 onClick={handleInstallApp}
-                                className="h-8 px-3 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
+                                className="h-8 px-3.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-2xs"
                               >
                                 <Download size={13} />
-                                <span>{isIOS ? "How to Install" : "Install App"}</span>
+                                <span>Install App</span>
                               </Button>
                             )}
                           </div>
                         </div>
-
-                        {/* iOS Safari Installation Guide Expander */}
-                        {showIOSGuide && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            className="pt-3 border-t border-gray-100"
-                          >
-                            <div className="p-3 rounded-xl bg-amber-50/60 border border-amber-200/50 text-[11px] text-gray-700 space-y-1.5">
-                              <p className="font-semibold text-gray-900 flex items-center gap-1.5">
-                                <Share2 size={13} className="text-primary" />
-                                <span>Installing on iOS (Safari):</span>
-                              </p>
-                              <ol className="list-decimal list-inside space-y-1 text-gray-600 pl-1">
-                                <li>Tap the <strong className="text-gray-900">Share</strong> button at the bottom of Safari.</li>
-                                <li>Scroll down and tap <strong className="text-gray-900">&quot;Add to Home Screen&quot;</strong>.</li>
-                                <li>Tap <strong className="text-gray-900">Add</strong> in the top right to complete.</li>
-                              </ol>
-                            </div>
-                          </motion.div>
-                        )}
                       </div>
                     </div>
                   </motion.div>
@@ -436,7 +410,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Profile & Security Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Profile & Security</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Profile & Security</p>
 
                       <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
                         {/* Profile Row */}
@@ -564,7 +538,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     {/* Personal Referral Invite Link Section */}
                     {currentProfile && (
                       <div className="space-y-2">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Referrals & Growth</p>
+                        <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Referrals & Growth</p>
 
                         <div className="rounded-2xl border border-gray-100 bg-white p-3.5 space-y-2.5 shadow-2xs">
                           <div className="flex items-center justify-between">
@@ -594,7 +568,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               type="text"
                               readOnly
                               value={typeof window !== 'undefined' ? `${window.location.origin}/invite/@${currentProfile.username}` : ''}
-                              className="flex-1 bg-gray-50 border border-gray-200/80 rounded-xl px-3 py-1.5 text-xs font-mono text-gray-800 select-all focus:outline-none"
+                              className="flex-1 bg-gray-50 border border-gray-200/80 rounded-xl px-3 py-1.5 text-xs font-medium text-gray-800 select-all focus:outline-none"
                             />
                             <Button
                               variant="primary"
@@ -616,13 +590,13 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* Connected Accounts Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Connected Accounts</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Connected Accounts</p>
                       <ConnectedAccounts />
                     </div>
 
                     {/* Danger Zone: Delete Account */}
                     <div className="space-y-2 pt-2">
-                      <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider px-1">Danger Zone</p>
+                      <p className="text-[10px] font-bold text-red-500 tracking-wider px-1">Danger Zone</p>
                       
                       <div className="rounded-2xl border border-red-100 bg-red-50/30 p-3.5 space-y-3 shadow-2xs">
                         <div className="flex items-center justify-between gap-4">
@@ -708,7 +682,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Delivery Channels Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Delivery Channels</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Delivery Channels</p>
                       
                       <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
                         {/* In-App Notifications */}
@@ -816,7 +790,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* Activity Alerts Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Activity Alerts</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Activity Alerts</p>
                       
                       <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
                         {/* Critiques */}
@@ -924,7 +898,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Community & Feedback Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Community & Feedback</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Community & Feedback</p>
 
                       <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
                         <Link
@@ -990,7 +964,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* Legal Policies Section */}
                     <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Legal Policies</p>
+                      <p className="text-[10px] font-semibold text-gray-400 tracking-wider px-1">Legal Policies</p>
 
                       <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
                         <Link

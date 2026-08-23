@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Copy, Check, User, Sparkles } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { cn } from '@/lib/utils';
 
 interface QRCodeOverlayProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
   
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const activeUrl = mode === 'invite' ? `${origin}/invite/@${username}` : `${origin}/@${username}`;
+  const displayUrl = activeUrl.replace(/^https?:\/\//, '');
 
   useEffect(() => {
     setMode(initialMode);
@@ -124,60 +126,65 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
       {isOpen && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
           <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            className="absolute inset-0 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
             onClick={onClose}
           />
           
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-sm bg-white rounded-4xl p-6 shadow-2xl overflow-hidden flex flex-col items-center border border-gray-100"
+            initial={{ scale: 0.96, opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ scale: 0.96, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+            className="relative w-full max-w-[370px] bg-white rounded-[32px] p-6 shadow-2xl overflow-hidden flex flex-col items-center border border-gray-100"
           >
             {/* Header */}
             <div className="w-full flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-lg text-black">
+              <h3 className="font-bold text-base text-gray-950 tracking-tight">
                 {mode === 'invite' ? 'Invite Referral Link' : 'Share Profile'}
               </h3>
               <button 
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-gray-50 text-gray-500"
+                aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Mode Switcher */}
-            <div className="w-full flex bg-gray-100 p-1 rounded-2xl mb-5 border border-gray-200/80">
+            {/* Mode Switcher Pills */}
+            <div className="w-full flex bg-gray-100/70 p-1 rounded-full mb-5 border border-gray-200/50">
               <button
+                type="button"
                 onClick={() => setMode('profile')}
-                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={cn(
+                  "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200",
                   mode === 'profile'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:text-black'
-                }`}
+                    ? "bg-white text-gray-950 shadow-2xs border border-gray-200/50"
+                    : "text-gray-500 hover:text-gray-950"
+                )}
               >
-                <User size={13} />
+                <User size={13} className={mode === 'profile' ? "text-gray-950" : "text-gray-400"} />
                 <span>Profile</span>
               </button>
               <button
+                type="button"
                 onClick={() => setMode('invite')}
-                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={cn(
+                  "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200",
                   mode === 'invite'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:text-black'
-                }`}
+                    ? "bg-white text-gray-950 shadow-2xs border border-gray-200/50"
+                    : "text-gray-500 hover:text-gray-950"
+                )}
               >
-                <Sparkles size={13} />
+                <Sparkles size={13} className={mode === 'invite' ? "text-amber-500" : "text-gray-400"} />
                 <span>Invite Link</span>
               </button>
             </div>
 
-            {/* QR Code */}
+            {/* QR Code Container */}
             <div 
               ref={canvasRef}
-              className="bg-white p-4 rounded-3xl border-2 border-gray-100 shadow-sm mb-4"
+              className="bg-white p-4.5 rounded-3xl border-2 border-gray-100 shadow-2xs mb-4"
             >
               <QRCodeCanvas 
                 value={activeUrl}
@@ -197,12 +204,13 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
               />
             </div>
 
+            {/* User details and clean URL */}
             <div className="text-center mb-6 w-full px-2">
-              <p className="text-sm font-semibold text-black mb-0.5 truncate">@{username}</p>
-              <p className="text-xs text-gray-500 font-mono truncate select-all">{activeUrl}</p>
+              <p className="text-sm font-bold text-gray-950 mb-0.5 truncate">@{username}</p>
+              <p className="text-xs text-gray-500 font-medium truncate select-all">{displayUrl}</p>
               {mode === 'invite' && (
-                <p className="text-[11px] text-amber-800 bg-amber-50 rounded-xl p-2 mt-2 font-medium">
-                  When a designer signs up using this link, you will be recognized as their referrer.
+                <p className="text-[11px] text-amber-900 bg-amber-50/80 border border-amber-200/50 rounded-2xl p-2.5 mt-2.5 font-medium leading-relaxed">
+                  When a designer joins with this link, you will be credited as their referrer.
                 </p>
               )}
             </div>
@@ -210,18 +218,20 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
             {/* Actions */}
             <div className="flex gap-2.5 w-full">
               <button 
+                type="button"
                 onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-black font-semibold text-xs transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gray-100/90 hover:bg-gray-200/90 text-gray-900 font-bold text-xs transition-all active:scale-[0.98]"
               >
-                {copied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                {copied ? "Copied" : "Copy Link"}
+                {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? "Copied" : "Copy Link"}</span>
               </button>
               <button 
+                type="button"
                 onClick={handleDownload}
-                className="flex-[1.3] flex items-center justify-center gap-2 py-3 rounded-2xl bg-black hover:bg-gray-800 text-white font-semibold text-xs transition-colors shadow-sm"
+                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-primary/90 text-black font-bold text-xs transition-all shadow-xs active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
-                Download QR
+                <span>Download PNG</span>
               </button>
             </div>
           </motion.div>

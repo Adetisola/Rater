@@ -73,10 +73,10 @@ export function NotificationItem({
     <div
       onClick={handleClick}
       className={cn(
-        "group relative flex items-start gap-3 p-3.5 rounded-2xl transition-all duration-200 cursor-pointer",
+        "group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer shadow-2xs",
         notification.is_read
-          ? "bg-transparent hover:bg-gray-50/80"
-          : "bg-amber-50/30 hover:bg-amber-50/60 border border-primary/10 shadow-xs"
+          ? "bg-white hover:bg-gray-50/90 border-gray-100"
+          : "bg-amber-50/25 hover:bg-amber-50/50 border-primary/25 ring-1 ring-primary/10"
       )}
     >
       {/* Actor Avatar or Category Icon */}
@@ -88,7 +88,7 @@ export function NotificationItem({
             className="w-10 h-10 rounded-full border border-gray-100 shadow-2xs"
           />
         ) : (
-          <div className="w-10 h-10 rounded-2xl bg-gray-100 flex items-center justify-center border border-gray-200/60 shadow-2xs">
+          <div className="w-10 h-10 rounded-2xl bg-gray-100/80 flex items-center justify-center border border-gray-200/60 shadow-2xs">
             {getCategoryIcon(notification.category, notification.type)}
           </div>
         )}
@@ -102,35 +102,49 @@ export function NotificationItem({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 min-w-0 pr-2">
-        <div className="flex items-center justify-between gap-2 mb-0.5">
+      <div className="flex-1 min-w-0 pr-1">
+        <div className="flex items-center justify-between gap-2 mb-1">
           <p className={cn(
-            "text-xs truncate tracking-tight",
-            notification.is_read ? "font-medium text-gray-800" : "font-bold text-gray-950"
+            "text-xs sm:text-[13px] truncate tracking-tight",
+            notification.is_read ? "font-semibold text-gray-800" : "font-bold text-gray-950"
           )}>
             {notification.title}
           </p>
-          <span className="text-[10px] text-gray-400 shrink-0 flex items-center gap-1 font-mono">
+          <span className="text-[10px] sm:text-[11px] text-gray-400 shrink-0 font-mono">
             {getFormattedTime(notification.created_at)}
           </span>
         </div>
 
-        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mb-2 font-normal">
+        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mb-2.5 font-normal">
           {notification.message}
         </p>
 
         {/* Action Button & Unread Indicator */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/15 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
+        <div className="flex items-center justify-between pt-0.5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
             <span>{notification.action_label || 'View'}</span>
             <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform text-gray-800" />
           </div>
 
           {!notification.is_read && (
-            <span className="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20 shrink-0" />
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-primary ring-2 ring-primary/20 shrink-0" />
+            </div>
           )}
         </div>
       </div>
+
+      {/* Right Compact Post Thumbnail (if linked to a Work) */}
+      {notification.post?.image_url && (
+        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200/80 shadow-2xs group-hover:border-primary/40 transition-colors mt-0.5">
+          <img
+            src={notification.post.image_url}
+            alt={notification.post.title || "Work preview"}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        </div>
+      )}
     </div>
   );
 }
