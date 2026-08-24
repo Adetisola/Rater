@@ -254,7 +254,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
         >
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-            <h2 className="text-lg font-bold text-gray-900 tracking-tight">Settings</h2>
+            <h2 className="text-lg font-medium text-gray-900 tracking-tight">Settings</h2>
             <button
               onClick={onClose}
               className="w-9 h-9 rounded-full bg-gray-100/80 hover:bg-gray-200/80 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
@@ -329,7 +329,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Appearance</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5 shadow-2xs">
+                      <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5">
                         <div className="flex items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center gap-2">
@@ -363,7 +363,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">App & Experience</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5 shadow-2xs">
+                      <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5">
                         <div className="flex items-center justify-between gap-3 sm:gap-4">
                           <div className="flex items-start gap-3 min-w-0 flex-1">
                             <div className="w-9 h-9 rounded-xl bg-gray-100 border border-gray-200/60 flex items-center justify-center text-gray-700 shrink-0 mt-0.5">
@@ -414,7 +414,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Profile & Security</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         {/* Profile Row */}
                         {currentProfile && (
                           <div className="p-4 flex items-center justify-between gap-3">
@@ -543,7 +543,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                       <div className="space-y-2.5">
                         <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Referrals & Growth</p>
 
-                        <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3 shadow-2xs">
+                        <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3">
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
@@ -601,7 +601,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5 pt-2">
                       <p className="text-xs font-bold text-red-500 tracking-wider px-1">Danger Zone</p>
                       
-                      <div className="rounded-2xl border border-red-100 bg-red-50/30 p-4 space-y-3.5 shadow-2xs">
+                      <div className="rounded-2xl border border-red-100 bg-red-50/30 p-4 space-y-3.5">
                         <div className="flex items-center justify-between gap-3 sm:gap-4">
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-red-900">Delete Account</p>
@@ -687,7 +687,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Delivery Channels</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         {/* Web Push Notifications */}
                         <div className="p-4 space-y-3">
                           <div className="flex items-center justify-between gap-4">
@@ -795,7 +795,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Activity Alerts</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         {/* Critiques */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
@@ -903,7 +903,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Community & Feedback</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         <Link
                           href="/legal/community-guidelines"
                           onClick={onClose}
@@ -975,7 +975,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Legal Policies</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         <Link
                           href="/legal/terms"
                           onClick={onClose}

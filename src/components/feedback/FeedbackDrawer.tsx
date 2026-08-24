@@ -340,7 +340,7 @@ export function FeedbackDrawer() {
                       onChange={e => setTitle(e.target.value)}
                       placeholder="Short, descriptive title"
                       maxLength={120}
-                      className="w-full h-10 bg-white border border-gray-200/80 rounded-xl px-3.5 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+                      className="w-full h-10 bg-white border border-gray-200/80 rounded-xl px-3.5 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                       required
                     />
                   </div>

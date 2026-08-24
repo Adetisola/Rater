@@ -145,7 +145,7 @@ export function FeedbackBoard() {
               className={cn(
                 "flex-1 py-1.5 sm:py-2 px-3 sm:px-3.5 rounded-full text-xs sm:text-[13px] font-medium md:font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap shrink-0",
                 isActive
-                  ? "bg-white text-black shadow-2xs"
+                  ? "bg-white text-black"
                   : "text-gray-500 hover:text-gray-900"
               )}
             >
@@ -157,7 +157,7 @@ export function FeedbackBoard() {
       </div>
 
       {/* 3. Search & Filter Bar */}
-      <div className="flex items-center gap-2 bg-white p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 shadow-2xs">
+      <div className="flex items-center gap-2 bg-white p-2.5 sm:p-3.5 rounded-2xl border border-gray-100">
         {/* Search Bar */}
         <div className="relative flex-1 min-w-0">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -201,7 +201,7 @@ export function FeedbackBoard() {
                 className={cn(
                   "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
                   isSelected
-                    ? "bg-primary/10 border-primary/40 text-black shadow-2xs"
+                    ? "bg-primary/10 border-primary/40 text-black"
                     : "bg-white border-gray-200/70 text-gray-500 hover:border-gray-300 hover:text-black"
                 )}
               >
@@ -224,7 +224,7 @@ export function FeedbackBoard() {
                   className={cn(
                     "px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
                     isSelected
-                      ? "bg-black text-white border-black shadow-2xs"
+                      ? "bg-black text-white border-black"
                       : "bg-white border-gray-200/70 text-gray-600 hover:border-gray-300"
                   )}
                 >
@@ -299,7 +299,7 @@ export function FeedbackBoard() {
             <MessageSquare size={26} />
           </div>
           <div className="space-y-1.5">
-            <h3 className="text-base font-bold text-gray-950">No feedback requests found</h3>
+            <h3 className="text-base font-medium text-gray-950">No feedback requests found</h3>
             <p className="text-xs sm:text-[13px] text-gray-500 max-w-sm mx-auto">
               {debouncedSearch
                 ? `No requests matching "${debouncedSearch}". Try a different keyword.`
@@ -313,7 +313,7 @@ export function FeedbackBoard() {
           <Button
             variant="primary"
             onClick={() => openFeedbackDrawer()}
-            className="h-9 px-4 rounded-xl text-xs font-bold shadow-2xs inline-flex items-center gap-1.5"
+            className="h-9 px-4 rounded-full text-xs font-medium inline-flex items-center gap-1.5"
           >
             <Plus size={14} />
             <span>Share Feedback</span>
