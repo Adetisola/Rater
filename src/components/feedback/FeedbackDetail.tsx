@@ -6,7 +6,6 @@ import {
   ChevronUp, 
   ChevronLeft, 
   MessageSquare, 
-  Send, 
   Bookmark, 
   BookmarkCheck, 
   Sparkles, 
@@ -272,14 +271,75 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
       </Link>
 
       {/* 2. Hero Request Card */}
-      <div className="bg-white rounded-3xl border border-gray-100 p-6 sm:p-8 shadow-2xs space-y-6">
-        <div className="flex items-start gap-4 sm:gap-6">
-          {/* Upvote Button */}
+      <div className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-8 shadow-2xs space-y-4 sm:space-y-6">
+        {/* Mobile Top Actions Row (< sm) */}
+        <div className="flex sm:hidden items-center justify-between gap-2">
+          {/* Mobile Upvote Button */}
           <button
             type="button"
             onClick={handleVote}
             className={cn(
-              "w-14 sm:w-16 py-3 rounded-2xl border-2 flex flex-col items-center justify-center transition-all shrink-0 select-none shadow-2xs",
+              "h-8 px-3 rounded-full border flex items-center gap-1.5 transition-all shrink-0 select-none",
+              request.has_voted
+                ? "bg-amber-50 border-primary/60 text-black font-bold shadow-2xs"
+                : "bg-white border-gray-200/80 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+            )}
+            aria-label={`Upvote request (${request.upvote_count || 0} votes)`}
+          >
+            <ChevronUp size={16} strokeWidth={3} className={request.has_voted ? "text-primary" : ""} />
+            <span className="text-xs font-bold">{request.upvote_count || 0}</span>
+          </button>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className={cn(
+                "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border",
+                isPlanned && "bg-blue-50 text-blue-700 border-blue-200/60",
+                isInProgress && "bg-purple-50 text-purple-700 border-purple-200/60",
+                isCompleted && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
+                isUnderReview && "bg-amber-50 text-amber-800 border-amber-200/60",
+                isDeclined && "bg-red-50 text-red-700 border-red-200/60",
+                isDuplicate && "bg-gray-100 text-gray-600 border-gray-200/60",
+                (!request.status || request.status === 'New') && "bg-gray-50 text-gray-600 border-gray-200/60"
+              )}
+            >
+              {request.status || 'New'}
+            </span>
+
+            {/* Mobile Follow Button */}
+            <button
+              type="button"
+              onClick={handleFollow}
+              className={cn(
+                "h-8 px-2.5 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all shrink-0",
+                request.is_following
+                  ? "bg-amber-50 border-amber-200/80 text-amber-900 shadow-2xs"
+                  : "bg-white border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              )}
+            >
+              {request.is_following ? (
+                <>
+                  <BookmarkCheck size={13} className="text-primary" />
+                  <span>Following</span>
+                </>
+              ) : (
+                <>
+                  <Bookmark size={13} />
+                  <span>Follow</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex items-start gap-6">
+          {/* Desktop Upvote Button (hidden on mobile) */}
+          <button
+            type="button"
+            onClick={handleVote}
+            className={cn(
+              "hidden sm:flex w-14 sm:w-16 py-3 rounded-2xl border-2 flex-col items-center justify-center transition-all shrink-0 select-none shadow-2xs",
               request.has_voted
                 ? "bg-amber-50 border-primary/60 text-black font-bold"
                 : "bg-white border-gray-200/80 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
@@ -291,18 +351,18 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
           </button>
 
           {/* Header & Details */}
-          <div className="flex-1 min-w-0 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-950 leading-tight">
+          <div className="flex-1 min-w-0 space-y-2.5 sm:space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-950 leading-snug sm:leading-tight">
                 {request.title}
               </h1>
 
-              {/* Follow Button */}
+              {/* Desktop Follow Button (hidden on mobile) */}
               <button
                 type="button"
                 onClick={handleFollow}
                 className={cn(
-                  "h-9 px-3 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 self-start",
+                  "hidden sm:flex h-9 px-3 rounded-xl border text-xs font-semibold items-center gap-1.5 transition-all shrink-0 self-start",
                   request.is_following
                     ? "bg-amber-50 border-amber-200/80 text-amber-900 shadow-2xs"
                     : "bg-white border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -325,22 +385,23 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             {/* Badges & Meta Row */}
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {request.is_pinned && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-100 text-amber-900">
-                  <Pin size={12} />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-amber-100 text-amber-900">
+                  <Pin size={11} />
                   <span>Pinned</span>
                 </span>
               )}
 
               {request.is_locked && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gray-100 text-gray-700">
-                  <Lock size={12} />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-gray-100 text-gray-700">
+                  <Lock size={11} />
                   <span>Locked</span>
                 </span>
               )}
 
+              {/* Desktop Status Pill (hidden on mobile since it is on the top action bar) */}
               <span
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-xs font-bold uppercase tracking-wider border",
+                  "hidden sm:inline-block px-2.5 py-1 rounded-full text-xs font-semibold tracking-wider border border-gray-300",
                   isPlanned && "bg-blue-50 text-blue-700 border-blue-200/60",
                   isInProgress && "bg-purple-50 text-purple-700 border-purple-200/60",
                   isCompleted && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
@@ -353,23 +414,23 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                 {request.status || 'New'}
               </span>
 
-              <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600">
+              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold bg-gray-100 text-gray-600">
                 {request.category}
               </span>
 
               {request.author && (
-                <span className="text-xs text-gray-400">
+                <span className="text-[11px] sm:text-xs text-gray-400">
                   by <span className="font-semibold text-gray-700">{request.author.name}</span>
                 </span>
               )}
 
-              <span className="text-xs text-gray-400">
+              <span className="text-[11px] sm:text-xs text-gray-400">
                 {formatRelativeTime(request.created_at)}
               </span>
             </div>
 
             {/* Description Body */}
-            <div className="pt-2 text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+            <div className="pt-1 sm:pt-2 text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
               {request.description}
             </div>
           </div>
@@ -475,35 +536,42 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
               </p>
             </div>
           ) : currentProfile ? (
-            <form onSubmit={handleCommentSubmit} className="space-y-2">
+            <form onSubmit={handleCommentSubmit} className="space-y-3">
               <div className="relative">
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Leave a comment or share additional context..."
+                  placeholder={
+                    currentProfile?.name
+                      ? `${currentProfile.name}, what do you think?...`
+                      : "What do you think?..."
+                  }
                   maxLength={1000}
                   rows={3}
-                  className="w-full bg-white border border-gray-200/80 rounded-2xl p-3.5 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors resize-none shadow-2xs"
+                  className="w-full min-h-[100px] rounded-xl border border-gray-200 bg-white px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-gray-950 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all shadow-2xs"
                 />
+                <div
+                  className={cn(
+                    "absolute bottom-3 right-4 text-[10px] sm:text-xs font-medium pointer-events-none select-none transition-colors",
+                    newComment.length >= 1000 ? "text-red-500 font-bold" : "text-gray-400"
+                  )}
+                >
+                  {newComment.length} / 1000
+                </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-gray-400">
-                  {newComment.length} / 1000 characters
-                </span>
-
+              <div className="flex items-center justify-end">
                 <Button
                   type="submit"
                   variant="primary"
                   disabled={isSubmittingComment || !newComment.trim()}
-                  className="h-8 px-3.5 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs"
+                  className="h-10 px-5 rounded-full text-xs sm:text-[13px] font-medium flex items-center gap-1.5 shadow-2xs"
                 >
                   {isSubmittingComment ? (
-                    <Loader2 size={13} className="animate-spin" />
+                    <Loader2 size={14} className="animate-spin" />
                   ) : (
                     <>
                       <span>Post Comment</span>
-                      <Send size={12} />
                     </>
                   )}
                 </Button>

@@ -21,6 +21,7 @@ import { useFeedback } from '@/hooks/useFeedback';
 import { useOverlayStore } from '@/store/overlayStore';
 import { useAuthState } from '@/context/AuthContext';
 import { Button } from '../ui/Button';
+import { SelectDropdown } from '../ui/SelectDropdown';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
@@ -48,6 +49,12 @@ const ROADMAP_STATUSES = [
   'Completed',
   'Resolved Duplicate',
 ];
+
+const SORT_OPTIONS = [
+  { value: 'Most Upvoted', label: 'Most Upvoted' },
+  { value: 'Newest', label: 'Newest' },
+  { value: 'Recently Active', label: 'Recently Active' },
+] as const;
 
 export function FeedbackBoard() {
   const { currentProfile } = useAuthState();
@@ -97,14 +104,14 @@ export function FeedbackBoard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* 1. Header & Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-950 tracking-tight flex items-center gap-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-950 tracking-tight flex items-center gap-2">
             <span>Product Feedback & Roadmap</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 line-clamp-1 sm:line-clamp-none">
             Help shape Rater. Submit ideas, upvote community requests, and follow development.
           </p>
         </div>
@@ -112,15 +119,15 @@ export function FeedbackBoard() {
         <Button
           variant="primary"
           onClick={() => openFeedbackDrawer()}
-          className="h-10 px-4 rounded-full text-xs sm:text-[13px] font-bold flex items-center justify-center gap-1.5 shadow-2xs shrink-0"
+          className="h-8 sm:h-10 px-3 sm:px-4 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shrink-0"
         >
-          <Plus size={16} />
+          <Plus size={15} />
           <span>Share Feedback</span>
         </Button>
       </div>
 
       {/* 2. Primary Navigation Views */}
-      <div className="flex items-center gap-1 p-1 bg-gray-100/70 rounded-2xl border border-gray-200/50 overflow-x-auto">
+      <div className="flex items-center gap-1 p-1 bg-gray-100/70 rounded-full overflow-x-auto scrollbar-hide flex-nowrap shrink-0">
         {VIEW_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeView === tab.id;
@@ -136,13 +143,13 @@ export function FeedbackBoard() {
                 }
               }}
               className={cn(
-                "flex-1 py-2 px-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-all whitespace-nowrap",
+                "flex-1 py-1.5 sm:py-2 px-3 sm:px-3.5 rounded-full text-xs sm:text-[13px] font-medium md:font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap shrink-0",
                 isActive
-                  ? "bg-white text-gray-950 shadow-2xs border border-gray-200/60"
+                  ? "bg-white text-black shadow-2xs"
                   : "text-gray-500 hover:text-gray-900"
               )}
             >
-              <Icon size={15} className={isActive ? "text-primary" : "text-gray-400"} />
+              <Icon size={14} className={isActive ? "text-primary" : "text-gray-400"} />
               <span>{tab.label}</span>
             </button>
           );
@@ -150,40 +157,35 @@ export function FeedbackBoard() {
       </div>
 
       {/* 3. Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-gray-100 shadow-2xs">
+      <div className="flex items-center gap-2 bg-white p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 shadow-2xs">
         {/* Search Bar */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="relative flex-1 min-w-0">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search feedback ideas..."
-            className="w-full h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl pl-9 pr-8 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+            className="w-full h-8 sm:h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700"
             >
-              <X size={14} />
+              <X size={13} />
             </button>
           )}
         </div>
 
         {/* Sort Selector */}
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xs font-semibold text-gray-400 hidden md:inline">Sort:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
-            className="h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl px-3 text-xs font-semibold text-gray-800 focus:outline-none focus:border-black transition-colors"
-          >
-            <option value="Most Upvoted">Most Upvoted</option>
-            <option value="Newest">Newest</option>
-            <option value="Recently Active">Recently Active</option>
-          </select>
-        </div>
+        <SelectDropdown
+          label="Sort:"
+          options={SORT_OPTIONS}
+          value={sortBy}
+          onChange={(val) => setSortBy(val as any)}
+          size="sm"
+        />
       </div>
 
       {/* 4. Secondary Filter Pills (Type & Roadmap Status) */}
@@ -332,7 +334,7 @@ export function FeedbackBoard() {
               <div
                 key={item.id}
                 className={cn(
-                  "p-4 sm:p-5 rounded-2xl bg-white border border-gray-100 hover:border-gray-200/90 transition-all shadow-2xs flex items-start gap-3.5 sm:gap-4.5 group",
+                  "p-3.5 sm:p-5 rounded-2xl bg-white border border-gray-100 hover:border-gray-200/90 transition-all shadow-2xs flex items-start gap-3 sm:gap-4.5 group",
                   item.is_pinned && "border-amber-200/80 bg-amber-50/20"
                 )}
               >
@@ -344,7 +346,7 @@ export function FeedbackBoard() {
                     if (item.id) toggleVote(item.id);
                   }}
                   className={cn(
-                    "w-11 sm:w-12 py-2 rounded-xl flex flex-col items-center justify-center border transition-all shrink-0 select-none",
+                    "w-9 sm:w-12 py-1.5 sm:py-2 rounded-xl flex flex-col items-center justify-center border transition-all shrink-0 select-none",
                     item.has_voted
                       ? "bg-amber-50 border-primary/50 text-black font-bold shadow-2xs"
                       : "bg-white border-gray-200/70 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
@@ -352,20 +354,20 @@ export function FeedbackBoard() {
                   aria-label={`Upvote request (${item.upvote_count || 0} votes)`}
                 >
                   <ChevronUp
-                    size={16}
+                    size={15}
                     strokeWidth={3}
                     className={cn("transition-transform group-hover:-translate-y-0.5", item.has_voted ? "text-primary" : "")}
                   />
-                  <span className="text-xs font-bold mt-0.5">{item.upvote_count || 0}</span>
+                  <span className="text-[11px] sm:text-xs font-bold mt-0.5">{item.upvote_count || 0}</span>
                 </button>
 
                 {/* Main Card Content */}
-                <div className="min-w-0 flex-1 space-y-2">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
+                <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
+                  <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                    <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
                       <Link
                         href={`/feedback/${item.slug}`}
-                        className="text-sm sm:text-base font-semibold text-gray-950 hover:text-black hover:underline transition-colors line-clamp-1"
+                        className="text-xs sm:text-base font-semibold text-gray-950 hover:text-black hover:underline transition-colors line-clamp-1"
                       >
                         {item.title}
                       </Link>
@@ -381,7 +383,7 @@ export function FeedbackBoard() {
                         if (item.id) toggleFollow(item.id);
                       }}
                       className={cn(
-                        "h-8 px-2.5 rounded-xl border text-xs font-semibold flex items-center gap-1 transition-all shrink-0",
+                        "h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition-all shrink-0",
                         item.is_following
                           ? "bg-amber-50 border-amber-200/70 text-amber-900"
                           : "bg-white border-gray-200/70 text-gray-500 hover:text-gray-900 hover:bg-gray-50"
@@ -390,12 +392,12 @@ export function FeedbackBoard() {
                     >
                       {item.is_following ? (
                         <>
-                          <BookmarkCheck size={13} className="text-primary" />
+                          <BookmarkCheck size={12} className="text-primary" />
                           <span className="hidden sm:inline">Following</span>
                         </>
                       ) : (
                         <>
-                          <Bookmark size={13} />
+                          <Bookmark size={12} />
                           <span className="hidden sm:inline">Follow</span>
                         </>
                       )}

@@ -344,13 +344,13 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         </div>
 
                         {/* Theme Segmented Switcher */}
-                        <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-100/70 rounded-xl border border-gray-200/40">
+                        <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-100/70 rounded-full">
                           {['System', 'Light', 'Dark'].map((theme, i) => (
                             <div
                               key={theme}
                               className={cn(
-                                "py-2 px-3 rounded-lg text-center select-none text-xs sm:text-[13px] font-semibold transition-all cursor-not-allowed opacity-60",
-                                i === 0 ? "bg-white text-gray-900 shadow-2xs border border-gray-200/50 opacity-90" : "text-gray-500"
+                                "py-2 px-3 rounded-full text-center select-none text-xs sm:text-[13px] font-semibold transition-all cursor-not-allowed opacity-60",
+                                i === 0 ? "bg-white text-gray-900" : "text-gray-500"
                               )}
                             >
                               {theme}
@@ -365,12 +365,12 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">App & Experience</p>
 
                       <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5 shadow-2xs">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex items-start gap-3">
+                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
                             <div className="w-9 h-9 rounded-xl bg-gray-100 border border-gray-200/60 flex items-center justify-center text-gray-700 shrink-0 mt-0.5">
                               <Smartphone size={18} />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-gray-900">Install Rater App</p>
                               <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
                                 Fast launch from your home screen or desktop dock with full-screen view.
@@ -380,7 +380,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                           <div className="shrink-0">
                             {isInstalled ? (
-                              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs sm:text-[13px] font-semibold">
+                              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs sm:text-[13px] font-medium whitespace-nowrap shrink-0">
                                 <CheckCircle2 size={14} />
                                 <span>Installed</span>
                               </div>
@@ -388,7 +388,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               <Button
                                 variant="primary"
                                 onClick={handleInstallApp}
-                                className="h-9 px-4 rounded-full text-xs sm:text-[13px] font-bold flex items-center gap-1.5 shadow-2xs"
+                                className="h-9 px-4 rounded-full text-xs sm:text-[13px] font-medium flex items-center gap-1.5 whitespace-nowrap shrink-0"
                               >
                                 <Download size={14} />
                                 <span>Install App</span>
@@ -419,13 +419,13 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Profile Row */}
                         {currentProfile && (
                           <div className="p-4 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
                               <UserAvatar
                                 avatarUrl={currentProfile.avatar_url}
                                 size="xs"
                                 className="w-11 h-11 shrink-0"
                               />
-                              <div className="min-w-0">
+                              <div className="min-w-0 flex-1">
                                 <p className="font-semibold text-sm text-gray-900 truncate">{currentProfile.name}</p>
                                 <p className="text-xs text-gray-500 truncate">@{currentProfile.username}</p>
                               </div>
@@ -434,10 +434,11 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <Link
                               href={`/@${currentProfile.username}?edit=true`}
                               onClick={onClose}
+                              className="shrink-0"
                             >
                               <Button
                                 variant="outline"
-                                className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold rounded-xl flex items-center gap-1.5"
+                                className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold rounded-full flex items-center gap-1.5 whitespace-nowrap shrink-0"
                               >
                                 <Edit2 size={13} className="text-gray-400" />
                                 <span>Edit Profile</span>
@@ -463,9 +464,9 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Password / Passkey Row */}
                         <div className="p-4 space-y-3.5">
                           <div className="flex items-center justify-between gap-3">
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                                <KeyRound size={15} className="text-gray-400" />
+                                <KeyRound size={15} className="text-gray-400 shrink-0" />
                                 <span>Passkey / Password</span>
                               </p>
                               <p className="text-xs sm:text-[13px] text-gray-500 mt-1">Set or update your account password.</p>
@@ -477,7 +478,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                 setPasswordError(null);
                                 setPasswordSuccess(false);
                               }}
-                              className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold rounded-xl"
+                              className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold rounded-full whitespace-nowrap shrink-0"
                             >
                               {isChangingPassword ? 'Cancel' : 'Change'}
                             </Button>
@@ -526,7 +527,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                   type="submit"
                                   variant="primary"
                                   disabled={passwordLoading || !newPassword}
-                                  className="h-9 px-4 text-xs sm:text-[13px] font-semibold rounded-xl flex items-center gap-1.5"
+                                  className="h-9 px-4 text-xs sm:text-[13px] font-semibold rounded-full flex items-center gap-1.5"
                                 >
                                   {passwordLoading && <Loader2 size={13} className="animate-spin" />}
                                   <span>Save Password</span>
@@ -544,13 +545,13 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Referrals & Growth</p>
 
                         <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3 shadow-2xs">
-                          <div className="flex items-center justify-between">
-                            <div>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                                <Sparkles size={15} className="text-primary" />
+                                <Sparkles size={15} className="text-primary shrink-0" />
                                 <span>Personal Invite Link</span>
                               </p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1">
+                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
                                 Invite fellow designers to join and earn referral attribution.
                               </p>
                             </div>
@@ -560,7 +561,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                 onClose();
                                 showInviteModal();
                               }}
-                              className="h-8 px-3 text-xs font-semibold rounded-lg"
+                              className="h-8 px-3.5 text-xs font-semibold rounded-full whitespace-nowrap shrink-0"
                             >
                               Open Card
                             </Button>
@@ -571,7 +572,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               type="text"
                               readOnly
                               value={typeof window !== 'undefined' ? `${window.location.origin}/invite/@${currentProfile.username}` : ''}
-                              className="flex-1 bg-gray-50 border border-gray-200/80 rounded-xl px-3.5 py-2 text-xs sm:text-[13px] font-medium text-gray-800 select-all focus:outline-none"
+                              className="flex-1 min-w-0 bg-gray-50 border border-gray-200/80 rounded-xl px-3.5 py-2 text-xs sm:text-[13px] font-medium text-gray-800 select-all focus:outline-none"
                             />
                             <Button
                               variant="primary"
@@ -582,7 +583,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                   showToast('Invite link copied to clipboard!', 'success');
                                 }
                               }}
-                              className="h-9 px-3.5 rounded-xl text-xs sm:text-[13px] font-semibold shrink-0"
+                              className="h-9 px-4 rounded-full text-xs sm:text-[13px] font-semibold shrink-0 whitespace-nowrap"
                             >
                               Copy
                             </Button>
@@ -602,8 +603,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                       <p className="text-xs font-bold text-red-500 tracking-wider px-1">Danger Zone</p>
                       
                       <div className="rounded-2xl border border-red-100 bg-red-50/30 p-4 space-y-3.5 shadow-2xs">
-                        <div className="flex items-center justify-between gap-4">
-                          <div>
+                        <div className="flex items-center justify-between gap-3 sm:gap-4">
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold text-red-900">Delete Account</p>
                             <p className="text-xs sm:text-[13px] text-red-700/80 mt-1">
                               Permanently delete your profile, creative works, and reviews.
@@ -613,7 +614,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <Button
                               variant="outline"
                               onClick={() => setShowDeleteConfirm(true)}
-                              className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0 rounded-xl"
+                              className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0 rounded-full whitespace-nowrap"
                             >
                               Delete
                             </Button>
@@ -648,7 +649,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                   setDeleteConfirmationText('');
                                   setDeleteError(null);
                                 }}
-                                className="h-9 px-3.5 text-xs sm:text-[13px] rounded-xl"
+                                className="h-9 px-3.5 text-xs sm:text-[13px] rounded-full"
                               >
                                 Cancel
                               </Button>
@@ -660,7 +661,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                   deleteConfirmationText.trim().toLowerCase() !== currentProfile.username.toLowerCase()
                                 }
                                 onClick={handleDeleteAccount}
-                                className="h-9 px-4 text-xs sm:text-[13px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-xl flex items-center gap-1.5"
+                                className="h-9 px-4 text-xs sm:text-[13px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-full flex items-center gap-1.5"
                               >
                                 {isDeletingAccount && <Loader2 size={13} className="animate-spin" />}
                                 <span>Permanently Delete</span>
@@ -745,7 +746,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                           {/* Device Registration Trigger */}
                           <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
-                            <span className="text-xs sm:text-[13px] text-gray-500">
+                            <span className="text-xs sm:text-[13px] text-gray-500 min-w-0 flex-1">
                               Device status: <span className={cn("font-semibold", isPushSubscribed ? "text-emerald-700" : "text-amber-700")}>
                                 {isPushSubscribed ? "Active on this device" : "Not enabled on this device"}
                               </span>
@@ -754,7 +755,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               variant="outline"
                               disabled={isPushLoading}
                               onClick={handlePushToggle}
-                              className="h-8 px-3 text-xs font-semibold rounded-lg"
+                              className="h-8 px-3.5 text-xs font-semibold rounded-full whitespace-nowrap shrink-0"
                             >
                               {isPushLoading && <Loader2 size={12} className="animate-spin mr-1" />}
                               <span>{isPushSubscribed ? "Disable on Device" : "Enable on Device"}</span>

@@ -22,6 +22,7 @@ import { getPopularFeedback, checkSimilarFeedback, toggleFeedbackVote } from '@/
 import type { FeedbackRequest, FeedbackType, FeedbackCategory } from '@/types';
 import { showToast } from '@/components/GlobalOverlays';
 import { Button } from '@/components/ui/Button';
+import { SelectDropdown } from '@/components/ui/SelectDropdown';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -295,7 +296,7 @@ export function FeedbackDrawer() {
                   {/* Type Selector Tabs */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-500 tracking-wider">Type</label>
-                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100/70 rounded-xl border border-gray-200/40">
+                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100/70 rounded-xl">
                       {FEEDBACK_TYPES.map(t => {
                         const isSelected = type === t.id;
                         return (
@@ -304,9 +305,9 @@ export function FeedbackDrawer() {
                             type="button"
                             onClick={() => setType(t.id)}
                             className={cn(
-                              "py-1.5 px-2 rounded-lg text-center select-none text-xs font-semibold transition-all",
+                              "py-1.5 px-2 rounded-full text-center select-none text-xs font-medium md:font-semibold transition-all",
                               isSelected
-                                ? "bg-white text-gray-950 shadow-2xs border border-gray-200/50"
+                                ? "bg-white text-black"
                                 : "text-gray-500 hover:text-gray-900"
                             )}
                           >
@@ -320,17 +321,14 @@ export function FeedbackDrawer() {
                   {/* Category Selector */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-500 tracking-wider">Category</label>
-                    <select
+                    <SelectDropdown
+                      options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
                       value={category}
-                      onChange={e => setCategory(e.target.value as FeedbackCategory)}
-                      className="w-full h-10 bg-gray-50/80 border border-gray-200/80 rounded-xl px-3 text-xs font-medium text-gray-900 focus:outline-none focus:border-black transition-colors"
-                    >
-                      {CATEGORIES.map(cat => (
-                        <option key={cat} value={cat}>
-                          {cat}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={val => setCategory(val as FeedbackCategory)}
+                      className="w-full"
+                      menuClassName="w-full"
+                      align="left"
+                    />
                   </div>
 
                   {/* Title Input */}
@@ -396,15 +394,29 @@ export function FeedbackDrawer() {
                   {/* Description Textarea */}
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-500 tracking-wider">Details</label>
-                    <textarea
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      placeholder="Explain what you want to achieve, why it helps, or what went wrong..."
-                      rows={4}
-                      maxLength={2000}
-                      className="w-full bg-white border border-gray-200/80 rounded-xl p-3 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors resize-none shadow-2xs"
-                      required
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={description}
+                        onChange={e => setDescription(e.target.value)}
+                        placeholder={
+                          currentProfile?.name
+                            ? `${currentProfile.name}, what would make Rater better?...`
+                            : "What would make Rater better?..."
+                        }
+                        rows={4}
+                        maxLength={2000}
+                        className="w-full min-h-[120px] rounded-xl border border-gray-200 bg-white px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-gray-950 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all shadow-2xs"
+                        required
+                      />
+                      <div
+                        className={cn(
+                          "absolute bottom-3 right-4 text-[10px] sm:text-xs font-medium pointer-events-none select-none transition-colors",
+                          description.length >= 2000 ? "text-red-500 font-bold" : "text-gray-400"
+                        )}
+                      >
+                        {description.length} / 2000
+                      </div>
+                    </div>
                   </div>
 
                   {/* Submit Action */}
@@ -412,14 +424,13 @@ export function FeedbackDrawer() {
                     type="submit"
                     variant="primary"
                     disabled={isSubmitting || !title.trim() || !description.trim()}
-                    className="w-full h-10 rounded-xl text-xs sm:text-[13px] font-bold flex items-center justify-center gap-1.5 shadow-2xs"
+                    className="w-full h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5"
                   >
                     {isSubmitting ? (
                       <Loader2 size={15} className="animate-spin" />
                     ) : (
                       <>
                         <span>Submit Feedback</span>
-                        <ArrowRight size={14} />
                       </>
                     )}
                   </Button>
@@ -430,7 +441,7 @@ export function FeedbackDrawer() {
                   <div className="flex items-center justify-between px-1">
                     <div className="flex items-center gap-1.5">
                       <Flame size={15} className="text-amber-500" />
-                      <h3 className="text-xs font-bold text-gray-900 tracking-tight">Popular Active Requests</h3>
+                      <h3 className="text-xs font-medium text-gray-900 tracking-tight">Popular Active Requests</h3>
                     </div>
                     <span className="text-[11px] text-gray-400">Past 90 days</span>
                   </div>
@@ -500,12 +511,12 @@ export function FeedbackDrawer() {
             <Link
               href="/feedback"
               onClick={closeFeedbackDrawer}
-              className="text-xs font-semibold text-gray-700 hover:text-black inline-flex items-center gap-1.5 transition-colors"
+              className="text-xs font-medium md:font-semibold text-gray-700 hover:text-black inline-flex items-center gap-1.5 transition-colors"
             >
               <span>View full feedback board</span>
               <ExternalLink size={13} />
             </Link>
-            <span className="text-[11px] text-gray-400">Rater Studio</span>
+            <span className="text-[11px] text-gray-400">Rater</span>
           </div>
         </motion.div>
       </div>
