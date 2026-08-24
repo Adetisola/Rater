@@ -244,7 +244,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       <span>Invite Designers</span>
                     </div>
                     <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary/20 text-black leading-none">
-                      Invite
+                      New
                     </span>
                   </button>
 
@@ -262,11 +262,16 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                 <div className="p-1.5 space-y-0.5">
                   <button
                     onClick={() => { handleCloseAll(); showSettings(); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/settings"
                     role="menuitem"
                   >
-                    <Settings size={16} className="text-gray-400" />
-                    <span>Settings</span>
+                    <div className="flex items-center gap-2.5">
+                      <Settings size={16} className="text-gray-400 group-hover/settings:text-black transition-colors" />
+                      <span>Settings</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary/20 text-black leading-none">
+                      New
+                    </span>
                   </button>
 
                   {/* Help & Resources Trigger Button */}
@@ -286,7 +291,12 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       <LifeBuoy size={16} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-black" : "text-gray-400 group-hover/help:text-black")} />
                       <span>Help & Resources</span>
                     </div>
-                    <ChevronRight size={14} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-gray-700" : "text-gray-300 group-hover/help:text-gray-600")} />
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary/20 text-black leading-none">
+                        New
+                      </span>
+                      <ChevronRight size={14} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-gray-700" : "text-gray-300 group-hover/help:text-gray-600")} />
+                    </div>
                   </button>
                 </div>
 

@@ -30,6 +30,8 @@ if (vapidPublicKey && vapidPrivateKey) {
   }
 }
 
+import type { PushNotificationAction } from './types';
+
 export interface DispatchWebPushOptions {
   profileId: string;
   title: string;
@@ -37,6 +39,7 @@ export interface DispatchWebPushOptions {
   targetUrl: string;
   groupKey?: string;
   notificationId?: string;
+  actions?: PushNotificationAction[];
 }
 
 /**
@@ -49,6 +52,7 @@ export async function dispatchWebPush({
   targetUrl,
   groupKey,
   notificationId,
+  actions,
 }: DispatchWebPushOptions): Promise<{ sent: number; failed: number }> {
   if (!vapidPublicKey || !vapidPrivateKey) {
     globalLogger.warn('[WebPush] VAPID keys not configured — skipping push dispatch');
@@ -68,6 +72,18 @@ export async function dispatchWebPush({
     return { sent: 0, failed: 0 };
   }
 
+  const actionUrls: Record<string, string> = {};
+  const formattedActions = (actions || []).map((a) => {
+    if (a.url) {
+      actionUrls[a.action] = a.url;
+    }
+    return {
+      action: a.action,
+      title: a.title,
+      icon: a.icon || '/icons/icon-192.png',
+    };
+  });
+
   const payload = JSON.stringify({
     title,
     body,
@@ -76,6 +92,8 @@ export async function dispatchWebPush({
     targetUrl,
     groupKey,
     id: notificationId,
+    actions: formattedActions,
+    actionUrls,
   });
 
   let sent = 0;

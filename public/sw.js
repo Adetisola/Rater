@@ -230,7 +230,9 @@ self.addEventListener('push', (event) => {
       data: {
         url: data.targetUrl || '/browse',
         id: data.id,
+        actionUrls: data.actionUrls || {},
       },
+      actions: Array.isArray(data.actions) ? data.actions : [],
       tag: data.groupKey || undefined,
       renotify: Boolean(data.groupKey),
     };
@@ -245,19 +247,34 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/';
+
+  const clickedAction = event.action;
+  const actionUrls = event.notification.data?.actionUrls || {};
+  let targetUrl = event.notification.data?.url || '/browse';
+
+  // If a specific quick action button was clicked with a mapped URL:
+  if (clickedAction && actionUrls[clickedAction]) {
+    targetUrl = actionUrls[clickedAction];
+  }
+
+  // Resolve absolute URL
+  const absoluteTargetUrl = new URL(targetUrl, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // If a client window is already open at the target URL, focus it
+      // If any existing client is open, navigate and focus it
       for (const client of windowClients) {
-        if (client.url === targetUrl && 'focus' in client) {
+        if ('navigate' in client && 'focus' in client) {
+          return client.navigate(absoluteTargetUrl).then((navigatedClient) => {
+            return navigatedClient ? navigatedClient.focus() : client.focus();
+          });
+        } else if ('focus' in client) {
           return client.focus();
         }
       }
       // Otherwise open a new window
       if (clients.openWindow) {
-        return clients.openWindow(targetUrl);
+        return clients.openWindow(absoluteTargetUrl);
       }
     })
   );

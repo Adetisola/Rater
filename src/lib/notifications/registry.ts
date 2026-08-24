@@ -23,13 +23,20 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     preferenceKey: 'notify_critiques',
     renderCopy: ({ workTitle, postId, reviewId }) => {
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+      const critiqueUrl = postId ? `/post/${postId}?tab=critique${reviewId ? `#review-${reviewId}` : ''}` : '/browse';
+      const postUrl = postId ? `/post/${postId}` : '/browse';
       return {
         title: 'Someone critiqued your Work.',
         message: `Your first Critique is in. See what they noticed on ${titleClean}.`,
         pushTitle: 'First Critique on Rater',
         pushBody: `Your first Critique is in for ${titleClean}.`,
         actionLabel: 'View Critique',
-        actionUrl: postId ? `/post/${postId}?tab=critique${reviewId ? `#review-${reviewId}` : ''}` : '/browse',
+        actionUrl: critiqueUrl,
+        pushActions: [
+          { action: 'view_critique', title: 'View Critique', url: critiqueUrl },
+          { action: 'view_score', title: 'View Score', url: postUrl },
+          { action: 'studio', title: 'Studio', url: '/browse' },
+        ],
       };
     },
   },
@@ -48,13 +55,20 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     renderCopy: ({ actorName, workTitle, postId, reviewId }) => {
       const reviewer = actorName?.trim() || 'A creative';
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+      const critiqueUrl = postId ? `/post/${postId}?tab=critique${reviewId ? `#review-${reviewId}` : ''}` : '/browse';
+      const postUrl = postId ? `/post/${postId}` : '/browse';
       return {
         title: 'New Critique on your Work',
         message: `${reviewer} shared a critique on ${titleClean}.`,
         pushTitle: 'New Critique on Rater',
         pushBody: `${reviewer} left feedback on ${titleClean}.`,
         actionLabel: 'View Critique',
-        actionUrl: postId ? `/post/${postId}?tab=critique${reviewId ? `#review-${reviewId}` : ''}` : '/browse',
+        actionUrl: critiqueUrl,
+        pushActions: [
+          { action: 'view_critique', title: 'View Critique', url: critiqueUrl },
+          { action: 'view_score', title: 'View Score', url: postUrl },
+          { action: 'studio', title: 'Studio', url: '/browse' },
+        ],
       };
     },
   },
@@ -72,6 +86,8 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     preferenceKey: 'notify_milestones',
     renderCopy: ({ workTitle, postId }) => {
       const titleClean = workTitle ? `"${workTitle}"` : 'Your Work';
+      const postUrl = postId ? `/post/${postId}` : '/browse';
+      const critiquesUrl = postId ? `/post/${postId}?tab=critique` : '/browse';
       return {
         title: 'Your Work has a score.',
         message: `${titleClean} has received 3 Critiques. Your Overall Score and Criteria Scores are now unlocked.`,
@@ -79,7 +95,12 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
         pushBody: `${titleClean} has received 3 Critiques. Your Overall Score is live.`,
         emailSubject: `Your Work ${titleClean} has unlocked its Overall Score`,
         actionLabel: 'See Score',
-        actionUrl: postId ? `/post/${postId}` : '/browse',
+        actionUrl: postUrl,
+        pushActions: [
+          { action: 'see_score', title: 'See Score', url: postUrl },
+          { action: 'view_critiques', title: 'Critiques', url: critiquesUrl },
+          { action: 'share_score', title: 'Share', url: postUrl },
+        ],
       };
     },
   },
@@ -97,6 +118,8 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     preferenceKey: 'notify_insights',
     renderCopy: ({ workTitle, postId }) => {
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+      const insightsUrl = postId ? `/post/${postId}?tab=insights` : '/browse';
+      const postUrl = postId ? `/post/${postId}` : '/browse';
       return {
         title: 'Insights ready',
         message: `Patterns and synthesis across community critiques are now available for ${titleClean}.`,
@@ -104,7 +127,11 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
         pushBody: `Discover what the studio observed in ${titleClean}.`,
         emailSubject: `New Insights ready for ${titleClean}`,
         actionLabel: 'Explore Insights',
-        actionUrl: postId ? `/post/${postId}?tab=insights` : '/browse',
+        actionUrl: insightsUrl,
+        pushActions: [
+          { action: 'explore_insights', title: 'Explore Insights', url: insightsUrl },
+          { action: 'view_work', title: 'View Work', url: postUrl },
+        ],
       };
     },
   },
@@ -122,6 +149,8 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     preferenceKey: 'notify_milestones',
     renderCopy: ({ workTitle, postId }) => {
       const titleClean = workTitle ? `"${workTitle}"` : 'Your Work';
+      const postUrl = postId ? `/post/${postId}` : '/browse';
+      const critiquesUrl = postId ? `/post/${postId}?tab=critique` : '/browse';
       return {
         title: 'Top Rated in the Studio 🏆',
         message: `${titleClean} has earned the Top Rated badge for exceptional community standing.`,
@@ -129,7 +158,12 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
         pushBody: `${titleClean} is now featured as Top Rated in the Studio.`,
         emailSubject: `Congratulations! ${titleClean} is now Top Rated on Rater`,
         actionLabel: 'Share Result',
-        actionUrl: postId ? `/post/${postId}` : '/browse',
+        actionUrl: postUrl,
+        pushActions: [
+          { action: 'view_badge', title: 'View Badge 🏆', url: postUrl },
+          { action: 'view_critiques', title: 'Critiques', url: critiquesUrl },
+          { action: 'share_result', title: 'Share', url: postUrl },
+        ],
       };
     },
   },
@@ -168,13 +202,18 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     },
     renderCopy: ({ feedbackTitle, feedbackSlug }) => {
       const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'your idea';
+      const discussionUrl = feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback';
       return {
         title: 'Team responded to feedback',
         message: `The Rater team posted an official response to ${titleClean}.`,
         pushTitle: 'Official Feedback Response',
         pushBody: `The Rater team responded to ${titleClean}.`,
         actionLabel: 'View Response',
-        actionUrl: feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback',
+        actionUrl: discussionUrl,
+        pushActions: [
+          { action: 'view_response', title: 'View Response', url: discussionUrl },
+          { action: 'feedback_board', title: 'Feedback Board', url: '/feedback' },
+        ],
       };
     },
   },
@@ -192,13 +231,18 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     renderCopy: ({ feedbackTitle, feedbackSlug, metadata }) => {
       const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'your followed idea';
       const newStatus = metadata?.newStatus || 'Updated';
+      const discussionUrl = feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback';
       return {
         title: `Feedback status moved to ${newStatus}`,
         message: `${titleClean} is now ${newStatus}.`,
         pushTitle: 'Feedback Status Update',
         pushBody: `${titleClean} is now ${newStatus}.`,
         actionLabel: 'View Request',
-        actionUrl: feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback',
+        actionUrl: discussionUrl,
+        pushActions: [
+          { action: 'view_request', title: 'View Request', url: discussionUrl },
+          { action: 'feedback_board', title: 'Feedback Board', url: '/feedback' },
+        ],
       };
     },
   },

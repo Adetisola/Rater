@@ -14,6 +14,13 @@ export interface NotificationEventPayload {
   metadata?: Record<string, any>;
 }
 
+export interface PushNotificationAction {
+  action: string;
+  title: string;
+  url?: string;
+  icon?: string;
+}
+
 export interface RenderedNotificationCopy {
   title: string;
   message: string;
@@ -22,6 +29,7 @@ export interface RenderedNotificationCopy {
   emailSubject?: string;
   actionLabel: string;
   actionUrl: string;
+  pushActions?: PushNotificationAction[];
 }
 
 export interface NotificationEventDefinition {

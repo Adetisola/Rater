@@ -165,6 +165,7 @@ export class NotificationEngine {
             targetUrl: rendered.actionUrl,
             groupKey: groupKey || undefined,
             notificationId,
+            actions: rendered.pushActions,
           });
         } catch (pushErr) {
           globalLogger.warn('[NotificationEngine] Web push delivery failed (non-blocking)', {

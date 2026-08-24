@@ -47,7 +47,11 @@ ALTER TABLE public.feedback_comments
   ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL;
 
 -- 4. Update feedback_requests_with_stats View
-CREATE OR REPLACE VIEW public.feedback_requests_with_stats AS
+DROP VIEW IF EXISTS public.feedback_requests_with_stats CASCADE;
+
+CREATE VIEW public.feedback_requests_with_stats
+WITH (security_invoker = true)
+AS
 SELECT 
   fr.id,
   fr.title,
@@ -89,3 +93,4 @@ LEFT JOIN (
   GROUP BY request_id
 ) f ON f.request_id = fr.id
 WHERE fr.deleted_at IS NULL;
+

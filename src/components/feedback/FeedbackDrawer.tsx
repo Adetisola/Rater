@@ -156,7 +156,7 @@ export function FeedbackDrawer() {
           category,
           slug,
           author_id: currentProfile.id,
-          status: 'New',
+          status: 'Open',
         })
         .select('slug')
         .single();
@@ -168,7 +168,10 @@ export function FeedbackDrawer() {
       setDescription('');
       showToast('Feedback submitted successfully!', 'success');
     } catch (err: any) {
-      setError(err?.message || 'Failed to submit feedback. Please try again.');
+      console.error('[FeedbackDrawer] Failed to submit feedback:', err);
+      const msg = err?.message || 'Failed to submit feedback. Please try again.';
+      setError(msg);
+      showToast(msg, 'error');
     } finally {
       setIsSubmitting(false);
     }
