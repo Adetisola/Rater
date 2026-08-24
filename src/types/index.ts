@@ -218,9 +218,32 @@ export interface InsightOutput {
 
 import type { Database } from './supabase';
 
-export type FeedbackRequest = Database['public']['Views']['feedback_requests_with_stats']['Row'];
-export type FeedbackComment = Database['public']['Tables']['feedback_comments']['Row'];
+export type FeedbackType = 'Feature Request' | 'Improvement' | 'Bug Report' | 'General Feedback';
+export type FeedbackStatus = 'New' | 'Under Review' | 'Planned' | 'In Progress' | 'Completed' | 'Declined' | 'Resolved Duplicate';
+export type FeedbackCategory = 'UI' | 'Search' | 'Performance' | 'Profiles' | 'Reviews' | 'Mobile' | 'Accessibility' | 'Notifications' | 'General';
+
+export type FeedbackRequest = Database['public']['Views']['feedback_requests_with_stats']['Row'] & {
+  author?: {
+    name: string;
+    username: string;
+    avatar_url: string | null;
+    bg_color?: string | null;
+  } | null;
+  has_voted?: boolean;
+  is_following?: boolean;
+};
+
+export type FeedbackComment = Database['public']['Tables']['feedback_comments']['Row'] & {
+  author?: {
+    name: string;
+    username: string;
+    avatar_url: string | null;
+    bg_color?: string | null;
+  } | null;
+};
+
 export type FeedbackVote = Database['public']['Tables']['feedback_votes']['Row'];
+export type FeedbackFollow = Database['public']['Tables']['feedback_follows']['Row'];
 
 // ─── Moderation & Reports ───────────────────────────────────────────────────
 

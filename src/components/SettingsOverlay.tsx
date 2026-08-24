@@ -32,6 +32,7 @@ import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
 import { ConnectedAccounts } from './ConnectedAccounts';
 import { showToast, showInviteModal, showInstallAppModal } from './GlobalOverlays';
+import { useOverlayStore } from '@/store/overlayStore';
 import { deleteOwnAccount } from '@/lib/account/server';
 import { cn } from '@/lib/utils';
 import { 
@@ -918,10 +919,13 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
                         </Link>
 
-                        <Link
-                          href="/feedback"
-                          onClick={onClose}
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            useOverlayStore.getState().openFeedbackDrawer({ defaultType: 'Feature Request' });
+                          }}
+                          className="w-full p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group text-left"
                         >
                           <div className="flex items-center gap-3">
                             <MessageSquarePlus size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
@@ -931,12 +935,15 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             </div>
                           </div>
                           <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
-                        </Link>
+                        </button>
 
-                        <Link
-                          href="/feedback?type=bug"
-                          onClick={onClose}
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            useOverlayStore.getState().openFeedbackDrawer({ defaultType: 'Bug Report' });
+                          }}
+                          className="w-full p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group text-left"
                         >
                           <div className="flex items-center gap-3">
                             <Bug size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
@@ -946,7 +953,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             </div>
                           </div>
                           <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
-                        </Link>
+                        </button>
 
                         <a
                           href="mailto:support@raterapp.site?subject=Rater%20Support%20Inquiry"

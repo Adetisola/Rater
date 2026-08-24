@@ -9,11 +9,14 @@ import { SuspendedAccountOverlay } from './SuspendedAccountOverlay';
 import { SettingsOverlay, type SettingsTab } from './SettingsOverlay';
 import { InviteModal } from './InviteModal';
 import { InstallAppModal } from './InstallAppModal';
+import { FeedbackDrawer } from './feedback/FeedbackDrawer';
+import { useOverlayStore } from '@/store/overlayStore';
 import { usePosts } from '../context/PostContext';
 import { useAuthState, useAuthActions } from '../context/AuthContext';
 import { InstallPromptUI } from './InstallPromptUI';
 import { OfflineStatus } from './OfflineStatus';
 import { useSearchParams } from 'next/navigation';
+import type { FeedbackType } from '@/types';
 
 export type ToastType = 'success' | 'error' | 'info';
 
@@ -21,6 +24,13 @@ export interface ToastMessage {
   id: string;
   message: string;
   type: ToastType;
+}
+
+/**
+ * Programmatically opens the global Feedback Drawer.
+ */
+export function openFeedbackDrawer(options?: { defaultType?: FeedbackType }) {
+  useOverlayStore.getState().openFeedbackDrawer(options);
 }
 
 /**
@@ -211,6 +221,7 @@ export function GlobalOverlays() {
       <SettingsOverlay isOpen={isSettingsOpen} initialTab={settingsTab} onClose={handleCloseSettings} />
       <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
       <InstallAppModal isOpen={isInstallOpen} onClose={() => setIsInstallOpen(false)} />
+      <FeedbackDrawer />
       <InstallPromptUI />
       <OfflineStatus />
       

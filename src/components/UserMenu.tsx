@@ -28,7 +28,7 @@ import {
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
 import { QRCodeOverlay } from './QRCodeOverlay';
-import { showSettings, showInviteModal } from './GlobalOverlays';
+import { showSettings, showInviteModal, openFeedbackDrawer } from './GlobalOverlays';
 import { cn } from '@/lib/utils';
 
 interface UserMenuProps {
@@ -355,14 +355,17 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                         <Mail size={16} className="text-gray-400" />
                         <span>Contact Support</span>
                       </a>
-                      <Link
-                        href="/feedback"
-                        onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleCloseAll();
+                          openFeedbackDrawer();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
                       >
                         <MessageSquarePlus size={16} className="text-gray-400" />
-                        <span>Give Feedback & Bugs</span>
-                      </Link>
+                        <span>Share Feedback</span>
+                      </button>
                     </div>
 
                     {/* Resources */}
@@ -446,15 +449,18 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                         <Mail size={16} className="text-gray-400" />
                         <span>Contact Support</span>
                       </a>
-                      <Link
-                        href="/feedback"
-                        onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleCloseAll();
+                          openFeedbackDrawer();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
                         role="menuitem"
                       >
                         <MessageSquarePlus size={16} className="text-gray-400" />
-                        <span>Give Feedback & Bugs</span>
-                      </Link>
+                        <span>Share Feedback</span>
+                      </button>
                     </div>
 
                     {/* Resources */}

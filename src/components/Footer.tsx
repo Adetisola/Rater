@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { openFeedbackDrawer } from './GlobalOverlays';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -25,9 +26,13 @@ export function Footer() {
           Privacy
         </Link>
         <span className="text-gray-300">•</span>
-        <Link href="/feedback" className="hover:text-black transition-colors">
+        <button
+          type="button"
+          onClick={() => openFeedbackDrawer()}
+          className="hover:text-black transition-colors"
+        >
           Feedback
-        </Link>
+        </button>
         <span className="text-gray-300">•</span>
         <a href="mailto:support@raterapp.site" className="hover:text-black transition-colors">
           Contact Support

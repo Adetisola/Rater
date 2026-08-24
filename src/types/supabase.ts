@@ -178,6 +178,8 @@ export type Database = {
           author_id: string
           content: string
           created_at: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id: string
           request_id: string
           updated_at: string
@@ -186,6 +188,8 @@ export type Database = {
           author_id: string
           content: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           request_id: string
           updated_at?: string
@@ -194,6 +198,8 @@ export type Database = {
           author_id?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           request_id?: string
           updated_at?: string
@@ -222,6 +228,49 @@ export type Database = {
           },
         ]
       }
+      feedback_follows: {
+        Row: {
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_follows_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_follows_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_requests_with_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_follows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_requests: {
         Row: {
           admin_notes: string | null
@@ -235,6 +284,9 @@ export type Database = {
           id: string
           is_locked: boolean | null
           is_pinned: boolean | null
+          official_response: string | null
+          official_response_at: string | null
+          official_response_by: string | null
           slug: string
           status: string
           title: string
@@ -253,6 +305,9 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug: string
           status?: string
           title: string
@@ -271,6 +326,9 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug?: string
           status?: string
           title?: string
@@ -892,6 +950,7 @@ export type Database = {
     Views: {
       feedback_requests_with_stats: {
         Row: {
+          admin_notes: string | null
           author_id: string | null
           category: string | null
           comment_count: number | null
@@ -899,10 +958,14 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           description: string | null
+          follow_count: number | null
           fts: unknown
           id: string | null
           is_locked: boolean | null
           is_pinned: boolean | null
+          official_response: string | null
+          official_response_at: string | null
+          official_response_by: string | null
           slug: string | null
           status: string | null
           title: string | null
@@ -911,6 +974,7 @@ export type Database = {
           upvote_count: number | null
         }
         Insert: {
+          admin_notes?: string | null
           author_id?: string | null
           category?: string | null
           comment_count?: never
@@ -918,10 +982,14 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          follow_count?: never
           fts?: unknown
           id?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug?: string | null
           status?: string | null
           title?: string | null
@@ -930,6 +998,7 @@ export type Database = {
           upvote_count?: never
         }
         Update: {
+          admin_notes?: string | null
           author_id?: string | null
           category?: string | null
           comment_count?: never
@@ -937,10 +1006,14 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          follow_count?: never
           fts?: unknown
           id?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug?: string | null
           status?: string | null
           title?: string | null

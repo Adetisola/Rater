@@ -14,6 +14,7 @@ export type NotificationEventType =
   | 'BADGE_TOP_RATED_AWARDED'
   | 'FIRST_WORK_PUBLISHED'
   | 'FEEDBACK_REQUEST_REPLY'
+  | 'FEEDBACK_STATUS_CHANGED'
   | 'ACCOUNT_SUSPENDED';
 
 export interface NotificationActor {

@@ -40,6 +40,7 @@ import type {
 import { deleteAsset } from '@/lib/cloudinary/service';
 import { extractPublicId } from '@/lib/cloudinary/transforms';
 import { normalizeCampaignSlug, normalizeSourceDetail } from '@/utils/attributionNormalize';
+import { NotificationEngine } from '@/lib/notifications/engine';
 
 // ─── Infrastructure Helpers ───────────────────────────────────────────────────
 
@@ -657,6 +658,7 @@ export async function updateFeedbackRequest(
     status?: string;
     category?: string;
     admin_notes?: string;
+    official_response?: string | null;
     is_pinned?: boolean;
     is_locked?: boolean;
   }
@@ -664,12 +666,44 @@ export async function updateFeedbackRequest(
   const { profile: adminProfile } = await verifyAdminSession();
   const adminSupabase = getAdminSupabase();
 
+  // 1. Fetch current record for audit history tracking
+  const { data: currentRecord, error: fetchError } = await adminSupabase
+    .from('feedback_requests')
+    .select('status, category, admin_notes, official_response, is_pinned, is_locked, title, author_id')
+    .eq('id', requestId)
+    .single();
+
+  if (fetchError || !currentRecord) {
+    throw new Error(`Feedback request not found: ${fetchError?.message || 'Unknown error'}`);
+  }
+
+  // 2. Prepare update payload
+  const payload: Database['public']['Tables']['feedback_requests']['Update'] = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.category !== undefined) payload.category = updates.category;
+  if (updates.admin_notes !== undefined) payload.admin_notes = updates.admin_notes;
+  if (updates.is_pinned !== undefined) payload.is_pinned = updates.is_pinned;
+  if (updates.is_locked !== undefined) payload.is_locked = updates.is_locked;
+
+  if (updates.official_response !== undefined) {
+    if (updates.official_response && updates.official_response.trim()) {
+      payload.official_response = updates.official_response.trim();
+      payload.official_response_at = new Date().toISOString();
+      payload.official_response_by = adminProfile.id;
+    } else {
+      payload.official_response = null;
+      payload.official_response_at = null;
+      payload.official_response_by = null;
+    }
+  }
+
+  // 3. Update database
   const { data, error } = await adminSupabase
     .from('feedback_requests')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq('id', requestId)
     .select()
     .single();
@@ -678,7 +712,85 @@ export async function updateFeedbackRequest(
     throw new Error(`Failed to update feedback request: ${error.message}`);
   }
 
-  await logAdminAction(adminProfile.id, 'update_feedback', 'feedback', requestId, updates);
+  // 4. Log detailed admin audit trail with before/after state
+  const auditDetails: Record<string, any> = {
+    title: currentRecord.title,
+    admin_id: adminProfile.id,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (updates.status !== undefined && updates.status !== currentRecord.status) {
+    auditDetails.old_status = currentRecord.status;
+    auditDetails.new_status = updates.status;
+  }
+  if (updates.category !== undefined && updates.category !== currentRecord.category) {
+    auditDetails.old_category = currentRecord.category;
+    auditDetails.new_category = updates.category;
+  }
+  if (updates.official_response !== undefined && updates.official_response !== currentRecord.official_response) {
+    auditDetails.old_official_response = currentRecord.official_response;
+    auditDetails.new_official_response = updates.official_response;
+  }
+  if (updates.admin_notes !== undefined && updates.admin_notes !== currentRecord.admin_notes) {
+    auditDetails.admin_notes_updated = true;
+  }
+  if (updates.is_pinned !== undefined && updates.is_pinned !== currentRecord.is_pinned) {
+    auditDetails.is_pinned = updates.is_pinned;
+  }
+  if (updates.is_locked !== undefined && updates.is_locked !== currentRecord.is_locked) {
+    auditDetails.is_locked = updates.is_locked;
+  }
+
+  await logAdminAction(adminProfile.id, 'update_feedback', 'feedback', requestId, auditDetails);
+
+  // 5. Dispatch Notifications to Author & Followers (Asynchronous, Non-blocking)
+  try {
+    const { data: followRows } = await adminSupabase
+      .from('feedback_follows')
+      .select('user_id')
+      .eq('request_id', requestId);
+
+    const followerIds = (followRows || []).map(f => f.user_id);
+    const recipientIds = Array.from(new Set([currentRecord.author_id, ...followerIds]))
+      .filter(id => id && id !== adminProfile.id);
+
+    // Status Changed Notification
+    if (updates.status !== undefined && updates.status !== currentRecord.status) {
+      for (const recipientId of recipientIds) {
+        await NotificationEngine.dispatch({
+          eventType: 'FEEDBACK_STATUS_CHANGED',
+          recipientProfileId: recipientId,
+          actorProfileId: adminProfile.id,
+          feedbackRequestId: requestId,
+          idempotencyKey: `feedback_status_${requestId}_${updates.status}_${recipientId}_${Date.now()}`,
+          metadata: {
+            feedbackTitle: currentRecord.title,
+            feedbackSlug: data.slug,
+            newStatus: updates.status,
+          },
+        }).catch(e => console.error('[NotificationEngine] feedback status dispatch error:', e));
+      }
+    }
+
+    // Official Response Notification
+    if (updates.official_response && updates.official_response.trim() && updates.official_response !== currentRecord.official_response) {
+      for (const recipientId of recipientIds) {
+        await NotificationEngine.dispatch({
+          eventType: 'FEEDBACK_REQUEST_REPLY',
+          recipientProfileId: recipientId,
+          actorProfileId: adminProfile.id,
+          feedbackRequestId: requestId,
+          idempotencyKey: `feedback_reply_${requestId}_${recipientId}_${Date.now()}`,
+          metadata: {
+            feedbackTitle: currentRecord.title,
+            feedbackSlug: data.slug,
+          },
+        }).catch(e => console.error('[NotificationEngine] feedback reply dispatch error:', e));
+      }
+    }
+  } catch (notifErr) {
+    console.error('[NotificationEngine] Failed to dispatch feedback notifications:', notifErr);
+  }
 
   return { ok: true, data };
 }

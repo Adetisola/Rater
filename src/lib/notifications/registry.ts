@@ -169,17 +169,41 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     renderCopy: ({ feedbackTitle, feedbackSlug }) => {
       const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'your idea';
       return {
-        title: 'Update on your feedback',
-        message: `The Rater team responded to your feedback on ${titleClean}.`,
-        pushTitle: 'Feedback Update',
-        pushBody: 'The Rater team responded to your feedback.',
+        title: 'Team responded to feedback',
+        message: `The Rater team posted an official response to ${titleClean}.`,
+        pushTitle: 'Official Feedback Response',
+        pushBody: `The Rater team responded to ${titleClean}.`,
         actionLabel: 'View Response',
-        actionUrl: feedbackSlug ? `/feedback?item=${feedbackSlug}` : '/feedback',
+        actionUrl: feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback',
       };
     },
   },
 
-  // ─── 8. Account Suspended (System Bypass) ───────────────────────────────────
+  // ─── 8. Feedback Status Changed ─────────────────────────────────────────────
+  FEEDBACK_STATUS_CHANGED: {
+    type: 'FEEDBACK_STATUS_CHANGED',
+    category: 'community',
+    priority: 'normal',
+    channels: {
+      inApp: true,
+      push: true,
+      email: false,
+    },
+    renderCopy: ({ feedbackTitle, feedbackSlug, metadata }) => {
+      const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'your followed idea';
+      const newStatus = metadata?.newStatus || 'Updated';
+      return {
+        title: `Feedback status moved to ${newStatus}`,
+        message: `${titleClean} is now ${newStatus}.`,
+        pushTitle: 'Feedback Status Update',
+        pushBody: `${titleClean} is now ${newStatus}.`,
+        actionLabel: 'View Request',
+        actionUrl: feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback',
+      };
+    },
+  },
+
+  // ─── 9. Account Suspended (System Bypass) ───────────────────────────────────
   ACCOUNT_SUSPENDED: {
     type: 'ACCOUNT_SUSPENDED',
     category: 'system',
