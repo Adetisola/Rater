@@ -18,6 +18,7 @@ import {
   normalizeFeedbackCommentInsertEvent 
 } from '@/lib/notifications/normalizers';
 import { NotificationEngine } from '@/lib/notifications/engine';
+import { dispatchNewWorkPublished } from '@/lib/notifications/resolvers';
 
 function safeCompare(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -114,8 +115,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, message: `Processed ${events.length} feedback comment events` });
   }
 
-  // 6. posts INSERT → First Work Published Milestone
+  // 6. posts INSERT → Public Work Publication & First Work Milestone
   if (table === 'posts' && type === 'INSERT') {
+    // A. Dispatch NEW_WORK_PUBLISHED to eligible community recipients (Non-blocking)
+    try {
+      await dispatchNewWorkPublished(record);
+    } catch (publishErr) {
+      globalLogger.warn('[Webhook/Supabase] Failed to dispatch NEW_WORK_PUBLISHED:', {
+        postId: record?.id,
+        error: publishErr instanceof Error ? publishErr.message : String(publishErr),
+      });
+    }
+
+    // B. First Work Published Milestone for Author (When count === 1)
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -134,7 +146,9 @@ export async function POST(req: Request) {
         targetEntityId: record.id,
         idempotencyKey: `first_work:${record.id}`,
         metadata: { workTitle: record.title },
-      });
+      }).catch((e) =>
+        globalLogger.warn('[Webhook/Supabase] Failed to dispatch FIRST_WORK_PUBLISHED:', e)
+      );
     }
 
     return NextResponse.json({ ok: true, message: 'Post event processed' });

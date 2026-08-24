@@ -106,14 +106,14 @@ export function FeedbackBoard() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="w-full max-w-full min-w-0 space-y-3.5 sm:space-y-6 overflow-x-hidden">
       {/* 1. Header & Primary Action */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0 flex-1">
           <h1 className="text-lg sm:text-xl font-semibold text-gray-950 tracking-tight flex items-center gap-2">
             <span>Product Feedback & Roadmap</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 line-clamp-1 sm:line-clamp-none">
+          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
             Help shape Rater. Submit ideas, upvote community requests, and follow development.
           </p>
         </div>
@@ -121,7 +121,7 @@ export function FeedbackBoard() {
         <Button
           variant="primary"
           onClick={() => openFeedbackDrawer()}
-          className="h-8 sm:h-10 px-3 sm:px-4 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shrink-0"
+          className="h-8.5 sm:h-10 px-3.5 sm:px-4 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-auto"
         >
           <Plus size={15} />
           <span>Share Feedback</span>
@@ -129,7 +129,7 @@ export function FeedbackBoard() {
       </div>
 
       {/* 2. Primary Navigation Views */}
-      <div className="flex items-center gap-1 p-1 bg-gray-100/70 rounded-full overflow-x-auto scrollbar-hide flex-nowrap shrink-0">
+      <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1 p-1 bg-gray-100/80 rounded-2xl sm:rounded-full touch-pan-x shrink-0">
         {VIEW_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeView === tab.id;
@@ -145,9 +145,9 @@ export function FeedbackBoard() {
                 }
               }}
               className={cn(
-                "flex-1 py-1.5 sm:py-2 px-3 sm:px-3.5 rounded-full text-xs sm:text-[13px] font-medium md:font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap shrink-0",
+                "flex-1 sm:flex-initial py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs sm:text-[13px] font-medium md:font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap shrink-0 select-none",
                 isActive
-                  ? "bg-white text-black"
+                  ? "bg-white text-black shadow-2xs"
                   : "text-gray-500 hover:text-gray-900"
               )}
             >
@@ -159,7 +159,7 @@ export function FeedbackBoard() {
       </div>
 
       {/* 3. Search & Filter Bar */}
-      <div className="flex items-center gap-2 bg-white p-2.5 sm:p-3.5 rounded-2xl border border-gray-100">
+      <div className="w-full bg-white p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 space-y-2.5 sm:space-y-0 sm:flex sm:items-center sm:gap-2.5 min-w-0">
         {/* Search Bar */}
         <div className="relative flex-1 min-w-0">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -168,7 +168,7 @@ export function FeedbackBoard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search feedback ideas..."
-            className="w-full h-8 sm:h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+            className="w-full h-8.5 sm:h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
           />
           {searchQuery && (
             <button
@@ -181,19 +181,21 @@ export function FeedbackBoard() {
         </div>
 
         {/* Sort Selector */}
-        <SelectDropdown
-          label="Sort:"
-          options={SORT_OPTIONS}
-          value={sortBy}
-          onChange={(val) => setSortBy(val as any)}
-          size="sm"
-        />
+        <div className="flex items-center justify-end shrink-0">
+          <SelectDropdown
+            label="Sort:"
+            options={SORT_OPTIONS}
+            value={sortBy}
+            onChange={(val) => setSortBy(val as any)}
+            size="sm"
+          />
+        </div>
       </div>
 
       {/* 4. Secondary Filter Pills (Type & Roadmap Status) */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2 min-w-0 max-w-full">
         {/* Type Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-0.5 touch-pan-x">
           {TYPE_FILTERS.map((t) => {
             const isSelected = activeType === t;
             return (
@@ -201,9 +203,9 @@ export function FeedbackBoard() {
                 key={t}
                 onClick={() => setActiveType(t)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
+                  "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 select-none",
                   isSelected
-                    ? "bg-primary/10 border-primary/40 text-black"
+                    ? "bg-primary/10 border-primary/40 text-black shadow-2xs"
                     : "bg-white border-gray-200/70 text-gray-500 hover:border-gray-300 hover:text-black"
                 )}
               >
@@ -215,8 +217,8 @@ export function FeedbackBoard() {
 
         {/* Roadmap Status Pills (Visible in Roadmap view or when filtering statuses) */}
         {activeView === 'roadmap' && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide pt-1">
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-1">Status:</span>
+          <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-0.5 pt-0.5 touch-pan-x">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-1 shrink-0">Status:</span>
             {ROADMAP_STATUSES.map((s) => {
               const isSelected = activeStatus === s;
               return (
@@ -224,9 +226,9 @@ export function FeedbackBoard() {
                   key={s}
                   onClick={() => setActiveStatus(s)}
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
+                    "px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 select-none",
                     isSelected
-                      ? "bg-black text-white border-black"
+                      ? "bg-black text-white border-black shadow-2xs"
                       : "bg-white border-gray-200/70 text-gray-600 hover:border-gray-300"
                   )}
                 >
@@ -369,15 +371,15 @@ export function FeedbackBoard() {
 
                 {/* Main Card Content */}
                 <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
-                  <div className="flex items-start justify-between gap-2.5 sm:gap-3">
+                  <div className="flex items-start justify-between gap-2 sm:gap-3">
                     <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
                       <Link
                         href={`/feedback/${item.slug}`}
-                        className="text-xs sm:text-base font-semibold text-gray-950 hover:text-black hover:underline transition-colors line-clamp-1"
+                        className="text-xs sm:text-base font-semibold text-gray-950 hover:text-black hover:underline transition-colors line-clamp-2 break-words leading-snug"
                       >
                         {item.title}
                       </Link>
-                      <p className="text-xs sm:text-[13px] text-gray-500 line-clamp-2 leading-relaxed">
+                      <p className="text-xs sm:text-[13px] text-gray-500 line-clamp-2 leading-relaxed break-words">
                         {item.description}
                       </p>
                     </div>
@@ -389,21 +391,22 @@ export function FeedbackBoard() {
                         if (item.id) toggleFollow(item.id);
                       }}
                       className={cn(
-                        "h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs font-semibold flex items-center gap-1 transition-all shrink-0",
+                        "w-7 h-7 sm:w-auto sm:h-8 sm:px-2.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-all shrink-0 select-none",
                         item.is_following
                           ? "bg-amber-50 border-amber-200/70 text-amber-900"
                           : "bg-white border-gray-200/70 text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                       )}
                       title={item.is_following ? "Following (click to unfollow)" : "Follow request"}
+                      aria-label={item.is_following ? "Following request" : "Follow request"}
                     >
                       {item.is_following ? (
                         <>
-                          <BookmarkCheck size={12} className="text-primary" />
+                          <BookmarkCheck size={13} className="text-primary" />
                           <span className="hidden sm:inline">Following</span>
                         </>
                       ) : (
                         <>
-                          <Bookmark size={12} />
+                          <Bookmark size={13} />
                           <span className="hidden sm:inline">Follow</span>
                         </>
                       )}
@@ -411,10 +414,10 @@ export function FeedbackBoard() {
                   </div>
 
                   {/* Metadata Chips Row */}
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-0.5 text-xs min-w-0">
                     {/* Pinned Badge */}
                     {item.is_pinned && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-900 shrink-0">
                         <Pin size={10} />
                         <span>Pinned</span>
                       </span>
@@ -422,7 +425,7 @@ export function FeedbackBoard() {
 
                     {/* Locked Badge */}
                     {item.is_locked && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-700">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-gray-100 text-gray-700 shrink-0">
                         <Lock size={10} />
                         <span>Locked</span>
                       </span>
@@ -431,7 +434,7 @@ export function FeedbackBoard() {
                     {/* Status Pill */}
                     <span
                       className={cn(
-                        "px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border",
+                        "px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border shrink-0",
                         isPlanned && "bg-blue-50 text-blue-700 border-blue-200/60",
                         isInProgress && "bg-purple-50 text-purple-700 border-purple-200/60",
                         isCompleted && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
@@ -445,13 +448,13 @@ export function FeedbackBoard() {
                     </span>
 
                     {/* Category Chip */}
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 text-gray-600">
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 text-gray-600 shrink-0">
                       {item.category}
                     </span>
 
                     {/* Official Response Indicator */}
                     {item.official_response && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-primary/20">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-primary/20 shrink-0">
                         <Sparkles size={11} className="text-primary" />
                         <span>Team Response</span>
                       </span>
@@ -459,20 +462,20 @@ export function FeedbackBoard() {
 
                     {/* Author Metadata */}
                     {item.author && (
-                      <span className="text-[11px] text-gray-400 hidden sm:inline">
+                      <span className="text-[11px] text-gray-400 hidden sm:inline shrink-0">
                         by <span className="font-semibold text-gray-600">{item.author.name}</span>
                       </span>
                     )}
 
                     {/* Relative Timestamp */}
-                    <span className="text-[11px] text-gray-400">
+                    <span className="text-[11px] text-gray-400 shrink-0">
                       {formatRelativeTime(item.created_at)}
                     </span>
 
                     {/* Comment Count */}
                     <Link
                       href={`/feedback/${item.slug}#comments`}
-                      className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-gray-700 transition-colors"
+                      className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-gray-700 transition-colors shrink-0"
                     >
                       <MessageCircle size={13} />
                       <span>{item.comment_count || 0}</span>

@@ -876,6 +876,94 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             />
                           </button>
                         </div>
+
+                        {/* New Work on Rater */}
+                        <div className="p-4 flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">New work on Rater</p>
+                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              Get notified when new work is published on Rater.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_new_work ?? true}
+                            onClick={() => handlePreferenceToggle('notify_new_work')}
+                            className={cn(
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_new_work ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_new_work ?? true) ? "translate-x-4" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Feedback & Community Section */}
+                    <div className="space-y-2.5">
+                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Feedback & Community</p>
+                      
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                        {/* Status Updates & Official Responses */}
+                        <div className="p-4 flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Status Updates & Official Responses</p>
+                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              When followed feature requests change status or receive official team responses.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_feedback_status ?? true}
+                            onClick={() => handlePreferenceToggle('notify_feedback_status')}
+                            className={cn(
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_feedback_status ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_feedback_status ?? true) ? "translate-x-4" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Discussion Comments */}
+                        <div className="p-4 flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Discussion Comments</p>
+                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              When community members share comments on feedback requests you follow or authored.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_feedback_comments ?? true}
+                            onClick={() => handlePreferenceToggle('notify_feedback_comments')}
+                            className={cn(
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_feedback_comments ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_feedback_comments ?? true) ? "translate-x-4" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
                       </div>
                     </div>
 

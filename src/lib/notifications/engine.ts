@@ -80,6 +80,9 @@ export class NotificationEngine {
         notify_critiques: true,
         notify_milestones: true,
         notify_insights: true,
+        notify_feedback_status: true,
+        notify_feedback_comments: true,
+        notify_new_work: true,
         created_at: '',
         updated_at: '',
       };

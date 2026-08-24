@@ -262,20 +262,20 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
   const isDuplicate = request.status === 'Resolved Duplicate';
 
   return (
-    <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 sm:px-6 space-y-6">
+    <div className="w-full max-w-4xl mx-auto py-4 sm:py-10 px-3.5 sm:px-6 space-y-4 sm:space-y-6 overflow-x-hidden min-w-0">
       {/* 1. Breadcrumb Navigation */}
       <Link
         href="/feedback"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors select-none"
       >
         <ChevronLeft size={16} />
         <span>Back to Feedback Board</span>
       </Link>
 
       {/* 2. Hero Request Card */}
-      <div className="bg-white rounded-3xl border border-gray-100 p-5 sm:p-8 shadow-2xs space-y-4 sm:space-y-6">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 p-4 sm:p-8 shadow-2xs space-y-3.5 sm:space-y-6 min-w-0">
         {/* Mobile Top Actions Row (< sm) */}
-        <div className="flex sm:hidden items-center justify-between gap-2">
+        <div className="flex sm:hidden items-center justify-between gap-2 min-w-0">
           {/* Mobile Upvote Button */}
           <button
             type="button"
@@ -292,10 +292,10 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             <span className="text-xs font-bold">{request.upvote_count || 0}</span>
           </button>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span
               className={cn(
-                "px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide border",
+                "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0",
                 isPlanned && "bg-blue-50 text-blue-700 border-blue-200/60",
                 isInProgress && "bg-purple-50 text-purple-700 border-purple-200/60",
                 isCompleted && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
@@ -441,7 +441,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
 
       {/* 3. Official Team Response Card (When Present) */}
       {request.official_response && (
-        <div className="bg-amber-50/60 border border-primary/25 rounded-3xl p-6 sm:p-8 space-y-3.5 shadow-2xs">
+        <div className="bg-amber-50/60 border border-primary/25 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-3 sm:space-y-3.5 shadow-2xs min-w-0 break-words">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Image
@@ -449,29 +449,29 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                 alt="Rater Official"
                 width={24}
                 height={24}
-                className="w-6 h-6 shrink-0 select-none"
+                className="w-5.5 h-5.5 sm:w-6 sm:h-6 shrink-0 select-none"
               />
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-xs sm:text-[13px] font-medium text-gray-950">Official Team Response</h3>
                   <ShieldCheck size={14} className="text-primary" />
                 </div>
-                <p className="text-[11px] text-gray-500">
+                <p className="text-[10px] sm:text-[11px] text-gray-500">
                   Updated {formatRelativeTime(request.official_response_at)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed">
+          <div className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed break-words">
             {request.official_response}
           </div>
         </div>
       )}
 
       {/* 4. Discussion / Comments Card */}
-      <div id="comments" className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
-        <div className="px-6 py-4.5 border-b border-gray-100 flex items-center justify-between bg-white">
+      <div id="comments" className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-2xs overflow-hidden min-w-0">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 border-b border-gray-100 flex items-center justify-between bg-white">
           <h3 className="text-sm sm:text-base font-medium text-gray-950 flex items-center gap-2">
             <MessageSquare size={17} className="text-gray-400" />
             <span>Discussion ({comments.length})</span>
@@ -479,21 +479,21 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
         </div>
 
         {/* Comment Thread List */}
-        <div className="p-6 space-y-5">
+        <div className="p-3.5 sm:p-6 space-y-3.5 sm:space-y-5">
           {comments.map((c) => {
             const isAuthor = currentProfile?.id === c.author_id;
             const isDeleted = !!c.deleted_at;
 
             return (
-              <div key={c.id} className="flex items-start gap-3.5 group">
-                <UserAvatar avatarUrl={c.author?.avatar_url} className="w-8 h-8 rounded-full shrink-0" />
-                <div className="flex-1 min-w-0 bg-gray-50/70 rounded-2xl p-4 border border-gray-100/70">
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-gray-900">
+              <div key={c.id} className="flex items-start gap-2.5 sm:gap-3.5 group min-w-0">
+                <UserAvatar avatarUrl={c.author?.avatar_url} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0 bg-gray-50/70 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100/70 break-words">
+                  <div className="flex items-center justify-between gap-2 mb-1.5 min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <span className="text-xs font-bold text-gray-900 truncate">
                         {c.author?.name || 'Community Member'}
                       </span>
-                      <span className="text-[11px] text-gray-400">
+                      <span className="text-[10px] sm:text-[11px] text-gray-400 shrink-0">
                         {formatRelativeTime(c.created_at)}
                       </span>
                     </div>
@@ -502,7 +502,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                       <button
                         type="button"
                         onClick={() => handleDeleteComment(c.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100"
+                        className="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100 shrink-0"
                         title="Delete comment"
                       >
                         <Trash2 size={13} />
@@ -513,7 +513,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                   {isDeleted ? (
                     <p className="text-xs italic text-gray-400">Comment deleted by author.</p>
                   ) : (
-                    <p className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed break-words">
                       {c.content}
                     </p>
                   )}
@@ -523,14 +523,14 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
           })}
 
           {comments.length === 0 && (
-            <div className="py-8 text-center text-gray-400 text-xs">
+            <div className="py-6 sm:py-8 text-center text-gray-400 text-xs">
               No comments on this request yet. Be the first to join the conversation!
             </div>
           )}
         </div>
 
         {/* Comment Form or Locked Banner */}
-        <div className="p-5 bg-gray-50/70 border-t border-gray-100">
+        <div className="p-3.5 sm:p-5 bg-gray-50/70 border-t border-gray-100">
           {request.is_locked ? (
             <div className="p-3.5 bg-amber-50/60 border border-amber-200/50 rounded-2xl text-center space-y-1">
               <p className="text-xs font-bold text-amber-900 flex items-center justify-center gap-1.5">

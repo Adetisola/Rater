@@ -13,8 +13,10 @@ export type NotificationEventType =
   | 'INSIGHTS_READY'
   | 'BADGE_TOP_RATED_AWARDED'
   | 'FIRST_WORK_PUBLISHED'
+  | 'NEW_WORK_PUBLISHED'
   | 'FEEDBACK_REQUEST_REPLY'
   | 'FEEDBACK_STATUS_CHANGED'
+  | 'FEEDBACK_COMMENT_RECEIVED'
   | 'ACCOUNT_SUSPENDED';
 
 export interface NotificationActor {
@@ -63,6 +65,9 @@ export interface NotificationPreferences {
   notify_critiques: boolean;
   notify_milestones: boolean;
   notify_insights: boolean;
+  notify_feedback_status: boolean;
+  notify_feedback_comments: boolean;
+  notify_new_work: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -190,6 +190,35 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     },
   },
 
+  // ─── 6b. New Work Published (Discovery) ─────────────────────────────────────
+  NEW_WORK_PUBLISHED: {
+    type: 'NEW_WORK_PUBLISHED',
+    category: 'activity',
+    priority: 'normal',
+    channels: {
+      inApp: true,
+      push: true,
+      email: false,
+    },
+    preferenceKey: 'notify_new_work',
+    renderCopy: ({ actorName, workTitle, postId }) => {
+      const creatorName = actorName?.trim() || 'A creator';
+      const titleClean = workTitle ? `"${workTitle}"` : 'a new design';
+      const postUrl = postId ? `/post/${postId}` : '/browse';
+      return {
+        title: 'New work on Rater',
+        message: `${creatorName} published ${titleClean}.`,
+        pushTitle: 'New work on Rater',
+        pushBody: `${creatorName} just published a new design.`,
+        actionLabel: 'View Work',
+        actionUrl: postUrl,
+        pushActions: [
+          { action: 'view_work', title: 'View Work', url: postUrl },
+        ],
+      };
+    },
+  },
+
   // ─── 7. Feedback Request Response ───────────────────────────────────────────
   FEEDBACK_REQUEST_REPLY: {
     type: 'FEEDBACK_REQUEST_REPLY',
@@ -200,6 +229,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
       push: true,
       email: false,
     },
+    preferenceKey: 'notify_feedback_status',
     renderCopy: ({ feedbackTitle, feedbackSlug }) => {
       const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'your idea';
       const discussionUrl = feedbackSlug ? `/feedback/${feedbackSlug}` : '/feedback';
@@ -228,6 +258,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
       push: true,
       email: false,
     },
+    preferenceKey: 'notify_feedback_status',
     renderCopy: ({ feedbackTitle, feedbackSlug, metadata }) => {
       const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'your followed idea';
       const newStatus = metadata?.newStatus || 'Updated';
@@ -247,7 +278,37 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     },
   },
 
-  // ─── 9. Account Suspended (System Bypass) ───────────────────────────────────
+  // ─── 9. Feedback Comment Received ───────────────────────────────────────────
+  FEEDBACK_COMMENT_RECEIVED: {
+    type: 'FEEDBACK_COMMENT_RECEIVED',
+    category: 'community',
+    priority: 'normal',
+    channels: {
+      inApp: true,
+      push: true,
+      email: false,
+    },
+    preferenceKey: 'notify_feedback_comments',
+    renderCopy: ({ actorName, feedbackTitle, feedbackSlug }) => {
+      const commenter = actorName?.trim() || 'A creative';
+      const titleClean = feedbackTitle ? `"${feedbackTitle}"` : 'a followed idea';
+      const discussionUrl = feedbackSlug ? `/feedback/${feedbackSlug}#comments` : '/feedback';
+      return {
+        title: 'New comment on followed idea',
+        message: `${commenter} commented on ${titleClean}.`,
+        pushTitle: 'New Feedback Comment',
+        pushBody: `${commenter} joined the discussion on ${titleClean}.`,
+        actionLabel: 'View Discussion',
+        actionUrl: discussionUrl,
+        pushActions: [
+          { action: 'view_discussion', title: 'View Discussion', url: discussionUrl },
+          { action: 'feedback_board', title: 'Feedback Board', url: '/feedback' },
+        ],
+      };
+    },
+  },
+
+  // ─── 10. Account Suspended (System Bypass) ──────────────────────────────────
   ACCOUNT_SUSPENDED: {
     type: 'ACCOUNT_SUSPENDED',
     category: 'system',

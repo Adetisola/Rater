@@ -7,7 +7,8 @@ import {
   Trophy, 
   CheckCircle, 
   ShieldAlert, 
-  Layers
+  Layers,
+  BookmarkCheck
 } from 'lucide-react';
 import type { Notification } from '@/types';
 import { UserAvatar } from '../UserAvatar';
@@ -34,7 +35,12 @@ export function NotificationItem({
     if (t.includes('TOP_RATED')) return <Trophy className="w-3.5 h-3.5 text-amber-500" />;
     if (t.includes('INSIGHTS')) return <Sparkles className="w-3.5 h-3.5 text-amber-500" />;
     if (t.includes('RATING_UNLOCKED')) return <CheckCircle className="w-3.5 h-3.5 text-green-500" />;
+    if (t.includes('WORK_PUBLISHED')) return <Sparkles className="w-3.5 h-3.5 text-primary" />;
+    if (t.includes('FEEDBACK_STATUS')) return <BookmarkCheck className="w-3.5 h-3.5 text-primary" />;
+    if (t.includes('FEEDBACK_REQUEST_REPLY')) return <CheckCircle className="w-3.5 h-3.5 text-primary" />;
+    if (t.includes('FEEDBACK_COMMENT')) return <MessageSquare className="w-3.5 h-3.5 text-amber-500" />;
     if (c === 'system') return <ShieldAlert className="w-3.5 h-3.5 text-red-500" />;
+    if (c === 'community') return <MessageSquare className="w-3.5 h-3.5 text-primary" />;
     if (c === 'activity') return <MessageSquare className="w-3.5 h-3.5 text-primary" />;
     return <Layers className="w-3.5 h-3.5 text-gray-500" />;
   };

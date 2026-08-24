@@ -41,7 +41,13 @@ export interface NotificationEventDefinition {
     push: boolean;
     email: boolean;
   };
-  preferenceKey?: 'notify_critiques' | 'notify_milestones' | 'notify_insights';
+  preferenceKey?:
+    | 'notify_critiques'
+    | 'notify_milestones'
+    | 'notify_insights'
+    | 'notify_feedback_status'
+    | 'notify_feedback_comments'
+    | 'notify_new_work';
   renderCopy: (data: {
     actorName?: string;
     workTitle?: string;

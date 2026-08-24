@@ -302,38 +302,40 @@ export async function toggleFeedbackFollow(
  */
 export async function addFeedbackComment(
   requestId: string,
-  userId: string,
+  _userId: string,
   content: string
 ): Promise<{ data: FeedbackComment | null; error: string | null }> {
   const sanitized = content.trim().slice(0, 1000);
   if (!sanitized) return { data: null, error: 'Comment cannot be empty' };
 
-  // Check if request is locked
-  const { data: req } = await supabase
-    .from('feedback_requests')
-    .select('is_locked')
-    .eq('id', requestId)
-    .single();
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      return { data: null, error: 'You must be signed in to post a comment.' };
+    }
 
-  if (req?.is_locked) {
-    return { data: null, error: 'Discussion is closed for this feedback request.' };
+    const res = await fetch('/api/feedback/comment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        requestId,
+        content: sanitized,
+      }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || !json.ok) {
+      return { data: null, error: json.error || 'Failed to post comment.' };
+    }
+
+    return { data: json.data as FeedbackComment, error: null };
+  } catch (err: any) {
+    console.error('[Feedback] addFeedbackComment error:', err);
+    return { data: null, error: err?.message || 'Network error posting comment.' };
   }
-
-  const { data, error } = await supabase
-    .from('feedback_comments')
-    .insert({
-      request_id: requestId,
-      author_id: userId,
-      content: sanitized,
-    })
-    .select('*, author:profiles!feedback_comments_author_id_fkey(name, username, avatar_url, bg_color)')
-    .single();
-
-  if (error) {
-    return { data: null, error: error.message };
-  }
-
-  return { data: data as FeedbackComment, error: null };
 }
 
 /**
