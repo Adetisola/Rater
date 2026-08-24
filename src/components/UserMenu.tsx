@@ -292,7 +292,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       <span>Help & Resources</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary/20 text-black leading-none">
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-primary/20 text-black leading-none">
                         New
                       </span>
                       <ChevronRight size={14} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-gray-700" : "text-gray-300 group-hover/help:text-gray-600")} />

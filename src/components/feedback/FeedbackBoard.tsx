@@ -22,6 +22,7 @@ import { useOverlayStore } from '@/store/overlayStore';
 import { useAuthState } from '@/context/AuthContext';
 import { Button } from '../ui/Button';
 import { SelectDropdown } from '../ui/SelectDropdown';
+import { AuthOverlay } from '../AuthOverlay';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
@@ -66,6 +67,7 @@ export function FeedbackBoard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sortBy, setSortBy] = useState<'Most Upvoted' | 'Newest' | 'Recently Active'>('Most Upvoted');
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -268,11 +270,13 @@ export function FeedbackBoard() {
               Follow feature requests to receive instant notifications when the team changes their status or posts official responses.
             </p>
           </div>
-          <Link href="/auth">
-            <Button variant="primary" className="h-9 px-4 rounded-xl text-xs font-bold shadow-2xs">
-              Sign In
-            </Button>
-          </Link>
+          <Button 
+            variant="primary" 
+            onClick={() => setShowAuthOverlay(true)}
+            className="h-9 px-4 rounded-full text-xs font-medium"
+          >
+            Sign In
+          </Button>
         </div>
       ) : activeView === 'my_feedback' && !currentProfile ? (
         /* Logged out My Feedback state */
@@ -286,11 +290,13 @@ export function FeedbackBoard() {
               Track the ideas and bug reports you&apos;ve shared with the Rater community.
             </p>
           </div>
-          <Link href="/auth">
-            <Button variant="primary" className="h-9 px-4 rounded-xl text-xs font-bold shadow-2xs">
-              Sign In
-            </Button>
-          </Link>
+          <Button 
+            variant="primary" 
+            onClick={() => setShowAuthOverlay(true)}
+            className="h-9 px-4 rounded-full text-xs font-medium"
+          >
+            Sign In
+          </Button>
         </div>
       ) : feedback.length === 0 ? (
         /* Empty Results state */
@@ -492,6 +498,15 @@ export function FeedbackBoard() {
             </div>
           )}
         </div>
+      )}
+
+      {/* In-place Sign In / Register Modal */}
+      {showAuthOverlay && (
+        <AuthOverlay
+          initialTab="login"
+          redirectOnSuccess={false}
+          onClose={() => setShowAuthOverlay(false)}
+        />
       )}
     </div>
   );

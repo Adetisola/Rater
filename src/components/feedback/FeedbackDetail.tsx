@@ -8,7 +8,6 @@ import {
   MessageSquare, 
   Bookmark, 
   BookmarkCheck, 
-  Sparkles, 
   Lock, 
   Pin, 
   Trash2, 
@@ -17,9 +16,11 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthState } from '@/context/AuthContext';
 import { UserAvatar } from '../UserAvatar';
 import { Button } from '../ui/Button';
+import { AuthOverlay } from '../AuthOverlay';
 import { showToast } from '@/components/GlobalOverlays';
 import { formatDistanceToNow, parseISO, isValid } from 'date-fns';
 import { 
@@ -42,6 +43,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAuthOverlay, setShowAuthOverlay] = useState(false);
   
   const { currentProfile } = useAuthState();
 
@@ -353,7 +355,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
           {/* Header & Details */}
           <div className="flex-1 min-w-0 space-y-2.5 sm:space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-lg sm:text-2xl font-bold text-gray-950 leading-snug sm:leading-tight">
+              <h1 className="text-lg sm:text-xl font-medium text-gray-950 leading-snug sm:leading-tight">
                 {request.title}
               </h1>
 
@@ -441,13 +443,17 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
       {request.official_response && (
         <div className="bg-amber-50/60 border border-primary/25 rounded-3xl p-6 sm:p-8 space-y-3.5 shadow-2xs">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
-                <Sparkles size={15} />
-              </div>
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/icons/rater-logo-white-bg-stroked.svg"
+                alt="Rater Official"
+                width={24}
+                height={24}
+                className="w-6 h-6 shrink-0 select-none"
+              />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-xs sm:text-[13px] font-bold text-gray-950">Official Team Response</h3>
+                  <h3 className="text-xs sm:text-[13px] font-medium text-gray-950">Official Team Response</h3>
                   <ShieldCheck size={14} className="text-primary" />
                 </div>
                 <p className="text-[11px] text-gray-500">
@@ -457,7 +463,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             </div>
           </div>
 
-          <div className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed pl-9">
+          <div className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed">
             {request.official_response}
           </div>
         </div>
@@ -466,7 +472,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
       {/* 4. Discussion / Comments Card */}
       <div id="comments" className="bg-white rounded-3xl border border-gray-100 shadow-2xs overflow-hidden">
         <div className="px-6 py-4.5 border-b border-gray-100 flex items-center justify-between bg-white">
-          <h3 className="text-sm sm:text-base font-bold text-gray-950 flex items-center gap-2">
+          <h3 className="text-sm sm:text-base font-medium text-gray-950 flex items-center gap-2">
             <MessageSquare size={17} className="text-gray-400" />
             <span>Discussion ({comments.length})</span>
           </h3>
@@ -580,15 +586,26 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
           ) : (
             <div className="py-4 text-center space-y-2">
               <p className="text-xs text-gray-500">Sign in to join the discussion.</p>
-              <Link href="/auth">
-                <Button variant="outline" className="h-8 px-4 rounded-xl text-xs font-bold">
-                  Sign In
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAuthOverlay(true)}
+                className="h-8 px-4 rounded-full text-xs font-medium hover:bg-gray-100 transition-colors"
+              >
+                Sign In
+              </Button>
             </div>
           )}
         </div>
       </div>
+
+      {/* In-place Sign In / Register Modal */}
+      {showAuthOverlay && (
+        <AuthOverlay
+          initialTab="login"
+          redirectOnSuccess={false}
+          onClose={() => setShowAuthOverlay(false)}
+        />
+      )}
     </div>
   );
 }

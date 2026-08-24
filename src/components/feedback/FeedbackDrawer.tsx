@@ -8,7 +8,6 @@ import {
   MessageSquarePlus, 
   Sparkles, 
   ChevronUp, 
-  ArrowRight, 
   CheckCircle2, 
   Loader2, 
   AlertCircle,
@@ -258,7 +257,7 @@ export function FeedbackDrawer() {
                   <CheckCircle2 size={28} />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-lg font-bold text-gray-950">Feedback Submitted 🎉</h3>
+                  <h3 className="text-lg font-medium text-gray-950">Feedback Submitted 🎉</h3>
                   <p className="text-xs sm:text-[13px] text-gray-500 max-w-xs mx-auto leading-relaxed">
                     Thanks for helping shape Rater! Your idea is now live on the public community board.
                   </p>
@@ -271,15 +270,14 @@ export function FeedbackDrawer() {
                       closeFeedbackDrawer();
                       router.push(`/feedback/${submittedSlug}`);
                     }}
-                    className="h-10 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-1.5 shadow-2xs"
+                    className="h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shadow-2xs"
                   >
                     <span>View Your Request</span>
-                    <ArrowRight size={14} />
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setSubmittedSlug(null)}
-                    className="h-10 rounded-xl text-xs font-semibold"
+                    className="h-10 rounded-full text-xs font-medium"
                   >
                     Share Another Idea
                   </Button>
@@ -361,7 +359,7 @@ export function FeedbackDrawer() {
                         ) : (
                           <Sparkles size={14} className="text-primary shrink-0" />
                         )}
-                        <p className="text-xs font-bold">Similar community requests</p>
+                        <p className="text-xs font-medium">Similar community requests</p>
                       </div>
                       <p className="text-[11px] text-amber-800 leading-relaxed">
                         Looks similar? You can upvote an existing request or continue submitting below.
