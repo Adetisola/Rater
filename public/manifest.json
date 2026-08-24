@@ -1,22 +1,34 @@
 {
-  "name": "Rater",
+  "name": "Rater — Design Critique Studio",
   "short_name": "Rater",
+  "description": "Rater is a design critique studio where creatives sharpen design judgment through structured critique, ratings, and reflection.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0A0A0A",
   "theme_color": "#FEC312",
+  "categories": ["design", "productivity", "social"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://alpha.raterapp.site/manifest.json"
+    }
+  ],
+  "prefer_related_applications": false
 }

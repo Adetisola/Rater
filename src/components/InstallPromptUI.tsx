@@ -6,6 +6,8 @@ import { Download } from 'lucide-react';
 import { AmbientPromptShell } from './AmbientPromptShell';
 import { usePathname } from 'next/navigation';
 
+import { showInstallAppModal } from './GlobalOverlays';
+
 interface InstallPromptUIProps {
   className?: string;
   variant?: 'button' | 'banner';
@@ -45,6 +47,15 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
     localStorage.setItem(DISMISS_KEY, JSON.stringify({ timestamp: Date.now() }));
   };
 
+  const handleAction = async () => {
+    const res = await promptInstall();
+    if (res.outcome === 'accepted') {
+      handleDismiss();
+    } else if (res.outcome === 'guide' || res.outcome === 'unavailable') {
+      showInstallAppModal();
+    }
+  };
+
   // Do not show on landing page
   if (pathname === '/') return null;
 
@@ -67,7 +78,7 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
         description="Install Rater for quick studio access."
         actionButton={
           <button
-            onClick={promptInstall}
+            onClick={handleAction}
             className="bg-rater-yellow text-white px-3.5 py-2 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base font-medium hover:text-primary transition-colors shadow-sm"
           >
             Install
@@ -82,7 +93,7 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
 
   return (
     <button
-      onClick={promptInstall}
+      onClick={handleAction}
       className={`flex items-center gap-2 text-black hover:text-primary transition-colors font-medium ${className}`}
       aria-label="Install Rater"
     >

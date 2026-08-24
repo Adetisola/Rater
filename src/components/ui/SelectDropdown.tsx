@@ -86,7 +86,7 @@ export function SelectDropdown<T extends string = string>({
           aria-haspopup="listbox"
           aria-expanded={isOpen}
           className={cn(
-            "w-full rounded-full border border-gray-200/80 bg-white text-gray-900 font-medium flex items-center justify-between gap-2 transition-all select-none shadow-2xs hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20",
+            "w-full rounded-full border border-gray-200/80 bg-white text-gray-900 font-medium flex items-center justify-between gap-2 transition-all select-none hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20",
             size === 'sm' ? "h-8 px-3 text-xs" : "h-9 sm:h-10 px-3.5 text-xs sm:text-[13px]",
             disabled && "opacity-50 cursor-not-allowed",
             isOpen && "border-primary/60 ring-2 ring-primary/10",

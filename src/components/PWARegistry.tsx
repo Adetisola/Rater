@@ -34,6 +34,9 @@ export function PWARegistry() {
 
     const handleAppInstalled = () => {
       window.__raterDeferredPrompt = null;
+      try {
+        localStorage.setItem('rater_pwa_installed', 'true');
+      } catch (_) {}
       window.dispatchEvent(new CustomEvent('rater-pwa-installed'));
     };
 

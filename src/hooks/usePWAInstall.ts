@@ -13,19 +13,45 @@ export function usePWAInstall() {
   const checkStatus = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    // 1. Detect standalone (already installed)
+    // 1. Multi-vector standalone detection
     const isStandalone = 
       window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
       (window.navigator as any).standalone === true ||
-      (typeof document !== 'undefined' && document.referrer.includes('android-app://'));
+      (typeof document !== 'undefined' && document.referrer && document.referrer.includes('android-app://'));
 
-    setIsInstalled(isStandalone);
+    let persistedInstall = false;
+    try {
+      persistedInstall = localStorage.getItem('rater_pwa_installed') === 'true';
+    } catch (_) {}
 
-    // 2. Detect Platform
+    if (isStandalone || persistedInstall) {
+      setIsInstalled(true);
+      try {
+        localStorage.setItem('rater_pwa_installed', 'true');
+      } catch (_) {}
+    }
+
+    // 2. Query browser getInstalledRelatedApps API (Chrome, Edge, Samsung Internet)
+    if (typeof navigator !== 'undefined' && 'getInstalledRelatedApps' in navigator) {
+      (navigator as any).getInstalledRelatedApps()
+        .then((relatedApps: any[]) => {
+          if (relatedApps && relatedApps.length > 0) {
+            setIsInstalled(true);
+            try {
+              localStorage.setItem('rater_pwa_installed', 'true');
+            } catch (_) {}
+          }
+        })
+        .catch(() => {});
+    }
+
+    // 3. Detect Platform (including Samsung Internet)
     const ua = window.navigator.userAgent.toLowerCase();
     if (/iphone|ipad|ipod/.test(ua) && !/crios|fxios|opios/.test(ua)) {
       setPlatform('ios');
-    } else if (/android/.test(ua)) {
+    } else if (/samsungbrowser|android/.test(ua)) {
       setPlatform('android');
     } else if (/macintosh|mac os x/.test(ua) && !/chrome|chromium|edg/.test(ua) && /safari/.test(ua)) {
       setPlatform('mac');
@@ -33,7 +59,7 @@ export function usePWAInstall() {
       setPlatform('desktop');
     }
 
-    // 3. Check if deferred prompt was captured
+    // 4. Check if deferred prompt was captured
     if (window.__raterDeferredPrompt) {
       setIsInstallable(true);
     }
@@ -49,6 +75,9 @@ export function usePWAInstall() {
     const handleInstalled = () => {
       setIsInstalled(true);
       setIsInstallable(false);
+      try {
+        localStorage.setItem('rater_pwa_installed', 'true');
+      } catch (_) {}
     };
 
     window.addEventListener('rater-pwa-installable', handleInstallable);
@@ -80,6 +109,9 @@ export function usePWAInstall() {
           setIsInstallable(false);
           if (typeof window !== 'undefined') {
             window.__raterDeferredPrompt = null;
+            try {
+              localStorage.setItem('rater_pwa_installed', 'true');
+            } catch (_) {}
             window.dispatchEvent(new CustomEvent('rater-pwa-installed'));
           }
         }
@@ -89,13 +121,9 @@ export function usePWAInstall() {
       }
     }
 
-    // If native programmatic install is not supported by the browser (iOS / Mac Safari)
-    if (platform === 'ios' || platform === 'mac') {
-      return { outcome: 'guide', platform };
-    }
-
-    // Non-iOS browser where prompt has already been dismissed or consumed by browser
-    return { outcome: 'unavailable', platform };
+    // Fallback: If native programmatic install prompt cannot be fired directly,
+    // show the illustrated platform guide modal so user can install immediately via browser menu
+    return { outcome: 'guide', platform };
   };
 
   return {

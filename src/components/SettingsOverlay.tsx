@@ -22,7 +22,8 @@ import {
   Download,
   Smartphone,
   FileText,
-  Lock
+  Lock,
+  Users
 } from 'lucide-react';
 import { useAuthState } from '@/context/AuthContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -81,10 +82,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
     const res = await installApp();
     if (res.outcome === 'accepted') {
       showToast('Rater app installed successfully!', 'success');
-    } else if (res.outcome === 'guide') {
+    } else if (res.outcome === 'guide' || res.outcome === 'unavailable') {
       showInstallAppModal();
-    } else if (res.outcome === 'unavailable') {
-      showToast('To install, open your browser menu (⋮ or Share) and select "Install" or "Add to Home Screen".', 'info');
     }
   };
 
@@ -438,7 +437,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             >
                               <Button
                                 variant="outline"
-                                className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold rounded-full flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                                className="h-9 px-3.5 text-xs sm:text-[13px] font-medium rounded-full flex items-center gap-1.5 whitespace-nowrap shrink-0"
                               >
                                 <Edit2 size={13} className="text-gray-400" />
                                 <span>Edit Profile</span>
@@ -478,7 +477,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                 setPasswordError(null);
                                 setPasswordSuccess(false);
                               }}
-                              className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold rounded-full whitespace-nowrap shrink-0"
+                              className="h-9 px-3.5 text-xs sm:text-[13px] font-medium rounded-full whitespace-nowrap shrink-0"
                             >
                               {isChangingPassword ? 'Cancel' : 'Change'}
                             </Button>
@@ -548,7 +547,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                                <Sparkles size={15} className="text-primary shrink-0" />
+                                <Users size={15} className="text-gray-400 shrink-0" />
                                 <span>Personal Invite Link</span>
                               </p>
                               <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
@@ -561,7 +560,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                 onClose();
                                 showInviteModal();
                               }}
-                              className="h-8 px-3.5 text-xs font-semibold rounded-full whitespace-nowrap shrink-0"
+                              className="h-8 px-3.5 text-xs font-medium rounded-full whitespace-nowrap shrink-0"
                             >
                               Open Card
                             </Button>
@@ -583,7 +582,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                   showToast('Invite link copied to clipboard!', 'success');
                                 }
                               }}
-                              className="h-9 px-4 rounded-full text-xs sm:text-[13px] font-semibold shrink-0 whitespace-nowrap"
+                              className="h-9 px-4 rounded-full text-xs sm:text-[13px] font-medium shrink-0 whitespace-nowrap"
                             >
                               Copy
                             </Button>
@@ -614,7 +613,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <Button
                               variant="outline"
                               onClick={() => setShowDeleteConfirm(true)}
-                              className="h-9 px-3.5 text-xs sm:text-[13px] font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0 rounded-full whitespace-nowrap"
+                              className="h-9 px-3.5 text-xs sm:text-[13px] font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0 rounded-full whitespace-nowrap"
                             >
                               Delete
                             </Button>
@@ -755,7 +754,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               variant="outline"
                               disabled={isPushLoading}
                               onClick={handlePushToggle}
-                              className="h-8 px-3.5 text-xs font-semibold rounded-full whitespace-nowrap shrink-0"
+                              className="h-8 px-3.5 text-xs font-medium rounded-full whitespace-nowrap shrink-0"
                             >
                               {isPushLoading && <Loader2 size={12} className="animate-spin mr-1" />}
                               <span>{isPushSubscribed ? "Disable on Device" : "Enable on Device"}</span>

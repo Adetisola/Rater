@@ -340,7 +340,7 @@ export function FeedbackDrawer() {
                       onChange={e => setTitle(e.target.value)}
                       placeholder="Short, descriptive title"
                       maxLength={120}
-                      className="w-full h-10 bg-white border border-gray-200/80 rounded-xl px-3.5 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors shadow-2xs"
+                      className="w-full h-10 bg-white border border-gray-200/80 rounded-xl px-3.5 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
                       required
                     />
                   </div>
@@ -405,7 +405,7 @@ export function FeedbackDrawer() {
                         }
                         rows={4}
                         maxLength={2000}
-                        className="w-full min-h-[120px] rounded-xl border border-gray-200 bg-white px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-gray-950 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all shadow-2xs"
+                        className="w-full min-h-[120px] rounded-xl border border-gray-200 bg-white px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-gray-950 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all"
                         required
                       />
                       <div
@@ -422,7 +422,7 @@ export function FeedbackDrawer() {
                   {/* Submit Action */}
                   <Button
                     type="submit"
-                    variant="primary"
+                    variant="outline"
                     disabled={isSubmitting || !title.trim() || !description.trim()}
                     className="w-full h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5"
                   >

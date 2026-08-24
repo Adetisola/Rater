@@ -189,20 +189,25 @@ export function InstallAppModal({ isOpen, onClose, defaultPlatform }: InstallApp
                 <div className="space-y-2.5 text-xs text-gray-700">
                   <p className="font-bold text-gray-950 flex items-center gap-1.5 text-xs">
                     <Smartphone size={14} className="text-gray-900" />
-                    <span>Installing on Android (Chrome):</span>
+                    <span>Installing on Android (Chrome & Samsung Internet):</span>
                   </p>
                   <ol className="space-y-2 text-gray-600 pl-1">
                     <li className="flex items-start gap-2">
                       <span className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-900 shrink-0 mt-0.5">1</span>
-                      <span>Tap the <strong className="text-gray-950 font-semibold inline-flex items-center gap-1"><MoreVertical size={13} /> Menu</strong> icon (3 dots) in the top right.</span>
+                      <span>
+                        In <strong className="text-gray-950 font-semibold">Chrome</strong>: tap the <strong className="text-gray-950 font-semibold inline-flex items-center gap-0.5"><MoreVertical size={12} /> Menu</strong> (3 dots).<br />
+                        In <strong className="text-gray-950 font-semibold">Samsung Internet</strong>: tap the <strong className="text-gray-950 font-semibold">☰ Menu</strong> or the <strong className="text-gray-950 font-semibold">Install (↓)</strong> icon in the address bar.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-900 shrink-0 mt-0.5">2</span>
-                      <span>Select <strong className="text-gray-950 font-semibold">&quot;Install app&quot;</strong> or <strong className="text-gray-950 font-semibold">&quot;Add to Home screen&quot;</strong>.</span>
+                      <span>
+                        Tap <strong className="text-gray-950 font-semibold">&quot;Install app&quot;</strong>, or select <strong className="text-gray-950 font-semibold">&quot;+ Add page to&quot; → &quot;Home screen&quot;</strong>.
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-900 shrink-0 mt-0.5">3</span>
-                      <span>Confirm by tapping <strong className="text-gray-950 font-semibold">&quot;Install&quot;</strong>.</span>
+                      <span>Confirm by tapping <strong className="text-gray-950 font-semibold">&quot;Install&quot;</strong> or <strong className="text-gray-950 font-semibold">&quot;Add&quot;</strong>.</span>
                     </li>
                   </ol>
                 </div>

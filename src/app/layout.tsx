@@ -88,6 +88,43 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  if (
+                    window.matchMedia('(display-mode: standalone)').matches ||
+                    window.matchMedia('(display-mode: fullscreen)').matches ||
+                    window.matchMedia('(display-mode: minimal-ui)').matches ||
+                    window.navigator.standalone === true ||
+                    (document.referrer && document.referrer.indexOf('android-app://') !== -1)
+                  ) {
+                    localStorage.setItem('rater_pwa_installed', 'true');
+                  }
+                } catch (e) {}
+
+                window.__raterDeferredPrompt = null;
+
+                window.addEventListener('beforeinstallprompt', function(e) {
+                  e.preventDefault();
+                  window.__raterDeferredPrompt = e;
+                  window.dispatchEvent(new CustomEvent('rater-pwa-installable'));
+                });
+
+                window.addEventListener('appinstalled', function() {
+                  window.__raterDeferredPrompt = null;
+                  try {
+                    localStorage.setItem('rater_pwa_installed', 'true');
+                  } catch (e) {}
+                  window.dispatchEvent(new CustomEvent('rater-pwa-installed'));
+                });
+              })();
+            `,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning>
         <StructuredData />
         <GlobalErrorBoundary>
