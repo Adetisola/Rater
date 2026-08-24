@@ -688,33 +688,6 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Delivery Channels</p>
                       
                       <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 shadow-2xs overflow-hidden">
-                        {/* In-App Notifications */}
-                        <div className="p-4 flex items-center justify-between gap-4">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">In-App Notifications</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
-                              Realtime bell alerts and unread counters in the app header.
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={preferences?.in_app_enabled ?? true}
-                            onClick={() => handlePreferenceToggle('in_app_enabled')}
-                            className={cn(
-                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.in_app_enabled ?? true) ? "bg-primary" : "bg-gray-200"
-                            )}
-                          >
-                            <span
-                              className={cn(
-                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
-                                (preferences?.in_app_enabled ?? true) ? "translate-x-4" : "translate-x-0"
-                              )}
-                            />
-                          </button>
-                        </div>
-
                         {/* Web Push Notifications */}
                         <div className="p-4 space-y-3">
                           <div className="flex items-center justify-between gap-4">
@@ -760,6 +733,33 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               <span>{isPushSubscribed ? "Disable on Device" : "Enable on Device"}</span>
                             </Button>
                           </div>
+                        </div>
+
+                        {/* In-App Notifications */}
+                        <div className="p-4 flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">In-App Notifications</p>
+                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              Realtime bell alerts and unread counters in the app header.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.in_app_enabled ?? true}
+                            onClick={() => handlePreferenceToggle('in_app_enabled')}
+                            className={cn(
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.in_app_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.in_app_enabled ?? true) ? "translate-x-4" : "translate-x-0"
+                              )}
+                            />
+                          </button>
                         </div>
 
                         {/* Email Notifications */}
