@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ListFilter } from 'lucide-react';
+import { X, ListFilter, ArrowUpRight, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { MobileFilterPanel } from './MobileFilterPanel';
 import { useDebounce } from '../hooks/useDebounce';
-import { searchAll, type SearchIndexes, type SectionedSearchResults } from '@/lib/algolia/search';
+import { searchAll, getQuerySuggestions, type SearchIndexes, type SectionedSearchResults } from '@/lib/algolia/search';
 import type { Post, Avatar, Category } from '@/types';
 import { useAuthState } from '../context/AuthContext';
 import { usePostStore } from '../store/postStore';
@@ -24,6 +24,26 @@ const SORT_OPTION_LABELS: Record<string, string> = {
   most_reviewed: 'Hot',
   newest: 'Recent',
 };
+
+const POPULAR_EXPLORE_CATEGORIES: Category[] = [
+  'Web Design',
+  'Mobile App Design',
+  'Brand Identity Design',
+  'Logo Design',
+  'Typography Design',
+  'Poster Design',
+  'Illustration',
+  '3D Design',
+];
+
+const TRENDING_FEEDBACK_TOPICS = [
+  'Landing page feedback',
+  'Mobile app UX audit',
+  'Brand identity review',
+  'Clean minimal typography',
+  'SaaS dashboard design',
+  'Portfolio review',
+];
 
 interface MobileSearchOverlayProps {
   isOpen: boolean;
@@ -74,6 +94,16 @@ export function MobileSearchOverlay({
   const debouncedQuery = useDebounce(searchQuery, 200);
   const isRecentMode = debouncedQuery.trim() === '';
 
+  // Query suggestions computation
+  const recentQueryStrings = useMemo(() => {
+    return recentItems.filter(i => i.type === 'search').map(i => i.query);
+  }, [recentItems]);
+
+  const suggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return getQuerySuggestions(searchQuery, recentQueryStrings, 5);
+  }, [searchQuery, recentQueryStrings]);
+
   // Perform async search
   useEffect(() => {
     let isMounted = true;
@@ -101,28 +131,29 @@ export function MobileSearchOverlay({
     return () => { isMounted = false; };
   }, [debouncedQuery, searchIndexes]);
 
-  const hasResults = searchResults.avatars.length > 0 || 
-                     searchResults.posts.length > 0 || 
-                     searchResults.categories.length > 0;
+  const hasEntityResults = searchResults.avatars.length > 0 || 
+                           searchResults.posts.length > 0 || 
+                           searchResults.categories.length > 0;
+  const hasSuggestions = suggestions.length > 0;
+  const isNoResults = !isRecentMode && debouncedQuery.trim().length >= 2 && !hasEntityResults && !hasSuggestions;
 
   // Lock body scroll and handle Android back button
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         searchInputRef.current?.focus();
-      }, 400);
+      }, 300);
 
       const handlePopState = () => {
-        // Just close the overlay. By not calling preventDefault(), 
-        // we allow the popstate to continue to the restoration system.
         onClose();
       };
 
       window.addEventListener('popstate', handlePopState);
 
       return () => {
+        clearTimeout(timer);
         document.body.style.overflow = '';
         window.removeEventListener('popstate', handlePopState);
       };
@@ -161,6 +192,20 @@ export function MobileSearchOverlay({
     }
   };
 
+  // Handle suggestion selection
+  const handleSuggestionClick = (query: string) => {
+    addSearch(query);
+    onSearchChange(query);
+    onSearchSubmit?.(query);
+    onClose();
+  };
+
+  // Handle fill input (↗ arrow)
+  const handlePopulateSearch = (query: string) => {
+    onSearchChange(query);
+    searchInputRef.current?.focus();
+  };
+
   // Handle Enter key
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -188,7 +233,7 @@ export function MobileSearchOverlay({
           initial={{ opacity: 0, y: 20, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.98 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           className="fixed inset-0 z-60 bg-white flex flex-col"
         >
           {/* Header */}
@@ -196,6 +241,7 @@ export function MobileSearchOverlay({
             <button 
               onClick={onClose}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
+              aria-label="Close search"
             >
               <X size={20} className="text-gray-600" />
             </button>
@@ -238,220 +284,316 @@ export function MobileSearchOverlay({
               </AnimatePresence>
             </motion.div>
 
-        <button 
-          onClick={() => setIsFilterOpen(true)}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
-        >
-          <ListFilter className="h-5 w-5" />
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
-          <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
-            {sortBy !== 'balanced' && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
-                <span className="text-xs font-medium text-black">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
-                <button 
-                  onClick={() => onSortChange('balanced')}
-                  className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
-                >
-                  <X className="w-2.5 h-2.5 text-white" />
-                </button>
-              </div>
-            )}
-            
-            {selectedCategories.map(cat => (
-              <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                <span className="text-xs font-medium text-black">{cat}</span>
-                <button 
-                  onClick={() => {
-                    const newCats = selectedCategories.filter(c => c !== cat);
-                    onCategoryChange(newCats);
-                  }}
-                  className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
-                >
-                  <X className="w-2.5 h-2.5 text-white" />
-                </button>
-              </div>
-            ))}
+            <button 
+              onClick={() => setIsFilterOpen(true)}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
+              aria-label="Open filter settings"
+            >
+              <ListFilter className="h-5 w-5" />
+            </button>
           </div>
-        )}
 
-        {isSearching ? (
-          <div className="flex items-center justify-center h-40 text-gray-400 text-sm">Searching...</div>
-        ) : isRecentMode && recentItems.length > 0 ? (
-          <div className="divide-y divide-gray-100">
-            <div>
-              <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Recent</span>
-                <button 
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    clearAll?.();
-                  }}
-                  className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors px-2 py-0.5 rounded-full hover:bg-red-50"
-                >
-                  Clear all
-                </button>
-              </div>
-              <div className="p-2">
-                {recentItems.map((item, index) => {
-                  const removeBtn = (
-                    <button
-                      onMouseDown={(e) => { 
-                        e.preventDefault(); 
-                        e.stopPropagation(); 
-                        removeItem(index); 
-                      }}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0 ml-2"
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
+              <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
+                {sortBy !== 'balanced' && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
+                    <span className="text-xs font-medium text-black">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
+                    <button 
+                      onClick={() => onSortChange('balanced')}
+                      className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-2.5 h-2.5 text-white" />
                     </button>
-                  );
+                  </div>
+                )}
+                
+                {selectedCategories.map(cat => (
+                  <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
+                    <span className="text-xs font-medium text-black">{cat}</span>
+                    <button 
+                      onClick={() => {
+                        const newCats = selectedCategories.filter(c => c !== cat);
+                        onCategoryChange(newCats);
+                      }}
+                      className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
+                    >
+                      <X className="w-2.5 h-2.5 text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
-                  if (item.type === 'search') {
-                    return (
-                      <div key={`rec-search-${item.query}`} className="flex items-center group">
+            {isSearching ? (
+              <div className="flex items-center justify-center h-40 text-gray-400 text-sm">Searching...</div>
+            ) : isRecentMode ? (
+              /* HYBRID HUB EMPTY STATE */
+              <div className="divide-y divide-gray-100">
+                {recentItems.length > 0 && (
+                  <div>
+                    <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Recent Searches</span>
+                      <button 
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          clearAll?.();
+                        }}
+                        className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors px-2 py-0.5 rounded-full hover:bg-red-50"
+                      >
+                        Clear all
+                      </button>
+                    </div>
+                    <div className="p-2">
+                      {recentItems.map((item, index) => {
+                        const removeBtn = (
+                          <button
+                            onMouseDown={(e) => { 
+                              e.preventDefault(); 
+                              e.stopPropagation(); 
+                              removeItem(index); 
+                            }}
+                            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0 ml-1"
+                            aria-label="Remove item"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        );
+
+                        if (item.type === 'search') {
+                          return (
+                            <div key={`rec-search-${item.query}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                              <div
+                                onMouseDown={(e) => { 
+                                  e.preventDefault(); e.stopPropagation(); 
+                                  handleSuggestionClick(item.query);
+                                }}
+                                className="flex-1 min-w-0 p-3 flex gap-3 items-center cursor-pointer"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-500">
+                                  <Search className="w-4 h-4" />
+                                </div>
+                                <div className="flex-1 min-w-0 flex items-center justify-between">
+                                  <span className="font-medium text-sm text-black truncate">{item.query}</span>
+                                  <span className="text-[11px] font-semibold text-gray-400">Search</span>
+                                </div>
+                              </div>
+                              {removeBtn}
+                            </div>
+                          );
+                        }
+
+                        if (item.type === 'avatar') {
+                          const avatar = profileMap[item.avatarId];
+                          if (!avatar) return null;
+                          return (
+                            <div key={`rec-av-${item.avatarId}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <AvatarResultItem avatar={avatar} onClick={() => handleAvatarClick(avatar)} />
+                              </div>
+                              {removeBtn}
+                            </div>
+                          );
+                        }
+
+                        if (item.type === 'post') {
+                          const postObj = allPosts[item.postId];
+                          if (!postObj) return null;
+                          return (
+                            <div key={`rec-post-${item.postId}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <PostResultItem post={postObj} onClick={() => handlePostClick(postObj, recentItems.filter(i => i.type === 'post').map(i => i.postId as string))} />
+                              </div>
+                              {removeBtn}
+                            </div>
+                          );
+                        }
+
+                        if (item.type === 'category') {
+                          return (
+                            <div key={`rec-cat-${item.category}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <CategoryResultItem category={item.category} onClick={() => handleCategoryClick(item.category)} />
+                              </div>
+                              {removeBtn}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Explore Categories */}
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Explore Categories</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {POPULAR_EXPLORE_CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleCategoryClick(cat);
+                        }}
+                        className="px-3.5 py-1.5 rounded-full bg-gray-100 active:bg-primary/15 text-xs font-semibold text-gray-700 transition-all active:scale-95"
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trending Feedback Inspiration */}
+                <div className="p-4 bg-gray-50/50">
+                  <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Looking for feedback on...</span>
+                  <div className="flex flex-wrap gap-2">
+                    {TRENDING_FEEDBACK_TOPICS.map(topic => (
+                      <button
+                        key={topic}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSuggestionClick(topic);
+                        }}
+                        className="px-3.5 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-black active:text-primary transition-all active:scale-95 shadow-2xs"
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : isNoResults ? (
+              /* NO RESULTS STATE */
+              <div className="p-6 text-center">
+                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
+                  <Search className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-base text-black mb-1">No results for "{debouncedQuery}"</h4>
+                <p className="text-xs text-gray-500 max-w-xs mx-auto mb-5">
+                  Try searching for another keyword or creator name, or explore these categories:
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 max-w-sm mx-auto">
+                  {POPULAR_EXPLORE_CATEGORIES.slice(0, 6).map(cat => (
+                    <button
+                      key={cat}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleCategoryClick(cat);
+                      }}
+                      className="px-3.5 py-1.5 rounded-full bg-gray-100 text-xs font-semibold text-gray-700 active:scale-95"
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* ACTIVE SUGGESTIONS & RESULTS */
+              <div className="divide-y divide-gray-100">
+                {/* Query Suggestions with 44px Dual-Action */}
+                {suggestions.length > 0 && (
+                  <div className="p-2">
+                    {suggestions.map((sug) => (
+                      <div key={`m-sug-${sug}`} className="flex items-center rounded-xl hover:bg-gray-50 transition-colors group">
                         <div
-                          onMouseDown={(e) => { 
-                            e.preventDefault(); e.stopPropagation(); 
-                            addSearch(item.query);
-                            onSearchChange(item.query); 
-                            onSearchSubmit?.(item.query);
-                            onClose();
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSuggestionClick(sug);
                           }}
-                          className="flex-1 w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
+                          className="flex-1 min-w-0 p-3 flex items-center gap-3 cursor-pointer"
                         >
-                          <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                            <Search className="w-4 h-4 text-gray-400" />
-                          </div>
-                          <div className="flex-1 min-w-0 flex items-center justify-between">
-                            <span className="font-medium text-sm text-black truncate">{item.query}</span>
-                            <span className="text-xs font-semibold text-gray-400">Search</span>
-                          </div>
+                          <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                          <span className="font-semibold text-sm text-black truncate">{sug}</span>
                         </div>
-                        {removeBtn}
+                        <button
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handlePopulateSearch(sug);
+                          }}
+                          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 active:text-black active:bg-gray-200/60 rounded-full transition-colors shrink-0 mr-1"
+                          aria-label={`Complete search with "${sug}"`}
+                        >
+                          <ArrowUpRight className="w-4 h-4" />
+                        </button>
                       </div>
-                    );
-                  }
+                    ))}
+                  </div>
+                )}
 
-                  if (item.type === 'avatar') {
-                    const avatar = profileMap[item.avatarId];
-                    if (!avatar) return null;
-                    return (
-                      <div key={`rec-av-${item.avatarId}`} className="flex items-center group flex-nowrap">
-                         <div className="flex-1 min-w-0">
-                           <AvatarResultItem avatar={avatar} onClick={() => handleAvatarClick(avatar)} />
-                         </div>
-                         {removeBtn}
-                      </div>
-                    );
-                  }
+                {searchResults.categories.length > 0 && (
+                  <div>
+                    <div className="px-4 py-2 bg-gray-50">
+                      <span className="text-xs font-bold text-gray-500 tracking-wide uppercase">Categories</span>
+                    </div>
+                    <div className="p-2">
+                      {searchResults.categories.map(({ category }) => (
+                        <CategoryResultItem 
+                          key={category}
+                          category={category}
+                          onClick={() => handleCategoryClick(category)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                  if (item.type === 'post') {
-                    const postObj = allPosts[item.postId];
-                    if (!postObj) return null;
-                    return (
-                      <div key={`rec-post-${item.postId}`} className="flex items-center group flex-nowrap">
-                         <div className="flex-1 min-w-0">
-                           <PostResultItem post={postObj} onClick={() => handlePostClick(postObj, recentItems.filter(i => i.type === 'post').map(i => i.postId as string))} />
-                         </div>
-                         {removeBtn}
-                      </div>
-                    );
-                  }
+                {searchResults.avatars.length > 0 && (
+                  <div>
+                    <div className="px-4 py-2 bg-gray-50">
+                      <span className="text-xs font-bold text-gray-500 tracking-wide uppercase">Creatives</span>
+                    </div>
+                    <div className="p-2">
+                      {searchResults.avatars.map(({ avatar }) => (
+                        <AvatarResultItem 
+                          key={avatar.id}
+                          avatar={avatar}
+                          onClick={() => handleAvatarClick(avatar)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                  if (item.type === 'category') {
-                    return (
-                       <div key={`rec-cat-${item.category}`} className="flex items-center group flex-nowrap">
-                         <div className="flex-1 min-w-0">
-                           <CategoryResultItem category={item.category} onClick={() => handleCategoryClick(item.category)} />
-                         </div>
-                         {removeBtn}
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            </div>
-          </div>
-        ) : hasResults ? (
-          <div className="divide-y divide-gray-100">
-            {searchResults.categories.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 tracking-wide">Categories</span>
-                </div>
-                <div className="p-2">
-                  {searchResults.categories.map(({ category }) => (
-                    <CategoryResultItem 
-                      key={category}
-                      category={category}
-                      onClick={() => handleCategoryClick(category)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {searchResults.avatars.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 tracking-wide">Creatives</span>
-                </div>
-                <div className="p-2">
-                  {searchResults.avatars.map(({ avatar }) => (
-                    <AvatarResultItem 
-                      key={avatar.id}
-                      avatar={avatar}
-                      onClick={() => handleAvatarClick(avatar)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {searchResults.posts.length > 0 && (
-              <div>
-                <div className="px-4 py-2 bg-gray-50">
-                  <span className="text-xs font-bold text-gray-500 tracking-wide">Works</span>
-                </div>
-                <div className="p-2">
-                  {searchResults.posts.map((result) => (
-                    <PostResultItem 
-                      key={result.post.id}
-                      post={result.post}
-                      onClick={() => handlePostClick(result.post, searchResults.posts.map(r => r.post.id))}
-                    />
-                  ))}
-                </div>
+                {searchResults.posts.length > 0 && (
+                  <div>
+                    <div className="px-4 py-2 bg-gray-50">
+                      <span className="text-xs font-bold text-gray-500 tracking-wide uppercase">Works</span>
+                    </div>
+                    <div className="p-2">
+                      {searchResults.posts.map((result) => (
+                        <PostResultItem 
+                          key={result.post.id}
+                          post={result.post}
+                          onClick={() => handlePostClick(result.post, searchResults.posts.map(r => r.post.id))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        ) : debouncedQuery.trim().length >= 2 ? (
-          <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
-            No results found for "{debouncedQuery}"
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
-            Search work, creatives, or categories...
-          </div>
-        )}
-      </div>
 
-      <MobileFilterPanel
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        onApply={onClose} 
-        sortBy={sortBy}
-        onSortChange={onSortChange}
-        selectedCategories={selectedCategories}
-        onCategoryChange={onCategoryChange}
-        onReset={onReset}
-      />
+          <MobileFilterPanel
+            isOpen={isFilterOpen}
+            onClose={() => setIsFilterOpen(false)}
+            onApply={() => setIsFilterOpen(false)} 
+            sortBy={sortBy}
+            onSortChange={onSortChange}
+            selectedCategories={selectedCategories}
+            onCategoryChange={onCategoryChange}
+            onReset={onReset}
+          />
         </motion.div>
       )}
     </AnimatePresence>,

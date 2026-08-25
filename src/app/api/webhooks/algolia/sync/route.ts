@@ -58,6 +58,47 @@ async function syncToAlgolia(indexName: string, objects: any[]) {
   }
 }
 
+async function configureAlgoliaIndexSettings() {
+  if (!appId || !adminKey) return;
+
+  // 1. Profiles Settings
+  const profilesSettings = {
+    searchableAttributes: ['name', 'username', 'bio', 'role'],
+    queryType: 'prefixLast',
+    typoTolerance: true,
+    minWordSizefor1Typo: 3,
+    minWordSizefor2Typos: 6,
+  };
+
+  await fetch(`https://${appId}.algolia.net/1/indexes/profiles/settings`, {
+    method: 'PUT',
+    headers: {
+      'X-Algolia-Application-Id': appId,
+      'X-Algolia-API-Key': adminKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(profilesSettings),
+  });
+
+  // 2. Posts Settings
+  const postsSettings = {
+    searchableAttributes: ['title', 'category', 'description'],
+    queryType: 'prefixLast',
+    typoTolerance: true,
+    customRanking: ['desc(review_count)', 'desc(average_score)'],
+  };
+
+  await fetch(`https://${appId}.algolia.net/1/indexes/posts/settings`, {
+    method: 'PUT',
+    headers: {
+      'X-Algolia-Application-Id': appId,
+      'X-Algolia-API-Key': adminKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(postsSettings),
+  });
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -70,6 +111,9 @@ export async function GET(req: Request) {
     if (!appId || !adminKey) {
       return NextResponse.json({ error: 'Algolia credentials not configured' }, { status: 500 });
     }
+
+    // Configure Index Settings
+    await configureAlgoliaIndexSettings();
 
     // 1. Fetch and Sync Posts
     await clearAlgoliaIndex('posts');

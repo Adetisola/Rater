@@ -1,14 +1,13 @@
 /**
- * Algolia Search Service
+ * Algolia Search & Discovery Service
  *
- * This is the ONLY file the rest of the application imports search from.
- * Callers never know whether Fuse.js or Algolia is the active engine.
- *
- * It uses Algolia as the primary engine for posts and profiles,
- * with seamless fallback to Fuse.js local search if Algolia is unavailable.
+ * Algolia is the single authoritative relevance engine for search.
+ * Local ProfileCache is used strictly for synchronous avatar enrichment and emergency fallback.
  */
 
 import type { Post, Avatar, Category } from '@/types';
+import { CATEGORIES } from '@/constants/categories';
+import { ProfileCache } from '@/lib/profiles';
 import { algoliaClient } from './client';
 import {
   createSearchIndexes,
@@ -18,52 +17,136 @@ import {
   type SectionedSearchResults,
   type PostSearchResult,
   type AvatarSearchResult,
+  type CategorySearchResult,
 } from '@/logic/searchUtils';
 
-export type { SearchIndexes, SectionedSearchResults, PostSearchResult, AvatarSearchResult };
+export type { SearchIndexes, SectionedSearchResults, PostSearchResult, AvatarSearchResult, CategorySearchResult };
 
+// Curated search phrase vocabulary for high-quality design autocomplete
+const CURATED_SUGGESTION_TERMS: string[] = [
+  'Web Design',
+  'Mobile App Design',
+  'Brand Identity',
+  'Logo Design',
+  'Typography',
+  'Poster Design',
+  'Illustration',
+  '3D Design',
+  'Product Design',
+  'Design System',
+  'Landing Page',
+  'SaaS UI',
+  'Dashboard Design',
+  'Motion Graphics',
+  'Packaging Design',
+  'Icon Design',
+  'Landing page feedback',
+  'Mobile app UX audit',
+  'Brand identity review',
+  'Clean minimal typography',
+  'SaaS dashboard design',
+  'Creative portfolio review',
+  'Dark mode UI design',
+  'Design critique',
+  'Modern poster layout',
+  '3D product rendering'
+];
+
+/**
+ * Builds fallback Fuse.js search indexes using posts and all cached avatars.
+ */
 export function buildSearchIndexes(
   posts: Post[],
-  avatars: Record<string, Avatar>,
-  categories: Category[]
+  avatars: Record<string, Avatar> = {},
+  categories: Category[] = CATEGORIES as Category[]
 ): SearchIndexes {
-  // We still build Fuse.js indexes for the seamless fallback
-  // and for searching the static categories list.
-  return createSearchIndexes(posts, avatars, categories);
+  // Merge any explicitly provided avatars with the full client-side ProfileCache
+  const allAvatarsMap: Record<string, Avatar> = { ...avatars };
+  const cachedProfiles = ProfileCache.getAll();
+  cachedProfiles.forEach(p => {
+    if (p.id) allAvatarsMap[p.id] = p;
+  });
+
+  return createSearchIndexes(posts, allAvatarsMap, categories);
 }
 
+/**
+ * Generates instant query predictions / autocompletions (strings) for the search bar.
+ * Matches curated domain taxonomy, design phrases, and user recent searches.
+ */
+export function getQuerySuggestions(
+  query: string,
+  recentSearches: string[] = [],
+  limit = 5
+): string[] {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return [];
+
+  const matched = new Set<string>();
+
+  // 1. Check user's recent searches first if they match the typed prefix
+  recentSearches.forEach(recent => {
+    const trimmed = recent.trim();
+    if (trimmed && trimmed.toLowerCase() !== normalized && trimmed.toLowerCase().includes(normalized)) {
+      matched.add(trimmed);
+    }
+  });
+
+  // 2. Check curated design vocabulary and categories
+  CURATED_SUGGESTION_TERMS.forEach(term => {
+    if (term.toLowerCase().includes(normalized) && term.toLowerCase() !== normalized) {
+      matched.add(term);
+    }
+  });
+
+  // 3. Category variations
+  CATEGORIES.forEach(cat => {
+    if (cat.toLowerCase().includes(normalized) && cat.toLowerCase() !== normalized) {
+      matched.add(cat);
+    }
+  });
+
+  return Array.from(matched).slice(0, limit);
+}
+
+/**
+ * Main search function across Creatives, Works, and Categories.
+ * Uses Algolia as authoritative engine with graceful local fallback.
+ */
 export async function searchAll(
   indexes: SearchIndexes,
   query: string,
-  limits?: { avatars: number; posts: number; categories: number }
+  limits?: { avatars?: number; posts?: number; categories?: number }
 ): Promise<SectionedSearchResults> {
-  const defaultLimits = { avatars: 3, posts: 5, categories: 3, ...limits };
+  const defaultLimits = { avatars: 4, posts: 6, categories: 3, ...limits };
+  const trimmed = query.trim();
 
-  if (algoliaClient && query.trim().length > 0) {
+  if (!trimmed) {
+    return { avatars: [], posts: [], categories: [] };
+  }
+
+  // 1. Primary Engine: Algolia Search
+  if (algoliaClient && trimmed.length > 0) {
     try {
-      const profilesPromise = algoliaClient.search({
-        requests: [
-          {
-            indexName: 'profiles',
-            query,
-            hitsPerPage: defaultLimits.avatars,
-          }
-        ]
-      });
-
-      const postsPromise = algoliaClient.search({
-        requests: [
-          {
-            indexName: 'posts',
-            query,
-            hitsPerPage: defaultLimits.posts,
-          }
-        ]
-      });
-
       const [profilesSettled, postsSettled] = await Promise.allSettled([
-        profilesPromise,
-        postsPromise
+        algoliaClient.search({
+          requests: [
+            {
+              indexName: 'profiles',
+              query: trimmed,
+              hitsPerPage: defaultLimits.avatars,
+            }
+          ]
+        }),
+        algoliaClient.search({
+          requests: [
+            {
+              indexName: 'posts',
+              query: trimmed,
+              hitsPerPage: defaultLimits.posts,
+            }
+          ]
+        })
       ]);
 
       let profilesResult: any = null;
@@ -72,124 +155,120 @@ export async function searchAll(
       if (profilesSettled.status === 'fulfilled') {
         profilesResult = profilesSettled.value.results[0];
       } else {
-        console.warn('[Algolia] Profiles search failed (likely missing index)', profilesSettled.reason);
+        console.warn('[Algolia] Profiles search query failed', profilesSettled.reason);
       }
 
       if (postsSettled.status === 'fulfilled') {
         postsResult = postsSettled.value.results[0];
       } else {
-        throw postsSettled.reason; // If posts fail, we fallback to local fuse entirely
+        console.warn('[Algolia] Posts search query failed', postsSettled.reason);
       }
 
-      // For categories, since they are static and small, we can just use the local fuse index.
-      const fuseResults = await fuseSearchAll(indexes, query, defaultLimits);
+      // If at least one Algolia query succeeded, format results with cache enrichment
+      if (profilesResult || postsResult) {
+        // Creatives mapping & enrichment
+        const mappedAvatars: AvatarSearchResult[] = (profilesResult?.hits || [])
+          .map((hit: any) => {
+            const cached = ProfileCache.get(hit.objectID) || indexes.rawAvatars?.[hit.objectID];
+            const username = hit.username || cached?.username || '';
+            const name = hit.name || cached?.name || username;
+            const role = hit.role || cached?.role || null;
+            const avatarUrl = hit.avatar_url || cached?.avatar_url || '';
+            const bio = hit.bio || cached?.bio || '';
 
-      const mappedAvatars = (profilesResult?.hits || [])
-        .map((hit: any) => {
-          // Enrich with local data if Algolia record is stale
-          const rawAvatar = indexes.rawAvatars?.[hit.objectID];
-          const username = hit.username || rawAvatar?.username;
-          const role = hit.role || rawAvatar?.role || null;
-          const avatar = { ...rawAvatar, ...hit, id: hit.objectID, username, role } as Avatar;
-          
-          // If Algolia stripped large fields (like Base64 avatars) during sync, fallback to the local cache
-          if (!hit.avatar_url && rawAvatar?.avatar_url) avatar.avatar_url = rawAvatar.avatar_url;
-          if (!hit.name && rawAvatar?.name) avatar.name = rawAvatar.name;
-          if (!hit.bg_color && rawAvatar?.bg_color) avatar.bg_color = rawAvatar.bg_color;
-          
-          return {
-            avatar,
-            score: 1 // Algolia handles internal scoring
-          };
-        })
-        .filter((mapped: any) => {
-          if (!mapped.avatar.username) {
-            console.warn('[Algolia] Filtered malformed profile missing username even after enrichment:', mapped.avatar);
-            return false;
-          }
-          return true;
-        });
+            const avatar: Avatar = {
+              id: hit.objectID,
+              username,
+              name,
+              role,
+              email: hit.email || cached?.email || '',
+              avatar_url: avatarUrl,
+              bio,
+              bg_color: hit.bg_color || cached?.bg_color || '#1A1A1A',
+              created_at: hit.created_at || cached?.created_at || new Date().toISOString(),
+              is_blocked: false,
+            };
 
-      // Merge local Fuse avatars with Algolia avatars, deduplicating by ID.
-      // This guarantees that any valid creator matching locally won't be lost.
-      const avatarMap = new Map<string, any>();
-      for (const fuseHit of fuseResults.avatars) {
-        avatarMap.set(fuseHit.avatar.id, fuseHit);
-      }
-      for (const algoliaHit of mappedAvatars) {
-        avatarMap.set(algoliaHit.avatar.id, algoliaHit);
-      }
-      
-      const finalAvatars = Array.from(avatarMap.values()).slice(0, defaultLimits.avatars);
+            return {
+              avatar,
+              score: 1
+            };
+          })
+          .filter((item: AvatarSearchResult) => Boolean(item.avatar.username));
 
-      return {
-        avatars: finalAvatars,
-        posts: (postsResult?.hits || []).map((hit: any) => ({
-          post: { ...hit, id: hit.objectID } as Post,
+        // Works mapping
+        const mappedPosts: PostSearchResult[] = (postsResult?.hits || []).map((hit: any) => ({
+          post: {
+            id: hit.objectID,
+            title: hit.title,
+            description: hit.description,
+            category: hit.category,
+            avatar_id: hit.avatar_id,
+            image_url: hit.image_url,
+            created_at: hit.created_at || new Date().toISOString(),
+            review_count: hit.review_count || 0,
+            average_score: hit.average_score || 0,
+          } as Post,
           score: 1,
-          matches: undefined
-        })),
-        categories: fuseResults.categories // Categories remain local
-      };
+          matches: undefined,
+        }));
+
+        // Categories matching (local taxonomy matching)
+        const matchingCategories = CATEGORIES
+          .filter(cat => cat.toLowerCase().includes(trimmed.toLowerCase()))
+          .slice(0, defaultLimits.categories)
+          .map(category => ({ category: category as Category, score: 1 }));
+
+        return {
+          avatars: mappedAvatars,
+          posts: mappedPosts,
+          categories: matchingCategories,
+        };
+      }
     } catch (e) {
-      console.warn('[Algolia] Search failed, falling back to local Fuse.js', e);
+      console.warn('[Algolia] Search exception, falling back to local index', e);
     }
   }
 
-  // Fallback to local search
-  return await fuseSearchAll(indexes, query, limits);
+  // 2. Emergency Fallback: Local Fuse Index
+  return await fuseSearchAll(indexes, trimmed, defaultLimits);
 }
 
+/**
+ * Search posts specifically for the Browse Grid view.
+ */
 export async function searchPosts(
   indexes: SearchIndexes,
   query: string,
-  limit?: number
+  limit = 100
 ): Promise<PostSearchResult[]> {
-  if (algoliaClient && query.trim().length > 0) {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  if (algoliaClient) {
     try {
       const { results } = await algoliaClient.search({
         requests: [
           {
             indexName: 'posts',
-            query,
-            hitsPerPage: limit || 10,
+            query: trimmed,
+            hitsPerPage: limit,
           }
         ]
       });
       const postsResult = results[0] as any;
-      
       return (postsResult?.hits || []).map((hit: any) => ({
-        post: hit as Post,
+        post: {
+          ...hit,
+          id: hit.objectID,
+        } as Post,
         score: 1,
-        matches: undefined
+        matches: undefined,
       }));
     } catch (e) {
       console.warn('[Algolia] Post search failed, falling back to local Fuse.js', e);
     }
   }
 
-  return fuseSearchPosts(indexes, query, limit);
-}
-
-export async function autocomplete(query: string): Promise<string[]> {
-  if (algoliaClient && query.trim().length > 0) {
-    try {
-      // Instead of relying on a Query Suggestions index (which needs search history),
-      // we query the actual posts index directly to auto-suggest real post titles!
-      const { results } = await algoliaClient.search({
-        requests: [
-          {
-            indexName: 'posts',
-            query,
-            hitsPerPage: 5,
-          }
-        ]
-      });
-      const postsResult = results[0] as any;
-      return (postsResult?.hits || []).map((hit: any) => hit.title);
-    } catch (e) {
-      console.warn('[Algolia] Autocomplete failed', e);
-    }
-  }
-  return [];
+  return fuseSearchPosts(indexes, trimmed, limit);
 }

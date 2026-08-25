@@ -7,7 +7,7 @@ import { SearchResults } from './SearchResults';
 import { Tooltip } from './ui/Tooltip';
 import { useDebounce } from '../hooks/useDebounce';
 import { type SearchIndexes, type SectionedSearchResults } from '../logic/searchUtils';
-import { searchAll, buildSearchIndexes } from '../lib/algolia/search';
+import { searchAll, buildSearchIndexes, getQuerySuggestions } from '../lib/algolia/search';
 import type { Post, Avatar, Category } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
 import { ListFilter, Search, X, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -222,6 +222,16 @@ function HeaderContent({
   // Debounce search query
   const debouncedQuery = useDebounce(searchQuery, 200);
 
+  // Query suggestions computation
+  const recentQueryStrings = useMemo(() => {
+    return recentItems.filter(i => i.type === 'search').map(i => i.query);
+  }, [recentItems]);
+
+  const suggestions = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    return getQuerySuggestions(searchQuery, recentQueryStrings, 5);
+  }, [searchQuery, recentQueryStrings]);
+
   // Perform async search
   useEffect(() => {
     let isMounted = true;
@@ -234,8 +244,8 @@ function HeaderContent({
 
       setIsSearching(true);
       const results = await searchAll(searchIndexes, debouncedQuery, {
-        avatars: 3,
-        posts: 5,
+        avatars: 4,
+        posts: 6,
         categories: 3
       });
 
@@ -249,10 +259,6 @@ function HeaderContent({
     return () => { isMounted = false; };
   }, [searchIndexes, debouncedQuery]);
 
-  const hasResults = searchResults.avatars.length > 0 ||
-    searchResults.posts.length > 0 ||
-    searchResults.categories.length > 0;
-
   const isRecentMode = isSearchFocused && debouncedQuery.trim() === '';
 
   useEffect(() => {
@@ -261,14 +267,29 @@ function HeaderContent({
       return;
     }
 
-    if (isRecentMode && recentItems.length > 0) {
+    if (isRecentMode) {
       setShowSearchResults(true);
-    } else if (debouncedQuery.trim().length >= 2 && hasResults) {
+    } else if (debouncedQuery.trim().length >= 1) {
       setShowSearchResults(true);
     } else {
       setShowSearchResults(false);
     }
-  }, [debouncedQuery, hasResults, isRecentMode, recentItems.length, isSearchFocused]);
+  }, [debouncedQuery, isRecentMode, isSearchFocused]);
+
+  // In-place Clear Search handler
+  const handleClearSearch = () => {
+    handleSearchChange('');
+    if (isBrowsePage) {
+      updateUrlParams({ q: null });
+    }
+    searchInputRef.current?.focus();
+  };
+
+  // Autocomplete fill handler (tap ↗ arrow)
+  const handlePopulateSearch = (term: string) => {
+    handleSearchChange(term);
+    searchInputRef.current?.focus();
+  };
 
   // Handle avatar click in search results
   const handleAvatarClick = (avatar: Avatar) => {
@@ -326,9 +347,9 @@ function HeaderContent({
       setShowSearchResults(false);
       searchInputRef.current?.blur();
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       setShowSearchResults(false);
       searchInputRef.current?.blur();
-      handleSearchChange('');
     }
   };
 
@@ -448,7 +469,6 @@ function HeaderContent({
                       onFocus={() => {
                         if (blurTimeoutRef.current) { clearTimeout(blurTimeoutRef.current); blurTimeoutRef.current = null; }
                         setIsSearchFocused(true);
-                        if (hasResults || recentItems.length > 0) setShowSearchResults(true);
                       }}
                       onBlur={() => {
                         if (blurTimeoutRef.current) clearTimeout(blurTimeoutRef.current);
@@ -483,9 +503,7 @@ function HeaderContent({
                           exit={{ opacity: 0, scale: 0.8 }}
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleSearchChange('');
-                            handleSearchSubmit('');
-                            searchInputRef.current?.focus();
+                            handleClearSearch();
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
                         >
@@ -507,6 +525,8 @@ function HeaderContent({
 
               <SearchResults
                 results={searchResults}
+                suggestions={suggestions}
+                searchQuery={searchQuery}
                 isVisible={showSearchResults && !isFilterOpen}
                 onAvatarClick={handleAvatarClick}
                 onPostClick={handlePostClick}
@@ -521,6 +541,7 @@ function HeaderContent({
                   handleSearchSubmit(q);
                   handleCloseSearch();
                 }}
+                onPopulateSearch={handlePopulateSearch}
                 onRemoveRecentItem={removeItem}
                 onClearRecent={clearAll}
               />
