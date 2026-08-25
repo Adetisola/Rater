@@ -17,7 +17,7 @@ import { populateProfileCache } from './profiles';
 export async function getReviewsByPostId(postId: string): Promise<Review[]> {
   const { data, error } = await supabase
     .from('reviews')
-    .select('*, profiles(id, username, name, avatar_url)')
+    .select('*, profiles:reviewer_id(id, username, name, avatar_url)')
     .eq('post_id', postId)
     .order('created_at', { ascending: false });
 
