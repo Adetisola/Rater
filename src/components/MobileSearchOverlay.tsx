@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ListFilter, ArrowUpRight, Sparkles } from 'lucide-react';
+import { X, ListFilter, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { MobileFilterPanel } from './MobileFilterPanel';
@@ -426,32 +426,8 @@ export function MobileSearchOverlay({
                   </div>
                 )}
 
-                {/* Explore Categories */}
+                {/* Keyword Suggestions with gray pill style and no section header */}
                 <div className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Explore Categories</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {POPULAR_EXPLORE_CATEGORIES.map(cat => (
-                      <button
-                        key={cat}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleCategoryClick(cat);
-                        }}
-                        className="px-3.5 py-1.5 rounded-full bg-gray-100 active:bg-primary/15 text-xs font-semibold text-gray-700 transition-all active:scale-95"
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Trending Feedback Inspiration */}
-                <div className="p-4 bg-gray-50/50">
-                  <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Looking for feedback on...</span>
                   <div className="flex flex-wrap gap-2">
                     {TRENDING_FEEDBACK_TOPICS.map(topic => (
                       <button
@@ -461,7 +437,7 @@ export function MobileSearchOverlay({
                           e.stopPropagation();
                           handleSuggestionClick(topic);
                         }}
-                        className="px-3.5 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-black active:text-primary transition-all active:scale-95 shadow-2xs"
+                        className="px-3.5 py-1.5 rounded-full bg-gray-100 active:bg-gray-200 text-xs font-semibold text-gray-700 transition-all active:scale-95"
                       >
                         {topic}
                       </button>
@@ -488,7 +464,7 @@ export function MobileSearchOverlay({
                         e.stopPropagation();
                         handleCategoryClick(cat);
                       }}
-                      className="px-3.5 py-1.5 rounded-full bg-gray-100 text-xs font-semibold text-gray-700 active:scale-95"
+                      className="px-3.5 py-1.5 rounded-full bg-gray-100 active:bg-gray-200 text-xs font-semibold text-gray-700 active:scale-95"
                     >
                       {cat}
                     </button>

@@ -5,7 +5,7 @@ import type { SectionedSearchResults, HighlightSegment, PostSearchResult } from 
 import { highlightMatches } from '../logic/searchUtils';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, X, ArrowUpRight, Sparkles, Folder } from 'lucide-react';
+import { Search, X, ArrowUpRight, Folder } from 'lucide-react';
 import { useAuthState } from '../context/AuthContext';
 import { usePostStore } from '../store/postStore';
 import type { RecentItemData } from '../hooks/useRecentSearches';
@@ -209,32 +209,8 @@ export function SearchResults({
               </div>
             )}
 
-            {/* Explore Categories Hub */}
+            {/* Keyword Suggestions with gray pill style and no section header */}
             <div className="p-4 sm:p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Explore Categories</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {POPULAR_EXPLORE_CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onCategoryClick(cat);
-                    }}
-                    className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-primary/15 hover:text-primary text-xs font-semibold text-gray-700 transition-all active:scale-95"
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Trending Feedback Inspiration */}
-            <div className="p-4 sm:p-5 bg-gray-50/50">
-              <span className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Looking for feedback on...</span>
               <div className="flex flex-wrap gap-2">
                 {TRENDING_FEEDBACK_TOPICS.map(topic => (
                   <button
@@ -244,7 +220,7 @@ export function SearchResults({
                       e.stopPropagation();
                       onRecentSearchClick?.(topic);
                     }}
-                    className="px-3.5 py-1.5 rounded-full bg-white border border-gray-200 hover:border-primary/50 text-xs font-medium text-black hover:text-primary transition-all active:scale-95 shadow-2xs"
+                    className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 transition-all active:scale-95 cursor-pointer"
                   >
                     {topic}
                   </button>
@@ -273,7 +249,7 @@ export function SearchResults({
                     e.stopPropagation();
                     onCategoryClick(cat);
                   }}
-                  className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-primary/15 hover:text-primary text-xs font-semibold text-gray-700 transition-all active:scale-95"
+                  className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 transition-all active:scale-95 cursor-pointer"
                 >
                   {cat}
                 </button>
@@ -302,7 +278,7 @@ export function SearchResults({
                       }}
                       className="flex-1 min-w-0 p-2.5 sm:p-3 flex items-center gap-3 cursor-pointer"
                     >
-                      <Search className="w-4 h-4 text-gray-400 shrink-0 group-hover:text-primary transition-colors" />
+                      <Search className="w-4 h-4 text-gray-400 shrink-0 transition-colors" />
                       <span className="font-semibold text-sm text-black truncate">{sug}</span>
                     </div>
 
@@ -405,12 +381,12 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
         e.stopPropagation();
         onClick();
       }}
-      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer group"
+      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10 border border-gray-100 shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-bold text-sm text-black group-hover:text-primary transition-colors">
+          <span className="font-bold text-sm text-black">
             {avatar.name}
           </span>
           {avatar.role && (
@@ -445,7 +421,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       scroll={false}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 sm:gap-4 items-center cursor-pointer group"
+      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 sm:gap-4 items-center cursor-pointer"
     >
       <PostThumbnail
         imageUrl={post.image_url}
@@ -454,7 +430,7 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
         alt={post.title}
       />
       <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-sm text-black truncate group-hover:text-primary transition-colors">
+        <h4 className="font-semibold text-sm text-black truncate">
           <HighlightedText segments={titleSegments} />
         </h4>
         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
@@ -482,12 +458,12 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
         e.stopPropagation();
         onClick();
       }}
-      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer group"
+      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-primary">
         <Folder className="w-4 h-4" />
       </div>
-      <span className="font-semibold text-sm text-black group-hover:text-primary transition-colors">{category}</span>
+      <span className="font-semibold text-sm text-black">{category}</span>
     </div>
   );
 }
