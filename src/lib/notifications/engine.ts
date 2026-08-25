@@ -215,11 +215,17 @@ export class NotificationEngine {
   }
 
   /**
-   * Batch dispatch multiple normalized events.
+   * Batch dispatch multiple normalized events concurrently in chunks of 15.
    */
-  public static async dispatchBatch(events: NormalizedNotificationEvent[]): Promise<void> {
-    for (const event of events) {
-      await this.dispatch(event);
+  public static async dispatchBatch(
+    events: NormalizedNotificationEvent[],
+    concurrency = 15
+  ): Promise<void> {
+    if (!events || events.length === 0) return;
+
+    for (let i = 0; i < events.length; i += concurrency) {
+      const chunk = events.slice(i, i + concurrency);
+      await Promise.allSettled(chunk.map((event) => this.dispatch(event)));
     }
   }
 }

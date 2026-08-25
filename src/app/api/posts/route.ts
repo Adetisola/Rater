@@ -89,40 +89,43 @@ export async function POST(req: NextRequest) {
     const { profiles, ...post } = postData as any;
     const formattedPost = { ...post, author: profiles };
 
-    // 4. Non-blocking Server-side Notifications Dispatch
-    (async () => {
-      try {
-        // A. Community Discovery: NEW_WORK_PUBLISHED
-        await dispatchNewWorkPublished(postData);
+    // 4. Server-side Notifications Dispatch (Awaited with timeout safeguard)
+    try {
+      await Promise.race([
+        (async () => {
+          // A. Community Discovery: NEW_WORK_PUBLISHED
+          await dispatchNewWorkPublished(postData);
 
-        // B. Author Milestone: FIRST_WORK_PUBLISHED (If first published work)
-        const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        if (adminUrl && adminKey) {
-          const adminClient = createClient(adminUrl, adminKey);
-          const { count } = await adminClient
-            .from('posts')
-            .select('id', { count: 'exact', head: true })
-            .eq('avatar_id', user.id)
-            .eq('is_deleted', false);
+          // B. Author Milestone: FIRST_WORK_PUBLISHED (If first published work)
+          const adminUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const adminKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          if (adminUrl && adminKey) {
+            const adminClient = createClient(adminUrl, adminKey);
+            const { count } = await adminClient
+              .from('posts')
+              .select('id', { count: 'exact', head: true })
+              .eq('avatar_id', user.id)
+              .eq('is_deleted', false);
 
-          if (count === 1) {
-            await NotificationEngine.dispatch({
-              eventType: 'FIRST_WORK_PUBLISHED',
-              recipientProfileId: user.id,
-              targetEntityId: postData.id,
-              idempotencyKey: `first_work:${postData.id}`,
-              metadata: { workTitle: postData.title },
-            });
+            if (count === 1) {
+              await NotificationEngine.dispatch({
+                eventType: 'FIRST_WORK_PUBLISHED',
+                recipientProfileId: user.id,
+                targetEntityId: postData.id,
+                idempotencyKey: `first_work:${postData.id}`,
+                metadata: { workTitle: postData.title },
+              });
+            }
           }
-        }
-      } catch (notifErr) {
-        globalLogger.warn('[API/posts] Non-blocking notification dispatch failed:', {
-          postId: postData.id,
-          error: notifErr instanceof Error ? notifErr.message : String(notifErr),
-        });
-      }
-    })();
+        })(),
+        new Promise((resolve) => setTimeout(resolve, 4500)),
+      ]);
+    } catch (notifErr) {
+      globalLogger.warn('[API/posts] Notification dispatch error:', {
+        postId: postData.id,
+        error: notifErr instanceof Error ? notifErr.message : String(notifErr),
+      });
+    }
 
     return NextResponse.json({ ok: true, post: formattedPost });
   } catch (err: any) {
