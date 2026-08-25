@@ -66,7 +66,7 @@ export function CritiqueReplyItem({
       className={`group/reply w-full rounded-2xl p-3.5 transition-all duration-300 ${
         isHighlighted
           ? 'bg-primary/5 ring-2 ring-primary/40'
-          : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-150/80'
+          : 'bg-gray-50/50 hover:bg-gray-50'
       } ${reply.is_optimistic ? 'opacity-70' : ''}`}
     >
       {/* Header: Author + Replying-to + Timestamp */}

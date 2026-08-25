@@ -1158,29 +1158,24 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     className="space-y-6"
                   >
                     {/* 1. App Identity Hero */}
-                    <div className="p-5 rounded-3xl bg-linear-to-br from-gray-50 via-white to-gray-50/50 border border-gray-100 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center shadow-xs shrink-0">
-                          <span className="text-white font-bold text-lg tracking-tight">R<span className="text-primary">+</span></span>
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold text-gray-900 tracking-tight">Rater</h3>
-                            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/20 text-gray-900 border border-primary/30 font-mono">
-                              v1.2.0
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                            Real-time design critique and creative discovery platform.
-                          </p>
-                        </div>
+                    <div className="p-5 rounded-3xl bg-gray-50/60 border border-gray-100 flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0">
+                        <img
+                          src="/icons/rater-logo-white-bg-stroked.svg"
+                          alt="Rater Logo"
+                          className="w-full h-full object-contain"
+                        />
                       </div>
-
-                      <div className="flex items-center gap-2 self-start sm:self-auto">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Up to date
-                        </span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-medium text-gray-900 tracking-tight">Rater</h3>
+                          <span className="text-xs text-gray-400 font-normal">
+                            v1.2.0
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                          Real-time design critique and creative discovery platform.
+                        </p>
                       </div>
                     </div>
 
@@ -1188,10 +1183,10 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
                         <p className="text-xs font-semibold text-gray-400 tracking-wider">What&apos;s New in v1.2</p>
-                        <span className="text-[11px] text-gray-400 font-mono">Release Highlights</span>
+                        <span className="text-xs text-gray-400 font-normal">Release Highlights</span>
                       </div>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden shadow-2xs">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         {/* Item 1: Threaded Critique Replies & @Mentions */}
                         <div className="transition-colors">
                           <button
@@ -1381,7 +1376,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5">
                       <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Legal & Platform Ethics</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden shadow-2xs">
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
                         <Link
                           href="/legal/community-guidelines"
                           onClick={onClose}
