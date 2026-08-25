@@ -61,16 +61,27 @@ async function syncToAlgolia(indexName: string, objects: any[]) {
 async function configureAlgoliaIndexSettings() {
   if (!appId || !adminKey) return;
 
-  // 1. Profiles Settings
+  // 1. Profiles Settings (order matters: name > username > bio > role)
   const profilesSettings = {
     searchableAttributes: ['name', 'username', 'bio', 'role'],
     queryType: 'prefixLast',
     typoTolerance: true,
     minWordSizefor1Typo: 3,
     minWordSizefor2Typos: 6,
+    ranking: [
+      'typo',
+      'geo',
+      'words',
+      'filters',
+      'proximity',
+      'attribute',
+      'exact',
+      'custom'
+    ],
+    attributesToRetrieve: ['objectID', 'name', 'username', 'bio', 'avatar_url', 'bg_color', 'role']
   };
 
-  await fetch(`https://${appId}.algolia.net/1/indexes/profiles/settings`, {
+  const profRes = await fetch(`https://${appId}.algolia.net/1/indexes/profiles/settings`, {
     method: 'PUT',
     headers: {
       'X-Algolia-Application-Id': appId,
@@ -80,15 +91,23 @@ async function configureAlgoliaIndexSettings() {
     body: JSON.stringify(profilesSettings),
   });
 
-  // 2. Posts Settings
+  if (!profRes.ok) {
+    const err = await profRes.text();
+    console.error('[Algolia] Failed to configure profiles settings:', err);
+  }
+
+  // 2. Posts Settings (title > category > description > creator_name > creator_username)
   const postsSettings = {
-    searchableAttributes: ['title', 'category', 'description'],
+    searchableAttributes: ['title', 'category', 'description', 'creator_name', 'creator_username'],
     queryType: 'prefixLast',
     typoTolerance: true,
+    minWordSizefor1Typo: 4,
+    minWordSizefor2Typos: 7,
     customRanking: ['desc(review_count)', 'desc(average_score)'],
+    attributesForFaceting: ['filterOnly(category)', 'filterOnly(avatar_id)', 'filterOnly(is_deleted)'],
   };
 
-  await fetch(`https://${appId}.algolia.net/1/indexes/posts/settings`, {
+  const postRes = await fetch(`https://${appId}.algolia.net/1/indexes/posts/settings`, {
     method: 'PUT',
     headers: {
       'X-Algolia-Application-Id': appId,
@@ -97,6 +116,11 @@ async function configureAlgoliaIndexSettings() {
     },
     body: JSON.stringify(postsSettings),
   });
+
+  if (!postRes.ok) {
+    const err = await postRes.text();
+    console.error('[Algolia] Failed to configure posts settings:', err);
+  }
 }
 
 export async function GET(req: Request) {
@@ -115,49 +139,66 @@ export async function GET(req: Request) {
     // Configure Index Settings
     await configureAlgoliaIndexSettings();
 
-    // 1. Fetch and Sync Posts
-    await clearAlgoliaIndex('posts');
-    const { data: posts, error: postsError } = await supabase.from('posts')
+    // 1. Fetch Profiles first to build denormalization lookup map
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, name, bio, avatar_url, bg_color, role, is_blocked');
+    if (profilesError) throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+
+    const profileMap: Record<string, { name: string; username: string }> = {};
+    const eligibleProfiles = (profiles || []).filter(p => !p.is_blocked);
+
+    if (eligibleProfiles.length > 0) {
+      await clearAlgoliaIndex('profiles');
+      const algoliaProfiles = eligibleProfiles.map(profile => {
+        profileMap[profile.id] = {
+          name: profile.name || '',
+          username: profile.username || '',
+        };
+        return {
+          objectID: profile.id,
+          username: sanitizeString(profile.username),
+          name: sanitizeString(profile.name),
+          bio: sanitizeString(profile.bio),
+          avatar_url: sanitizeString(profile.avatar_url),
+          bg_color: profile.bg_color,
+          role: sanitizeString(profile.role),
+        };
+      });
+      await syncToAlgolia('profiles', algoliaProfiles);
+    }
+
+    // 2. Fetch and Sync Posts with creator denormalization
+    const { data: posts, error: postsError } = await supabase
+      .from('posts')
       .select('id, title, description, category, avatar_id, image_url, created_at, review_count, average_score')
       .neq('is_deleted', true);
     if (postsError) throw new Error(`Failed to fetch posts: ${postsError.message}`);
 
     if (posts && posts.length > 0) {
-      const algoliaPosts = posts.map(post => ({
-        objectID: post.id,
-        title: sanitizeString(post.title),
-        description: sanitizeString(post.description),
-        category: post.category,
-        avatar_id: post.avatar_id,
-        image_url: sanitizeString(post.image_url),
-        created_at: post.created_at,
-        review_count: post.review_count,
-        average_score: post.average_score,
-      }));
+      await clearAlgoliaIndex('posts');
+      const algoliaPosts = posts.map(post => {
+        const creator = profileMap[post.avatar_id] || { name: '', username: '' };
+        return {
+          objectID: post.id,
+          title: sanitizeString(post.title),
+          description: sanitizeString(post.description),
+          category: post.category,
+          avatar_id: post.avatar_id,
+          creator_name: sanitizeString(creator.name),
+          creator_username: sanitizeString(creator.username),
+          image_url: sanitizeString(post.image_url),
+          created_at: post.created_at,
+          review_count: post.review_count || 0,
+          average_score: post.average_score || 0,
+        };
+      });
       await syncToAlgolia('posts', algoliaPosts);
-    }
-
-    // 2. Fetch and Sync Profiles
-    await clearAlgoliaIndex('profiles');
-    const { data: profiles, error: profilesError } = await supabase.from('profiles').select('id, username, name, bio, avatar_url, bg_color, role');
-    if (profilesError) throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
-
-    if (profiles && profiles.length > 0) {
-      const algoliaProfiles = profiles.map(profile => ({
-        objectID: profile.id,
-        username: sanitizeString(profile.username),
-        name: sanitizeString(profile.name),
-        bio: sanitizeString(profile.bio),
-        avatar_url: sanitizeString(profile.avatar_url),
-        bg_color: profile.bg_color,
-        role: sanitizeString(profile.role),
-      }));
-      await syncToAlgolia('profiles', algoliaProfiles);
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully synced ${posts?.length || 0} posts and ${profiles?.length || 0} profiles.` 
+      message: `Successfully synced ${posts?.length || 0} posts and ${eligibleProfiles.length} profiles to Algolia.` 
     });
 
   } catch (error: any) {

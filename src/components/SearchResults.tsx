@@ -115,7 +115,7 @@ export function SearchResults({
             {recentItems.length > 0 && (
               <div>
                 <div className="px-4 sm:px-5 py-3 bg-gray-50 flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Recent Searches</span>
+                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Recent Searches</span>
                   <button 
                     onMouseDown={(e) => {
                       e.preventDefault();
@@ -236,7 +236,7 @@ export function SearchResults({
             <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
               <Search className="w-6 h-6" />
             </div>
-            <h4 className="font-bold text-base text-black mb-1">No results for "{searchQuery}"</h4>
+            <h4 className="font-medium text-base text-black mb-1">No results for "{searchQuery}"</h4>
             <p className="text-xs text-gray-500 max-w-sm mx-auto mb-5">
               Try searching for a different keyword or creator name, or explore these popular categories:
             </p>
@@ -279,7 +279,7 @@ export function SearchResults({
                       className="flex-1 min-w-0 p-2.5 sm:p-3 flex items-center gap-3 cursor-pointer"
                     >
                       <Search className="w-4 h-4 text-gray-400 shrink-0 transition-colors" />
-                      <span className="font-semibold text-sm text-black truncate">{sug}</span>
+                      <span className="font-medium text-sm text-black truncate">{sug}</span>
                     </div>
 
                     {/* Secondary Action: Populate Input without Submitting (44px min hit area) */}
@@ -306,7 +306,7 @@ export function SearchResults({
             {results.avatars.length > 0 && (
               <div>
                 <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80 flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Creatives</span>
+                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Creatives</span>
                   <span className="text-[11px] font-semibold text-gray-400">{results.avatars.length} matching</span>
                 </div>
                 <div className="p-2 sm:p-2.5">
@@ -325,7 +325,7 @@ export function SearchResults({
             {results.posts.length > 0 && (
               <div>
                 <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80 flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Works</span>
+                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Works</span>
                   <span className="text-[11px] font-semibold text-gray-400">{results.posts.length} matching</span>
                 </div>
                 <div className="p-2 sm:p-2.5">
@@ -344,7 +344,7 @@ export function SearchResults({
             {results.categories.length > 0 && (
               <div>
                 <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Categories</span>
+                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Categories</span>
                 </div>
                 <div className="p-2 sm:p-2.5">
                   {results.categories.map(({ category }) => (
@@ -386,7 +386,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
       <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10 border border-gray-100 shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-bold text-sm text-black">
+          <span className="font-semibold text-sm text-black">
             {avatar.name}
           </span>
           {avatar.role && (

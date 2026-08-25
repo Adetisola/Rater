@@ -7,8 +7,10 @@
 
 import type { Post, Avatar, Category } from '@/types';
 import { CATEGORIES } from '@/constants/categories';
+import { AI_TOOLS } from '@/types';
 import { ProfileCache } from '@/lib/profiles';
 import { algoliaClient } from './client';
+import { trackSearchEvent } from '@/lib/searchAnalytics';
 import {
   createSearchIndexes,
   searchAll as fuseSearchAll,
@@ -21,36 +23,6 @@ import {
 } from '@/logic/searchUtils';
 
 export type { SearchIndexes, SectionedSearchResults, PostSearchResult, AvatarSearchResult, CategorySearchResult };
-
-// Curated search phrase vocabulary for high-quality design autocomplete
-const CURATED_SUGGESTION_TERMS: string[] = [
-  'Web Design',
-  'Mobile App Design',
-  'Brand Identity',
-  'Logo Design',
-  'Typography',
-  'Poster Design',
-  'Illustration',
-  '3D Design',
-  'Product Design',
-  'Design System',
-  'Landing Page',
-  'SaaS UI',
-  'Dashboard Design',
-  'Motion Graphics',
-  'Packaging Design',
-  'Icon Design',
-  'Landing page feedback',
-  'Mobile app UX audit',
-  'Brand identity review',
-  'Clean minimal typography',
-  'SaaS dashboard design',
-  'Creative portfolio review',
-  'Dark mode UI design',
-  'Design critique',
-  'Modern poster layout',
-  '3D product rendering'
-];
 
 /**
  * Builds fallback Fuse.js search indexes using posts and all cached avatars.
@@ -71,42 +43,63 @@ export function buildSearchIndexes(
 }
 
 /**
- * Generates instant query predictions / autocompletions (strings) for the search bar.
- * Matches curated domain taxonomy, design phrases, and user recent searches.
+ * Generates dynamic, context-aware query autocompletions (strings) for the search bar.
+ * Combines 4 signals:
+ * 1. Personal Recent Searches (highest personal relevance)
+ * 2. Live Content Matches (creator names & post titles from Algolia / local cache)
+ * 3. Official Platform Taxonomy (categories & AI tools)
+ * 4. Platform Popular Queries (optional injected list from Redis / Analytics)
  */
 export function getQuerySuggestions(
   query: string,
   recentSearches: string[] = [],
+  popularSearches: string[] = [],
+  liveEntities: { creatorNames?: string[]; postTitles?: string[] } = {},
   limit = 5
 ): string[] {
   const normalized = query.trim().toLowerCase();
-  if (!normalized) return [];
+  if (!normalized || normalized.length < 1) return [];
 
-  const matched = new Set<string>();
+  const suggestions: Array<{ text: string; score: number }> = [];
+  const seen = new Set<string>();
 
-  // 1. Check user's recent searches first if they match the typed prefix
-  recentSearches.forEach(recent => {
-    const trimmed = recent.trim();
-    if (trimmed && trimmed.toLowerCase() !== normalized && trimmed.toLowerCase().includes(normalized)) {
-      matched.add(trimmed);
+  const addCandidate = (text: string, baseScore: number) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    const lower = trimmed.toLowerCase();
+    if (lower === normalized || seen.has(lower)) return;
+
+    // Check match relationship
+    if (lower.startsWith(normalized)) {
+      // Prefix match gets highest priority
+      suggestions.push({ text: trimmed, score: baseScore + 10 });
+      seen.add(lower);
+    } else if (lower.includes(normalized)) {
+      // Partial containment
+      suggestions.push({ text: trimmed, score: baseScore });
+      seen.add(lower);
     }
-  });
+  };
 
-  // 2. Check curated design vocabulary and categories
-  CURATED_SUGGESTION_TERMS.forEach(term => {
-    if (term.toLowerCase().includes(normalized) && term.toLowerCase() !== normalized) {
-      matched.add(term);
-    }
-  });
+  // Signal 1: Personal Recent Searches (baseScore: 100)
+  recentSearches.forEach(recent => addCandidate(recent, 100));
 
-  // 3. Category variations
-  CATEGORIES.forEach(cat => {
-    if (cat.toLowerCase().includes(normalized) && cat.toLowerCase() !== normalized) {
-      matched.add(cat);
-    }
-  });
+  // Signal 2: Live Content Matches (baseScore: 80 for creators, 70 for post titles)
+  (liveEntities.creatorNames || []).forEach(name => addCandidate(name, 80));
+  (liveEntities.postTitles || []).forEach(title => addCandidate(title, 70));
 
-  return Array.from(matched).slice(0, limit);
+  // Signal 3: Official Platform Categories (baseScore: 60)
+  CATEGORIES.forEach(cat => addCandidate(cat, 60));
+  AI_TOOLS.forEach(tool => addCandidate(tool.label, 50));
+
+  // Signal 4: Platform-wide Popular Queries (baseScore: 40)
+  popularSearches.forEach(pop => addCandidate(pop, 40));
+
+  // Sort by score descending and return top `limit` strings
+  return suggestions
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(s => s.text);
 }
 
 /**
@@ -219,11 +212,19 @@ export async function searchAll(
           .slice(0, defaultLimits.categories)
           .map(category => ({ category: category as Category, score: 1 }));
 
-        return {
+        const finalResults = {
           avatars: mappedAvatars,
           posts: mappedPosts,
           categories: matchingCategories,
         };
+
+        const totalCount = mappedAvatars.length + mappedPosts.length + matchingCategories.length;
+        trackSearchEvent({
+          query: trimmed,
+          resultCount: totalCount,
+        });
+
+        return finalResults;
       }
     } catch (e) {
       console.warn('[Algolia] Search exception, falling back to local index', e);
@@ -231,7 +232,13 @@ export async function searchAll(
   }
 
   // 2. Emergency Fallback: Local Fuse Index
-  return await fuseSearchAll(indexes, trimmed, defaultLimits);
+  const fallbackResults = await fuseSearchAll(indexes, trimmed, defaultLimits);
+  const totalFallback = fallbackResults.avatars.length + fallbackResults.posts.length + fallbackResults.categories.length;
+  trackSearchEvent({
+    query: trimmed,
+    resultCount: totalFallback,
+  });
+  return fallbackResults;
 }
 
 /**

@@ -229,8 +229,10 @@ function HeaderContent({
 
   const suggestions = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    return getQuerySuggestions(searchQuery, recentQueryStrings, 5);
-  }, [searchQuery, recentQueryStrings]);
+    const creatorNames = searchResults.avatars.map(a => a.avatar.name);
+    const postTitles = searchResults.posts.map(p => p.post.title);
+    return getQuerySuggestions(searchQuery, recentQueryStrings, [], { creatorNames, postTitles }, 5);
+  }, [searchQuery, recentQueryStrings, searchResults]);
 
   // Perform async search
   useEffect(() => {

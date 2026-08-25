@@ -20,7 +20,8 @@ import {
   Percent, 
   Timer, 
   BarChart2,
-  CheckCircle2
+  CheckCircle2,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -34,6 +35,7 @@ import {
   getCampaignBreakdown,
   getSharingMetrics
 } from '@/lib/admin/server';
+import { getSearchIntelligenceSummary, type SearchIntelligenceSummary } from '@/lib/searchAnalytics';
 import type { 
   AnalyticsPlatformOverview,
   ActivationMetrics,
@@ -67,6 +69,7 @@ export function AnalyticsDashboard() {
   const [retention, setRetention] = useState<RetentionMetrics | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignBreakdownRow[]>([]);
   const [sharing, setSharing] = useState<SharingMetrics | null>(null);
+  const [searchSummary, setSearchSummary] = useState<SearchIntelligenceSummary | null>(null);
 
   const getDateRangeFromPreset = useCallback((p: DatePreset): AnalyticsDateRange | undefined => {
     if (p === 'all') return undefined;
@@ -96,16 +99,18 @@ export function AnalyticsDashboard() {
         retentionRes,
         campaignsRes,
         sharingRes,
+        searchRes,
       ] = await Promise.all([
         getAnalyticsPlatformOverview(),
         getActivationMetrics(range),
         getCoreLoopMetrics(range),
         getRatingLiquidityMetrics(range),
-        getGrowthLoopCohort(range),
+        getGrowthLoopCohort(),
         getAcquisitionBreakdown(range),
         getRetentionMetrics(),
         getCampaignBreakdown(range),
         getSharingMetrics(range),
+        getSearchIntelligenceSummary(),
       ]);
 
       setOverview(overviewRes);
@@ -117,10 +122,11 @@ export function AnalyticsDashboard() {
       setRetention(retentionRes);
       setCampaigns(campaignsRes);
       setSharing(sharingRes);
+      setSearchSummary(searchRes);
       setLastRefreshed(new Date());
     } catch (err: any) {
-      console.error('Failed to load growth analytics:', err);
-      setError(err?.message || 'Failed to load telemetry analytics');
+      console.error('[AnalyticsDashboard] Load failed:', err);
+      setError(err?.message || 'Failed to load analytics.');
     } finally {
       setIsLoading(false);
     }
@@ -778,6 +784,71 @@ export function AnalyticsDashboard() {
                   <div key={m.method} className="flex items-center justify-between text-xs">
                     <span className="font-semibold text-gray-900 uppercase">{m.method}</span>
                     <span className="font-mono text-gray-500">{m.count} actions</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 10: Search Intelligence & Discovery Telemetry ────────────── */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
+            <Search size={16} className="text-primary" />
+            Search Intelligence & Discovery Telemetry
+          </h2>
+          <p className="text-xs text-gray-400">Search patterns, popular platform queries, and zero-result product demand signals.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Popular Searches */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Popular Search Queries</span>
+              <span className="text-[11px] font-mono text-gray-400">Total: {searchSummary?.totalSearches ?? 0} searches</span>
+            </div>
+
+            {!searchSummary?.popularSearches || searchSummary.popularSearches.length === 0 ? (
+              <div className="text-xs text-gray-400 italic py-4 text-center">No search events recorded yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {searchSummary.popularSearches.map((item, idx) => (
+                  <div key={`pop-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 font-mono text-gray-400 font-bold">{idx + 1}.</span>
+                      <span className="font-semibold text-gray-900">{item.query}</span>
+                    </div>
+                    <span className="font-mono text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">{item.count} searches</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Zero-Result Search Opportunities */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                Zero-Result Searches (Demand Signals)
+              </span>
+              <span className="text-[11px] font-mono text-amber-600/80">{searchSummary?.zeroResultCount ?? 0} unfulfilled</span>
+            </div>
+            <p className="text-[11px] text-gray-400">Queries entered by users that returned zero creators or works — key content opportunities.</p>
+
+            {!searchSummary?.noResultSearches || searchSummary.noResultSearches.length === 0 ? (
+              <div className="text-xs text-gray-400 italic py-4 text-center">No unfulfilled queries recorded yet.</div>
+            ) : (
+              <div className="space-y-2">
+                {searchSummary.noResultSearches.map((item, idx) => (
+                  <div key={`zero-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/60 border border-amber-100 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 font-mono text-amber-500 font-bold">{idx + 1}.</span>
+                      <span className="font-semibold text-gray-900">{item.query}</span>
+                    </div>
+                    <span className="font-mono text-amber-700 bg-white px-2 py-0.5 rounded-full border border-amber-200">{item.count} misses</span>
                   </div>
                 ))}
               </div>
