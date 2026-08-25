@@ -83,7 +83,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
       push: true,
       email: false,
     },
-    preferenceKey: 'notify_critiques',
+    preferenceKey: 'notify_replies',
     renderCopy: ({ actorName, workTitle, postId, reviewId, metadata }) => {
       const replier = actorName?.trim() || 'A creative';
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
@@ -116,7 +116,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
       push: true,
       email: false,
     },
-    preferenceKey: 'notify_critiques',
+    preferenceKey: 'notify_replies',
     renderCopy: ({ actorName, workTitle, postId, reviewId, metadata }) => {
       const replier = actorName?.trim() || 'A creative';
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
@@ -149,7 +149,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
       push: true,
       email: false,
     },
-    preferenceKey: 'notify_critiques',
+    preferenceKey: 'notify_replies',
     renderCopy: ({ actorName, workTitle, postId, reviewId, metadata }) => {
       const mentioner = actorName?.trim() || 'A creative';
       const titleClean = workTitle ? `"${workTitle}"` : 'a design';

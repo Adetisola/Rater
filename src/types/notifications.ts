@@ -66,6 +66,7 @@ export interface NotificationPreferences {
   push_enabled: boolean;
   email_enabled: boolean;
   notify_critiques: boolean;
+  notify_replies: boolean;
   notify_milestones: boolean;
   notify_insights: boolean;
   notify_feedback_status: boolean;

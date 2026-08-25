@@ -78,6 +78,7 @@ export class NotificationEngine {
         push_enabled: true,
         email_enabled: true,
         notify_critiques: true,
+        notify_replies: true,
         notify_milestones: true,
         notify_insights: true,
         notify_feedback_status: true,

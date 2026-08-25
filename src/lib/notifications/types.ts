@@ -43,6 +43,7 @@ export interface NotificationEventDefinition {
   };
   preferenceKey?:
     | 'notify_critiques'
+    | 'notify_replies'
     | 'notify_milestones'
     | 'notify_insights'
     | 'notify_feedback_status'

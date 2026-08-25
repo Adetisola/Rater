@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { CornerDownRight, Flag, Loader2 } from 'lucide-react';
+import { CornerDownRight, Loader2 } from 'lucide-react';
 import { UserAvatar } from '@/components/UserAvatar';
 import { MentionRenderer } from './MentionRenderer';
 import { formatTimestamp, getFullTimestamp } from '@/utils/dateUtils';
@@ -22,7 +22,6 @@ interface CritiqueReplyItemProps {
 export function CritiqueReplyItem({
   reply,
   currentUserId,
-  isAdmin = false,
   onReplyTo,
   onDelete,
   onReport,
@@ -49,7 +48,7 @@ export function CritiqueReplyItem({
   const username = reply.author?.username;
   const displayName = reply.author?.name || (username ? `@${username}` : 'Creative');
   const isAuthor = currentUserId && reply.author_id === currentUserId;
-  const canDelete = isAuthor || isAdmin;
+  const canDelete = Boolean(isAuthor);
 
   const handleDelete = async () => {
     try {
@@ -66,7 +65,7 @@ export function CritiqueReplyItem({
       id={`reply-${reply.id}`}
       className={`group/reply w-full rounded-2xl p-3.5 transition-all duration-300 ${
         isHighlighted
-          ? 'bg-primary/5 ring-2 ring-primary/40 border border-primary/20 shadow-sm'
+          ? 'bg-primary/5 ring-2 ring-primary/40'
           : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-150/80'
       } ${reply.is_optimistic ? 'opacity-70' : ''}`}
     >
@@ -128,7 +127,7 @@ export function CritiqueReplyItem({
           )}
 
           <span 
-            className="text-[11px] text-gray-400 font-normal ml-auto shrink-0" 
+            className="text-[11px] text-gray-400 font-normal shrink-0" 
             title={fullTime}
             suppressHydrationWarning
           >
@@ -199,10 +198,9 @@ export function CritiqueReplyItem({
               <button
                 type="button"
                 onClick={() => onReport(reply.id)}
-                className="opacity-0 group-hover/reply:opacity-100 hover:text-gray-600 transition-all focus:outline-none ml-auto"
-                title="Report reply"
+                className="hover:text-red-500 transition-colors focus:outline-none"
               >
-                <Flag className="w-3 h-3" />
+                Report
               </button>
             </>
           )}

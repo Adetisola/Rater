@@ -1457,7 +1457,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                 >
                                                     {timeLabel}
                                                 </span>
-                                                {currentAvatar?.id === review.reviewer_id && (
+                                                {currentAvatar?.id === review.reviewer_id ? (
                                                     <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
                                                         <button 
                                                             onClick={() => {
@@ -1491,12 +1491,22 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                             </button>
                                                         )}
                                                     </div>
+                                                ) : (
+                                                    <div className="flex items-center text-xs font-medium text-gray-400">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => setReportTarget({ targetType: 'review', targetId: review.id })}
+                                                            className="hover:text-red-500 transition-colors focus:outline-none"
+                                                        >
+                                                            Report
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
 
                                         {review.comment && (
-                                            <div className="text-sm text-black leading-relaxed mb-4">
+                                            <div className="text-sm text-black leading-relaxed mb-3">
                                                 <div className="markdown-content text-sm wrap-break-word">
                                                     <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                         {review.comment}

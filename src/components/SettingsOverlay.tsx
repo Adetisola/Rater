@@ -830,6 +830,33 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           </button>
                         </div>
 
+                        {/* Replies & Mentions */}
+                        <div className="p-4 flex items-center justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Critique Replies & @Mentions</p>
+                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              When creatives reply to your critiques, respond to your comments, or mention you.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={preferences?.notify_replies ?? true}
+                            onClick={() => handlePreferenceToggle('notify_replies')}
+                            className={cn(
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
+                              (preferences?.notify_replies ?? true) ? "bg-primary" : "bg-gray-200"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+                                (preferences?.notify_replies ?? true) ? "translate-x-4" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+
                         {/* Milestones */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
@@ -1140,7 +1167,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           <div className="flex items-center gap-2">
                             <h3 className="text-base font-bold text-gray-900 tracking-tight">Rater</h3>
                             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/20 text-gray-900 border border-primary/30 font-mono">
-                              v1.3.0
+                              v1.2.0
                             </span>
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
@@ -1157,10 +1184,10 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                       </div>
                     </div>
 
-                    {/* 2. What's New in v1.3.0 (Compact Expandable Accordion) */}
+                    {/* 2. What's New in v1.2.0 (Compact Expandable Accordion) */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <p className="text-xs font-semibold text-gray-400 tracking-wider">What&apos;s New in v1.3.0</p>
+                        <p className="text-xs font-semibold text-gray-400 tracking-wider">What&apos;s New in v1.2</p>
                         <span className="text-[11px] text-gray-400 font-mono">Release Highlights</span>
                       </div>
 

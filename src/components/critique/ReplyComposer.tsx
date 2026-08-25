@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useCallback, useMemo } from 'react';
-import { Loader2, Send, X, CornerDownRight } from 'lucide-react';
+import { X, CornerDownRight } from 'lucide-react';
 import { useAuthState } from '@/context/AuthContext';
 import { AuthOverlay } from '@/components/AuthOverlay';
 import { UserAvatar } from '@/components/UserAvatar';
+import { Button } from '@/components/ui/Button';
 import { ProfileCache } from '@/lib/profiles';
 import type { Avatar } from '@/types';
 
@@ -210,7 +211,7 @@ export function ReplyComposer({
       )}
 
       {/* Composer Input Box */}
-      <div className="relative bg-gray-50/80 border border-gray-200 focus-within:border-primary/60 focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/15 rounded-2xl transition-all duration-200 p-2.5 sm:p-3">
+      <div className="relative bg-gray-50/80 border border-gray-200 focus-within:border-primary/60 focus-within:bg-white rounded-2xl transition-all duration-200 p-2.5 sm:p-3">
         {/* Autocomplete Suggestions Popover */}
         {showSuggestions && suggestions.length > 0 && (
           <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden max-h-48 overflow-y-auto animate-in zoom-in-95 duration-150">
@@ -267,22 +268,17 @@ export function ReplyComposer({
                 {1000 - content.length}
               </span>
             )}
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleSubmit}
               disabled={!content.trim() || isSubmitting}
-              className="h-8 px-3.5 rounded-full bg-primary hover:bg-[#E5B011] disabled:bg-gray-200 text-white font-medium text-xs transition-all active:scale-95 disabled:active:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 focus:outline-none"
+              isLoading={isSubmitting}
+              className="h-8 px-3.5 rounded-full text-xs gap-1.5 focus:outline-none"
               title="Reply (Cmd+Enter)"
             >
-              {isSubmitting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <>
-                  <span>Reply</span>
-                  <Send className="w-3 h-3" />
-                </>
-              )}
-            </button>
+              <span>Reply</span>
+            </Button>
           </div>
         </div>
       </div>
