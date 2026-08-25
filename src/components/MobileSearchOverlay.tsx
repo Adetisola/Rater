@@ -453,7 +453,7 @@ export function MobileSearchOverlay({
                 <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
                   <Search className="w-6 h-6" />
                 </div>
-                <h4 className="font-bold text-base text-black mb-1">No results for "{debouncedQuery}"</h4>
+                <h4 className="font-medium text-base text-black mb-1">No results for "{debouncedQuery}"</h4>
                 <p className="text-xs text-gray-500 max-w-xs mx-auto mb-5">
                   Try searching for another keyword or creator name, or explore these categories:
                 </p>
@@ -490,7 +490,7 @@ export function MobileSearchOverlay({
                           className="flex-1 min-w-0 p-3 flex items-center gap-3 cursor-pointer"
                         >
                           <Search className="w-4 h-4 text-gray-400 shrink-0" />
-                          <span className="font-semibold text-sm text-black truncate">{sug}</span>
+                          <span className="font-medium text-sm text-black truncate">{sug}</span>
                         </div>
                         <button
                           onMouseDown={(e) => {
@@ -511,7 +511,7 @@ export function MobileSearchOverlay({
                 {searchResults.categories.length > 0 && (
                   <div>
                     <div className="px-4 py-2 bg-gray-50">
-                      <span className="text-xs font-bold text-gray-500 tracking-wide uppercase">Categories</span>
+                      <span className="text-xs font-medium text-gray-500 tracking-wide">Categories</span>
                     </div>
                     <div className="p-2">
                       {searchResults.categories.map(({ category }) => (
@@ -528,7 +528,7 @@ export function MobileSearchOverlay({
                 {searchResults.avatars.length > 0 && (
                   <div>
                     <div className="px-4 py-2 bg-gray-50">
-                      <span className="text-xs font-bold text-gray-500 tracking-wide uppercase">Creatives</span>
+                      <span className="text-xs font-medium text-gray-500 tracking-wide">Creatives</span>
                     </div>
                     <div className="p-2">
                       {searchResults.avatars.map(({ avatar }) => (
@@ -545,7 +545,7 @@ export function MobileSearchOverlay({
                 {searchResults.posts.length > 0 && (
                   <div>
                     <div className="px-4 py-2 bg-gray-50">
-                      <span className="text-xs font-bold text-gray-500 tracking-wide uppercase">Works</span>
+                      <span className="text-xs font-medium text-gray-500 tracking-wide">Works</span>
                     </div>
                     <div className="p-2">
                       {searchResults.posts.map((result) => (
@@ -596,7 +596,7 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
     >
       <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10" />
       <div className="flex-1 min-w-0">
-        <span className="font-bold text-sm text-black">{avatar.name}</span>
+        <span className="font-medium text-sm text-black">{avatar.name}</span>
         <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
       </div>
     </div>
@@ -621,7 +621,7 @@ function PostResultItem({ post, onClick }: PostResultItemProps) {
         alt={post.title}
       />
       <div className="flex-1 min-w-0">
-        <h4 className="font-bold text-sm text-black truncate">{post.title}</h4>
+        <h4 className="font-medium text-sm text-black truncate">{post.title}</h4>
         <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{post.description}</p>
       </div>
     </button>

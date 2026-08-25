@@ -946,6 +946,53 @@ export type Database = {
           },
         ]
       }
+      search_events: {
+        Row: {
+          created_at: string
+          has_results: boolean | null
+          id: string
+          is_authenticated: boolean | null
+          normalized_query: string
+          query: string
+          result_count: number
+          selected_result_id: string | null
+          selected_result_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          has_results?: boolean | null
+          id?: string
+          is_authenticated?: boolean | null
+          normalized_query: string
+          query: string
+          result_count?: number
+          selected_result_id?: string | null
+          selected_result_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          has_results?: boolean | null
+          id?: string
+          is_authenticated?: boolean | null
+          normalized_query?: string
+          query?: string
+          result_count?: number
+          selected_result_id?: string | null
+          selected_result_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       feedback_requests_with_stats: {

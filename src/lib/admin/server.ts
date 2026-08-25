@@ -35,7 +35,8 @@ import type {
   ReferralAcquisitionStats,
   RetentionMetrics,
   CampaignBreakdownRow,
-  SharingMetrics
+  SharingMetrics,
+  SearchIntelligenceMetrics
 } from '@/types';
 import { deleteAsset } from '@/lib/cloudinary/service';
 import { extractPublicId } from '@/lib/cloudinary/transforms';
@@ -2054,4 +2055,104 @@ export async function getSharingMetrics(range?: AnalyticsDateRange): Promise<Sha
     sharesByMethod: current.sharesByMethod,
   };
 }
+
+/**
+ * Retrieves platform search intelligence and zero-result product demand signals.
+ */
+export async function getSearchIntelligenceAnalytics(
+  range?: AnalyticsDateRange
+): Promise<SearchIntelligenceMetrics> {
+  await verifyAdminSession();
+  const adminSupabase = getAdminSupabase();
+
+  let query = adminSupabase
+    .from('search_events')
+    .select('query, normalized_query, result_count, created_at');
+
+  if (range?.from && range?.to) {
+    query = query.gte('created_at', range.from).lte('created_at', range.to);
+  }
+
+  const { data: rawEvents, error } = await query
+    .order('created_at', { ascending: false })
+    .limit(2000);
+
+  if (error || !rawEvents) {
+    console.error('[SearchAnalytics] Failed to fetch events from admin client:', error);
+    return {
+      totalSearches: 0,
+      zeroResultCount: 0,
+      popularSearches: [],
+      trendingSearches: [],
+      noResultSearches: [],
+    };
+  }
+
+  const events = rawEvents as Array<{
+    query: string;
+    normalized_query: string;
+    result_count: number;
+    created_at: string;
+  }>;
+
+  const totalSearches = events.length;
+  const zeroEvents = events.filter((e) => e.result_count === 0);
+  const zeroResultCount = zeroEvents.length;
+
+  // Aggregate popular queries (all-time / period frequency)
+  const popularMap: Record<string, number> = {};
+  events.forEach((e) => {
+    const q = e.normalized_query?.trim() || e.query?.trim().toLowerCase();
+    if (q && q.length >= 2) {
+      popularMap[q] = (popularMap[q] || 0) + 1;
+    }
+  });
+
+  const popularSearches = Object.entries(popularMap)
+    .map(([query, count]) => ({ query, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Aggregate trending searches (recent velocity)
+  const nowTime = Date.now();
+  const recentWindowMs = 48 * 60 * 60 * 1000; // 48h
+  const trendingMap: Record<string, number> = {};
+  events.forEach((e) => {
+    const eventTime = new Date(e.created_at).getTime();
+    if (nowTime - eventTime <= recentWindowMs) {
+      const q = e.normalized_query?.trim() || e.query?.trim().toLowerCase();
+      if (q && q.length >= 2) {
+        trendingMap[q] = (trendingMap[q] || 0) + 1;
+      }
+    }
+  });
+
+  const trendingSearches = Object.entries(trendingMap)
+    .map(([query, count]) => ({ query, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  // Aggregate zero-result / unfulfilled demand queries
+  const zeroMap: Record<string, number> = {};
+  zeroEvents.forEach((e) => {
+    const q = e.normalized_query?.trim() || e.query?.trim().toLowerCase();
+    if (q && q.length >= 2) {
+      zeroMap[q] = (zeroMap[q] || 0) + 1;
+    }
+  });
+
+  const noResultSearches = Object.entries(zeroMap)
+    .map(([query, count]) => ({ query, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+
+  return {
+    totalSearches,
+    zeroResultCount,
+    popularSearches,
+    trendingSearches,
+    noResultSearches,
+  };
+}
+
 

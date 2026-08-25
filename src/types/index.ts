@@ -484,4 +484,17 @@ export interface SharingMetrics {
   }>;
 }
 
+export interface SearchMetricRow {
+  query: string;
+  count: number;
+}
+
+export interface SearchIntelligenceMetrics {
+  totalSearches: number;
+  zeroResultCount: number;
+  popularSearches: SearchMetricRow[];
+  trendingSearches: SearchMetricRow[];
+  noResultSearches: SearchMetricRow[];
+}
+
 

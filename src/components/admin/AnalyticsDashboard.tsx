@@ -33,9 +33,9 @@ import {
   getAcquisitionBreakdown,
   getRetentionMetrics,
   getCampaignBreakdown,
-  getSharingMetrics
+  getSharingMetrics,
+  getSearchIntelligenceAnalytics
 } from '@/lib/admin/server';
-import { getSearchIntelligenceSummary, type SearchIntelligenceSummary } from '@/lib/searchAnalytics';
 import type { 
   AnalyticsPlatformOverview,
   ActivationMetrics,
@@ -46,6 +46,7 @@ import type {
   RetentionMetrics,
   CampaignBreakdownRow,
   SharingMetrics,
+  SearchIntelligenceMetrics,
   TrendMetric,
   AnalyticsDateRange
 } from '@/types';
@@ -69,7 +70,7 @@ export function AnalyticsDashboard() {
   const [retention, setRetention] = useState<RetentionMetrics | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignBreakdownRow[]>([]);
   const [sharing, setSharing] = useState<SharingMetrics | null>(null);
-  const [searchSummary, setSearchSummary] = useState<SearchIntelligenceSummary | null>(null);
+  const [searchSummary, setSearchSummary] = useState<SearchIntelligenceMetrics | null>(null);
 
   const getDateRangeFromPreset = useCallback((p: DatePreset): AnalyticsDateRange | undefined => {
     if (p === 'all') return undefined;
@@ -110,7 +111,7 @@ export function AnalyticsDashboard() {
         getRetentionMetrics(),
         getCampaignBreakdown(range),
         getSharingMetrics(range),
-        getSearchIntelligenceSummary(),
+        getSearchIntelligenceAnalytics(range),
       ]);
 
       setOverview(overviewRes);
@@ -802,53 +803,82 @@ export function AnalyticsDashboard() {
           <p className="text-xs text-gray-400">Search patterns, popular platform queries, and zero-result product demand signals.</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Top Popular Searches */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 1. Top Popular Searches */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Popular Search Queries</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Popular Queries</span>
               <span className="text-[11px] font-mono text-gray-400">Total: {searchSummary?.totalSearches ?? 0} searches</span>
             </div>
+            <p className="text-[11px] text-gray-400">Most frequent search terms across the platform.</p>
 
             {!searchSummary?.popularSearches || searchSummary.popularSearches.length === 0 ? (
               <div className="text-xs text-gray-400 italic py-4 text-center">No search events recorded yet.</div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {searchSummary.popularSearches.map((item, idx) => (
                   <div key={`pop-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 font-mono text-gray-400 font-bold">{idx + 1}.</span>
-                      <span className="font-semibold text-gray-900">{item.query}</span>
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="w-4 font-mono text-gray-400 font-bold">{idx + 1}.</span>
+                      <span className="font-semibold text-gray-900 truncate">{item.query}</span>
                     </div>
-                    <span className="font-mono text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200">{item.count} searches</span>
+                    <span className="font-mono text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200 shrink-0">{item.count} searches</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Zero-Result Search Opportunities */}
+          {/* 2. Trending / Rising Searches */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">
+                <TrendingUp size={14} className="text-emerald-500" />
+                Trending (48h)
+              </span>
+              <span className="text-[11px] font-mono text-emerald-600/80">Velocity</span>
+            </div>
+            <p className="text-[11px] text-gray-400">Queries with high search volume over the last 48 hours.</p>
+
+            {!searchSummary?.trendingSearches || searchSummary.trendingSearches.length === 0 ? (
+              <div className="text-xs text-gray-400 italic py-4 text-center">No trending searches in window.</div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {searchSummary.trendingSearches.map((item, idx) => (
+                  <div key={`trend-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100 text-xs">
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="w-4 font-mono text-emerald-500 font-bold">{idx + 1}.</span>
+                      <span className="font-semibold text-gray-900 truncate">{item.query}</span>
+                    </div>
+                    <span className="font-mono text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">{item.count} recent</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 3. Zero-Result Search Opportunities */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                Zero-Result Searches (Demand Signals)
+                Zero-Result Demands
               </span>
               <span className="text-[11px] font-mono text-amber-600/80">{searchSummary?.zeroResultCount ?? 0} unfulfilled</span>
             </div>
-            <p className="text-[11px] text-gray-400">Queries entered by users that returned zero creators or works — key content opportunities.</p>
+            <p className="text-[11px] text-gray-400">Queries returning 0 creators or works — content opportunities.</p>
 
             {!searchSummary?.noResultSearches || searchSummary.noResultSearches.length === 0 ? (
               <div className="text-xs text-gray-400 italic py-4 text-center">No unfulfilled queries recorded yet.</div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {searchSummary.noResultSearches.map((item, idx) => (
                   <div key={`zero-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/60 border border-amber-100 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-5 font-mono text-amber-500 font-bold">{idx + 1}.</span>
-                      <span className="font-semibold text-gray-900">{item.query}</span>
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="w-4 font-mono text-amber-500 font-bold">{idx + 1}.</span>
+                      <span className="font-semibold text-gray-900 truncate">{item.query}</span>
                     </div>
-                    <span className="font-mono text-amber-700 bg-white px-2 py-0.5 rounded-full border border-amber-200">{item.count} misses</span>
+                    <span className="font-mono text-amber-700 bg-white px-2 py-0.5 rounded-full border border-amber-200 shrink-0">{item.count} misses</span>
                   </div>
                 ))}
               </div>
