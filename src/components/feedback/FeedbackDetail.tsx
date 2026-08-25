@@ -44,6 +44,8 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [isDeletingComment, setIsDeletingComment] = useState(false);
   
   const { currentProfile } = useAuthState();
 
@@ -499,14 +501,43 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                     </div>
 
                     {isAuthor && !isDeleted && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteComment(c.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100 shrink-0"
-                        title="Delete comment"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      deletingCommentId === c.id ? (
+                        <div className="flex items-center gap-1.5 shrink-0 animate-in fade-in zoom-in-95 duration-150 select-none">
+                          <span className="text-[10px] text-gray-500 font-medium hidden xs:inline">Delete?</span>
+                          <button
+                            type="button"
+                            disabled={isDeletingComment}
+                            onClick={() => setDeletingCommentId(null)}
+                            className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-200/80 hover:bg-gray-300 text-gray-700 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isDeletingComment}
+                            onClick={async () => {
+                              setIsDeletingComment(true);
+                              await handleDeleteComment(c.id);
+                              setIsDeletingComment(false);
+                              setDeletingCommentId(null);
+                            }}
+                            className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500 hover:bg-red-600 text-white transition-colors flex items-center gap-1 shadow-2xs"
+                          >
+                            {isDeletingComment ? <Loader2 size={10} className="animate-spin" /> : null}
+                            <span>Confirm</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingCommentId(c.id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors p-1.5 -mr-1 rounded-md hover:bg-red-50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
+                          title="Delete comment"
+                          aria-label="Delete comment"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )
                     )}
                   </div>
 

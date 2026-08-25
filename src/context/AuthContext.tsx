@@ -38,10 +38,54 @@ interface AuthActions {
 const AuthStateContext = createContext<AuthState | undefined>(undefined);
 const AuthActionsContext = createContext<AuthActions | undefined>(undefined);
 
+const AUTH_PROFILE_KEY = 'rater_auth_profile';
+
+function getCachedAuthProfile(): Avatar | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(AUTH_PROFILE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.id) {
+      return parsed as Avatar;
+    }
+  } catch (err) {
+    console.warn('Failed to read cached auth profile:', err);
+  }
+  return null;
+}
+
+function setCachedAuthProfile(profile: Avatar | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile) {
+      localStorage.setItem(AUTH_PROFILE_KEY, JSON.stringify(profile));
+    } else {
+      localStorage.removeItem(AUTH_PROFILE_KEY);
+    }
+  } catch (err) {
+    console.warn('Failed to persist cached auth profile:', err);
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentProfile, setCurrentProfile] = useState<Avatar | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentProfile, setCurrentProfileState] = useState<Avatar | null>(() => {
+    const cached = getCachedAuthProfile();
+    if (cached) {
+      ProfileCache.set(cached, true);
+    }
+    return cached;
+  });
+  const [isLoading, setIsLoading] = useState(() => !getCachedAuthProfile());
   const [isSuspended, setIsSuspended] = useState(false);
+
+  const setCurrentProfile = useCallback((profile: Avatar | null) => {
+    setCurrentProfileState(profile);
+    setCachedAuthProfile(profile);
+    if (profile) {
+      ProfileCache.set(profile, true);
+    }
+  }, []);
 
   const dismissSuspendedNotice = useCallback(() => {
     setIsSuspended(false);
@@ -55,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setCurrentProfile(null);
     setIsSuspended(true);
-  }, []);
+  }, [setCurrentProfile]);
 
   // 1. Initial Session Check (Flicker-free & block-aware)
   useEffect(() => {
@@ -75,8 +119,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return;
           }
-          if (mounted && profile) {
-            setCurrentProfile(profile);
+          if (mounted) {
+            if (profile) {
+              setCurrentProfile(profile);
+            }
+          }
+        } else {
+          // No active session in Supabase — clear stale cached profile if present
+          if (mounted) {
+            setCurrentProfile(null);
           }
         }
       } catch (error) {
@@ -109,7 +160,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [setCurrentProfile]);
 
   // 3. Multi-tier Session Enforcement for Active Logged-In User
   useEffect(() => {

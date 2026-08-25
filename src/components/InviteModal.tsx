@@ -50,7 +50,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.raterapp.site';
   const inviteUrl = `${origin}/invite/@${currentProfile.username}`;
-  const shareText = `Join me on Rater — the design feedback platform where designers get real critiques and ratings on their work. Sign up with my invite link:`;
+  const shareText = `Join me on Rater, the design critique platform where designers get real critiques and ratings on their work. Sign up with my invite link:`;
 
   const handleCopy = async () => {
     try {

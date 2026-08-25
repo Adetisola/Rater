@@ -74,7 +74,7 @@ function HeaderContent({
   const isBrowsePage = pathname === '/browse' || pathname === '/browse/';
   const isPostPage = pathname.startsWith('/post/');
 
-  const { currentProfile, profileMap } = useAuthState();
+  const { currentProfile, profileMap, isLoading } = useAuthState();
   const { hasMeaningfulHistory, goBack } = useNavigationHistory();
 
   // Internal Navigation Store for Post Page Prev/Next navigation
@@ -624,11 +624,15 @@ function HeaderContent({
               </div>
             )}
 
-            {/* Profile & Notification Controls (Logged in) */}
+            {/* Profile & Notification Controls (Logged in / Loading / Logged out) */}
             {currentProfile ? (
               <div className="flex items-center gap-2 sm:gap-3">
                 <NotificationBell />
                 <UserMenu variant="nav" align="right" />
+              </div>
+            ) : isLoading ? (
+              <div className="flex items-center gap-2 h-10 sm:h-12 px-2">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100/70 animate-pulse" />
               </div>
             ) : (
               /* Auth Buttons (Logged out - shown on all pages or when prev/next navigation is hidden on post page) */

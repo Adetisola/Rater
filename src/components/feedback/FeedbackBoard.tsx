@@ -106,14 +106,14 @@ export function FeedbackBoard() {
   };
 
   return (
-    <div className="w-full max-w-full min-w-0 space-y-3.5 sm:space-y-6 overflow-x-hidden">
+    <div className="w-full max-w-full min-w-0 space-y-4 sm:space-y-6 overflow-x-clip">
       {/* 1. Header & Primary Action */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-950 tracking-tight flex items-center gap-2">
-            <span>Product Feedback & Roadmap</span>
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-950 tracking-tight">
+            Product Feedback & Roadmap
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
             Help shape Rater. Submit ideas, upvote community requests, and follow development.
           </p>
         </div>
@@ -121,15 +121,15 @@ export function FeedbackBoard() {
         <Button
           variant="primary"
           onClick={() => openFeedbackDrawer()}
-          className="h-8.5 sm:h-10 px-3.5 sm:px-4 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shrink-0 self-start sm:self-auto"
+          className="h-9 sm:h-10 px-4 sm:px-5 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 shrink-0 self-start sm:self-auto shadow-sm active:scale-95 transition-transform"
         >
-          <Plus size={15} />
+          <Plus size={16} />
           <span>Share Feedback</span>
         </Button>
       </div>
 
       {/* 2. Primary Navigation Views */}
-      <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1 p-1 bg-gray-100/80 rounded-2xl sm:rounded-full touch-pan-x shrink-0">
+      <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1 p-1 bg-gray-100/80 rounded-2xl sm:rounded-full touch-pan-x min-w-0">
         {VIEW_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeView === tab.id;
@@ -145,9 +145,9 @@ export function FeedbackBoard() {
                 }
               }}
               className={cn(
-                "flex-1 sm:flex-initial py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs sm:text-[13px] font-medium md:font-semibold flex items-center justify-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap shrink-0 select-none",
+                "flex-1 sm:flex-initial py-2 px-3 sm:px-4 rounded-xl sm:rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap shrink-0 select-none",
                 isActive
-                  ? "bg-white text-black shadow-2xs"
+                  ? "bg-white text-black shadow-xs font-semibold"
                   : "text-gray-500 hover:text-gray-900"
               )}
             >
@@ -159,7 +159,7 @@ export function FeedbackBoard() {
       </div>
 
       {/* 3. Search & Filter Bar */}
-      <div className="w-full bg-white p-2.5 sm:p-3.5 rounded-2xl border border-gray-100 space-y-2.5 sm:space-y-0 sm:flex sm:items-center sm:gap-2.5 min-w-0">
+      <div className="w-full bg-white p-2 sm:p-3 rounded-2xl border border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 min-w-0 shadow-2xs">
         {/* Search Bar */}
         <div className="relative flex-1 min-w-0">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -168,12 +168,12 @@ export function FeedbackBoard() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search feedback ideas..."
-            className="w-full h-8.5 sm:h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+            className="w-full h-9 bg-gray-50/80 border border-gray-200/70 rounded-xl pl-8 pr-7 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-700"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700"
             >
               <X size={13} />
             </button>
@@ -195,7 +195,7 @@ export function FeedbackBoard() {
       {/* 4. Secondary Filter Pills (Type & Roadmap Status) */}
       <div className="flex flex-col gap-2 min-w-0 max-w-full">
         {/* Type Filter Pills */}
-        <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-0.5 touch-pan-x">
+        <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-0.5 touch-pan-x min-w-0">
           {TYPE_FILTERS.map((t) => {
             const isSelected = activeType === t;
             return (
@@ -205,7 +205,7 @@ export function FeedbackBoard() {
                 className={cn(
                   "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 select-none",
                   isSelected
-                    ? "bg-primary/10 border-primary/40 text-black shadow-2xs"
+                    ? "bg-primary/10 border-primary/40 text-black shadow-xs"
                     : "bg-white border-gray-200/70 text-gray-500 hover:border-gray-300 hover:text-black"
                 )}
               >
@@ -217,7 +217,7 @@ export function FeedbackBoard() {
 
         {/* Roadmap Status Pills (Visible in Roadmap view or when filtering statuses) */}
         {activeView === 'roadmap' && (
-          <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-0.5 pt-0.5 touch-pan-x">
+          <div className="w-full max-w-full overflow-x-auto no-scrollbar scroll-smooth flex items-center gap-1.5 pb-0.5 pt-0.5 touch-pan-x min-w-0">
             <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider px-1 shrink-0">Status:</span>
             {ROADMAP_STATUSES.map((s) => {
               const isSelected = activeStatus === s;
@@ -228,7 +228,7 @@ export function FeedbackBoard() {
                   className={cn(
                     "px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 select-none",
                     isSelected
-                      ? "bg-black text-white border-black shadow-2xs"
+                      ? "bg-black text-white border-black shadow-xs"
                       : "bg-white border-gray-200/70 text-gray-600 hover:border-gray-300"
                   )}
                 >
@@ -246,10 +246,10 @@ export function FeedbackBoard() {
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl bg-white border border-gray-100 flex items-start gap-4 animate-pulse"
+              className="p-4 sm:p-5 rounded-2xl bg-white border border-gray-100 flex items-start gap-3 sm:gap-4 animate-pulse"
             >
-              <div className="w-12 h-14 bg-gray-100 rounded-xl shrink-0" />
-              <div className="flex-1 space-y-2.5">
+              <div className="w-9 sm:w-12 h-14 bg-gray-100 rounded-xl shrink-0" />
+              <div className="flex-1 space-y-2 min-w-0">
                 <div className="h-4 bg-gray-100 rounded w-1/3" />
                 <div className="h-3 bg-gray-100 rounded w-3/4" />
                 <div className="flex gap-2 pt-1">
@@ -262,7 +262,7 @@ export function FeedbackBoard() {
         </div>
       ) : activeView === 'following' && !currentProfile ? (
         /* Logged out Following state */
-        <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center space-y-4 shadow-2xs">
+        <div className="bg-white rounded-3xl border border-gray-100 p-8 sm:p-12 text-center space-y-4 shadow-2xs">
           <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-primary/20 flex items-center justify-center mx-auto text-primary">
             <BookmarkCheck size={28} />
           </div>
@@ -275,14 +275,14 @@ export function FeedbackBoard() {
           <Button 
             variant="primary" 
             onClick={() => setShowAuthOverlay(true)}
-            className="h-9 px-4 rounded-full text-xs font-medium"
+            className="h-9 px-5 rounded-full text-xs font-medium"
           >
             Sign In
           </Button>
         </div>
       ) : activeView === 'my_feedback' && !currentProfile ? (
         /* Logged out My Feedback state */
-        <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center space-y-4 shadow-2xs">
+        <div className="bg-white rounded-3xl border border-gray-100 p-8 sm:p-12 text-center space-y-4 shadow-2xs">
           <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-primary/20 flex items-center justify-center mx-auto text-primary">
             <User size={28} />
           </div>
@@ -295,20 +295,20 @@ export function FeedbackBoard() {
           <Button 
             variant="primary" 
             onClick={() => setShowAuthOverlay(true)}
-            className="h-9 px-4 rounded-full text-xs font-medium"
+            className="h-9 px-5 rounded-full text-xs font-medium"
           >
             Sign In
           </Button>
         </div>
       ) : feedback.length === 0 ? (
         /* Empty Results state */
-        <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center space-y-4 shadow-2xs">
+        <div className="bg-white rounded-3xl border border-gray-100 p-8 sm:p-12 text-center space-y-4 shadow-2xs">
           <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center mx-auto text-gray-400">
             <MessageSquare size={26} />
           </div>
           <div className="space-y-1.5">
             <h3 className="text-base font-medium text-gray-950">No feedback requests found</h3>
-            <p className="text-xs sm:text-[13px] text-gray-500 max-w-sm mx-auto">
+            <p className="text-xs sm:text-[13px] text-gray-500 max-w-sm mx-auto leading-relaxed">
               {debouncedSearch
                 ? `No requests matching "${debouncedSearch}". Try a different keyword.`
                 : activeView === 'following'
@@ -321,7 +321,7 @@ export function FeedbackBoard() {
           <Button
             variant="primary"
             onClick={() => openFeedbackDrawer()}
-            className="h-9 px-4 rounded-full text-xs font-medium inline-flex items-center gap-1.5"
+            className="h-9 px-5 rounded-full text-xs font-medium inline-flex items-center gap-1.5"
           >
             <Plus size={14} />
             <span>Share Feedback</span>
@@ -342,7 +342,7 @@ export function FeedbackBoard() {
               <div
                 key={item.id}
                 className={cn(
-                  "p-3.5 sm:p-5 rounded-2xl bg-white border border-gray-100 hover:border-gray-200/90 transition-all shadow-2xs flex items-start gap-3 sm:gap-4.5 group",
+                  "p-3.5 sm:p-5 rounded-2xl bg-white border border-gray-100 hover:border-gray-200/90 transition-all shadow-2xs flex items-start gap-2.5 sm:gap-4 min-w-0 max-w-full overflow-hidden group",
                   item.is_pinned && "border-amber-200/80 bg-amber-50/20"
                 )}
               >
@@ -354,7 +354,7 @@ export function FeedbackBoard() {
                     if (item.id) toggleVote(item.id);
                   }}
                   className={cn(
-                    "w-9 sm:w-12 py-1.5 sm:py-2 rounded-xl flex flex-col items-center justify-center border transition-all shrink-0 select-none",
+                    "w-9 sm:w-12 py-1.5 sm:py-2.5 rounded-xl flex flex-col items-center justify-center border transition-all shrink-0 select-none active:scale-95",
                     item.has_voted
                       ? "bg-amber-50 border-primary/50 text-black font-bold shadow-2xs"
                       : "bg-white border-gray-200/70 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
@@ -370,16 +370,16 @@ export function FeedbackBoard() {
                 </button>
 
                 {/* Main Card Content */}
-                <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2">
-                  <div className="flex items-start justify-between gap-2 sm:gap-3">
-                    <div className="space-y-0.5 sm:space-y-1 min-w-0 flex-1">
+                <div className="min-w-0 flex-1 space-y-1.5 sm:space-y-2 overflow-hidden">
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <div className="space-y-0.5 min-w-0 flex-1 overflow-hidden">
                       <Link
                         href={`/feedback/${item.slug}`}
-                        className="text-xs sm:text-base font-semibold text-gray-950 hover:text-black hover:underline transition-colors line-clamp-2 break-words leading-snug"
+                        className="text-xs sm:text-base font-semibold text-gray-950 hover:text-black hover:underline transition-colors line-clamp-2 break-words leading-snug block"
                       >
                         {item.title}
                       </Link>
-                      <p className="text-xs sm:text-[13px] text-gray-500 line-clamp-2 leading-relaxed break-words">
+                      <p className="text-[11px] sm:text-[13px] text-gray-500 line-clamp-2 leading-relaxed break-words">
                         {item.description}
                       </p>
                     </div>
@@ -391,7 +391,7 @@ export function FeedbackBoard() {
                         if (item.id) toggleFollow(item.id);
                       }}
                       className={cn(
-                        "w-7 h-7 sm:w-auto sm:h-8 sm:px-2.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-all shrink-0 select-none",
+                        "h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg sm:rounded-xl border text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 transition-all shrink-0 select-none active:scale-95",
                         item.is_following
                           ? "bg-amber-50 border-amber-200/70 text-amber-900"
                           : "bg-white border-gray-200/70 text-gray-500 hover:text-gray-900 hover:bg-gray-50"
@@ -468,14 +468,14 @@ export function FeedbackBoard() {
                     )}
 
                     {/* Relative Timestamp */}
-                    <span className="text-[11px] text-gray-400 shrink-0">
+                    <span className="text-[10px] sm:text-[11px] text-gray-400 shrink-0">
                       {formatRelativeTime(item.created_at)}
                     </span>
 
                     {/* Comment Count */}
                     <Link
                       href={`/feedback/${item.slug}#comments`}
-                      className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-gray-700 transition-colors shrink-0"
+                      className="ml-auto inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-gray-400 hover:text-gray-700 transition-colors shrink-0"
                     >
                       <MessageCircle size={13} />
                       <span>{item.comment_count || 0}</span>

@@ -11,7 +11,7 @@ export const metadata = {
 
 export default function FeedbackPage() {
   return (
-    <div className="max-w-4xl mx-auto py-6 sm:py-10 px-4 sm:px-6">
+    <div className="w-full max-w-4xl mx-auto py-4 sm:py-10 px-3.5 sm:px-6 overflow-x-clip min-w-0">
       <FeedbackBoard />
     </div>
   );
