@@ -29,6 +29,7 @@ import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transforms';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
+import { CritiqueReplyThread } from './critique/CritiqueReplyThread';
 import { AmbientLoadingText } from './AmbientLoadingText';
 import { RelatedSection } from './RelatedSection';
 import { MediaCarousel } from './MediaCarousel';
@@ -404,10 +405,54 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
 
     const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const [reportTarget, setReportTarget] = useState<{ targetType: 'post' | 'profile' | 'reply' | 'review'; targetId: string } | null>(null);
+    const [urlCritiqueId, setUrlCritiqueId] = useState<string | null>(null);
+    const [urlReplyId, setUrlReplyId] = useState<string | null>(null);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
     const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
     const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(true);
+
+    // Deep Linking Support: /post/[id]?tab=critique&critiqueId=...&replyId=...
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const tabParam = searchParams.get('tab');
+        const cId = searchParams.get('critiqueId') || searchParams.get('reviewId');
+        const rId = searchParams.get('replyId');
+
+        const hash = window.location.hash;
+        let hashCritiqueId = null;
+        if (hash.startsWith('#critique-')) {
+            hashCritiqueId = hash.replace('#critique-', '');
+        } else if (hash.startsWith('#review-')) {
+            hashCritiqueId = hash.replace('#review-', '');
+        }
+
+        const targetCritique = cId || hashCritiqueId;
+        if (targetCritique) {
+            setUrlCritiqueId(targetCritique);
+        }
+        if (rId) {
+            setUrlReplyId(rId);
+        }
+
+        if (tabParam === 'critique' || targetCritique || rId) {
+            setActiveTab('rate');
+            setTimeout(() => {
+                if (targetCritique) {
+                    const el = document.getElementById(`critique-${targetCritique}`);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else if (critiquesSectionRef.current) {
+                        critiquesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                } else if (critiquesSectionRef.current) {
+                    critiquesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 450);
+        }
+    }, []);
 
     useEffect(() => {
         setIsFullscreenImageLoading(true);
@@ -598,15 +643,16 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
             return;
         }
 
-        const newReview = {
+        const newReview: Review = {
             id: `r_new_${Date.now()}`,
             post_id: post.id,
-            ratings: ratings,
+            ratings: ratings as Record<string, number>,
             comment,
-            reviewer_id: currentAvatar?.id,
+            reviewer_id: currentAvatar?.id || '',
             reviewer_name: currentAvatar ? currentAvatar.name : reviewer_name,
+            author: currentAvatar || undefined,
             created_at: new Date().toISOString()
-        } as Review;
+        };
 
         try {
             // Submit the review to the database first (Blocking UI)
@@ -618,10 +664,11 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
 
             // SUCCESS: Now apply updates strictly synchronized with the backend
             
-            // 1. Merge the backend response to ensure full consistency
-            const finalReview = result.review ? {
+            // 1. Merge the backend response to ensure full consistency, preserving author
+            const finalReview: Review = result.review ? {
                 ...newReview,
                 id: result.review.id,
+                author: currentAvatar || newReview.author || undefined,
                 created_at: result.review.created_at,
                 updated_at: result.review.updated_at
             } : newReview;
@@ -659,7 +706,12 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
             if (!result.ok) throw new Error(result.error);
 
             // Update both userReviews (if created this session) and dbReviews (if fetched on mount)
-            const updated = { ...oldReview, ratings, comment };
+            const updated: Review = { 
+                ...oldReview, 
+                ratings: ratings as Record<string, number>, 
+                comment,
+                author: oldReview.author || (currentAvatar?.id === oldReview.reviewer_id ? currentAvatar : undefined)
+            };
             setUserReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
             setDbReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
             
@@ -1066,7 +1118,17 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                         {isReportOpen && (
                             <ReportPostOverlay
                                 postId={post.id}
+                                targetType="post"
+                                targetId={post.id}
                                 onClose={() => setIsReportOpen(false)}
+                            />
+                        )}
+
+                        {reportTarget && (
+                            <ReportPostOverlay
+                                targetType={reportTarget.targetType}
+                                targetId={reportTarget.targetId}
+                                onClose={() => setReportTarget(null)}
                             />
                         )}
 
@@ -1313,54 +1375,65 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                             const timeLabel = formatTimestamp(review.created_at, now);
                             const fullTime = getFullTimestamp(review.created_at);
 
+                            // Primary source of truth: embedded review.author from DB join
+                            // Fallback source of truth: ProfileCache via allAvatars
+                            const reviewerProfile = review.author || (review.reviewer_id ? allAvatars[review.reviewer_id] : undefined);
+                            const avatarUrl = reviewerProfile?.avatar_url || null;
+                            const username = reviewerProfile?.username;
+                            const displayName = reviewerProfile?.name || getReviewerDisplayName(review);
+                            const hasProfile = Boolean(username);
+
                             return (
                                 <motion.div
                                     key={review.id}
+                                    id={`critique-${review.id}`}
                                     initial={{ opacity: 0, y: 16 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.35, ease: "easeOut" }}
-                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4"
+                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4 scroll-mt-24"
                                 >
                                     <div className="w-full">
                                         <div className="flex items-center gap-3 mb-3">
-                                            <div
-                                                className={`transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer' : ''}`}
-                                                onClick={(e) => {
-                                                    if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
-                                                        e.stopPropagation();
-                                                        router.push(`/@${allAvatars[review.reviewer_id].username}`, { scroll: false });
-                                                    }
-                                                }}
-                                            >
-                                                {review.reviewer_id && allAvatars[review.reviewer_id] ? (
+                                            {hasProfile ? (
+                                                <Link
+                                                    href={`/@${username}`}
+                                                    scroll={false}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="transition-all block shrink-0 rounded-full hover:ring-1 ring-primary focus:outline-none"
+                                                >
                                                     <UserAvatar 
-                                                        avatarUrl={allAvatars[review.reviewer_id].avatar_url} 
-                                                        size="xs"
-                                                        className="w-7 h-7 hover:ring-1 ring-primary transition-all"
-                                                        iconClassName="w-3/4 h-3/4"
-                                                    />
-                                                ) : (
-                                                    <UserAvatar 
-                                                        avatarUrl={null} 
+                                                        avatarUrl={avatarUrl} 
                                                         size="xs"
                                                         className="w-7 h-7"
                                                         iconClassName="w-3/4 h-3/4"
                                                     />
-                                                )}
-                                            </div>
+                                                </Link>
+                                            ) : (
+                                                <div className="shrink-0">
+                                                    <UserAvatar 
+                                                        avatarUrl={avatarUrl} 
+                                                        size="xs"
+                                                        className="w-7 h-7"
+                                                        iconClassName="w-3/4 h-3/4"
+                                                    />
+                                                </div>
+                                            )}
                                             <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
                                                 <div className="flex items-center gap-2 min-w-0">
-                                                    <span
-                                                        className={`font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
-                                                        onClick={(e) => {
-                                                            if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
-                                                                e.stopPropagation();
-                                                                router.push(`/@${allAvatars[review.reviewer_id].username}`, { scroll: false });
-                                                            }
-                                                        }}
-                                                    >
-                                                        {getReviewerDisplayName(review)}
-                                                    </span>
+                                                    {hasProfile ? (
+                                                        <Link
+                                                            href={`/@${username}`}
+                                                            scroll={false}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors hover:text-primary cursor-pointer focus:outline-none"
+                                                        >
+                                                            {displayName}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none">
+                                                            {displayName}
+                                                        </span>
+                                                    )}
                                                     {!review.reviewer_id && (
                                                         <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
                                                             Guest
@@ -1442,6 +1515,15 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                 ))}
                                             </div>
                                         </div>
+
+                                        {/* Threaded Critique Replies */}
+                                        <CritiqueReplyThread
+                                            critique={review}
+                                            post={post}
+                                            initialExpanded={urlCritiqueId === review.id}
+                                            targetReplyId={urlCritiqueId === review.id ? urlReplyId : null}
+                                            onOpenReportModal={(type, targetId) => setReportTarget({ targetType: type, targetId })}
+                                        />
                                     </div>
                                 </motion.div>
                             );

@@ -7,7 +7,9 @@ import { Button } from './ui/Button';
 import { createReport } from '@/lib/admin/server';
 
 interface ReportPostOverlayProps {
-  postId: string;
+  postId?: string;
+  targetType?: 'post' | 'profile' | 'reply' | 'review';
+  targetId?: string;
   onClose: () => void;
   onSubmit?: (reason: string, details: string) => void;
 }
@@ -21,7 +23,13 @@ const REPORT_REASONS = [
   "Other issue"
 ];
 
-export function ReportPostOverlay({ postId, onClose, onSubmit }: ReportPostOverlayProps) {
+export function ReportPostOverlay({
+  postId,
+  targetType = 'post',
+  targetId,
+  onClose,
+  onSubmit,
+}: ReportPostOverlayProps) {
   const [reason, setReason] = useState('Select');
   const [details, setDetails] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -30,19 +38,38 @@ export function ReportPostOverlay({ postId, onClose, onSubmit }: ReportPostOverl
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  const effectiveTargetId = targetId || postId || '';
+  const titleText =
+    targetType === 'reply'
+      ? 'Report this Reply'
+      : targetType === 'review'
+      ? 'Report this Critique'
+      : targetType === 'profile'
+      ? 'Report this Profile'
+      : 'Report this Work';
+
+  const subtitleText =
+    targetType === 'reply'
+      ? "Help us understand what's wrong with this reply."
+      : targetType === 'review'
+      ? "Help us understand what's wrong with this critique."
+      : targetType === 'profile'
+      ? "Help us understand what's wrong with this profile."
+      : "Help us understand what's wrong with this work.";
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleSubmit = async () => {
-    if (reason === 'Select') return;
+    if (reason === 'Select' || !effectiveTargetId) return;
     try {
       setIsSubmitting(true);
       setSubmitError(null);
 
       await createReport({
-        target_type: 'post',
-        target_id: postId,
+        target_type: targetType,
+        target_id: effectiveTargetId,
         reason,
         details: details.trim() || undefined,
       });
@@ -90,8 +117,8 @@ export function ReportPostOverlay({ postId, onClose, onSubmit }: ReportPostOverl
             <>
                 {/* Header */}
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-medium text-black mb-1">Report this Work</h2>
-                    <p className="text-sm text-gray-500">Help us understand what's wrong with this work.</p>
+                    <h2 className="text-2xl font-medium text-black mb-1">{titleText}</h2>
+                    <p className="text-sm text-gray-500">{subtitleText}</p>
                 </div>
 
                 {submitError && (

@@ -23,7 +23,8 @@ import {
   Sparkles, 
   FileText, 
   Lock, 
-  LifeBuoy 
+  LifeBuoy,
+  Info
 } from 'lucide-react';
 import { UserAvatar } from './UserAvatar';
 import { LogoutConfirmOverlay } from './LogoutConfirmOverlay';
@@ -383,6 +384,22 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                         Resources
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleCloseAll();
+                          showSettings('about');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/about"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Info size={16} className="text-gray-400 group-hover/about:text-black transition-colors" />
+                          <span>About Rater</span>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/20 text-gray-900 leading-none">
+                          v1.2.0
+                        </span>
+                      </button>
                       <Link
                         href="/legal/community-guidelines"
                         onClick={handleCloseAll}
@@ -451,8 +468,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       </p>
                       <a
                         ref={firstSubmenuItemRef}
-                        href="mailto:support@raterapp.site"
-                        onClick={handleCloseAll}
+                        href="mailto:support@raterapp.site?subject=Rater%20Support%20Inquiry"
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
                         role="menuitem"
                       >
@@ -463,7 +479,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                         type="button"
                         onClick={() => {
                           handleCloseAll();
-                          openFeedbackDrawer();
+                          openFeedbackDrawer({ defaultType: 'Feature Request' });
                         }}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
                         role="menuitem"
@@ -478,6 +494,23 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
                         Resources
                       </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleCloseAll();
+                          showSettings('about');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/about"
+                        role="menuitem"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Info size={16} className="text-gray-400 group-hover/about:text-black transition-colors" />
+                          <span>About Rater</span>
+                        </div>
+                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/20 text-gray-900 leading-none">
+                          v1.2.0
+                        </span>
+                      </button>
                       <Link
                         href="/legal/community-guidelines"
                         onClick={handleCloseAll}

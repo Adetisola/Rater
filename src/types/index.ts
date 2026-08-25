@@ -76,18 +76,46 @@ export interface Avatar {
   referred_by?: string | null;
 }
 
-// ─── Reviews ──────────────────────────────────────────────────────────────────
+// ─── Reviews & Critique Replies ───────────────────────────────────────────────
+
+export interface CritiqueReply {
+  id: string;
+  critique_id: string;
+  author_id: string;
+  parent_reply_id?: string | null;
+  parent_reply_author_username?: string | null;
+  parent_reply_author_name?: string | null;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  author?: Avatar;
+  has_children?: boolean;
+  is_tombstone?: boolean;
+  is_optimistic?: boolean;
+}
+
+export interface CritiqueRepliesResponse {
+  replies: CritiqueReply[];
+  nextCursor: string | null;
+  totalCount: number;
+}
 
 export interface Review {
   id: string;
   post_id: string;
   reviewer_id: string;
   reviewer_name?: string;
+  author?: Avatar;
   ratings: Record<string, number>;
 
   comment?: string;
   created_at: string;
   updated_at?: string;
+  reply_count?: number;
+  latest_reply_at?: string | null;
+  has_unread_replies?: boolean;
 }
 
 // ─── Media & Posts ─────────────────────────────────────────────────────────────
@@ -247,7 +275,7 @@ export type FeedbackFollow = Database['public']['Tables']['feedback_follows']['R
 
 // ─── Moderation & Reports ───────────────────────────────────────────────────
 
-export type ReportTargetType = 'post' | 'profile';
+export type ReportTargetType = 'post' | 'profile' | 'reply' | 'review';
 export type ReportStatus = 'pending' | 'under_review' | 'resolved' | 'dismissed';
 
 export interface Report {

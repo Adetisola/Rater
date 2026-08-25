@@ -619,7 +619,7 @@ export async function updateReportStatus(
  * Callable by any authenticated user or anonymous visitor.
  */
 export async function createReport(data: {
-  target_type: 'post' | 'profile';
+  target_type: 'post' | 'profile' | 'reply' | 'review';
   target_id: string;
   reason: string;
   details?: string;

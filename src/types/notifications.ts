@@ -9,6 +9,9 @@ export type NotificationCategory = 'activity' | 'milestones' | 'insights' | 'com
 export type NotificationEventType =
   | 'FIRST_CRITIQUE_RECEIVED'
   | 'CRITIQUE_RECEIVED'
+  | 'CRITIQUE_REPLY_RECEIVED'
+  | 'REPLY_TO_REPLY_RECEIVED'
+  | 'REPLY_MENTION_RECEIVED'
   | 'WORK_RATING_UNLOCKED'
   | 'INSIGHTS_READY'
   | 'BADGE_TOP_RATED_AWARDED'

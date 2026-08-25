@@ -73,6 +73,105 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     },
   },
 
+  // ─── 2b. Reply to Critique ──────────────────────────────────────────────────
+  CRITIQUE_REPLY_RECEIVED: {
+    type: 'CRITIQUE_REPLY_RECEIVED',
+    category: 'activity',
+    priority: 'normal',
+    channels: {
+      inApp: true,
+      push: true,
+      email: false,
+    },
+    preferenceKey: 'notify_critiques',
+    renderCopy: ({ actorName, workTitle, postId, reviewId, metadata }) => {
+      const replier = actorName?.trim() || 'A creative';
+      const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+      const cId = reviewId || metadata?.critiqueId;
+      const rId = metadata?.replyId;
+      const targetUrl = postId
+        ? `/post/${postId}?tab=critique${cId ? `&critiqueId=${cId}` : ''}${rId ? `&replyId=${rId}` : ''}${cId ? `#critique-${cId}` : ''}`
+        : '/browse';
+      return {
+        title: 'New reply on your critique',
+        message: `${replier} replied to your critique on ${titleClean}.`,
+        pushTitle: 'New Reply on Rater',
+        pushBody: `${replier} replied to your critique on ${titleClean}.`,
+        actionLabel: 'View Reply',
+        actionUrl: targetUrl,
+        pushActions: [
+          { action: 'view_reply', title: 'View Reply', url: targetUrl },
+        ],
+      };
+    },
+  },
+
+  // ─── 2c. Reply to Another Reply ─────────────────────────────────────────────
+  REPLY_TO_REPLY_RECEIVED: {
+    type: 'REPLY_TO_REPLY_RECEIVED',
+    category: 'activity',
+    priority: 'normal',
+    channels: {
+      inApp: true,
+      push: true,
+      email: false,
+    },
+    preferenceKey: 'notify_critiques',
+    renderCopy: ({ actorName, workTitle, postId, reviewId, metadata }) => {
+      const replier = actorName?.trim() || 'A creative';
+      const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
+      const cId = reviewId || metadata?.critiqueId;
+      const rId = metadata?.replyId;
+      const targetUrl = postId
+        ? `/post/${postId}?tab=critique${cId ? `&critiqueId=${cId}` : ''}${rId ? `&replyId=${rId}` : ''}${cId ? `#critique-${cId}` : ''}`
+        : '/browse';
+      return {
+        title: 'New reply to your comment',
+        message: `${replier} replied to your reply on ${titleClean}.`,
+        pushTitle: 'New Reply on Rater',
+        pushBody: `${replier} replied to your reply on ${titleClean}.`,
+        actionLabel: 'View Reply',
+        actionUrl: targetUrl,
+        pushActions: [
+          { action: 'view_reply', title: 'View Reply', url: targetUrl },
+        ],
+      };
+    },
+  },
+
+  // ─── 2d. Mention in Reply ───────────────────────────────────────────────────
+  REPLY_MENTION_RECEIVED: {
+    type: 'REPLY_MENTION_RECEIVED',
+    category: 'activity',
+    priority: 'normal',
+    channels: {
+      inApp: true,
+      push: true,
+      email: false,
+    },
+    preferenceKey: 'notify_critiques',
+    renderCopy: ({ actorName, workTitle, postId, reviewId, metadata }) => {
+      const mentioner = actorName?.trim() || 'A creative';
+      const titleClean = workTitle ? `"${workTitle}"` : 'a design';
+      const cId = reviewId || metadata?.critiqueId;
+      const rId = metadata?.replyId;
+      const targetUrl = postId
+        ? `/post/${postId}?tab=critique${cId ? `&critiqueId=${cId}` : ''}${rId ? `&replyId=${rId}` : ''}${cId ? `#critique-${cId}` : ''}`
+        : '/browse';
+      return {
+        title: 'Mentioned in a critique reply',
+        message: `${mentioner} mentioned you in a reply on ${titleClean}.`,
+        pushTitle: 'New Mention on Rater',
+        pushBody: `${mentioner} mentioned you in a reply on ${titleClean}.`,
+        actionLabel: 'View Mention',
+        actionUrl: targetUrl,
+        pushActions: [
+          { action: 'view_mention', title: 'View Mention', url: targetUrl },
+        ],
+      };
+    },
+  },
+
   // ─── 3. Overall Score Unlocked ───────────────────────────────────────────────
   WORK_RATING_UNLOCKED: {
     type: 'WORK_RATING_UNLOCKED',

@@ -23,7 +23,12 @@ import {
   Smartphone,
   FileText,
   Lock,
-  Users
+  Users,
+  Info,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  MessageSquare
 } from 'lucide-react';
 import { useAuthState } from '@/context/AuthContext';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -47,7 +52,7 @@ import type { NotificationPreferences } from '@/types';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export type SettingsTab = 'general' | 'account' | 'notifications' | 'help';
+export type SettingsTab = 'general' | 'account' | 'notifications' | 'help' | 'about';
 
 interface SettingsOverlayProps {
   isOpen: boolean;
@@ -60,6 +65,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
   const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const [expandedChangelog, setExpandedChangelog] = useState<string | null>('replies');
 
   // Change Password State
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -229,6 +235,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
     { id: 'account' as const, label: 'Account', icon: User },
     { id: 'notifications' as const, label: 'Notifications', icon: Bell },
     { id: 'help' as const, label: 'Help', icon: HelpCircle },
+    { id: 'about' as const, label: 'About', icon: Info },
   ];
 
   return (
@@ -1109,6 +1116,311 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
                         </Link>
                       </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* ─── ABOUT TAB ───────────────────────────────────────── */}
+                {activeTab === 'about' && (
+                  <motion.div
+                    key="about"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="space-y-6"
+                  >
+                    {/* 1. App Identity Hero */}
+                    <div className="p-5 rounded-3xl bg-linear-to-br from-gray-50 via-white to-gray-50/50 border border-gray-100 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center shadow-xs shrink-0">
+                          <span className="text-white font-bold text-lg tracking-tight">R<span className="text-primary">+</span></span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-bold text-gray-900 tracking-tight">Rater</h3>
+                            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/20 text-gray-900 border border-primary/30 font-mono">
+                              v1.3.0
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                            Real-time design critique and creative discovery platform.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Up to date
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 2. What's New in v1.3.0 (Compact Expandable Accordion) */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between px-1">
+                        <p className="text-xs font-semibold text-gray-400 tracking-wider">What&apos;s New in v1.3.0</p>
+                        <span className="text-[11px] text-gray-400 font-mono">Release Highlights</span>
+                      </div>
+
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden shadow-2xs">
+                        {/* Item 1: Threaded Critique Replies & @Mentions */}
+                        <div className="transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedChangelog(expandedChangelog === 'replies' ? null : 'replies')}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                <MessageSquare size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Threaded Critique Replies &amp; @Mentions</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Engage in conversations directly beneath feedback.</p>
+                              </div>
+                            </div>
+                            {expandedChangelog === 'replies' ? (
+                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                            ) : (
+                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                            )}
+                          </button>
+                          {expandedChangelog === 'replies' && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
+                              <p>• <strong>Shallow-Threaded Discussions:</strong> Clean conversational replies under critiques without messy visual staircase nesting.</p>
+                              <p>• <strong>Smart @Mentions &amp; Autocomplete:</strong> Type @ to tag creators with clickable profiles and auto-suggested participants.</p>
+                              <p>• <strong>Unread Tracking &amp; Deep Linking:</strong> &quot;New replies&quot; badges and instant URL navigation jump straight into active threads.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Item 2: Instant Search & Creator Discovery */}
+                        <div className="transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedChangelog(expandedChangelog === 'search' ? null : 'search')}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                <Search size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Instant Search & Creator Discovery</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Find designers by name, username, or creative works.</p>
+                              </div>
+                            </div>
+                            {expandedChangelog === 'search' ? (
+                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                            ) : (
+                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                            )}
+                          </button>
+                          {expandedChangelog === 'search' && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
+                              <p>• <strong>Name & Username Discovery:</strong> Search for creators directly to see matching profiles and works.</p>
+                              <p>• <strong>Dynamic 4-Signal Autocomplete:</strong> Suggestions derived from trending queries, live creator names, and design taxonomy.</p>
+                              <p>• <strong>Dual-Action Predictions (↗):</strong> Tap arrow icons to populate query strings or jump straight to results.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Item 2: Real-Time Notifications & Web Push */}
+                        <div className="transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedChangelog(expandedChangelog === 'push' ? null : 'push')}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                <Bell size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Real-Time Notifications & Web Push</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Instant critique alerts on phone and desktop.</p>
+                              </div>
+                            </div>
+                            {expandedChangelog === 'push' ? (
+                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                            ) : (
+                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                            )}
+                          </button>
+                          {expandedChangelog === 'push' && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
+                              <p>• <strong>Browser Web Push (VAPID):</strong> Receive notifications even when Rater is closed in your browser.</p>
+                              <p>• <strong>Granular Channel Controls:</strong> Customize in-app, push, and email preferences per category.</p>
+                              <p>• <strong>Actionable Alerts:</strong> Tap directly to view reviews, comments, and new portfolio works.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Item 3: Community Feedback Hub */}
+                        <div className="transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedChangelog(expandedChangelog === 'feedback' ? null : 'feedback')}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                <MessageSquarePlus size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Community Feedback & Roadmap Hub</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Upvote feature requests and shape Rater&apos;s future.</p>
+                              </div>
+                            </div>
+                            {expandedChangelog === 'feedback' ? (
+                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                            ) : (
+                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                            )}
+                          </button>
+                          {expandedChangelog === 'feedback' && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
+                              <p>• <strong>Interactive Roadmap (/feedback):</strong> Community voting and real-time status stages (Planned, In Progress, Completed).</p>
+                              <p>• <strong>Discussion Drawer:</strong> Threaded creator conversations and official team responses.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Item 4: Progressive Web App (PWA) Installation */}
+                        <div className="transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedChangelog(expandedChangelog === 'pwa' ? null : 'pwa')}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                <Smartphone size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Native App Installation (PWA)</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Install on home screen with full-screen experience.</p>
+                              </div>
+                            </div>
+                            {expandedChangelog === 'pwa' ? (
+                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                            ) : (
+                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                            )}
+                          </button>
+                          {expandedChangelog === 'pwa' && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
+                              <p>• <strong>1-Click Install:</strong> Fast native installation on Android, Chrome, and iOS Safari Home Screen.</p>
+                              <p>• <strong>Offline Resilience:</strong> View recently browsed posts and cached search indexes with zero connectivity.</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Item 5: Unified Settings & Privacy */}
+                        <div className="transition-colors">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedChangelog(expandedChangelog === 'settings' ? null : 'settings')}
+                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center shrink-0">
+                                <Sliders size={16} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">Refined Settings & Privacy Controls</p>
+                                <p className="text-xs text-gray-500 mt-0.5">Unified sliding overlay for profile, accounts, and security.</p>
+                              </div>
+                            </div>
+                            {expandedChangelog === 'settings' ? (
+                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                            ) : (
+                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                            )}
+                          </button>
+                          {expandedChangelog === 'settings' && (
+                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
+                              <p>• <strong>Consolidated Navigation:</strong> Instant access to account details, password updates, and notification channels.</p>
+                              <p>• <strong>Privacy & Security:</strong> Multi-tier moderation safeguards and immediate account controls.</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Platform Policies & Resources */}
+                    <div className="space-y-2.5">
+                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Legal & Platform Ethics</p>
+
+                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden shadow-2xs">
+                        <Link
+                          href="/legal/community-guidelines"
+                          onClick={onClose}
+                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <BookOpen size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <div>
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">Community Guidelines</p>
+                              <p className="text-[11px] sm:text-xs text-gray-500">Rating standards and critique code of conduct.</p>
+                            </div>
+                          </div>
+                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                        </Link>
+
+                        <Link
+                          href="/legal/ai-insights"
+                          onClick={onClose}
+                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Sparkles size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <div>
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">AI Insights & Synthesis Ethics</p>
+                              <p className="text-[11px] sm:text-xs text-gray-500">Perception modeling and creator IP protections.</p>
+                            </div>
+                          </div>
+                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                        </Link>
+
+                        <Link
+                          href="/legal/terms"
+                          onClick={onClose}
+                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <div>
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">Terms of Service</p>
+                              <p className="text-[11px] sm:text-xs text-gray-500">Creator copyright ownership and platform rules.</p>
+                            </div>
+                          </div>
+                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                        </Link>
+
+                        <Link
+                          href="/legal/privacy"
+                          onClick={onClose}
+                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Lock size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <div>
+                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">Privacy Policy</p>
+                              <p className="text-[11px] sm:text-xs text-gray-500">How we store, process, and protect your data.</p>
+                            </div>
+                          </div>
+                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                        </Link>
+                      </div>
+                    </div>
+
+                    {/* 4. Footer & Copyright */}
+                    <div className="pt-2 pb-4 text-center space-y-1 text-xs text-gray-400">
+                      <p className="font-medium text-gray-500">Rater &copy; {new Date().getFullYear()} &bull; All Rights Reserved.</p>
+                      <p className="text-[11px]">Crafted for the global design community.</p>
                     </div>
                   </motion.div>
                 )}

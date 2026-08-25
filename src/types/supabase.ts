@@ -173,6 +173,100 @@ export type Database = {
         }
         Relationships: []
       }
+      critique_replies: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          critique_id: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          parent_reply_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          critique_id: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          parent_reply_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          critique_id?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          parent_reply_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "critique_replies_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critique_replies_critique_id_fkey"
+            columns: ["critique_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critique_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "critique_replies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      critique_reply_reads: {
+        Row: {
+          critique_id: string
+          last_read_reply_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          critique_id: string
+          last_read_reply_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          critique_id?: string
+          last_read_reply_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "critique_reply_reads_critique_id_fkey"
+            columns: ["critique_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critique_reply_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_comments: {
         Row: {
           author_id: string
