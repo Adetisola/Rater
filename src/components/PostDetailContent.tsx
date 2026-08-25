@@ -900,48 +900,50 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                         </div>
 
                         {/* 4. Description */}
-                        <div className="text-sm leading-relaxed text-gray-600">
-                            <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
-                                <div className="markdown-content">
-                                    <ReactMarkdown 
-                                        remarkPlugins={[remarkGfm]}
-                                        components={{
-                                            a: ({ node, href, children, ...props }) => {
-                                                let url = href || '';
-                                                // If it doesn't start with a protocol (http://, https://, mailto:, etc.) 
-                                                // and doesn't start with a slash, prepend https://
-                                                if (url && !url.match(/^[a-zA-Z]+:/) && !url.startsWith('/')) {
-                                                    url = 'https://' + url;
+                        {post.description && post.description.trim().length > 0 && (
+                            <div className="text-sm leading-relaxed text-gray-600">
+                                <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
+                                    <div className="markdown-content">
+                                        <ReactMarkdown 
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                a: ({ node, href, children, ...props }) => {
+                                                    let url = href || '';
+                                                    // If it doesn't start with a protocol (http://, https://, mailto:, etc.) 
+                                                    // and doesn't start with a slash, prepend https://
+                                                    if (url && !url.match(/^[a-zA-Z]+:/) && !url.startsWith('/')) {
+                                                        url = 'https://' + url;
+                                                    }
+                                                    return (
+                                                        <a href={url} target="_blank" rel="noopener noreferrer" {...props}>
+                                                            {children}
+                                                        </a>
+                                                    );
                                                 }
-                                                return (
-                                                    <a href={url} target="_blank" rel="noopener noreferrer" {...props}>
-                                                        {children}
-                                                    </a>
-                                                );
-                                            }
-                                        }}
-                                    >
-                                        {post.description}
-                                    </ReactMarkdown>
+                                            }}
+                                        >
+                                            {post.description}
+                                        </ReactMarkdown>
+                                    </div>
+                                    {isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
+                                        <button
+                                            onClick={() => setIsExpanded(false)}
+                                            className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
+                                        >
+                                            Show less
+                                        </button>
+                                    )}
                                 </div>
-                                {isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
+                                {!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
                                     <button
-                                        onClick={() => setIsExpanded(false)}
+                                        onClick={() => setIsExpanded(true)}
                                         className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
                                     >
-                                        Show less
+                                        Read more
                                     </button>
                                 )}
                             </div>
-                            {!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
-                                <button
-                                    onClick={() => setIsExpanded(true)}
-                                    className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
-                                >
-                                    Read more
-                                </button>
-                            )}
-                        </div>
+                        )}
 
                         {/* AI Badge & Prompt */}
                         {post.uses_ai && (

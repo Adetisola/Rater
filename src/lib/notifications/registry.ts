@@ -209,7 +209,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
         title: 'New work on Rater',
         message: `${creatorName} published ${titleClean}.`,
         pushTitle: 'New work on Rater',
-        pushBody: `${creatorName} just published a new design.`,
+        pushBody: `${creatorName} just published something new.`,
         actionLabel: 'View Work',
         actionUrl: postUrl,
         pushActions: [
