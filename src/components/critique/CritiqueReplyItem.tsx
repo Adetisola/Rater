@@ -127,7 +127,11 @@ export function CritiqueReplyItem({
             </div>
           )}
 
-          <span className="text-[11px] text-gray-400 font-normal ml-auto shrink-0" title={fullTime}>
+          <span 
+            className="text-[11px] text-gray-400 font-normal ml-auto shrink-0" 
+            title={fullTime}
+            suppressHydrationWarning
+          >
             {timeLabel}
           </span>
         </div>

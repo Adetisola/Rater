@@ -47,13 +47,7 @@ ALTER TABLE public.critique_reply_reads ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public can view active or tombstoned replies" ON public.critique_replies;
 CREATE POLICY "Public can view active or tombstoned replies" ON public.critique_replies
   FOR SELECT TO public
-  USING (
-    deleted_at IS NULL 
-    OR EXISTS (
-      SELECT 1 FROM public.critique_replies children 
-      WHERE children.parent_reply_id = critique_replies.id AND children.deleted_at IS NULL
-    )
-  );
+  USING (true);
 
 DROP POLICY IF EXISTS "Auth users can insert replies" ON public.critique_replies;
 CREATE POLICY "Auth users can insert replies" ON public.critique_replies
