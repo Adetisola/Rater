@@ -1159,7 +1159,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* 1. App Identity Hero */}
                     <div className="p-5 rounded-3xl bg-gray-50/60 border border-gray-100 flex items-center gap-3.5">
-                      <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0">
+                      <div className="w-11 h-11 overflow-hidden shrink-0">
                         <img
                           src="/icons/rater-logo-white-bg-stroked.svg"
                           alt="Rater Logo"
