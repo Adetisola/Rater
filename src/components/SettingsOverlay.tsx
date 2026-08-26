@@ -98,6 +98,23 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
   const [isPushSubscribed, setIsPushSubscribed] = useState(false);
   const [isPushLoading, setIsPushLoading] = useState(false);
 
+  // Platform detection for push guidance
+  const [platformInfo] = useState(() => {
+    if (typeof window === 'undefined') return { isIOS: false, isStandalone: false, isAndroid: false, isSamsung: false, isDesktop: true, supportsPush: true };
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+    const isStandalone = (window.navigator as any).standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches;
+    const isSamsung = /SamsungBrowser/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+    const isDesktop = !isIOS && !isAndroid;
+    const supportsPush = 'PushManager' in window && 'serviceWorker' in navigator;
+    return { isIOS, isStandalone, isAndroid, isSamsung, isDesktop, supportsPush };
+  });
+
+  const [isPushTroubleshootOpen, setIsPushTroubleshootOpen] = useState(false);
+  const [showAllPlatforms, setShowAllPlatforms] = useState(false);
+
   // Load notification preferences
   useEffect(() => {
     if (isOpen && currentProfile?.id) {
@@ -724,22 +741,209 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           </div>
 
                           {/* Device Registration Trigger */}
-                          <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
-                            <span className="text-xs sm:text-[13px] text-gray-500 min-w-0 flex-1">
-                              Device status: <span className={cn("font-semibold", isPushSubscribed ? "text-emerald-700" : "text-amber-700")}>
-                                {isPushSubscribed ? "Active on this device" : "Not enabled on this device"}
+                          {/* iOS — not installed as PWA: show Home Screen install guidance */}
+                          {platformInfo.isIOS && !platformInfo.isStandalone ? (
+                            <div className="pt-3 border-t border-gray-100">
+                              <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
+                                <Smartphone size={16} className="text-amber-600 mt-0.5 shrink-0" />
+                                <div>
+                                  <p className="text-xs font-semibold text-amber-800">Install Rater to enable push</p>
+                                  <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                                    iOS requires Rater to be added to your Home Screen before push notifications can be enabled. Tap the share icon in Safari, then tap &ldquo;Add to Home Screen&rdquo;.
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => showInstallAppModal()}
+                                    className="mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 focus:outline-none"
+                                  >
+                                    How to install Rater on iOS
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                              <span className="text-xs sm:text-[13px] text-gray-500 min-w-0 flex-1">
+                                Device status: <span className={cn("font-semibold", isPushSubscribed ? "text-emerald-700" : "text-amber-700")}>
+                                  {isPushSubscribed ? "Active on this device" : "Not enabled on this device"}
+                                </span>
                               </span>
-                            </span>
-                            <Button
-                              variant="outline"
-                              disabled={isPushLoading}
-                              onClick={handlePushToggle}
-                              className="h-8 px-3.5 text-xs font-medium rounded-full whitespace-nowrap shrink-0"
+                              <Button
+                                variant="outline"
+                                disabled={isPushLoading}
+                                onClick={handlePushToggle}
+                                className="h-8 px-3.5 text-xs font-medium rounded-full whitespace-nowrap shrink-0"
+                              >
+                                {isPushLoading && <Loader2 size={12} className="animate-spin mr-1" />}
+                                <span>{isPushSubscribed ? "Disable on Device" : "Enable on Device"}</span>
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Background Notification Troubleshooting Accordion */}
+                          <div className="pt-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setIsPushTroubleshootOpen(prev => !prev)}
+                              className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-black transition-colors focus:outline-none group text-left"
                             >
-                              {isPushLoading && <Loader2 size={12} className="animate-spin mr-1" />}
-                              <span>{isPushSubscribed ? "Disable on Device" : "Enable on Device"}</span>
-                            </Button>
+                              <HelpCircle size={13} className="text-gray-400 group-hover:text-primary transition-colors shrink-0" />
+                              <span className="underline underline-offset-2 decoration-gray-300 group-hover:decoration-gray-700 transition-colors">
+                                Why don&apos;t push notifications arrive when the app is closed?
+                              </span>
+                              {isPushTroubleshootOpen ? (
+                                <ChevronUp size={13} className="text-gray-400 group-hover:text-black transition-transform shrink-0" />
+                              ) : (
+                                <ChevronDown size={13} className="text-gray-400 group-hover:text-black transition-transform shrink-0" />
+                              )}
+                            </button>
+
+                            <AnimatePresence>
+                              {isPushTroubleshootOpen && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="mt-2.5 p-3.5 rounded-xl bg-gray-50/90 border border-gray-200/80 text-xs space-y-3">
+                                    <p className="text-gray-600 leading-relaxed">
+                                      Web browsers rely on device background services to deliver alerts. When your browser is completely closed or inactive, mobile operating systems often suspend background processes to preserve battery.
+                                    </p>
+
+                                    {/* Priority Platform Tip */}
+                                    {platformInfo.isSamsung && (
+                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
+                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                          <span>Samsung Internet &amp; Galaxy Devices</span>
+                                          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Browser</span>
+                                        </div>
+                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                          Samsung OneUI aggressively puts background browser daemons to sleep. Push messages are securely queued by Google FCM and deliver as soon as the browser wakes.
+                                        </p>
+                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
+                                          <li><strong className="text-gray-800">Unrestricted battery:</strong> Go to phone <span className="font-medium text-gray-800">Settings → Apps → Samsung Internet → Battery</span> and select <span className="font-medium text-gray-800">Unrestricted</span>.</li>
+                                          <li><strong className="text-gray-800">Install as App:</strong> Tap the browser menu (☰) → <span className="font-medium text-gray-800">Install app</span> for elevated background push priority.</li>
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {platformInfo.isAndroid && !platformInfo.isSamsung && (
+                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
+                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                          <span>Android &amp; Chrome</span>
+                                          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Browser</span>
+                                        </div>
+                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                          Android may pause background web-push when battery saver or adaptive battery is active.
+                                        </p>
+                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
+                                          <li><strong className="text-gray-800">Unrestricted battery:</strong> In Android <span className="font-medium text-gray-800">Settings → Apps → Chrome → App battery usage</span>, choose <span className="font-medium text-gray-800">Unrestricted</span>.</li>
+                                          <li><strong className="text-gray-800">Install Rater:</strong> Tap the browser menu (⋮) → <span className="font-medium text-gray-800">Install app</span> for highest delivery reliability.</li>
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {platformInfo.isIOS && (
+                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
+                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                          <span>Apple iOS (iPhone &amp; iPad)</span>
+                                          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Device</span>
+                                        </div>
+                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                          Apple requires iOS 16.4+ and only permits Web Push for websites saved to the Home Screen. Regular Safari tabs cannot receive notifications when closed.
+                                        </p>
+                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
+                                          <li>Tap the <span className="font-medium text-gray-800">Share</span> icon in Safari → select <span className="font-medium text-gray-800">&ldquo;Add to Home Screen&rdquo;</span>.</li>
+                                          <li>Launch Rater from your Home Screen to enable push.</li>
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {platformInfo.isDesktop && (
+                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
+                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                          <span>Desktop Browsers (Chrome, Edge, Brave, Firefox)</span>
+                                          <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Device</span>
+                                        </div>
+                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                          Desktop browsers can deliver alerts with all tabs closed if background processing is allowed in browser settings.
+                                        </p>
+                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
+                                          <li>In browser settings (e.g. Chrome <span className="font-medium text-gray-800">Settings → System</span>), ensure <span className="font-medium text-gray-800">&ldquo;Continue running background apps when closed&rdquo;</span> is enabled.</li>
+                                          <li>Ensure your OS settings (Windows Notifications / macOS Focus) allow notifications for your browser.</li>
+                                        </ul>
+                                      </div>
+                                    )}
+
+                                    {/* Universal toggle to see guidelines for all platforms */}
+                                    <div className="pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => setShowAllPlatforms(prev => !prev)}
+                                        className="text-[11px] font-medium text-gray-500 hover:text-black transition-colors focus:outline-none flex items-center gap-1"
+                                      >
+                                        <span>{showAllPlatforms ? 'Hide other operating systems' : 'View guidelines for other operating systems'}</span>
+                                        <ChevronDown size={11} className={cn("transition-transform duration-200", showAllPlatforms && "rotate-180")} />
+                                      </button>
+
+                                      {showAllPlatforms && (
+                                        <div className="mt-2.5 pt-2.5 border-t border-gray-200/70 space-y-2.5 text-[11px]">
+                                          {!platformInfo.isSamsung && (
+                                            <div className="space-y-0.5">
+                                              <p className="font-semibold text-gray-800">Samsung Internet (Galaxy):</p>
+                                              <p className="text-gray-500">Android Settings → Apps → Samsung Internet → Battery → set to &ldquo;Unrestricted&rdquo;.</p>
+                                            </div>
+                                          )}
+                                          {(!platformInfo.isAndroid || platformInfo.isSamsung) && (
+                                            <div className="space-y-0.5">
+                                              <p className="font-semibold text-gray-800">Android Chrome:</p>
+                                              <p className="text-gray-500">Android Settings → Apps → Chrome → App battery usage → set to &ldquo;Unrestricted&rdquo;.</p>
+                                            </div>
+                                          )}
+                                          {!platformInfo.isIOS && (
+                                            <div className="space-y-0.5">
+                                              <p className="font-semibold text-gray-800">iOS (iPhone &amp; iPad):</p>
+                                              <p className="text-gray-500">Requires iOS 16.4+. Safari Share menu → &ldquo;Add to Home Screen&rdquo;.</p>
+                                            </div>
+                                          )}
+                                          {!platformInfo.isDesktop && (
+                                            <div className="space-y-0.5">
+                                              <p className="font-semibold text-gray-800">Desktop (Windows &amp; macOS):</p>
+                                              <p className="text-gray-500">Ensure browser system settings permit running background apps when closed.</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
+
+                          {/* Android browser (not installed): gentle PWA install hint for reliability */}
+                          {platformInfo.isAndroid && !isInstalled && isPushSubscribed && (
+                            <div className="pt-0">
+                              <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
+                                <Download size={16} className="text-blue-600 mt-0.5 shrink-0" />
+                                <div>
+                                  <p className="text-xs font-semibold text-blue-800">Install for more reliable push</p>
+                                  <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
+                                    Installing Rater to your home screen improves push delivery reliability, especially when your browser is in the background.
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={handleInstallApp}
+                                    className="mt-2 text-xs font-semibold text-blue-800 underline underline-offset-2 focus:outline-none"
+                                  >
+                                    Install Rater
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* In-App Notifications */}

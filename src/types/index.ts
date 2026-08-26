@@ -294,6 +294,8 @@ export interface Report {
   reporter?: Avatar | null;
   target_post?: Post | null;
   target_profile?: Avatar | null;
+  target_review?: (Review & { post?: { id: string; title: string; image_url?: string } | null; reviewer?: Avatar | null }) | null;
+  target_reply?: (CritiqueReply & { critique?: { id: string; post_id: string } | null; post?: { id: string; title: string; image_url?: string } | null }) | null;
 }
 
 export interface AdminAuditLog {

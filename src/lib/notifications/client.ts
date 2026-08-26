@@ -201,6 +201,9 @@ export async function registerPushSubscription(profileId: string): Promise<{ ok:
         p256dh,
         auth,
         userAgent: navigator.userAgent,
+        // Optional metadata: PushSubscription.expirationTime may be null (browser-dependent).
+        // Stored server-side as optional metadata only; not used for pruning.
+        expiresAt: subscription.expirationTime ?? null,
       }),
     });
 
@@ -242,6 +245,56 @@ export async function unregisterPushSubscription(profileId: string): Promise<boo
   } catch (err) {
     console.error('[Push] Error unsubscribing from push:', err);
     return false;
+  }
+}
+
+/**
+ * Silently verify whether the current device's push subscription is still active
+ * and re-sync with the backend if it has been rotated or renewed by the browser.
+ *
+ * Intended to be called on app mount. Does nothing if push permission is not granted.
+ * Does NOT prompt for permission.
+ */
+export async function refreshPushSubscriptionIfNeeded(): Promise<void> {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return;
+  }
+
+  try {
+    if (Notification.permission !== 'granted') return;
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      // Subscription was cleared by the browser. Nothing to sync — the next explicit
+      // enable in Settings will trigger a fresh registration.
+      return;
+    }
+
+    const rawKey = subscription.getKey ? subscription.getKey('p256dh') : null;
+    const rawAuth = subscription.getKey ? subscription.getKey('auth') : null;
+    if (!rawKey || !rawAuth) return;
+
+    const p256dh = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(rawKey))));
+    const auth = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(rawAuth))));
+
+    // Upsert the current subscription state. If the browser rotated keys (pushsubscriptionchange),
+    // the SW handler will have already re-subscribed and re-registered — this call ensures
+    // the app-layer stays in sync. The server upserts on endpoint so this is idempotent.
+    await fetch('/api/notifications/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        endpoint: subscription.endpoint,
+        p256dh,
+        auth,
+        userAgent: navigator.userAgent,
+        expiresAt: subscription.expirationTime ?? null,
+      }),
+    });
+  } catch {
+    // Silent — this is a background health-check, not user-facing
   }
 }
 

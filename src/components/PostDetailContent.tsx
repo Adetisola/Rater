@@ -4,7 +4,15 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
 import { AI_TOOLS } from '@/types';
-import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview, updateReview, deleteReview } from '@/lib/reviews';
+import { 
+    getReviewsByPostId, 
+    getReviewerName as getReviewerDisplayName, 
+    submitReview, 
+    updateReview, 
+    deleteReview,
+    fetchCritiqueById,
+    resolveReplyContext 
+} from '@/lib/reviews';
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -54,7 +62,8 @@ import {
     ChevronRight,
     Copy,
     Check,
-    Eye
+    Eye,
+    Sparkles
 } from 'lucide-react';
 
 
@@ -408,6 +417,10 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
     const [reportTarget, setReportTarget] = useState<{ targetType: 'post' | 'profile' | 'reply' | 'review'; targetId: string } | null>(null);
     const [urlCritiqueId, setUrlCritiqueId] = useState<string | null>(null);
     const [urlReplyId, setUrlReplyId] = useState<string | null>(null);
+    const [targetedCritique, setTargetedCritique] = useState<Review | null>(null);
+    const [highlightedCritiqueId, setHighlightedCritiqueId] = useState<string | null>(null);
+    const [hasResolvedTarget, setHasResolvedTarget] = useState(false);
+    const hasScrolledToTargetRef = useRef(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
     const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
@@ -432,6 +445,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
         const targetCritique = cId || hashCritiqueId;
         if (targetCritique) {
             setUrlCritiqueId(targetCritique);
+            setHighlightedCritiqueId(targetCritique);
         }
         if (rId) {
             setUrlReplyId(rId);
@@ -439,18 +453,16 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
 
         if (tabParam === 'critique' || targetCritique || rId) {
             setActiveTab('rate');
-            setTimeout(() => {
-                if (targetCritique) {
-                    const el = document.getElementById(`critique-${targetCritique}`);
-                    if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    } else if (critiquesSectionRef.current) {
-                        critiquesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                } else if (critiquesSectionRef.current) {
-                    critiquesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Resilient fallback: If replyId is present but critiqueId was omitted, resolve the parent critique
+        if (rId && !targetCritique) {
+            resolveReplyContext(rId).then(ctx => {
+                if (ctx?.critiqueId) {
+                    setUrlCritiqueId(ctx.critiqueId);
+                    setHighlightedCritiqueId(ctx.critiqueId);
                 }
-            }, 450);
+            }).catch(() => {});
         }
     }, []);
 
@@ -631,9 +643,81 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
         });
     }, [allReviews, sortBy, modeConfig]);
 
-    const visibleReviews = sortedReviews.slice(0, visibleCount);
-    const hasMoreReviews = visibleCount < sortedReviews.length;
-    const remainingReviews = sortedReviews.length - visibleCount;
+    const displayReviews = useMemo(() => {
+        return sortedReviews.filter(r => !targetedCritique || r.id !== targetedCritique.id);
+    }, [sortedReviews, targetedCritique]);
+
+    const visibleReviews = useMemo(() => {
+        return displayReviews.slice(0, visibleCount);
+    }, [displayReviews, visibleCount]);
+
+    const hasMoreReviews = visibleCount < displayReviews.length;
+    const remainingReviews = displayReviews.length - visibleCount;
+
+    // Target Resolution: Decide whether to highlight in-place (top 5) or mount targeted container (deep items)
+    useEffect(() => {
+        if (!urlCritiqueId || isFetchingReviews || hasResolvedTarget) return;
+
+        const index = sortedReviews.findIndex(r => r.id === urlCritiqueId);
+
+        if (index >= 0 && index < REVIEWS_PER_PAGE) {
+            // Case 1: In the first 5 visible items -> highlight in place
+            setHasResolvedTarget(true);
+            setTargetedCritique(null);
+            setHighlightedCritiqueId(urlCritiqueId);
+        } else if (index >= REVIEWS_PER_PAGE) {
+            // Case 2: Deep in list (index 5+) -> promote to Targeted Critique container
+            setHasResolvedTarget(true);
+            setTargetedCritique(sortedReviews[index]);
+            setHighlightedCritiqueId(urlCritiqueId);
+        } else if (index === -1) {
+            // Case 3: Not in currently loaded reviews -> fetch single critique from database
+            let isCurrent = true;
+            fetchCritiqueById(urlCritiqueId).then(fetched => {
+                if (!isCurrent) return;
+                setHasResolvedTarget(true);
+                if (fetched) {
+                    setTargetedCritique(fetched);
+                    setHighlightedCritiqueId(urlCritiqueId);
+                } else {
+                    showToast('This critique or reply is no longer available.', 'error');
+                }
+            }).catch(() => {
+                if (!isCurrent) return;
+                setHasResolvedTarget(true);
+                showToast('Unable to load targeted critique.', 'error');
+            });
+            return () => { isCurrent = false; };
+        }
+    }, [urlCritiqueId, isFetchingReviews, sortedReviews, hasResolvedTarget]);
+
+    // Smooth Scroll to Target Critique once mounted
+    useEffect(() => {
+        if (!urlCritiqueId || !hasResolvedTarget || hasScrolledToTargetRef.current) return;
+
+        const timer = setTimeout(() => {
+            const el = document.getElementById(`critique-${urlCritiqueId}`);
+            if (el) {
+                hasScrolledToTargetRef.current = true;
+                if (!urlReplyId) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (critiquesSectionRef.current && !urlReplyId) {
+                critiquesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 150);
+
+        return () => clearTimeout(timer);
+    }, [urlCritiqueId, hasResolvedTarget, targetedCritique, urlReplyId]);
+
+    // Auto-clear highlight after 4.5s
+    useEffect(() => {
+        if (!highlightedCritiqueId) return;
+        const timer = setTimeout(() => {
+            setHighlightedCritiqueId(null);
+        }, 4500);
+        return () => clearTimeout(timer);
+    }, [highlightedCritiqueId]);
 
     const handleReviewSubmit = async (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewer_name: string) => {
         if (currentAvatar && post.avatar_id === currentAvatar.id) return;
@@ -760,7 +844,190 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
     };
 
     const handleLoadMore = () => {
-        setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
+        setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, displayReviews.length));
+    };
+
+    const renderCritiqueCard = (review: Review, isTargetedBanner: boolean = false) => {
+        let sum = 0;
+        let count = 0;
+        modeConfig.criteria.forEach(c => {
+            const val = review.ratings?.[c.dbKey];
+            if (typeof val === 'number') {
+                sum += val;
+                count++;
+            }
+        });
+        const ratingAvg = count > 0 ? sum / count : 0;
+
+        const timeLabel = formatTimestamp(review.created_at, now);
+        const fullTime = getFullTimestamp(review.created_at);
+
+        const reviewerProfile = review.author || (review.reviewer_id ? allAvatars[review.reviewer_id] : undefined);
+        const avatarUrl = reviewerProfile?.avatar_url || null;
+        const username = reviewerProfile?.username;
+        const displayName = reviewerProfile?.name || getReviewerDisplayName(review);
+        const hasProfile = Boolean(username);
+        const isTargeted = highlightedCritiqueId === review.id || isTargetedBanner;
+
+        return (
+            <motion.div
+                key={review.id}
+                id={`critique-${review.id}`}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className={cn(
+                    "rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4 scroll-mt-24 transition-all duration-500",
+                    isTargeted
+                        ? "bg-amber-50/25 border-2 border-primary/50 ring-4 ring-primary/10 shadow-sm"
+                        : "bg-white border border-gray-200"
+                )}
+            >
+                <div className="w-full">
+                    <div className="flex items-center gap-3 mb-3">
+                        {hasProfile ? (
+                            <Link
+                                href={`/@${username}`}
+                                scroll={false}
+                                onClick={(e) => e.stopPropagation()}
+                                className="transition-all block shrink-0 rounded-full hover:ring-1 ring-primary focus:outline-none"
+                            >
+                                <UserAvatar 
+                                    avatarUrl={avatarUrl} 
+                                    size="xs"
+                                    className="w-7 h-7"
+                                    iconClassName="w-3/4 h-3/4"
+                                />
+                            </Link>
+                        ) : (
+                            <div className="shrink-0">
+                                <UserAvatar 
+                                    avatarUrl={avatarUrl} 
+                                    size="xs"
+                                    className="w-7 h-7"
+                                    iconClassName="w-3/4 h-3/4"
+                                />
+                            </div>
+                        )}
+                        <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
+                            <div className="flex items-center gap-2 min-w-0">
+                                {hasProfile ? (
+                                    <Link
+                                        href={`/@${username}`}
+                                        scroll={false}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors hover:text-primary cursor-pointer focus:outline-none"
+                                    >
+                                        {displayName}
+                                    </Link>
+                                ) : (
+                                    <span className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none">
+                                        {displayName}
+                                    </span>
+                                )}
+                                {!review.reviewer_id && (
+                                    <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
+                                        Guest
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="flex gap-0.5">
+                                    <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
+                                </div>
+                                <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
+                                    {ratingAvg.toFixed(1)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
+                            <span
+                                className="text-xs text-gray-400 font-medium"
+                                title={fullTime}
+                                suppressHydrationWarning
+                            >
+                                {timeLabel}
+                            </span>
+                            {currentAvatar?.id === review.reviewer_id ? (
+                                <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
+                                    <button 
+                                        onClick={() => {
+                                            if (editingReview && editingReview.id !== review.id) {
+                                                if (!window.confirm("You have unsaved changes. Discard and edit this review instead?")) {
+                                                    return;
+                                                }
+                                            }
+                                            setEditingReview(review);
+                                            setReviewToDelete(null);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="hover:text-primary transition-colors"
+                                    >
+                                        Edit
+                                    </button>
+                                    <span>•</span>
+                                    {reviewToDelete === review.id ? (
+                                        <div className="flex items-center gap-1 text-red-500">
+                                            <span>Are you sure?</span>
+                                            <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
+                                            <span>/</span>
+                                            <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setReviewToDelete(review.id)}
+                                            className="hover:text-red-500 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex items-center text-xs font-medium text-gray-400">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setReportTarget({ targetType: 'review', targetId: review.id })}
+                                        className="hover:text-red-500 transition-colors focus:outline-none"
+                                    >
+                                        Report
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {review.comment && (
+                        <div className="text-sm text-black leading-relaxed mb-3">
+                            <div className="markdown-content text-sm wrap-break-word">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {review.comment}
+                                </ReactMarkdown>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-4 mt-2">
+                        <div className="flex flex-wrap gap-3 xs:gap-4">
+                            {modeConfig.criteria.map(c => (
+                                <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
+                                    <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
+                                    {review.ratings?.[c.dbKey] || '-'}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Threaded Critique Replies */}
+                    <CritiqueReplyThread
+                        critique={review}
+                        post={post}
+                        initialExpanded={urlCritiqueId === review.id}
+                        targetReplyId={urlCritiqueId === review.id ? urlReplyId : null}
+                        onOpenReportModal={(type, targetId) => setReportTarget({ targetType: type, targetId })}
+                    />
+                </div>
+            </motion.div>
+        );
     };
 
     const avatar = allAvatars[post.avatar_id] || post.author;
@@ -1345,7 +1612,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                  onRetry={() => setRetryCount(0)}
                                />
                             </div>
-                        ) : allReviews.length === 0 ? (
+                        ) : allReviews.length === 0 && !targetedCritique ? (
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1359,185 +1626,34 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     Your critique helps the creator sharpen their craft and provides valuable insights for the studio.
                                 </p>
                             </motion.div>
-                        ) : visibleReviews.map((review) => {
-                            // Calculate dynamic rating average based on mode criteria
-                            let sum = 0;
-                            let count = 0;
-                            modeConfig.criteria.forEach(c => {
-                                const val = review.ratings?.[c.dbKey];
-                                if (typeof val === 'number') {
-                                    sum += val;
-                                    count++;
-                                }
-                            });
-                            const ratingAvg = count > 0 ? sum / count : 0;
-
-                            const timeLabel = formatTimestamp(review.created_at, now);
-                            const fullTime = getFullTimestamp(review.created_at);
-
-                            // Primary source of truth: embedded review.author from DB join
-                            // Fallback source of truth: ProfileCache via allAvatars
-                            const reviewerProfile = review.author || (review.reviewer_id ? allAvatars[review.reviewer_id] : undefined);
-                            const avatarUrl = reviewerProfile?.avatar_url || null;
-                            const username = reviewerProfile?.username;
-                            const displayName = reviewerProfile?.name || getReviewerDisplayName(review);
-                            const hasProfile = Boolean(username);
-
-                            return (
-                                <motion.div
-                                    key={review.id}
-                                    id={`critique-${review.id}`}
-                                    initial={{ opacity: 0, y: 16 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.35, ease: "easeOut" }}
-                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4 scroll-mt-24"
-                                >
-                                    <div className="w-full">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            {hasProfile ? (
-                                                <Link
-                                                    href={`/@${username}`}
-                                                    scroll={false}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="transition-all block shrink-0 rounded-full hover:ring-1 ring-primary focus:outline-none"
-                                                >
-                                                    <UserAvatar 
-                                                        avatarUrl={avatarUrl} 
-                                                        size="xs"
-                                                        className="w-7 h-7"
-                                                        iconClassName="w-3/4 h-3/4"
-                                                    />
-                                                </Link>
-                                            ) : (
-                                                <div className="shrink-0">
-                                                    <UserAvatar 
-                                                        avatarUrl={avatarUrl} 
-                                                        size="xs"
-                                                        className="w-7 h-7"
-                                                        iconClassName="w-3/4 h-3/4"
-                                                    />
-                                                </div>
-                                            )}
-                                            <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    {hasProfile ? (
-                                                        <Link
-                                                            href={`/@${username}`}
-                                                            scroll={false}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                            className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors hover:text-primary cursor-pointer focus:outline-none"
-                                                        >
-                                                            {displayName}
-                                                        </Link>
-                                                    ) : (
-                                                        <span className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none">
-                                                            {displayName}
-                                                        </span>
-                                                    )}
-                                                    {!review.reviewer_id && (
-                                                        <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
-                                                            Guest
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="flex gap-0.5">
-                                                        <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
-                                                    </div>
-                                                    <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
-                                                        {ratingAvg.toFixed(1)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
-                                                <span
-                                                    className="text-xs text-gray-400 font-medium"
-                                                    title={fullTime}
-                                                    suppressHydrationWarning
-                                                >
-                                                    {timeLabel}
+                        ) : (
+                            <>
+                                {targetedCritique && (
+                                    <div className="mb-6 pb-6 border-b border-gray-200/80 flex flex-col gap-3">
+                                        <div className="flex items-center justify-between px-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary border border-primary/25">
+                                                    <Sparkles className="w-3.5 h-3.5" />
+                                                    Targeted Critique
                                                 </span>
-                                                {currentAvatar?.id === review.reviewer_id ? (
-                                                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
-                                                        <button 
-                                                            onClick={() => {
-                                                                if (editingReview && editingReview.id !== review.id) {
-                                                                    if (!window.confirm("You have unsaved changes. Discard and edit this review instead?")) {
-                                                                        return;
-                                                                    }
-                                                                }
-                                                                setEditingReview(review);
-                                                                setReviewToDelete(null);
-                                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                            }}
-                                                            className="hover:text-primary transition-colors"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <span>•</span>
-                                                        {reviewToDelete === review.id ? (
-                                                            <div className="flex items-center gap-1 text-red-500">
-                                                                <span>Are you sure?</span>
-                                                                <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
-                                                                <span>/</span>
-                                                                <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
-                                                            </div>
-                                                        ) : (
-                                                            <button 
-                                                                onClick={() => setReviewToDelete(review.id)}
-                                                                className="hover:text-red-500 transition-colors"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center text-xs font-medium text-gray-400">
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => setReportTarget({ targetType: 'review', targetId: review.id })}
-                                                            className="hover:text-red-500 transition-colors focus:outline-none"
-                                                        >
-                                                            Report
-                                                        </button>
-                                                    </div>
-                                                )}
+                                                <span className="text-xs text-gray-400">
+                                                    Referenced in notification
+                                                </span>
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setTargetedCritique(null)}
+                                                className="text-xs font-medium text-gray-400 hover:text-black transition-colors focus:outline-none"
+                                            >
+                                                Dismiss
+                                            </button>
                                         </div>
-
-                                        {review.comment && (
-                                            <div className="text-sm text-black leading-relaxed mb-3">
-                                                <div className="markdown-content text-sm wrap-break-word">
-                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                        {review.comment}
-                                                    </ReactMarkdown>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-center gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100 mt-2">
-                                            <div className="flex flex-wrap gap-3 xs:gap-4">
-                                                {modeConfig.criteria.map(c => (
-                                                    <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
-                                                        <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
-                                                        {review.ratings?.[c.dbKey] || '-'}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        {/* Threaded Critique Replies */}
-                                        <CritiqueReplyThread
-                                            critique={review}
-                                            post={post}
-                                            initialExpanded={urlCritiqueId === review.id}
-                                            targetReplyId={urlCritiqueId === review.id ? urlReplyId : null}
-                                            onOpenReportModal={(type, targetId) => setReportTarget({ targetType: type, targetId })}
-                                        />
+                                        {renderCritiqueCard(targetedCritique, true)}
                                     </div>
-                                </motion.div>
-                            );
-                        })}
+                                )}
+                                {visibleReviews.map((review) => renderCritiqueCard(review, false))}
+                            </>
+                        )}
                     </div>
 
 

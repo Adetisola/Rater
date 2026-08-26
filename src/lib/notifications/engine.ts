@@ -162,7 +162,7 @@ export class NotificationEngine {
       // 7. Tier 2: Web Push Dispatch (Non-blocking)
       if (shouldDeliverPush) {
         try {
-          await dispatchWebPush({
+          const pushResult = await dispatchWebPush({
             profileId: recipientProfileId,
             title: rendered.pushTitle || rendered.title,
             body: rendered.pushBody || rendered.message,
@@ -170,6 +170,11 @@ export class NotificationEngine {
             groupKey: groupKey || undefined,
             notificationId,
             actions: rendered.pushActions,
+          });
+          globalLogger.info('[NotificationEngine] Web push dispatch result', {
+            recipientProfileId,
+            sent: pushResult.sent,
+            failed: pushResult.failed,
           });
         } catch (pushErr) {
           globalLogger.warn('[NotificationEngine] Web push delivery failed (non-blocking)', {

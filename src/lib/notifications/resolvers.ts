@@ -99,6 +99,7 @@ export async function dispatchNewWorkPublished(post: Record<string, any>): Promi
       category: post.category,
       imageUrl: post.image_url,
       authorId: post.avatar_id,
+      postId: post.id,
     },
   }));
 

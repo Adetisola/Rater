@@ -13,9 +13,17 @@ import { Button } from '@/components/ui/Button';
 import { UserAvatar } from '@/components/UserAvatar';
 import { PostThumbnail } from '@/components/PostThumbnail';
 import { ConfirmDialog } from './ConfirmDialog';
-import { getReports, updateReportStatus, updatePostModeration, updateUserModeration } from '@/lib/admin/server';
+import { 
+  getReports, 
+  updateReportStatus, 
+  updatePostModeration, 
+  updateUserModeration,
+  deleteReviewModeration,
+  deleteReplyModeration
+} from '@/lib/admin/server';
 import type { Report, ReportStatus } from '@/types';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 export function ReportsAdminPanel() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -95,7 +103,10 @@ export function ReportsAdminPanel() {
     }
   };
 
-  const handleTakeActionAndResolve = (report: Report, actionType: 'hide_post' | 'block_user') => {
+  const handleTakeActionAndResolve = (
+    report: Report, 
+    actionType: 'hide_post' | 'block_user' | 'delete_review' | 'block_reviewer' | 'delete_reply' | 'block_reply_author'
+  ) => {
     if (actionType === 'hide_post' && report.target_post) {
       setConfirmDialog({
         isOpen: true,
@@ -131,6 +142,88 @@ export function ReportsAdminPanel() {
             setConfirmDialog(prev => ({ ...prev, isOpen: false }));
           } catch (err: any) {
             alert(err?.message || 'Failed to execute moderation action');
+          } finally {
+            setIsActionLoading(false);
+          }
+        },
+      });
+    } else if (actionType === 'delete_review' && report.target_review) {
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Delete Reported Critique?',
+        description: 'This will permanently remove this critique and its ratings from the post, recalculating the work\'s average score, and resolve this safety report.',
+        confirmLabel: 'Delete Critique & Resolve',
+        variant: 'danger',
+        action: async () => {
+          try {
+            setIsActionLoading(true);
+            await deleteReviewModeration(report.target_id);
+            await handleUpdateStatus(report.id, 'resolved', 'Critique deleted due to community violations');
+            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          } catch (err: any) {
+            alert(err?.message || 'Failed to delete critique');
+          } finally {
+            setIsActionLoading(false);
+          }
+        },
+      });
+    } else if (actionType === 'block_reviewer' && report.target_review?.reviewer_id) {
+      const username = report.target_review.reviewer?.username || 'user';
+      setConfirmDialog({
+        isOpen: true,
+        title: `Block Reviewer @${username}?`,
+        description: 'This will immediately suspend this user from Rater and resolve this safety report.',
+        confirmLabel: 'Block Reviewer & Resolve',
+        variant: 'danger',
+        action: async () => {
+          try {
+            setIsActionLoading(true);
+            await updateUserModeration(report.target_review!.reviewer_id, { is_blocked: true });
+            await handleUpdateStatus(report.id, 'resolved', `User @${username} blocked by admin`);
+            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          } catch (err: any) {
+            alert(err?.message || 'Failed to block user');
+          } finally {
+            setIsActionLoading(false);
+          }
+        },
+      });
+    } else if (actionType === 'delete_reply' && report.target_reply) {
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Remove Reported Reply?',
+        description: 'This will remove this reply due to community violations, replacing it with a violation notice while preserving thread continuity.',
+        confirmLabel: 'Remove Reply & Resolve',
+        variant: 'danger',
+        action: async () => {
+          try {
+            setIsActionLoading(true);
+            await deleteReplyModeration(report.target_id);
+            await handleUpdateStatus(report.id, 'resolved', 'Reply removed due to community violations');
+            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          } catch (err: any) {
+            alert(err?.message || 'Failed to remove reply');
+          } finally {
+            setIsActionLoading(false);
+          }
+        },
+      });
+    } else if (actionType === 'block_reply_author' && report.target_reply?.author_id) {
+      const username = report.target_reply.author?.username || 'user';
+      setConfirmDialog({
+        isOpen: true,
+        title: `Block Author @${username}?`,
+        description: 'This will immediately suspend this user from Rater and resolve this safety report.',
+        confirmLabel: 'Block Author & Resolve',
+        variant: 'danger',
+        action: async () => {
+          try {
+            setIsActionLoading(true);
+            await updateUserModeration(report.target_reply!.author_id, { is_blocked: true });
+            await handleUpdateStatus(report.id, 'resolved', `User @${username} blocked by admin`);
+            setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          } catch (err: any) {
+            alert(err?.message || 'Failed to block user');
           } finally {
             setIsActionLoading(false);
           }
@@ -182,6 +275,8 @@ export function ReportsAdminPanel() {
           >
             <option value="all">All Targets</option>
             <option value="post">Posts Only</option>
+            <option value="review">Critiques Only</option>
+            <option value="reply">Replies Only</option>
             <option value="profile">Profiles Only</option>
           </select>
 
@@ -227,8 +322,17 @@ export function ReportsAdminPanel() {
                     {report.status.replace('_', ' ')}
                   </span>
 
-                  <span className="text-xs font-bold text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">
-                    {report.target_type === 'post' ? 'Post Violation' : 'Profile Violation'}
+                  <span className={cn(
+                    "text-xs font-bold px-2.5 py-1 rounded-lg",
+                    report.target_type === 'post' && "bg-blue-50 text-blue-800",
+                    report.target_type === 'review' && "bg-purple-50 text-purple-800",
+                    report.target_type === 'reply' && "bg-amber-50 text-amber-900",
+                    report.target_type === 'profile' && "bg-gray-100 text-gray-900"
+                  )}>
+                    {report.target_type === 'post' ? 'Post Violation' :
+                     report.target_type === 'review' ? 'Critique Report' :
+                     report.target_type === 'reply' ? 'Critique Reply Report' :
+                     'Profile Violation'}
                   </span>
 
                   <span className="text-xs text-gray-400 font-medium">
@@ -273,6 +377,7 @@ export function ReportsAdminPanel() {
                     Reported Content
                   </div>
 
+                  {/* Post Preview */}
                   {report.target_type === 'post' && report.target_post && (
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
                       <PostThumbnail
@@ -300,6 +405,7 @@ export function ReportsAdminPanel() {
                     </div>
                   )}
 
+                  {/* Profile Preview */}
                   {report.target_type === 'profile' && report.target_profile && (
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
                       <UserAvatar avatarUrl={report.target_profile.avatar_url} size="sm" className="w-10 h-10" />
@@ -322,8 +428,109 @@ export function ReportsAdminPanel() {
                     </div>
                   )}
 
+                  {/* Critique / Review Preview */}
+                  {report.target_type === 'review' && report.target_review && (
+                    <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <UserAvatar avatarUrl={report.target_review.reviewer?.avatar_url} size="xs" className="w-6 h-6" />
+                          <span className="text-xs font-bold text-gray-900 truncate">
+                            {report.target_review.reviewer?.name || 'Reviewer'}
+                          </span>
+                          {report.target_review.reviewer?.username && (
+                            <span className="text-[11px] text-gray-500 truncate">
+                              @{report.target_review.reviewer.username}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0 bg-white px-2 py-0.5 rounded-full border border-gray-200/80">
+                          <img src="/icons/star-active-yellow.svg" className="w-3 h-3" alt="" />
+                          <span className="text-[11px] font-bold text-gray-800">
+                            {(() => {
+                              const ratings = report.target_review.ratings || {};
+                              const vals = Object.values(ratings).filter(v => typeof v === 'number') as number[];
+                              if (vals.length === 0) return '-';
+                              return (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+
+                      {report.target_review.comment && (
+                        <div className="text-xs text-gray-800 bg-white p-2.5 rounded-xl border border-gray-100 leading-relaxed max-h-28 overflow-y-auto">
+                          &ldquo;{report.target_review.comment}&rdquo;
+                        </div>
+                      )}
+
+                      <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[11px]">
+                        <div className="text-gray-500 truncate flex-1 min-w-0 mr-2">
+                          On work: <span className="font-semibold text-gray-800">{report.target_review.post?.title || 'Published Work'}</span>
+                        </div>
+                        {report.target_review.post_id && (
+                          <Link
+                            href={`/post/${report.target_review.post_id}?tab=critique&critiqueId=${report.target_id}#critique-${report.target_id}`}
+                            target="_blank"
+                            className="font-bold text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                          >
+                            Inspect Live Critique
+                            <ExternalLink size={10} />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Critique Reply Preview */}
+                  {report.target_type === 'reply' && report.target_reply && (
+                    <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <UserAvatar avatarUrl={report.target_reply.author?.avatar_url} size="xs" className="w-6 h-6" />
+                          <span className="text-xs font-bold text-gray-900 truncate">
+                            {report.target_reply.author?.name || 'User'}
+                          </span>
+                          {report.target_reply.author?.username && (
+                            <span className="text-[11px] text-gray-500 truncate">
+                              @{report.target_reply.author.username}
+                            </span>
+                          )}
+                        </div>
+
+                        {report.target_reply.is_tombstone && (
+                          <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
+                            Already Deleted
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-gray-800 bg-white p-2.5 rounded-xl border border-gray-100 leading-relaxed max-h-28 overflow-y-auto">
+                        &ldquo;{report.target_reply.content}&rdquo;
+                      </div>
+
+                      <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[11px]">
+                        <div className="text-gray-500 truncate flex-1 min-w-0 mr-2">
+                          On work: <span className="font-semibold text-gray-800">{report.target_reply.post?.title || 'Published Work'}</span>
+                        </div>
+                        {report.target_reply.critique?.post_id && (
+                          <Link
+                            href={`/post/${report.target_reply.critique.post_id}?tab=critique&critiqueId=${report.target_reply.critique_id}&replyId=${report.target_id}#critique-${report.target_reply.critique_id}`}
+                            target="_blank"
+                            className="font-bold text-primary hover:underline inline-flex items-center gap-1 shrink-0"
+                          >
+                            Inspect Live Reply
+                            <ExternalLink size={10} />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Target content deleted or missing fallback */}
                   {((report.target_type === 'post' && !report.target_post) || 
-                    (report.target_type === 'profile' && !report.target_profile)) && (
+                    (report.target_type === 'profile' && !report.target_profile) ||
+                    (report.target_type === 'review' && !report.target_review) ||
+                    (report.target_type === 'reply' && !report.target_reply)) && (
                     <div className="p-3 bg-gray-50 rounded-2xl text-xs text-gray-400 italic">
                       Target content was deleted or no longer exists.
                     </div>
@@ -355,6 +562,7 @@ export function ReportsAdminPanel() {
                     </Button>
                   )}
 
+                  {/* Post Moderation */}
                   {report.target_type === 'post' && report.target_post && (
                     <Button
                       variant="outline"
@@ -366,6 +574,7 @@ export function ReportsAdminPanel() {
                     </Button>
                   )}
 
+                  {/* Profile Moderation */}
                   {report.target_type === 'profile' && report.target_profile && (
                     <Button
                       variant="outline"
@@ -375,6 +584,54 @@ export function ReportsAdminPanel() {
                     >
                       Block User & Resolve
                     </Button>
+                  )}
+
+                  {/* Critique Moderation */}
+                  {report.target_type === 'review' && report.target_review && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleTakeActionAndResolve(report, 'delete_review')}
+                        disabled={isActionLoading}
+                        className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                      >
+                        Delete Critique & Resolve
+                      </Button>
+                      {report.target_review.reviewer_id && (
+                        <Button
+                          variant="outline"
+                          onClick={() => handleTakeActionAndResolve(report, 'block_reviewer')}
+                          disabled={isActionLoading}
+                          className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                        >
+                          Block Reviewer
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                  {/* Critique Reply Moderation */}
+                  {report.target_type === 'reply' && report.target_reply && !report.target_reply.is_tombstone && (
+                    <>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleTakeActionAndResolve(report, 'delete_reply')}
+                        disabled={isActionLoading}
+                        className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                      >
+                        Remove Reply & Resolve
+                      </Button>
+                      {report.target_reply.author_id && (
+                        <Button
+                          variant="outline"
+                          onClick={() => handleTakeActionAndResolve(report, 'block_reply_author')}
+                          disabled={isActionLoading}
+                          className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                        >
+                          Block Author
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   {report.status !== 'dismissed' && (

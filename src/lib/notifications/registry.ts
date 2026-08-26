@@ -23,7 +23,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     preferenceKey: 'notify_critiques',
     renderCopy: ({ workTitle, postId, reviewId }) => {
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
-      const critiqueUrl = postId ? `/post/${postId}?tab=critique${reviewId ? `#review-${reviewId}` : ''}` : '/browse';
+      const critiqueUrl = postId ? `/post/${postId}?tab=critique${reviewId ? `&critiqueId=${reviewId}#critique-${reviewId}` : ''}` : '/browse';
       const postUrl = postId ? `/post/${postId}` : '/browse';
       return {
         title: 'Someone critiqued your Work.',
@@ -55,7 +55,7 @@ export const NOTIFICATION_REGISTRY: Record<NotificationEventType, NotificationEv
     renderCopy: ({ actorName, workTitle, postId, reviewId }) => {
       const reviewer = actorName?.trim() || 'A creative';
       const titleClean = workTitle ? `"${workTitle}"` : 'your Work';
-      const critiqueUrl = postId ? `/post/${postId}?tab=critique${reviewId ? `#review-${reviewId}` : ''}` : '/browse';
+      const critiqueUrl = postId ? `/post/${postId}?tab=critique${reviewId ? `&critiqueId=${reviewId}#critique-${reviewId}` : ''}` : '/browse';
       const postUrl = postId ? `/post/${postId}` : '/browse';
       return {
         title: 'New Critique on your Work',

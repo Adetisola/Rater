@@ -56,7 +56,7 @@ export function CritiqueReplyThread({
   const loadInitialReplies = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await fetchCritiqueReplies(critique.id, undefined, 3);
+      const res = await fetchCritiqueReplies(critique.id, undefined, 3, targetReplyId || undefined);
       setReplies(res.replies);
       setNextCursor(res.nextCursor);
       setReplyCount(res.totalCount);
@@ -71,7 +71,7 @@ export function CritiqueReplyThread({
     } finally {
       setIsLoading(false);
     }
-  }, [critique.id]);
+  }, [critique.id, targetReplyId]);
 
   // Auto-expand and fetch if targetReplyId is present
   useEffect(() => {
@@ -86,12 +86,15 @@ export function CritiqueReplyThread({
   // Handle deep-link scrolling
   useEffect(() => {
     if (highlightedReplyId && replies.length > 0) {
-      const el = document.getElementById(`reply-${highlightedReplyId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        const timer = setTimeout(() => setHighlightedReplyId(null), 4000);
-        return () => clearTimeout(timer);
-      }
+      const raf = requestAnimationFrame(() => {
+        const el = document.getElementById(`reply-${highlightedReplyId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const timer = setTimeout(() => setHighlightedReplyId(null), 4000);
+          return () => clearTimeout(timer);
+        }
+      });
+      return () => cancelAnimationFrame(raf);
     }
   }, [highlightedReplyId, replies]);
 
@@ -345,6 +348,7 @@ export function CritiqueReplyThread({
                   key={reply.id}
                   reply={reply}
                   currentUserId={currentProfile?.id}
+                  postAuthorId={post.avatar_id}
                   isAdmin={Boolean(currentProfile?.is_admin)}
                   onReplyTo={handleReplyToItem}
                   onDelete={handleDeleteReply}

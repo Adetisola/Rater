@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { endpoint, p256dh, auth, userAgent } = body;
+    const { endpoint, p256dh, auth, userAgent, expiresAt } = body;
 
     if (!endpoint || !p256dh || !auth) {
       return NextResponse.json({ error: 'Missing required push subscription fields' }, { status: 400 });
@@ -69,6 +69,9 @@ export async function POST(req: NextRequest) {
           p256dh,
           auth,
           user_agent: userAgent || null,
+          // Optional metadata: browser-reported expiration. May be null.
+          // Not used for pruning — reactive 410/404 detection is authoritative.
+          expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'endpoint' }

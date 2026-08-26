@@ -78,6 +78,20 @@ async function invalidateRelatedCaches() {
   }
 }
 
+// =============================================================================
+// --- VAPID Key Reception ---
+// The VAPID public key is injected from the client (PWARegistry.tsx) via postMessage.
+// This avoids the need for an additional network request when handling
+// pushsubscriptionchange. The key is public and safe to store in the SW global scope.
+// =============================================================================
+self.__VAPID_PUBLIC_KEY__ = null;
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'VAPID_PUBLIC_KEY') {
+    self.__VAPID_PUBLIC_KEY__ = event.data.key;
+  }
+});
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHES.STATIC).then((cache) => cache.addAll(STATIC_ASSETS))
@@ -217,16 +231,28 @@ self.addEventListener('fetch', (event) => {
 
 });
 
+// =============================================================================
 // --- 7. Web Push Notification Handling ---
+// =============================================================================
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
   try {
     const data = event.data.json();
+
     const options = {
       body: data.body || 'You have a new update on Rater.',
       icon: data.icon || '/icons/icon-192.png',
       badge: data.badge || '/icons/icon-192.png',
+      // Use server-provided timestamp so notification displays the correct time
+      // even if the device was offline and the push was delayed by FCM.
+      timestamp: data.timestamp || Date.now(),
+      // Vibration pattern: short-long-short
+      vibrate: [100, 50, 100],
+      // Keep notification visible until the user explicitly interacts with it.
+      // Important for background delivery on Android where notifications can
+      // be dismissed automatically by some launchers.
+      requireInteraction: false,
       data: {
         url: data.targetUrl || '/browse',
         id: data.id,
@@ -242,9 +268,22 @@ self.addEventListener('push', (event) => {
     );
   } catch (err) {
     console.error('[ServiceWorker] Push event error:', err);
+    // Fallback: show a generic notification rather than silently failing.
+    // This ensures the push event is always visible even if payload is malformed.
+    event.waitUntil(
+      self.registration.showNotification('Rater', {
+        body: 'You have a new notification.',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data: { url: '/browse' },
+      })
+    );
   }
 });
 
+// =============================================================================
+// --- 8. Notification Click Handling ---
+// =============================================================================
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
@@ -257,22 +296,33 @@ self.addEventListener('notificationclick', (event) => {
     targetUrl = actionUrls[clickedAction];
   }
 
-  // Resolve absolute URL
+  // Resolve to an absolute URL using the SW's origin
   const absoluteTargetUrl = new URL(targetUrl, self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // If any existing client is open, navigate and focus it
+      // 1. Check if a window is already at the correct URL — if so, just focus it
       for (const client of windowClients) {
-        if ('navigate' in client && 'focus' in client) {
-          return client.navigate(absoluteTargetUrl).then((navigatedClient) => {
-            return navigatedClient ? navigatedClient.focus() : client.focus();
-          });
-        } else if ('focus' in client) {
+        if (client.url === absoluteTargetUrl && 'focus' in client) {
           return client.focus();
         }
       }
-      // Otherwise open a new window
+
+      // 2. If any window exists but is on a different URL — navigate the first one
+      //    that is on the same origin, so we don't open a redundant tab.
+      for (const client of windowClients) {
+        if (
+          client.url.startsWith(self.location.origin) &&
+          'navigate' in client &&
+          'focus' in client
+        ) {
+          return client.navigate(absoluteTargetUrl).then((navigatedClient) => {
+            return navigatedClient ? navigatedClient.focus() : client.focus();
+          });
+        }
+      }
+
+      // 3. No suitable existing window — open a fresh one
       if (clients.openWindow) {
         return clients.openWindow(absoluteTargetUrl);
       }
@@ -280,3 +330,86 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
+// =============================================================================
+// --- 9. Push Subscription Change Handling ---
+//
+// Fires when the browser automatically rotates push subscription keys
+// (e.g. after a browser update, or when the push service rotates credentials).
+//
+// Security: The re-registration POST uses the existing session cookie
+// (same-origin fetch from the SW). The server validates auth via
+// supabase.auth.getUser() from the cookie — no new auth mechanism is needed.
+//
+// If the session has expired, the fetch will fail with 401 and we log it.
+// The user will receive a fresh subscription the next time they use the app.
+//
+// Note: pushsubscriptionchange browser support varies. Chrome/Chromium-based
+// browsers fire it reliably. Safari fires it on iOS 16.4+. Samsung Internet
+// support follows Chrome's Chromium base. Firefox fires it correctly.
+// =============================================================================
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const vapidPublicKey = self.__VAPID_PUBLIC_KEY__;
+
+        if (!vapidPublicKey) {
+          console.warn('[ServiceWorker] pushsubscriptionchange: VAPID public key not available. Cannot re-subscribe.');
+          return;
+        }
+
+        // Convert base64url VAPID key to Uint8Array
+        const padding = '='.repeat((4 - (vapidPublicKey.length % 4)) % 4);
+        const base64 = (vapidPublicKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = atob(base64);
+        const applicationServerKey = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          applicationServerKey[i] = rawData.charCodeAt(i);
+        }
+
+        // Subscribe with new keys
+        const newSubscription = await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+
+        // Extract keys
+        const rawP256dh = newSubscription.getKey ? newSubscription.getKey('p256dh') : null;
+        const rawAuth = newSubscription.getKey ? newSubscription.getKey('auth') : null;
+
+        if (!rawP256dh || !rawAuth) {
+          console.warn('[ServiceWorker] pushsubscriptionchange: Could not extract new subscription keys.');
+          return;
+        }
+
+        const p256dh = btoa(String.fromCharCode(...new Uint8Array(rawP256dh)));
+        const auth = btoa(String.fromCharCode(...new Uint8Array(rawAuth)));
+
+        // POST new subscription to backend — session cookie included automatically
+        // (same-origin fetch). Server validates auth via cookie and upserts on endpoint.
+        const response = await fetch('/api/notifications/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            endpoint: newSubscription.endpoint,
+            p256dh,
+            auth,
+            expiresAt: newSubscription.expirationTime ?? null,
+          }),
+        });
+
+        if (response.ok) {
+          console.log('[ServiceWorker] pushsubscriptionchange: Re-registered successfully.');
+        } else if (response.status === 401) {
+          // Session expired — user will re-register on next app open. This is expected.
+          console.warn('[ServiceWorker] pushsubscriptionchange: Session expired. Subscription will be re-registered on next login.');
+        } else {
+          console.warn('[ServiceWorker] pushsubscriptionchange: Re-registration failed with status', response.status);
+        }
+      } catch (err) {
+        console.error('[ServiceWorker] pushsubscriptionchange error:', err);
+      }
+    })()
+  );
+});

@@ -550,16 +550,39 @@ export async function getReports(params: GetReportsParams = {}) {
     reporter: row.reporter || null,
   }));
 
-  // Populate target preview information (posts or user profiles)
+  // Populate target preview information (posts, user profiles, reviews, or replies)
   const postIds = reports.filter(r => r.target_type === 'post').map(r => r.target_id);
   const profileIds = reports.filter(r => r.target_type === 'profile').map(r => r.target_id);
+  const reviewIds = reports.filter(r => r.target_type === 'review').map(r => r.target_id);
+  const replyIds = reports.filter(r => r.target_type === 'reply').map(r => r.target_id);
 
-  const [postsRes, profilesRes] = await Promise.all([
+  const [postsRes, profilesRes, reviewsRes, repliesRes] = await Promise.all([
     postIds.length > 0 
       ? adminSupabase.from('posts').select('*, profiles(id, username, name, avatar_url)').in('id', postIds)
       : Promise.resolve({ data: [] }),
     profileIds.length > 0 
       ? adminSupabase.from('profiles').select('id, username, name, avatar_url, email, is_blocked').in('id', profileIds)
+      : Promise.resolve({ data: [] }),
+    reviewIds.length > 0
+      ? adminSupabase
+          .from('reviews')
+          .select('*, profiles:reviewer_id(id, username, name, avatar_url), posts:post_id(id, title, image_url)')
+          .in('id', reviewIds)
+      : Promise.resolve({ data: [] }),
+    replyIds.length > 0
+      ? adminSupabase
+          .from('critique_replies')
+          .select(`
+            *,
+            author:profiles!critique_replies_author_id_fkey(id, username, name, avatar_url),
+            critique:reviews!critique_replies_critique_id_fkey(
+              id,
+              post_id,
+              reviewer_id,
+              posts:post_id(id, title, image_url)
+            )
+          `)
+          .in('id', replyIds)
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -568,11 +591,32 @@ export async function getReports(params: GetReportsParams = {}) {
     { ...p, author: p.profiles } as Post
   ]));
   const profileMap = new Map((profilesRes.data || []).map((p: any) => [p.id, p as Avatar]));
+  const reviewMap = new Map((reviewsRes.data || []).map((rev: any) => [
+    rev.id,
+    {
+      ...rev,
+      reviewer: rev.profiles || null,
+      author: rev.profiles || null,
+      post: rev.posts || null,
+    }
+  ]));
+  const replyMap = new Map((repliesRes.data || []).map((rep: any) => [
+    rep.id,
+    {
+      ...rep,
+      author: rep.author || null,
+      critique: rep.critique ? { id: rep.critique.id, post_id: rep.critique.post_id } : null,
+      post: rep.critique?.posts || null,
+      is_tombstone: Boolean(rep.deleted_at),
+    }
+  ]));
 
   const enrichedReports: Report[] = reports.map(r => ({
     ...r,
     target_post: r.target_type === 'post' ? postMap.get(r.target_id) || null : null,
     target_profile: r.target_type === 'profile' ? profileMap.get(r.target_id) || null : null,
+    target_review: r.target_type === 'review' ? (reviewMap.get(r.target_id) as any) || null : null,
+    target_reply: r.target_type === 'reply' ? (replyMap.get(r.target_id) as any) || null : null,
   }));
 
   return {
@@ -612,6 +656,73 @@ export async function updateReportStatus(
   await logAdminAction(adminProfile.id, 'update_report_status', 'report', reportId, updates);
 
   return { ok: true, report: data as Report };
+}
+
+/**
+ * Delete a reported critique (review) and resolve report.
+ * Removes the review from the reviews table, which recalculates post scores via DB triggers.
+ */
+export async function deleteReviewModeration(reviewId: string) {
+  const { profile: adminProfile } = await verifyAdminSession();
+  const adminSupabase = getAdminSupabase();
+
+  const { data: review } = await adminSupabase
+    .from('reviews')
+    .select('id, post_id, reviewer_id, comment')
+    .eq('id', reviewId)
+    .single();
+
+  if (!review) {
+    throw new Error('Critique not found or already deleted.');
+  }
+
+  const { error: deleteError } = await adminSupabase
+    .from('reviews')
+    .delete()
+    .eq('id', reviewId);
+
+  if (deleteError) {
+    throw new Error(`Failed to delete critique: ${deleteError.message}`);
+  }
+
+  await logAdminAction(adminProfile.id, 'delete_critique', 'review', reviewId, {
+    postId: review.post_id,
+    reviewerId: review.reviewer_id,
+    commentSnippet: review.comment?.substring(0, 100),
+  });
+
+  return { ok: true };
+}
+
+/**
+ * Delete a reported critique reply and resolve report.
+ * Soft-deletes the reply into a tombstone to maintain thread hierarchy.
+ */
+export async function deleteReplyModeration(replyId: string) {
+  const { profile: adminProfile } = await verifyAdminSession();
+  const adminSupabase = getAdminSupabase();
+
+  const { data: reply, error: updateError } = await adminSupabase
+    .from('critique_replies')
+    .update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: adminProfile.id,
+    })
+    .eq('id', replyId)
+    .select('id, critique_id, author_id, content')
+    .single();
+
+  if (updateError || !reply) {
+    throw new Error(`Failed to delete reply: ${updateError?.message || 'Reply not found'}`);
+  }
+
+  await logAdminAction(adminProfile.id, 'delete_reply', 'reply', replyId, {
+    critiqueId: reply.critique_id,
+    authorId: reply.author_id,
+    contentSnippet: reply.content?.substring(0, 100),
+  });
+
+  return { ok: true };
 }
 
 /**

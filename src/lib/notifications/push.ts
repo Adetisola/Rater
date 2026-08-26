@@ -3,6 +3,9 @@
  *
  * Dispatches VAPID web-push notifications to all active subscriptions for a given profile,
  * handles 30-minute aggregation tags, and prunes 410/404 dead subscriptions.
+ *
+ * Delivery observability: each dispatch records per-endpoint accepted/rejected state,
+ * status code, and timing so Samsung Internet and other platform failures are diagnosable.
  */
 
 import 'server-only';
@@ -42,8 +45,20 @@ export interface DispatchWebPushOptions {
   actions?: PushNotificationAction[];
 }
 
+/** Per-subscription dispatch result — for delivery observability */
+interface EndpointDispatchResult {
+  subscriptionId: string;
+  /** Endpoint prefix only (not full URL to avoid logging user-identifying data) */
+  endpointPrefix: string;
+  accepted: boolean;
+  statusCode?: number;
+  errorMessage?: string;
+  durationMs: number;
+}
+
 /**
  * Dispatches a Web Push notification to all active devices registered to a profile.
+ * Returns aggregated sent/failed counts plus per-endpoint results for observability.
  */
 export async function dispatchWebPush({
   profileId,
@@ -53,14 +68,16 @@ export async function dispatchWebPush({
   groupKey,
   notificationId,
   actions,
-}: DispatchWebPushOptions): Promise<{ sent: number; failed: number }> {
+}: DispatchWebPushOptions): Promise<{ sent: number; failed: number; results: EndpointDispatchResult[] }> {
   if (!vapidPublicKey || !vapidPrivateKey) {
     globalLogger.warn('[WebPush] VAPID keys not configured — skipping push dispatch');
-    return { sent: 0, failed: 0 };
+    return { sent: 0, failed: 0, results: [] };
   }
 
   const adminClient = getAdminClient();
-  if (!adminClient) return { sent: 0, failed: 0 };
+  if (!adminClient) return { sent: 0, failed: 0, results: [] };
+
+  const dispatchStartMs = Date.now();
 
   // 1. Fetch all push subscriptions for this user
   const { data: subscriptions, error } = await adminClient
@@ -69,7 +86,8 @@ export async function dispatchWebPush({
     .eq('profile_id', profileId);
 
   if (error || !subscriptions || subscriptions.length === 0) {
-    return { sent: 0, failed: 0 };
+    globalLogger.info('[WebPush] No active subscriptions for profile', { profileId });
+    return { sent: 0, failed: 0, results: [] };
   }
 
   const actionUrls: Record<string, string> = {};
@@ -94,13 +112,16 @@ export async function dispatchWebPush({
     id: notificationId,
     actions: formattedActions,
     actionUrls,
+    // Timestamp so the SW can display the accurate notification time
+    timestamp: Date.now(),
   });
 
   let sent = 0;
   let failed = 0;
   const deadSubscriptionIds: string[] = [];
+  const results: EndpointDispatchResult[] = [];
 
-  // 2. Send in parallel to all active endpoints
+  // 2. Send in parallel to all active endpoints with per-endpoint timing
   await Promise.all(
     subscriptions.map(async (sub) => {
       const pushSubscription = {
@@ -111,24 +132,59 @@ export async function dispatchWebPush({
         },
       };
 
+      // Safe prefix for logging (avoids logging full URL which may contain tokens)
+      const endpointPrefix = sub.endpoint.substring(0, 40) + '…';
+      const endpointStartMs = Date.now();
+
       try {
         await webpush.sendNotification(pushSubscription, payload, {
-          TTL: 86400, // 24 hours
+          TTL: 86400, // 24 hours — FCM/Mozilla hold the message if device is unreachable
           urgency: 'high',
         });
+        const durationMs = Date.now() - endpointStartMs;
         sent++;
+        results.push({
+          subscriptionId: sub.id,
+          endpointPrefix,
+          accepted: true,
+          durationMs,
+        });
+        globalLogger.info('[WebPush] Endpoint accepted push', {
+          subscriptionId: sub.id,
+          endpointPrefix,
+          durationMs,
+        });
       } catch (err: any) {
+        const durationMs = Date.now() - endpointStartMs;
         failed++;
         const statusCode = err?.statusCode;
+        const errorMessage = err?.message || String(err);
 
-        // 3. Prune 410 Gone / 404 Not Found dead endpoints
+        results.push({
+          subscriptionId: sub.id,
+          endpointPrefix,
+          accepted: false,
+          statusCode,
+          errorMessage,
+          durationMs,
+        });
+
+        // 3. Prune 410 Gone / 404 Not Found dead endpoints (authoritative signal)
         if (statusCode === 410 || statusCode === 404) {
           deadSubscriptionIds.push(sub.id);
-        } else {
-          globalLogger.warn('[WebPush] Push dispatch error on device', {
+          globalLogger.info('[WebPush] Dead endpoint — scheduling pruning', {
             subscriptionId: sub.id,
+            endpointPrefix,
             statusCode,
-            message: err?.message,
+          });
+        } else {
+          // Non-fatal delivery error — log for platform diagnosis (e.g. Samsung Internet)
+          globalLogger.warn('[WebPush] Push dispatch error on endpoint', {
+            subscriptionId: sub.id,
+            endpointPrefix,
+            statusCode,
+            errorMessage,
+            durationMs,
           });
         }
       }
@@ -147,6 +203,24 @@ export async function dispatchWebPush({
     }
   }
 
-  globalLogger.info('[WebPush] Dispatch completed', { profileId, sent, failed, pruned: deadSubscriptionIds.length });
-  return { sent, failed };
+  const totalDurationMs = Date.now() - dispatchStartMs;
+
+  globalLogger.info('[WebPush] Dispatch completed', {
+    profileId,
+    sent,
+    failed,
+    pruned: deadSubscriptionIds.length,
+    subscriptionCount: subscriptions.length,
+    totalDurationMs,
+    // Per-endpoint result array for delivery tracing
+    endpointResults: results.map((r) => ({
+      subscriptionId: r.subscriptionId,
+      accepted: r.accepted,
+      statusCode: r.statusCode,
+      durationMs: r.durationMs,
+      ...(r.errorMessage ? { errorMessage: r.errorMessage } : {}),
+    })),
+  });
+
+  return { sent, failed, results };
 }

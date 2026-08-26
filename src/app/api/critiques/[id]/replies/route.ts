@@ -34,6 +34,7 @@ export async function GET(
     const { searchParams } = new URL(req.url);
     const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '3', 10), 1), 50);
     const cursor = searchParams.get('cursor');
+    const targetReplyId = searchParams.get('targetReplyId');
 
     const adminClient = getAdminClient() || supabase;
 
@@ -46,6 +47,29 @@ export async function GET(
 
     if (countErr) {
       console.error('[API/replies] Error counting replies:', countErr);
+    }
+
+    // 1b. Target-aware window resolution: If targetReplyId is specified on initial page
+    let effectiveLimit = limit;
+    if (targetReplyId && !cursor) {
+      const { data: targetRow } = await adminClient
+        .from('critique_replies')
+        .select('created_at')
+        .eq('id', targetReplyId)
+        .eq('critique_id', critiqueId)
+        .maybeSingle();
+
+      if (targetRow?.created_at) {
+        const { count: targetRank } = await adminClient
+          .from('critique_replies')
+          .select('id', { count: 'exact', head: true })
+          .eq('critique_id', critiqueId)
+          .lte('created_at', targetRow.created_at);
+
+        if (targetRank && targetRank > limit) {
+          effectiveLimit = Math.min(targetRank, 50);
+        }
+      }
     }
 
     // 2. Query replies ordered chronologically (created_at ASC)
@@ -65,7 +89,7 @@ export async function GET(
       `)
       .eq('critique_id', critiqueId)
       .order('created_at', { ascending: true })
-      .limit(limit + 1);
+      .limit(effectiveLimit + 1);
 
     if (cursor) {
       query = query.gt('created_at', cursor);
@@ -79,8 +103,8 @@ export async function GET(
     }
 
     const rawReplies = rows || [];
-    const hasMore = rawReplies.length > limit;
-    const pagedRows = hasMore ? rawReplies.slice(0, limit) : rawReplies;
+    const hasMore = rawReplies.length > effectiveLimit;
+    const pagedRows = hasMore ? rawReplies.slice(0, effectiveLimit) : rawReplies;
     const nextCursor = hasMore ? pagedRows[pagedRows.length - 1].created_at : null;
 
     // 3. Find parent replies and children relationships to resolve "Replying to @username" and tombstones

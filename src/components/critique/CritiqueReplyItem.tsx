@@ -12,6 +12,7 @@ import type { CritiqueReply } from '@/types';
 interface CritiqueReplyItemProps {
   reply: CritiqueReply;
   currentUserId?: string;
+  postAuthorId?: string;
   isAdmin?: boolean;
   onReplyTo: (reply: CritiqueReply) => void;
   onDelete: (replyId: string) => Promise<void>;
@@ -22,6 +23,7 @@ interface CritiqueReplyItemProps {
 export function CritiqueReplyItem({
   reply,
   currentUserId,
+  postAuthorId,
   onReplyTo,
   onDelete,
   onReport,
@@ -33,12 +35,17 @@ export function CritiqueReplyItem({
 
   // If this reply is a tombstone
   if (reply.is_tombstone) {
+    const isViolationRemoval = Boolean(reply.deleted_by && reply.deleted_by !== reply.author_id);
     return (
       <div
         id={`reply-${reply.id}`}
         className="w-full py-2.5 px-3 rounded-xl bg-gray-50/60 border border-dashed border-gray-200 text-xs text-gray-400 italic flex items-center gap-2"
       >
-        <span>This reply was deleted.</span>
+        <span>
+          {isViolationRemoval
+            ? 'This reply was removed due to community violations.'
+            : 'This reply was deleted.'}
+        </span>
       </div>
     );
   }
@@ -47,8 +54,9 @@ export function CritiqueReplyItem({
   const fullTime = getFullTimestamp(reply.created_at);
   const username = reply.author?.username;
   const displayName = reply.author?.name || (username ? `@${username}` : 'Creative');
-  const isAuthor = currentUserId && reply.author_id === currentUserId;
-  const canDelete = Boolean(isAuthor);
+  const isReplyOwner = currentUserId && reply.author_id === currentUserId;
+  const canDelete = Boolean(isReplyOwner);
+  const isPostAuthor = Boolean(postAuthorId && (reply.author_id === postAuthorId || reply.author?.id === postAuthorId));
 
   const handleDelete = async () => {
     try {
@@ -108,6 +116,12 @@ export function CritiqueReplyItem({
             </Link>
           ) : (
             <span className="text-xs font-semibold text-black truncate">{displayName}</span>
+          )}
+
+          {isPostAuthor && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium tracking-tight bg-primary/20 text-gray-900 border border-primary/30 select-none shrink-0">
+              Author
+            </span>
           )}
 
           {/* Contextual "Replying to @username" indicator */}
@@ -192,7 +206,7 @@ export function CritiqueReplyItem({
             </>
           )}
 
-          {!isAuthor && (
+          {!isReplyOwner && (
             <>
               <span>•</span>
               <button
