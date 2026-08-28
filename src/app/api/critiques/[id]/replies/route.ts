@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
+import { globalLogger } from '@/lib/logger';
 import type { CritiqueReply, CritiqueRepliesResponse } from '@/types';
 
 function jsonError(message: string, status: number) {
@@ -302,119 +303,8 @@ export async function POST(
       console.warn('[API/replies] Failed to update read state:', e);
     }
 
-    // 6. Resolve Mentions and Dispatch Priority-Deduplicated Notifications (Non-blocking)
-    (async () => {
-      try {
-        const { NotificationEngine } = await import('@/lib/notifications/engine');
-
-        // Regex boundary matching for @username (3-20 chars alphanumeric, underscore, dot)
-        const mentionRegex = /(?:^|\s)@([a-z0-9_.]{3,20})(?=$|[^\w.])/gi;
-        const matchedUsernames = new Set<string>();
-        let match: RegExpExecArray | null;
-
-        while ((match = mentionRegex.exec(rawContent)) !== null) {
-          const u = match[1].toLowerCase();
-          if (u) matchedUsernames.add(u);
-          if (matchedUsernames.size >= 5) break; // Maximum 5 mentions
-        }
-
-        // Resolve profile IDs for mentioned usernames
-        let mentionedProfilesMap = new Map<string, string>(); // username -> profile_id
-        if (matchedUsernames.size > 0) {
-          const { data: matchedProfiles } = await adminClient
-            .from('profiles')
-            .select('id, username, is_blocked')
-            .in('username', Array.from(matchedUsernames))
-            .neq('is_blocked', true);
-
-          (matchedProfiles || []).forEach((p) => {
-            if (p.id !== user.id) {
-              mentionedProfilesMap.set(p.username.toLowerCase(), p.id);
-            }
-          });
-        }
-
-        const mentionedProfileIds = Array.from(mentionedProfilesMap.values());
-
-        // Target candidate resolution with priority deduplication:
-        // Priority 1: Mention (REPLY_MENTION_RECEIVED)
-        // Priority 2: Reply to Reply (REPLY_TO_REPLY_RECEIVED)
-        // Priority 3: Reply to Critique (CRITIQUE_REPLY_RECEIVED)
-
-        const notifiedRecipients = new Set<string>();
-
-        // A. Mention Notifications
-        for (const mentionedId of mentionedProfileIds) {
-          if (mentionedId && mentionedId !== user.id && !notifiedRecipients.has(mentionedId)) {
-            notifiedRecipients.add(mentionedId);
-            await NotificationEngine.dispatch({
-              eventType: 'REPLY_MENTION_RECEIVED',
-              recipientProfileId: mentionedId,
-              actorProfileId: user.id,
-              targetEntityId: post.id,
-              idempotencyKey: `reply_mention:${insertedReply.id}:${mentionedId}`,
-              groupKey: `reply_thread:${critiqueId}`,
-              metadata: {
-                workTitle: post.title,
-                critiqueId,
-                replyId: insertedReply.id,
-                postId: post.id,
-              },
-            });
-          }
-        }
-
-        // B. Reply to Reply Notification
-        if (
-          parentReplyAuthorId &&
-          parentReplyAuthorId !== user.id &&
-          !notifiedRecipients.has(parentReplyAuthorId)
-        ) {
-          notifiedRecipients.add(parentReplyAuthorId);
-          await NotificationEngine.dispatch({
-            eventType: 'REPLY_TO_REPLY_RECEIVED',
-            recipientProfileId: parentReplyAuthorId,
-            actorProfileId: user.id,
-            targetEntityId: post.id,
-            idempotencyKey: `reply_to_reply:${insertedReply.id}:${parentReplyAuthorId}`,
-            groupKey: `reply_thread:${critiqueId}`,
-            metadata: {
-              workTitle: post.title,
-              critiqueId,
-              replyId: insertedReply.id,
-              postId: post.id,
-              parentReplyId,
-            },
-          });
-        }
-
-        // C. Reply to Critique Author Notification
-        if (
-          critique.reviewer_id &&
-          critique.reviewer_id !== user.id &&
-          !notifiedRecipients.has(critique.reviewer_id)
-        ) {
-          notifiedRecipients.add(critique.reviewer_id);
-          await NotificationEngine.dispatch({
-            eventType: 'CRITIQUE_REPLY_RECEIVED',
-            recipientProfileId: critique.reviewer_id,
-            actorProfileId: user.id,
-            targetEntityId: post.id,
-            idempotencyKey: `critique_reply:${insertedReply.id}:${critique.reviewer_id}`,
-            groupKey: `reply_thread:${critiqueId}`,
-            metadata: {
-              workTitle: post.title,
-              critiqueId,
-              replyId: insertedReply.id,
-              postId: post.id,
-            },
-          });
-        }
-      } catch (notifErr) {
-        console.warn('[API/replies POST] Notification dispatch failed (non-blocking):', notifErr);
-      }
-    })();
-
+    // 6. Build response payload — assembled before notification dispatch so the reply
+    //    is always returned to the client even if notification delivery fails.
     const formattedResponse: CritiqueReply = {
       id: insertedReply.id,
       critique_id: insertedReply.critique_id,
@@ -432,9 +322,196 @@ export async function POST(
       is_tombstone: false,
     };
 
+    // 7. Await notification dispatch before returning — prevents serverless runtime
+    //    from terminating the execution context mid-dispatch (the primary cause of
+    //    intermittent notification failures). Push delivery inside the engine is
+    //    already non-blocking; only in-app DB persistence is synchronous here.
+    //    Notification failure is logged with full context but MUST NOT surface as a
+    //    5xx or prevent the 201 response from being delivered to the client.
+    try {
+      await dispatchReplyNotifications({
+        adminClient,
+        actorId: user.id,
+        critiqueId,
+        critiqueReviewerId: critique.reviewer_id,
+        postId: post.id,
+        postTitle: post.title,
+        replyId: insertedReply.id,
+        parentReplyId,
+        parentReplyAuthorId,
+        rawContent,
+      });
+    } catch (notifErr) {
+      // Structured failure log — diagnosable in Vercel logs without blocking the reply.
+      globalLogger.error('[API/replies POST] Notification dispatch failed after reply creation', {
+        replyId: insertedReply.id,
+        critiqueId,
+        actorId: user.id,
+        critiqueReviewerId: critique.reviewer_id,
+        parentReplyAuthorId: parentReplyAuthorId ?? null,
+        postId: post.id,
+        error: notifErr instanceof Error ? notifErr.message : String(notifErr),
+      });
+    }
+
     return NextResponse.json({ ok: true, data: formattedResponse }, { status: 201 });
   } catch (err: any) {
     console.error('[API/replies POST] Unexpected error:', err);
     return jsonError(err?.message || 'Internal server error', 500);
   }
+}
+
+// =============================================================================
+// Reply Notification Dispatcher
+//
+// Extracted from the POST handler as an awaitable function so the serverless
+// runtime does not terminate the execution context before notifications are
+// persisted. Previously, this logic was wrapped in a detached fire-and-forget
+// IIFE that Vercel could kill immediately after NextResponse.json() returned.
+//
+// Priority ordering (per product rules):
+//   1. REPLY_MENTION_RECEIVED  — highest priority per mentioned user
+//   2. REPLY_TO_REPLY_RECEIVED — parent reply author
+//   3. CRITIQUE_REPLY_RECEIVED — critique author (if not already notified above)
+//
+// Self-notifications are always suppressed.
+// Each recipient receives at most one notification per reply event.
+// =============================================================================
+interface DispatchReplyNotificationsArgs {
+  adminClient: NonNullable<ReturnType<typeof getAdminClient>>;
+  actorId: string;
+  critiqueId: string;
+  critiqueReviewerId: string;
+  postId: string;
+  postTitle: string | null;
+  replyId: string;
+  parentReplyId: string | null;
+  parentReplyAuthorId: string | null;
+  rawContent: string;
+}
+
+async function dispatchReplyNotifications({
+  adminClient,
+  actorId,
+  critiqueId,
+  critiqueReviewerId,
+  postId,
+  postTitle,
+  replyId,
+  parentReplyId,
+  parentReplyAuthorId,
+  rawContent,
+}: DispatchReplyNotificationsArgs): Promise<void> {
+  const dispatchStart = Date.now();
+
+  globalLogger.info('[API/replies] Starting notification dispatch', {
+    replyId,
+    critiqueId,
+    actorId,
+    critiqueReviewerId,
+    parentReplyAuthorId: parentReplyAuthorId ?? null,
+    postId,
+  });
+
+  const { NotificationEngine } = await import('@/lib/notifications/engine');
+
+  // ── Resolve @mention targets ──────────────────────────────────────────────
+  // Regex boundary matching for @username (3–20 chars: alphanumeric, underscore, dot)
+  const mentionRegex = /(?:^|\s)@([a-z0-9_.]{3,20})(?=$|[^\w.])/gi;
+  const matchedUsernames = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = mentionRegex.exec(rawContent)) !== null) {
+    const u = match[1].toLowerCase();
+    if (u) matchedUsernames.add(u);
+    if (matchedUsernames.size >= 5) break; // cap at 5 mentions
+  }
+
+  const mentionedProfilesMap = new Map<string, string>(); // username → profile_id
+  if (matchedUsernames.size > 0) {
+    const { data: matchedProfiles } = await adminClient
+      .from('profiles')
+      .select('id, username, is_blocked')
+      .in('username', Array.from(matchedUsernames))
+      .neq('is_blocked', true);
+
+    (matchedProfiles || []).forEach((p: any) => {
+      // Exclude actor from their own mention notifications
+      if (p.id !== actorId) {
+        mentionedProfilesMap.set(p.username.toLowerCase(), p.id);
+      }
+    });
+  }
+
+  const mentionedProfileIds = Array.from(mentionedProfilesMap.values());
+  const notifiedRecipients = new Set<string>();
+  const dispatchedEvents: string[] = [];
+
+  // ── Priority 1: Mention Notifications ────────────────────────────────────
+  for (const mentionedId of mentionedProfileIds) {
+    if (mentionedId && !notifiedRecipients.has(mentionedId)) {
+      notifiedRecipients.add(mentionedId);
+      const result = await NotificationEngine.dispatch({
+        eventType: 'REPLY_MENTION_RECEIVED',
+        recipientProfileId: mentionedId,
+        actorProfileId: actorId,
+        targetEntityId: postId,
+        idempotencyKey: `reply_mention:${replyId}:${mentionedId}`,
+        groupKey: `reply_thread:${critiqueId}`,
+        metadata: { workTitle: postTitle, critiqueId, replyId, postId },
+      });
+      dispatchedEvents.push(`REPLY_MENTION_RECEIVED:${mentionedId}:ok=${result.ok}`);
+    }
+  }
+
+  // ── Priority 2: Reply-to-Reply Notification ───────────────────────────────
+  if (
+    parentReplyAuthorId &&
+    parentReplyAuthorId !== actorId &&
+    !notifiedRecipients.has(parentReplyAuthorId)
+  ) {
+    notifiedRecipients.add(parentReplyAuthorId);
+    const result = await NotificationEngine.dispatch({
+      eventType: 'REPLY_TO_REPLY_RECEIVED',
+      recipientProfileId: parentReplyAuthorId,
+      actorProfileId: actorId,
+      targetEntityId: postId,
+      idempotencyKey: `reply_to_reply:${replyId}:${parentReplyAuthorId}`,
+      groupKey: `reply_thread:${critiqueId}`,
+      metadata: { workTitle: postTitle, critiqueId, replyId, postId, parentReplyId },
+    });
+    dispatchedEvents.push(`REPLY_TO_REPLY_RECEIVED:${parentReplyAuthorId}:ok=${result.ok}`);
+  }
+
+  // ── Priority 3: Reply-to-Critique Author Notification ─────────────────────
+  // Recipient is critique.reviewer_id — NOT post.avatar_id.
+  // Suppressed if the critique author was already notified via mention or reply-to-reply.
+  if (
+    critiqueReviewerId &&
+    critiqueReviewerId !== actorId &&
+    !notifiedRecipients.has(critiqueReviewerId)
+  ) {
+    notifiedRecipients.add(critiqueReviewerId);
+    const result = await NotificationEngine.dispatch({
+      eventType: 'CRITIQUE_REPLY_RECEIVED',
+      recipientProfileId: critiqueReviewerId,
+      actorProfileId: actorId,
+      targetEntityId: postId,
+      idempotencyKey: `critique_reply:${replyId}:${critiqueReviewerId}`,
+      groupKey: `reply_thread:${critiqueId}`,
+      metadata: { workTitle: postTitle, critiqueId, replyId, postId },
+    });
+    dispatchedEvents.push(`CRITIQUE_REPLY_RECEIVED:${critiqueReviewerId}:ok=${result.ok}`);
+  }
+
+  const durationMs = Date.now() - dispatchStart;
+
+  globalLogger.info('[API/replies] Notification dispatch completed', {
+    replyId,
+    critiqueId,
+    actorId,
+    dispatchedEvents,
+    recipientCount: notifiedRecipients.size,
+    durationMs,
+  });
 }

@@ -4,6 +4,19 @@ All notable changes to Rater are documented here.
 
 ---
 
+## [1.2.1] — 2026-08-28
+
+### Fixed
+- **Push subscription registration schema mismatch** — resolved HTTP 500 error on `POST /api/notifications/push/subscribe` by ensuring the `expires_at` column is present and properly recognized in the database schema.
+- **Serverless critique reply notification persistence** — transitioned notification dispatch from an unawaited, detached fire-and-forget IIFE to an awaited helper function in the reply route handler, preventing serverless runtime termination from interrupting notification creation.
+- **Non-blocking notification error isolation** — ensured any notification delivery errors are logged with contextual telemetry without blocking or failing the HTTP 201 reply creation response.
+
+### Improved
+- **Notification observability** — added structured diagnostic logging across the critique reply notification pipeline.
+- **Regression test coverage** — added an automated unit and regression test suite covering all critique reply notification priority, deduplication, and suppression flows.
+
+---
+
 ## [1.2.0] — 2026-08-28
 
 ### Added
