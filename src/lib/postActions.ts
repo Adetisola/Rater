@@ -1,4 +1,5 @@
 import { extractPublicId, generateDownloadUrl } from './cloudinary/transforms';
+import { logShareEvent } from './server/shareEvents';
 
 /**
  * Share a post.
@@ -13,6 +14,8 @@ export async function sharePost(postId: string, title?: string): Promise<boolean
   if (isMobile && navigator.share) {
     try {
       await navigator.share({ title: title || 'Check out this design on Rater', url });
+      // Log share event non-blockingly
+      logShareEvent(postId, 'native').catch((err) => console.warn('Failed to log native share:', err));
       return true; // Handled natively
     } catch {
       // User cancelled or API failed

@@ -115,6 +115,25 @@ export const ProfileCache = {
         }
     });
     return map;
+  },
+
+  /**
+   * Returns a deduplicated list of all valid cached avatars.
+   */
+  getAll: (): Avatar[] => {
+    if (typeof window === 'undefined') return [];
+    const uniqueMap = new Map<string, Avatar>();
+    const now = Date.now();
+    clientCache.forEach((entry, key) => {
+      if (now - entry.timestamp <= CACHE_TTL_MS) {
+        if (entry.data?.id) {
+          uniqueMap.set(entry.data.id, entry.data);
+        }
+      } else {
+        clientCache.delete(key);
+      }
+    });
+    return Array.from(uniqueMap.values());
   }
 };
 

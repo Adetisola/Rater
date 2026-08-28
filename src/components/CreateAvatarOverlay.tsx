@@ -22,7 +22,6 @@ interface CreateAvatarOverlayProps {
   isEmbedded?: boolean;
   prefillName?: string;
   onLogin?: () => void;
-  onShowLegal?: (title: string, url: string) => void;
 }
 
 /**
@@ -42,7 +41,7 @@ function validateDisplayName(name: string): string | null {
  * Handles image upload with simulated latency, passkey validation, unique username claiming, 
  * and role selection. It integrates with AuthContext for the final signup step.
  */
-export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin, onShowLegal }: CreateAvatarOverlayProps) {
+export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName, onLogin }: CreateAvatarOverlayProps) {
   const [name, setName] = useState(prefillName || '');
   const [passkey, setPasskey] = useState('');
   const [confirmPasskey, setConfirmPasskey] = useState('');
@@ -203,9 +202,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
       
-      if (response.ok && !data.available) {
+      if (response.ok && data && !data.available) {
         setEmailError('Email is already registered');
         setIsSubmitting(false);
         return;
@@ -580,9 +579,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 <div className="px-2">
                   <p className="text-[11px] text-center text-gray-400">
                     By creating a profile, you agree to our{' '}
-                    <button type="button" onClick={(e) => { e.preventDefault(); onShowLegal?.('Terms of Service', '/legal/Rater Terms of Service.md'); }} className="font-semibold text-gray-500 hover:text-black transition-colors">Terms of Service</button>{' '}
+                    <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Terms of Service</a>{' '}
                     and acknowledge our{' '}
-                    <button type="button" onClick={(e) => { e.preventDefault(); onShowLegal?.('Privacy Policy', '/legal/Rater Privacy Policy.md'); }} className="font-semibold text-gray-500 hover:text-black transition-colors">Privacy Policy</button>.
+                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Privacy Policy</a>.
                   </p>
                 </div>
               </div>

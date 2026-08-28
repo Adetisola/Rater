@@ -30,10 +30,10 @@ export default function Offline() {
         </div>
 
         {/* Text Content */}
-        <h2 className="text-2xl md:text-3xl font-bold mb-2 text-black tracking-tight">
+        <h2 className="text-xl md:text-2xl font-medium mb-2 text-black tracking-tight">
           You are offline
         </h2>
-        <p className="text-lg text-gray-500 mb-8 max-w-sm mx-auto">
+        <p className="text-md text-gray-500 mb-8 max-w-sm mx-auto">
           You appear to be offline. Check your network connection and retry.
         </p>
 
@@ -41,7 +41,7 @@ export default function Offline() {
         <Button 
           variant="primary" 
           onClick={() => window.location.reload()}
-          className="h-12 px-8 text-lg rounded-full shadow-lg hover:scale-105 transition-transform"
+          className="h-12 px-8 text-lg rounded-full transition-transform"
         >
           Retry
         </Button>

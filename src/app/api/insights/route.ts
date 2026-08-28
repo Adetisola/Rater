@@ -34,7 +34,8 @@ async function callGemini(model: string, prompt: string, apiKey: string): Promis
     throw new Error(`Gemini ${model} ${response.status}: ${errMsg}`);
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
+  if (!data) throw new Error(`Invalid JSON response from Gemini ${model}`);
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
@@ -66,7 +67,8 @@ async function callOpenRouter(prompt: string, apiKey: string): Promise<string> {
     throw new Error(`OpenRouter ${response.status}: ${errMsg}`);
   }
 
-  const data = await response.json();
+  const data = await response.json().catch(() => null);
+  if (!data) throw new Error('Invalid JSON response from OpenRouter');
   return data.choices?.[0]?.message?.content || '';
 }
 
@@ -557,6 +559,31 @@ export async function POST(request: NextRequest) {
       });
       if (error) {
         console.error('[Insights API] Failed to cache:', error);
+      } else {
+        // Dispatch INSIGHTS_READY notification to post author
+        try {
+          const { data: post } = await supabaseAdmin
+            .from('posts')
+            .select('avatar_id, title')
+            .eq('id', postId)
+            .single();
+
+          if (post?.avatar_id) {
+            const { NotificationEngine } = await import('@/lib/notifications/engine');
+            await NotificationEngine.dispatch({
+              eventType: 'INSIGHTS_READY',
+              recipientProfileId: post.avatar_id,
+              targetEntityId: postId,
+              idempotencyKey: `insights:${postId}:${reviews.length}`,
+              groupKey: `post_insights:${postId}`,
+              metadata: {
+                workTitle: post.title || postTitle,
+              },
+            });
+          }
+        } catch (notifErr) {
+          console.warn('[Insights API] Failed to dispatch INSIGHTS_READY notification (non-blocking):', notifErr);
+        }
       }
     }
 

@@ -1,4 +1,6 @@
-**Effective Date:** July 5, 2026
+# Rater AI & Insights Policy
+
+**Effective Date:** August 2026
 
 This Policy explains how Rater’s AI-powered Insights features work and what users should expect from them.
 
@@ -107,4 +109,4 @@ If we make material changes, we may update the Effective Date or notify users th
 
 ## 10. Contact
 
-If you have questions about the AI & Insights Policy, contact us through the official support channels provided on Rater.
+If you have questions about the AI & Insights Policy, contact us directly at [support@raterapp.site](mailto:support@raterapp.site).

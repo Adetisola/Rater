@@ -32,25 +32,31 @@ export function useRecentSearches() {
     }
   };
 
+  const MAX_ITEMS = 8;
+
   const addSearch = (query: string) => {
-    if (!query.trim()) return;
-    const filtered = items.filter(i => !(i.type === 'search' && i.query.toLowerCase() === query.toLowerCase()));
-    saveItems([{ type: 'search' as const, query, timestamp: Date.now() }, ...filtered].slice(0, 7));
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    const filtered = items.filter(i => !(i.type === 'search' && i.query.toLowerCase() === trimmed.toLowerCase()));
+    saveItems([{ type: 'search' as const, query: trimmed, timestamp: Date.now() }, ...filtered].slice(0, MAX_ITEMS));
   };
 
   const addAvatar = (avatarId: string) => {
+    if (!avatarId) return;
     const filtered = items.filter(i => !(i.type === 'avatar' && i.avatarId === avatarId));
-    saveItems([{ type: 'avatar' as const, avatarId, timestamp: Date.now() }, ...filtered].slice(0, 7));
+    saveItems([{ type: 'avatar' as const, avatarId, timestamp: Date.now() }, ...filtered].slice(0, MAX_ITEMS));
   };
 
   const addPost = (postId: string) => {
+    if (!postId) return;
     const filtered = items.filter(i => !(i.type === 'post' && i.postId === postId));
-    saveItems([{ type: 'post' as const, postId, timestamp: Date.now() }, ...filtered].slice(0, 7));
+    saveItems([{ type: 'post' as const, postId, timestamp: Date.now() }, ...filtered].slice(0, MAX_ITEMS));
   };
 
   const addCategory = (category: Category) => {
+    if (!category) return;
     const filtered = items.filter(i => !(i.type === 'category' && i.category === category));
-    saveItems([{ type: 'category' as const, category, timestamp: Date.now() }, ...filtered].slice(0, 7));
+    saveItems([{ type: 'category' as const, category, timestamp: Date.now() }, ...filtered].slice(0, MAX_ITEMS));
   };
 
   const removeItem = (index: number) => {

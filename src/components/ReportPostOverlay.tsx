@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from './ui/Button';
-import { LegalModal } from './LegalModal';
+import { createReport } from '@/lib/admin/server';
 
 interface ReportPostOverlayProps {
+  postId?: string;
+  targetType?: 'post' | 'profile' | 'reply' | 'review';
+  targetId?: string;
   onClose: () => void;
-  onSubmit: (reason: string, details: string) => void;
+  onSubmit?: (reason: string, details: string) => void;
 }
 
 const REPORT_REASONS = [
@@ -20,33 +23,71 @@ const REPORT_REASONS = [
   "Other issue"
 ];
 
-export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps) {
+export function ReportPostOverlay({
+  postId,
+  targetType = 'post',
+  targetId,
+  onClose,
+  onSubmit,
+}: ReportPostOverlayProps) {
   const [reason, setReason] = useState('Select');
   const [details, setDetails] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
-    isOpen: false,
-    title: '',
-    docUrl: ''
-  });
+
+  const effectiveTargetId = targetId || postId || '';
+  const titleText =
+    targetType === 'reply'
+      ? 'Report this Reply'
+      : targetType === 'review'
+      ? 'Report this Critique'
+      : targetType === 'profile'
+      ? 'Report this Profile'
+      : 'Report this Work';
+
+  const subtitleText =
+    targetType === 'reply'
+      ? "Help us understand what's wrong with this reply."
+      : targetType === 'review'
+      ? "Help us understand what's wrong with this critique."
+      : targetType === 'profile'
+      ? "Help us understand what's wrong with this profile."
+      : "Help us understand what's wrong with this work.";
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const openLegal = (title: string, docUrl: string) => {
-    setLegalModal({ isOpen: true, title, docUrl });
-  };
+  const handleSubmit = async () => {
+    if (reason === 'Select' || !effectiveTargetId) return;
+    try {
+      setIsSubmitting(true);
+      setSubmitError(null);
 
-  const handleSubmit = () => {
-    if (reason === 'Select') return;
-    setIsSubmitted(true);
+      await createReport({
+        target_type: targetType,
+        target_id: effectiveTargetId,
+        reason,
+        details: details.trim() || undefined,
+      });
+
+      setIsSubmitted(true);
+      if (onSubmit) {
+        onSubmit(reason, details);
+      }
+    } catch (err: any) {
+      console.error('Failed to submit report:', err);
+      setSubmitError(err?.message || 'Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDone = () => {
-    onSubmit(reason, details);
+    onClose();
   };
 
   if (!mounted) return null;
@@ -65,20 +106,26 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          onClose();
+          if (!isSubmitting) onClose();
         }}
       />
 
       {/* Modal Content */}
-      <div className="w-full max-w-md bg-white rounded-[32px] p-8 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md bg-white rounded-[32px] p-8 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 border border-gray-100">
         
         {!isSubmitted ? (
             <>
                 {/* Header */}
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-medium text-black mb-1">Report this Work</h2>
-                    <p className="text-sm text-gray-500">Help us understand what's wrong with this work.</p>
+                    <h2 className="text-2xl font-medium text-black mb-1">{titleText}</h2>
+                    <p className="text-sm text-gray-500">{subtitleText}</p>
                 </div>
+
+                {submitError && (
+                  <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-xs font-semibold">
+                    {submitError}
+                  </div>
+                )}
 
                 {/* Reason Dropdown */}
                 <div className="mb-6 relative">
@@ -86,6 +133,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                     <button 
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        disabled={isSubmitting}
                         className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-left flex items-center justify-between text-sm font-medium hover:border-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                     >
                         <span className={reason === 'Select' ? 'text-gray-400' : 'text-black'}>{reason}</span>
@@ -118,6 +166,7 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                             value={details}
                             onChange={(e) => setDetails(e.target.value)}
                             maxLength={120}
+                            disabled={isSubmitting}
                             className="w-full h-32 bg-white border border-gray-200 rounded-xl p-4 pb-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                             placeholder=""
                         />
@@ -131,24 +180,32 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                 <div className="mb-6">
                     <p className="text-[12px] text-gray-500 text-center leading-relaxed">
                         Reports are reviewed according to our{' '}
-                        <button type="button" onClick={() => openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md')} className="font-semibold text-gray-600 hover:text-black transition-colors">Community Guidelines</button>.
+                        <a href="/legal/community-guidelines" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-600 hover:text-black transition-colors underline">Community Guidelines</a>.
                     </p>
                 </div>
                 <div className="flex items-center justify-center gap-4">
                     <Button 
                         variant="ghost"
                         onClick={onClose}
+                        disabled={isSubmitting}
                         className="h-12 px-6 rounded-full text-base font-medium text-gray-500 transition-all"
                     >
                         Cancel
                     </Button>
                     <Button
                         variant="outline"
-                        disabled={reason === 'Select'}
+                        disabled={reason === 'Select' || isSubmitting}
                         onClick={handleSubmit}
-                        className="min-w-[140px] h-12 rounded-full text-lg font-medium transition-all"
+                        className="min-w-[140px] h-12 rounded-full text-base font-bold transition-all inline-flex items-center justify-center gap-2"
                     >
-                        Report
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            Submitting...
+                          </>
+                        ) : (
+                          'Report'
+                        )}
                     </Button>
                 </div>
             </>
@@ -157,24 +214,17 @@ export function ReportPostOverlay({ onClose, onSubmit }: ReportPostOverlayProps)
                  <div className="w-20 h-20 bg-primary/20 text-primary rounded-full flex items-center justify-center mx-auto mb-6">
                     <ShieldCheck className="w-10 h-10" />
                  </div>
-                 <h2 className="text-2xl font-bold text-black mb-2">Report Submitted</h2>
+                 <h2 className="text-xl font-medium text-black mb-2">Report Submitted</h2>
                  <p className="text-sm text-gray-500 mb-8 max-w-[280px] mx-auto leading-relaxed">
                     Thanks for letting us know. We appreciate your help in keeping our community safe.
                  </p>
-                 <Button onClick={handleDone} className="w-full rounded-full py-6 text-sm font-bold shadow-none">
+                 <Button variant='outline' onClick={handleDone} className="w-full rounded-full py-6 shadow-none">
                     Done
                  </Button>
             </div>
         )}
 
       </div>
-      
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
-        title={legalModal.title}
-        docUrl={legalModal.docUrl}
-      />
     </div>,
     document.body
   );

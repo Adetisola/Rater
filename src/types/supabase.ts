@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_audit_logs_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           awarded_at: string | null
@@ -50,6 +88,79 @@ export type Database = {
           },
         ]
       }
+      campaign_links: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          detail: string | null
+          id: string
+          source: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          source: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_links_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           name: string
@@ -62,11 +173,107 @@ export type Database = {
         }
         Relationships: []
       }
+      critique_replies: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          critique_id: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          parent_reply_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          critique_id: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          parent_reply_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          critique_id?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          parent_reply_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "critique_replies_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critique_replies_critique_id_fkey"
+            columns: ["critique_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critique_replies_parent_reply_id_fkey"
+            columns: ["parent_reply_id"]
+            isOneToOne: false
+            referencedRelation: "critique_replies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      critique_reply_reads: {
+        Row: {
+          critique_id: string
+          last_read_reply_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          critique_id: string
+          last_read_reply_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          critique_id?: string
+          last_read_reply_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "critique_reply_reads_critique_id_fkey"
+            columns: ["critique_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "critique_reply_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_comments: {
         Row: {
           author_id: string
           content: string
           created_at: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id: string
           request_id: string
           updated_at: string
@@ -75,6 +282,8 @@ export type Database = {
           author_id: string
           content: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           request_id: string
           updated_at?: string
@@ -83,6 +292,8 @@ export type Database = {
           author_id?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           request_id?: string
           updated_at?: string
@@ -111,6 +322,49 @@ export type Database = {
           },
         ]
       }
+      feedback_follows: {
+        Row: {
+          created_at: string
+          id: string
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_follows_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_follows_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_requests_with_stats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feedback_follows_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback_requests: {
         Row: {
           admin_notes: string | null
@@ -124,6 +378,9 @@ export type Database = {
           id: string
           is_locked: boolean | null
           is_pinned: boolean | null
+          official_response: string | null
+          official_response_at: string | null
+          official_response_by: string | null
           slug: string
           status: string
           title: string
@@ -142,6 +399,9 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug: string
           status?: string
           title: string
@@ -160,6 +420,9 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug?: string
           status?: string
           title?: string
@@ -338,6 +601,90 @@ export type Database = {
           },
         ]
       }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_views: {
+        Row: {
+          created_at: string
+          guest_session_hash: string | null
+          id: string
+          ip_hash: string | null
+          post_id: string
+          updated_at: string
+          user_agent_hash: string | null
+          viewer_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          guest_session_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          post_id: string
+          updated_at?: string
+          user_agent_hash?: string | null
+          viewer_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          guest_session_hash?: string | null
+          id?: string
+          ip_hash?: string | null
+          post_id?: string
+          updated_at?: string
+          user_agent_hash?: string | null
+          viewer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_metrics"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_views_viewer_id_fkey"
+            columns: ["viewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           ai_prompt: string | null
@@ -359,6 +706,7 @@ export type Database = {
           title: string
           updated_at: string | null
           uses_ai: boolean
+          view_count: number | null
         }
         Insert: {
           ai_prompt?: string | null
@@ -380,6 +728,7 @@ export type Database = {
           title: string
           updated_at?: string | null
           uses_ai?: boolean
+          view_count?: number | null
         }
         Update: {
           ai_prompt?: string | null
@@ -401,6 +750,7 @@ export type Database = {
           title?: string
           updated_at?: string | null
           uses_ai?: boolean
+          view_count?: number | null
         }
         Relationships: [
           {
@@ -421,9 +771,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          acquisition_detail: string | null
+          acquisition_source: string | null
           avatar_url: string | null
           bg_color: string | null
           bio: string | null
+          campaign_tag: string | null
           created_at: string | null
           email: string | null
           id: string
@@ -433,6 +786,7 @@ export type Database = {
           onboarding_completed: boolean | null
           passkey: string | null
           previous_usernames: string[] | null
+          referred_by: string | null
           role: string | null
           show_email: boolean | null
           social_links: Json | null
@@ -441,9 +795,12 @@ export type Database = {
           username_last_changed_at: string | null
         }
         Insert: {
+          acquisition_detail?: string | null
+          acquisition_source?: string | null
           avatar_url?: string | null
           bg_color?: string | null
           bio?: string | null
+          campaign_tag?: string | null
           created_at?: string | null
           email?: string | null
           id: string
@@ -453,6 +810,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           passkey?: string | null
           previous_usernames?: string[] | null
+          referred_by?: string | null
           role?: string | null
           show_email?: boolean | null
           social_links?: Json | null
@@ -461,9 +819,12 @@ export type Database = {
           username_last_changed_at?: string | null
         }
         Update: {
+          acquisition_detail?: string | null
+          acquisition_source?: string | null
           avatar_url?: string | null
           bg_color?: string | null
           bio?: string | null
+          campaign_tag?: string | null
           created_at?: string | null
           email?: string | null
           id?: string
@@ -473,6 +834,7 @@ export type Database = {
           onboarding_completed?: boolean | null
           passkey?: string | null
           previous_usernames?: string[] | null
+          referred_by?: string | null
           role?: string | null
           show_email?: boolean | null
           social_links?: Json | null
@@ -480,7 +842,75 @@ export type Database = {
           username?: string
           username_last_changed_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_fkey"
+            columns: ["referred_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          action_taken: string | null
+          admin_notes: string | null
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string | null
+          resolved_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          admin_notes?: string | null
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          resolved_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reviews: {
         Row: {
@@ -564,10 +994,104 @@ export type Database = {
           },
         ]
       }
+      share_events: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          share_method: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          share_method?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          share_method?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "share_events_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "post_metrics"
+            referencedColumns: ["post_id"]
+          },
+          {
+            foreignKeyName: "share_events_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "share_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_events: {
+        Row: {
+          created_at: string
+          has_results: boolean | null
+          id: string
+          is_authenticated: boolean | null
+          normalized_query: string
+          query: string
+          result_count: number
+          selected_result_id: string | null
+          selected_result_type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          has_results?: boolean | null
+          id?: string
+          is_authenticated?: boolean | null
+          normalized_query: string
+          query: string
+          result_count?: number
+          selected_result_id?: string | null
+          selected_result_type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          has_results?: boolean | null
+          id?: string
+          is_authenticated?: boolean | null
+          normalized_query?: string
+          query?: string
+          result_count?: number
+          selected_result_id?: string | null
+          selected_result_type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       feedback_requests_with_stats: {
         Row: {
+          admin_notes: string | null
           author_id: string | null
           category: string | null
           comment_count: number | null
@@ -575,10 +1099,14 @@ export type Database = {
           deleted_at: string | null
           deleted_by: string | null
           description: string | null
+          follow_count: number | null
           fts: unknown
           id: string | null
           is_locked: boolean | null
           is_pinned: boolean | null
+          official_response: string | null
+          official_response_at: string | null
+          official_response_by: string | null
           slug: string | null
           status: string | null
           title: string | null
@@ -587,6 +1115,7 @@ export type Database = {
           upvote_count: number | null
         }
         Insert: {
+          admin_notes?: string | null
           author_id?: string | null
           category?: string | null
           comment_count?: never
@@ -594,10 +1123,14 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          follow_count?: never
           fts?: unknown
           id?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug?: string | null
           status?: string | null
           title?: string | null
@@ -606,6 +1139,7 @@ export type Database = {
           upvote_count?: never
         }
         Update: {
+          admin_notes?: string | null
           author_id?: string | null
           category?: string | null
           comment_count?: never
@@ -613,10 +1147,14 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
+          follow_count?: never
           fts?: unknown
           id?: string | null
           is_locked?: boolean | null
           is_pinned?: boolean | null
+          official_response?: string | null
+          official_response_at?: string | null
+          official_response_by?: string | null
           slug?: string | null
           status?: string | null
           title?: string | null
@@ -656,6 +1194,28 @@ export type Database = {
         Args: { p_password: string; p_username: string }
         Returns: string
       }
+      record_post_view:
+        | {
+            Args: {
+              p_guest_session_hash: string
+              p_ip_hash: string
+              p_post_id: string
+              p_user_agent_hash: string
+              p_viewer_id: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_guest_session_hash: string
+              p_ip_hash: string
+              p_ip_threshold?: number
+              p_post_id: string
+              p_user_agent_hash: string
+              p_viewer_id: string
+            }
+            Returns: boolean
+          }
     }
     Enums: {
       badge_type: "top_rated_active" | "top_rated_previous"

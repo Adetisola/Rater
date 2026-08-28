@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
-import { Check, FileUp, Lock, CloudUpload, ArrowLeft, Loader2, RotateCcw, Trash2 } from 'lucide-react';
+import { Check, FileUp, Lock, CloudUpload, Loader2, RotateCcw, Trash2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Input } from './ui/Input';
 import { UserAvatar } from './UserAvatar';
@@ -17,7 +17,6 @@ import { useAuthState } from '../context/AuthContext';
 import { usePosts } from '../context/PostContext';
 import { AuthOverlay } from './AuthOverlay';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AmbientSuccessText } from './AmbientSuccessText';
 import { showToast } from './GlobalOverlays';
@@ -54,7 +53,6 @@ interface PostFormProps {
 }
 
 export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = false }: PostFormProps) {
-  const router = useRouter();
   const formMode = mode || (initialPost ? 'edit' : 'create');
   const isEditMode = formMode === 'edit';
   const isEditing = !!initialPost;
@@ -747,19 +745,6 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       )}
     >
 
-      {/* HEADER */}
-      {!isOverlay && (
-        <div className="mb-6 md:mb-8">
-          <Button
-            variant="secondary"
-            onClick={() => router.back()}
-            className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
-          >
-            <ArrowLeft className="w-5 h-5 text-black" />
-            Back
-          </Button>
-        </div>
-      )}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
         <div>
           <h1 className="text-3xl font-medium mb-1.5 text-black">

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { LogIn, UserPlus } from 'lucide-react';
 import { AccessAvatarForm } from './AccessAvatarForm';
 import { CreateAvatarOverlay } from './CreateAvatarOverlay';
-import { LegalModal } from './LegalModal';
 
 interface AuthOverlayProps {
   onClose: () => void;
@@ -18,17 +17,8 @@ interface AuthOverlayProps {
 
 export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redirectOnSuccess = true }: AuthOverlayProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
-  const [legalModal, setLegalModal] = useState<{ isOpen: boolean; title: string; docUrl: string }>({
-    isOpen: false,
-    title: '',
-    docUrl: ''
-  });
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
-
-  const openLegal = (title: string, docUrl: string) => {
-    setLegalModal({ isOpen: true, title, docUrl });
-  };
 
   useEffect(() => {
     setMounted(true);
@@ -137,7 +127,6 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                   <CreateAvatarOverlay
                     isEmbedded
                     onClose={onClose}
-                    onShowLegal={openLegal}
                     onLogin={() => setActiveTab('login')}
                     onCreate={async () => {
                       onClose();
@@ -158,20 +147,13 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
           <div className="p-4 text-center border-t border-gray-100 shrink-0 bg-gray-50/50">
             <p className="text-[11px] text-gray-400">
               By continuing, you agree to Rater's{' '}
-              <button onClick={() => openLegal('Terms of Service', '/legal/Rater Terms of Service.md')} className="font-semibold text-gray-500 hover:text-black transition-colors">Terms of Service</button>{' '}
+              <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Terms of Service</a>{' '}
               and{' '}
-              <button onClick={() => openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md')} className="font-semibold text-gray-500 hover:text-black transition-colors">Privacy Policy</button>.
+              <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Privacy Policy</a>.
             </p>
           </div>
         )}
       </div>
-      
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
-        title={legalModal.title}
-        docUrl={legalModal.docUrl}
-      />
     </div>,
     document.body
   );

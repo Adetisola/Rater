@@ -159,12 +159,46 @@ export async function getProfilePosts(avatarId: string, { limit = 20, cursor }: 
 
 /**
  * Create a new post.
+ * Routes through authenticated /api/posts to enforce server-side validation
+ * and trigger authoritative multi-channel notifications (NEW_WORK_PUBLISHED).
  */
 export async function createPost(post: Omit<Post, 'id' | 'created_at'>): Promise<Post> {
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(post),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.ok || !json.post) {
+        throw new Error(json?.error || 'Failed to create post on server.');
+      }
+
+      if (json.post.author) {
+        populateProfileCache([json.post.author]);
+      }
+
+      return json.post as Post;
+    } catch (apiErr: any) {
+      console.warn('[Posts] /api/posts call failed, attempting client fallback:', apiErr);
+      if (apiErr?.message && !apiErr.message.includes('fetch')) {
+        throw apiErr;
+      }
+    }
+  }
+
+  // Fallback: Direct database insert
   const { data, error } = await supabase
     .from('posts')
     .insert([post])
-    .select()
+    .select('*, profiles(id, username, name, avatar_url)')
     .single();
 
   if (error) {
@@ -172,7 +206,12 @@ export async function createPost(post: Omit<Post, 'id' | 'created_at'>): Promise
     throw new Error(error.message);
   }
 
-  return data as Post;
+  const { profiles, ...createdPost } = data as any;
+  if (profiles) {
+    populateProfileCache([profiles]);
+  }
+
+  return { ...createdPost, author: profiles } as Post;
 }
 
 /**

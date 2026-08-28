@@ -12,31 +12,96 @@ import {
 } from '@/lib/profiles';
 import { validateSignupInput } from '@/utils/validation';
 import { generateUsernameFromName } from '@/utils/usernameUtils';
+import { getPlatformSettingPublic } from '@/lib/admin/server';
+import { SESSION_KEYS, getAttributionItem, clearAttributionStorage } from '@/hooks/useReferralCapture';
+import { recordSignupAttribution } from '@/lib/server/attribution';
+import { normalizeCampaignSlug, normalizeSourceDetail } from '@/utils/attributionNormalize';
 
 interface AuthState {
   currentProfile: Avatar | null;
   profileMap: Record<string, Avatar>; // Kept for backwards compatibility until M3
   isLoading: boolean;
+  isSuspended: boolean;
 }
 
 interface AuthActions {
-  login: (identifier: string, passkey: string) => Promise<boolean>;
+  login: (identifier: string, passkey: string) => Promise<{ ok: boolean; error?: string }>;
   signup: (name: string, email: string, passkey: string, avatar_url?: string, username?: string, role?: string) => Promise<{ ok: boolean; error?: string }>;
   updateProfile: (data: Partial<Avatar>) => Promise<{ ok: true } | { ok: false; error: string }>;
   loginWithGoogle: () => Promise<void>;
   connectGoogle: () => Promise<{ ok: boolean; error?: string }>;
   logout: () => void;
   checkUsernameAvailable: (username: string, excludeAvatarId?: string) => Promise<boolean>;
+  dismissSuspendedNotice: () => void;
 }
 
 const AuthStateContext = createContext<AuthState | undefined>(undefined);
 const AuthActionsContext = createContext<AuthActions | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentProfile, setCurrentProfile] = useState<Avatar | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+const AUTH_PROFILE_KEY = 'rater_auth_profile';
 
-  // 1. Initial Session Check (Flicker-free)
+function getCachedAuthProfile(): Avatar | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(AUTH_PROFILE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && parsed.id) {
+      return parsed as Avatar;
+    }
+  } catch (err) {
+    console.warn('Failed to read cached auth profile:', err);
+  }
+  return null;
+}
+
+function setCachedAuthProfile(profile: Avatar | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile) {
+      localStorage.setItem(AUTH_PROFILE_KEY, JSON.stringify(profile));
+    } else {
+      localStorage.removeItem(AUTH_PROFILE_KEY);
+    }
+  } catch (err) {
+    console.warn('Failed to persist cached auth profile:', err);
+  }
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [currentProfile, setCurrentProfileState] = useState<Avatar | null>(() => {
+    const cached = getCachedAuthProfile();
+    if (cached) {
+      ProfileCache.set(cached, true);
+    }
+    return cached;
+  });
+  const [isLoading, setIsLoading] = useState(() => !getCachedAuthProfile());
+  const [isSuspended, setIsSuspended] = useState(false);
+
+  const setCurrentProfile = useCallback((profile: Avatar | null) => {
+    setCurrentProfileState(profile);
+    setCachedAuthProfile(profile);
+    if (profile) {
+      ProfileCache.set(profile, true);
+    }
+  }, []);
+
+  const dismissSuspendedNotice = useCallback(() => {
+    setIsSuspended(false);
+  }, []);
+
+  const handleBlockedEviction = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Signout during eviction (ignoring):", err);
+    }
+    setCurrentProfile(null);
+    setIsSuspended(true);
+  }, [setCurrentProfile]);
+
+  // 1. Initial Session Check (Flicker-free & block-aware)
   useEffect(() => {
     let mounted = true;
 
@@ -46,8 +111,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user?.id) {
           const profile = await getProfileById(session.user.id);
-          if (mounted && profile) {
-            setCurrentProfile(profile);
+          if (profile?.is_blocked) {
+            await supabase.auth.signOut();
+            if (mounted) {
+              setCurrentProfile(null);
+              setIsSuspended(true);
+            }
+            return;
+          }
+          if (mounted) {
+            if (profile) {
+              setCurrentProfile(profile);
+            }
+          }
+        } else {
+          // No active session in Supabase — clear stale cached profile if present
+          if (mounted) {
+            setCurrentProfile(null);
           }
         }
       } catch (error) {
@@ -59,12 +139,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeSession();
 
-    // 2. Auth State Listener
+    // 2. Auth State Listener — also enforces block status on session events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setCurrentProfile(null);
       } else if (session?.user?.id) {
         const profile = await getProfileById(session.user.id);
+        if (profile?.is_blocked) {
+          // Blocked users are immediately ejected, even if they have a valid token
+          await supabase.auth.signOut();
+          setCurrentProfile(null);
+          setIsSuspended(true);
+          return;
+        }
         if (profile) setCurrentProfile(profile);
       }
     });
@@ -73,18 +160,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [setCurrentProfile]);
 
-  const login = useCallback(async (identifier: string, passkey: string): Promise<boolean> => {
+  // 3. Multi-tier Session Enforcement for Active Logged-In User
+  useEffect(() => {
+    if (!currentProfile?.id) return;
+
+    const profileId = currentProfile.id;
+
+    // A. Realtime subscription for prompt push eviction
+    const channel = supabase
+      .channel(`profile-block-watch:${profileId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${profileId}`,
+        },
+        (payload) => {
+          if (payload.new && (payload.new as { is_blocked?: boolean }).is_blocked) {
+            handleBlockedEviction();
+          }
+        }
+      )
+      .subscribe();
+
+    // B. Re-verification query helper
+    const checkBlockStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_blocked')
+          .eq('id', profileId)
+          .single();
+
+        if (!error && data?.is_blocked) {
+          handleBlockedEviction();
+        }
+      } catch (err) {
+        console.warn("Block status verification check failed:", err);
+      }
+    };
+
+    // C. Window focus & tab visibility listeners
+    const handleFocus = () => checkBlockStatus();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkBlockStatus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // D. 60-Second fallback poll
+    const pollInterval = setInterval(checkBlockStatus, 60000);
+
+    return () => {
+      channel.unsubscribe();
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(pollInterval);
+    };
+  }, [currentProfile?.id, handleBlockedEviction]);
+
+  const login = useCallback(async (identifier: string, passkey: string): Promise<{ ok: boolean; error?: string }> => {
     const email = await resolveIdentifierToEmail(identifier, passkey);
-    if (!email) return false;
+    if (!email) return { ok: false };
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: passkey
     });
 
-    return !error;
+    if (error || !data.user) return { ok: false };
+
+    // Enforce block: fetch profile and reject if account is suspended
+    const profile = await getProfileById(data.user.id);
+    if (profile?.is_blocked) {
+      await supabase.auth.signOut();
+      setIsSuspended(true);
+      return { ok: false, error: 'Your account has been suspended. Please contact support if you believe this is a mistake.' };
+    }
+
+    return { ok: true };
   }, []);
 
   const signup = useCallback(async (
@@ -95,6 +256,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     username?: string, 
     role?: string
   ): Promise<{ ok: boolean; error?: string }> => {
+    // 0. Platform gate check
+    try {
+      const signupSetting = await getPlatformSettingPublic('signup_enabled');
+      if (signupSetting && signupSetting.enabled === false) {
+        return { ok: false, error: 'New user registrations are currently disabled.' };
+      }
+    } catch {
+      // Allow fallback if setting query fails
+    }
+
     // 1. Pre-flight format validation
     const validationError = validateSignupInput(username || name, email, passkey);
     if (validationError) return { ok: false, error: validationError };
@@ -113,7 +284,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, error: 'Username is already taken.' };
     }
 
-    // 3. Supabase Auth Signup
+    // 3. Read marketing attribution & referral from storage (first-touch)
+    let attributionSource: string | null = null;
+    let attributionDetail: string | null = null;
+    let attributionCampaign: string | null = null;
+    let attributionReferrer: string | null = null;
+
+    try {
+      if (typeof window !== 'undefined') {
+        const rawSource = getAttributionItem(SESSION_KEYS.SOURCE);
+        const rawDetail = getAttributionItem(SESSION_KEYS.DETAIL);
+        const rawCampaign = getAttributionItem(SESSION_KEYS.CAMPAIGN);
+        const rawReferrer = getAttributionItem(SESSION_KEYS.REFERRER);
+
+        if (rawSource) attributionSource = normalizeSourceDetail(rawSource);
+        if (rawDetail) attributionDetail = normalizeSourceDetail(rawDetail);
+        if (rawCampaign) attributionCampaign = normalizeCampaignSlug(rawCampaign);
+        if (rawReferrer) attributionReferrer = rawReferrer.trim();
+      }
+    } catch (storageErr) {
+      console.warn('Failed to read attribution from storage:', storageErr);
+    }
+
+    // 4. Supabase Auth Signup (pass attribution in metadata so handle_new_user trigger populates it automatically)
     const { data: authData, error } = await supabase.auth.signUp({
       email,
       password: passkey,
@@ -124,6 +317,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           role: role || 'user',
           bg_color: '#FEC312',
           onboarding_completed: true,
+          avatar_url: avatar_url || null,
+          acquisition_source: attributionSource || null,
+          acquisition_detail: attributionDetail || null,
+          campaign_tag: attributionCampaign || null,
+          referred_by: attributionReferrer || null,
         }
       }
     });
@@ -132,13 +330,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: false, error: error.message };
     }
 
-    // 3. Save the base64 avatar directly to the profile table
-    if (avatar_url && authData.user) {
-      await supabase
-        .from('profiles')
-        .update({ avatar_url })
-        .eq('id', authData.user.id);
-        
+    // 5. Explicitly record attribution via elevated server action as reliable fallback
+    if (authData.user) {
+      if (attributionSource || attributionDetail || attributionCampaign || attributionReferrer) {
+        try {
+          await recordSignupAttribution(authData.user.id, {
+            source: attributionSource,
+            detail: attributionDetail,
+            campaign: attributionCampaign,
+            referrer: attributionReferrer,
+          });
+        } catch (recordErr) {
+          console.error('Failed to record signup attribution via server action:', recordErr);
+        }
+      }
+
+      // Clear storage attribution keys so future signups/sessions are clean
+      clearAttributionStorage();
+
       // Re-fetch to guarantee state is synced
       ProfileCache.invalidate(authData.user.id);
       const updated = await getProfileById(authData.user.id);
@@ -204,8 +413,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const stateValue = useMemo(() => ({
     currentProfile,
     profileMap: safeProfileMap,
-    isLoading
-  }), [currentProfile, safeProfileMap, isLoading]);
+    isLoading,
+    isSuspended
+  }), [currentProfile, safeProfileMap, isLoading, isSuspended]);
 
   const actionsValue = useMemo(() => ({
     login,
@@ -214,8 +424,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkUsernameAvailable: dbCheckUsername,
     loginWithGoogle,
     connectGoogle,
-    logout
-  }), [login, signup, updateProfile, loginWithGoogle, connectGoogle, logout]);
+    logout,
+    dismissSuspendedNotice
+  }), [login, signup, updateProfile, loginWithGoogle, connectGoogle, logout, dismissSuspendedNotice]);
 
   return (
     <AuthStateContext.Provider value={stateValue}>

@@ -6,14 +6,13 @@ import { usePostStore } from '@/store/postStore';
 import { Button } from './ui/Button';
 import { Tooltip } from './ui/Tooltip';
 import { MasonryGrid } from './MasonryGrid';
-import { Grid, Heart, ArrowLeft } from 'lucide-react';
+import { Grid, Heart, Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode, User, Loader2 } from 'lucide-react';
 import { RichTextarea } from '@/components/ui/RichTextarea';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { AuthOverlay } from './AuthOverlay';
 import { UserMenu } from './UserMenu';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Check, Edit2, Camera, Trash2, X, AtSign, AlertCircle, QrCode, User } from 'lucide-react';
 import { QRCodeOverlay } from './QRCodeOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
@@ -22,11 +21,11 @@ import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { safeMarkdownComponents } from '@/lib/markdownComponents';
 import { type SocialLink } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
-import { generateThumbnail, extractPublicId } from '@/lib/cloudinary/transforms';
-import { Loader2 } from 'lucide-react';
+import { optimizeAvatarUrl } from '@/lib/cloudinary/transforms';
 
 const AnimatedMetric = ({ value, isFloat = false }: { value: number | string; isFloat?: boolean }) => {
   const ref = useRef<HTMLSpanElement>(null);
@@ -150,12 +149,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
 
   // Compute optimized avatar URL for the main profile header
   const optimizedAvatarUrl = useMemo(() => {
-    if (!targetAvatar?.avatar_url) return null;
-    const publicId = extractPublicId(targetAvatar.avatar_url);
-    if (publicId) {
-      return generateThumbnail(publicId, 400, 400); // slightly larger for profile header
-    }
-    return targetAvatar.avatar_url;
+    return optimizeAvatarUrl(targetAvatar?.avatar_url, 'lg');
   }, [targetAvatar?.avatar_url]);
 
   // Username validation hook (wired to checkUsernameAvailable from AuthContext)
@@ -365,30 +359,19 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
   return (
     <div className="max-w-6xl mx-auto px-2 xs:px-6 pt-1 pb-16 md:pt-4 md:pb-24 w-full min-h-[60vh] relative">
 
-      {/* HEADER: Back Button & Mobile Menu */}
-      <div className="mb-4 md:mb-8 flex justify-between items-center">
-        <Button
-          variant="secondary"
-          onClick={() => router.back()}
-          className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
-        >
-          <ArrowLeft className="w-5 h-5 text-black" />
-          Back
-        </Button>
+      {/* Mobile Menu / Share Actions */}
+      {isMe && (
+        <div className="md:hidden flex justify-end mb-4">
+          <UserMenu variant="profile" align="right" onEditProfile={startEditing} />
+        </div>
+      )}
 
-        {isMe && (
-          <div className="md:hidden">
-            <UserMenu variant="profile" align="right" onEditProfile={startEditing} />
-          </div>
-        )}
-      </div>
-
-      {/* Share Button for Mobile (Non-Owners) */}
       {!isMe && (
-        <div className="md:hidden absolute top-8 right-4 z-40">
+        <div className="md:hidden flex justify-end mb-4">
           <button
             onClick={() => setShowQrCode(true)}
             className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-all active:scale-95 text-gray-700"
+            aria-label="Share profile"
           >
             <QrCode className="w-5 h-5" />
           </button>
@@ -413,12 +396,17 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
               >
                 <img
                   src={optimizedAvatarUrl || targetAvatar.avatar_url}
+                  width={136}
+                  height={136}
+                  loading="eager"
+                  fetchPriority="high"
+                  decoding="async"
                   className={cn(
                     "w-full h-full object-cover transition-transform duration-500",
                     !isUploadingAvatar && "group-hover/avatar:scale-110",
                     isUploadingAvatar && "opacity-50 blur-sm"
                   )}
-                  alt=""
+                  alt={targetAvatar.name || "Profile avatar"}
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                 />
               </button>
@@ -733,7 +721,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             ) : targetAvatar.bio || isMe ? (
               <div className="text-gray-600 leading-relaxed markdown-content [&_p]:my-1">
                 {targetAvatar.bio ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
                     {targetAvatar.bio}
                   </ReactMarkdown>
                 ) : (
@@ -853,8 +841,8 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
           </div>
         </div>
 
-        <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
-          {!isMe && (
+        {!isMe && (
+          <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
             <Button
               variant="ghost"
               className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
@@ -863,13 +851,8 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
               <QrCode className="w-4 h-4" />
               Share Profile
             </Button>
-          )}
-          {isMe && (
-            <div className="flex justify-end">
-              <UserMenu variant="profile" align="right" />
-            </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -917,7 +900,6 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                 <MasonryGrid 
                   postIds={avatarPostIds} 
                   isLoading={isLoadingPosts}
-                  maxColumns={3}
                 />
               </div>
             ) : (

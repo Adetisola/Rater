@@ -101,7 +101,6 @@ export function FilterDropdown({
 
           <div
             className="w-full min-h-[48px] pl-12 pr-16 py-1.5 flex items-center flex-wrap gap-2"
-            onClick={() => document.getElementById('filter-search-input')?.focus()}
           >
             {/* Category Pills */}
             {selectedCategories.map(cat => (
@@ -137,7 +136,6 @@ export function FilterDropdown({
               }}
               placeholder={selectedCategories.length === 0 ? "Search work, creatives, or categories..." : ""}
               className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 h-8"
-              autoFocus
             />
           </div>
 

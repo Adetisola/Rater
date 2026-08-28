@@ -1,8 +1,15 @@
+import { LegalNav } from '@/components/legal/LegalNav';
+
 export default function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6">
-      <div className="bg-white rounded-3xl p-8 sm:p-12 border border-gray-100 shadow-sm prose prose-gray max-w-none">
-        {children}
+    <div className="min-h-screen bg-gray-50/50 w-full overflow-x-clip">
+      <div className="max-w-5xl mx-auto py-4 sm:py-12 px-4 sm:px-6 w-full">
+        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 items-start w-full">
+          <LegalNav />
+          <main className="flex-1 w-full min-w-0 break-words">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

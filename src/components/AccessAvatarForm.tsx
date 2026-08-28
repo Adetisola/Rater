@@ -97,10 +97,12 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
     setError('');
     setIsLoading(true);
 
-    const success = await login(normalized, passkey);
+    const result = await login(normalized, passkey);
 
-    if (success) {
+    if (result.ok) {
       onSuccess();
+    } else if (result.error) {
+      setError(result.error);
     } else {
       setError(`That ${loginMode === 'username' ? 'username' : 'email'} and password don't match. If you originally signed up with Google, try Continue with Google instead.`);
     }

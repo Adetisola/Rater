@@ -4,10 +4,19 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Review, Post, PostMetrics } from '@/types';
 import { AI_TOOLS } from '@/types';
-import { getReviewsByPostId, getReviewerName as getReviewerDisplayName, submitReview, updateReview, deleteReview } from '@/lib/reviews';
+import { 
+    getReviewsByPostId, 
+    getReviewerName as getReviewerDisplayName, 
+    submitReview, 
+    updateReview, 
+    deleteReview,
+    fetchCritiqueById,
+    resolveReplyContext 
+} from '@/lib/reviews';
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { safeMarkdownComponents } from '@/lib/markdownComponents';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuthState } from '@/context/AuthContext';
 import { usePosts } from '@/context/PostContext';
@@ -16,7 +25,6 @@ import { useNavigationStore } from '@/store/navigationStore';
 import { useNow } from '@/context/TimeContext';
 import { AppErrorState } from '@/components/AppErrorState';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { PostActionsMenu } from './PostActionsMenu';
 import { sharePost } from '../lib/postActions';
@@ -30,6 +38,7 @@ import { formatTimestamp, getFullTimestamp } from '../utils/dateUtils';
 import { generateResponsiveUrls, extractPublicId } from '@/lib/cloudinary/transforms';
 import { SharePostOverlay } from './SharePostOverlay';
 import { ReportPostOverlay } from './ReportPostOverlay';
+import { CritiqueReplyThread } from './critique/CritiqueReplyThread';
 import { AmbientLoadingText } from './AmbientLoadingText';
 import { RelatedSection } from './RelatedSection';
 import { MediaCarousel } from './MediaCarousel';
@@ -37,13 +46,13 @@ import { PulseTab, shouldShowPulseTab } from './PulseTab';
 import { InsightsTab } from './InsightsTab';
 import { showToast } from './GlobalOverlays';
 import { AuthOverlay } from '@/components/AuthOverlay';
+import { useRouter } from 'next/navigation';
 import { cn } from '../lib/utils';
 
 
 import { useViewTracker } from '@/hooks/useViewTracker';
 import { motion, useMotionValue, useAnimation, AnimatePresence, type PanInfo } from 'framer-motion';
 import {
-    ArrowLeft,
     Download,
     Share2,
     X,
@@ -54,8 +63,10 @@ import {
     ChevronRight,
     Copy,
     Check,
-    Eye
+    Eye,
+    Sparkles
 } from 'lucide-react';
+
 
 const REVIEWS_PER_PAGE = 5;
 
@@ -83,7 +94,7 @@ interface PostDetailOverlayProps {
  * Responsive wrapper for the post detail view.
  * Handles mobile swipe-to-navigate gestures while delegating rendering to PostDetailCore.
  */
-export function PostDetailContent({ post, onClose, initialIsMobile = false }: PostDetailOverlayProps) {
+export function PostDetailContent({ post, initialIsMobile = false }: PostDetailOverlayProps) {
     const [isMobile, setIsMobile] = useState(initialIsMobile);
 
     // Hydrate the store with the server-provided post data
@@ -155,7 +166,7 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
     const [isSwipeDisabled, setIsSwipeDisabled] = useState(false);
 
     if (!isMobile) {
-        return <PostDetailCore post={displayPost} onClose={onClose} />;
+        return <PostDetailCore post={displayPost} />;
     }
 
     return (
@@ -179,7 +190,7 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
 
                 {/* Current Post */}
                 <div className="w-screen shrink-0 relative z-10">
-                    <PostDetailCore post={displayPost} onClose={onClose} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
+                    <PostDetailCore post={displayPost} onDisableSwipe={setIsSwipeDisabled} disableEntryAnimation />
                 </div>
 
                 {/* Next Post */}
@@ -197,7 +208,8 @@ export function PostDetailContent({ post, onClose, initialIsMobile = false }: Po
  * The core detail view for a post, displaying images, metadata, metrics, and the review form.
  * Contains complex interactive logic for zooming, reviewing, and adjacent post navigation.
  */
-export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
+export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryAnimation }: PostDetailOverlayProps & { isAdjacent?: boolean, disableEntryAnimation?: boolean }) {
+    const router = useRouter();
     const { optimisticUpdateMetrics } = usePosts();
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);
     const [hotLottieLoaded, setHotLottieLoaded] = useState(false);
@@ -206,9 +218,6 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     const posts = usePostStore(state => state.posts);
     const { currentProfile: currentAvatar, profileMap: allAvatars } = useAuthState();
     const now = useNow();
-    const router = useRouter();
-
-    const handleClose = onClose || (() => router.back());
 
     // Data State
     const modeConfig = getReviewMode(post.category);
@@ -225,12 +234,19 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     // UI State
     const [hasReviewed, setHasReviewed] = useState(false);
-    const headerOpacity = 1;
     const isFreshReviewRef = useRef(false);
     const successStarRef = useRef<SVGPathElement>(null);
     const successCheckRef = useRef<SVGPathElement>(null);
     const [isSelfPost, setIsSelfPost] = useState(false);
     const [showAuthOverlay, setShowAuthOverlay] = useState(false);
+    const critiquesSectionRef = useRef<HTMLDivElement>(null);
+
+    const scrollToCritiques = () => {
+        critiquesSectionRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    };
 
     // GSAP animation for review success card
     useEffect(() => {
@@ -399,10 +415,57 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
     const [activeTab, setActiveTab] = useState<'rate' | 'pulse' | 'insights'>('rate');
     const [isReportOpen, setIsReportOpen] = useState(false);
+    const [reportTarget, setReportTarget] = useState<{ targetType: 'post' | 'profile' | 'reply' | 'review'; targetId: string } | null>(null);
+    const [urlCritiqueId, setUrlCritiqueId] = useState<string | null>(null);
+    const [urlReplyId, setUrlReplyId] = useState<string | null>(null);
+    const [targetedCritique, setTargetedCritique] = useState<Review | null>(null);
+    const [highlightedCritiqueId, setHighlightedCritiqueId] = useState<string | null>(null);
+    const [hasResolvedTarget, setHasResolvedTarget] = useState(false);
+    const hasScrolledToTargetRef = useRef(false);
     const [isShareOpen, setIsShareOpen] = useState(false);
     const [isImageFullscreen, setIsImageFullscreen] = useState(false);
     const [fullscreenImageIndex, setFullscreenImageIndex] = useState(0);
     const [isFullscreenImageLoading, setIsFullscreenImageLoading] = useState(true);
+
+    // Deep Linking Support: /post/[id]?tab=critique&critiqueId=...&replyId=...
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const searchParams = new URLSearchParams(window.location.search);
+        const tabParam = searchParams.get('tab');
+        const cId = searchParams.get('critiqueId') || searchParams.get('reviewId');
+        const rId = searchParams.get('replyId');
+
+        const hash = window.location.hash;
+        let hashCritiqueId = null;
+        if (hash.startsWith('#critique-')) {
+            hashCritiqueId = hash.replace('#critique-', '');
+        } else if (hash.startsWith('#review-')) {
+            hashCritiqueId = hash.replace('#review-', '');
+        }
+
+        const targetCritique = cId || hashCritiqueId;
+        if (targetCritique) {
+            setUrlCritiqueId(targetCritique);
+            setHighlightedCritiqueId(targetCritique);
+        }
+        if (rId) {
+            setUrlReplyId(rId);
+        }
+
+        if (tabParam === 'critique' || targetCritique || rId) {
+            setActiveTab('rate');
+        }
+
+        // Resilient fallback: If replyId is present but critiqueId was omitted, resolve the parent critique
+        if (rId && !targetCritique) {
+            resolveReplyContext(rId).then(ctx => {
+                if (ctx?.critiqueId) {
+                    setUrlCritiqueId(ctx.critiqueId);
+                    setHighlightedCritiqueId(ctx.critiqueId);
+                }
+            }).catch(() => {});
+        }
+    }, []);
 
     useEffect(() => {
         setIsFullscreenImageLoading(true);
@@ -581,9 +644,81 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
         });
     }, [allReviews, sortBy, modeConfig]);
 
-    const visibleReviews = sortedReviews.slice(0, visibleCount);
-    const hasMoreReviews = visibleCount < sortedReviews.length;
-    const remainingReviews = sortedReviews.length - visibleCount;
+    const displayReviews = useMemo(() => {
+        return sortedReviews.filter(r => !targetedCritique || r.id !== targetedCritique.id);
+    }, [sortedReviews, targetedCritique]);
+
+    const visibleReviews = useMemo(() => {
+        return displayReviews.slice(0, visibleCount);
+    }, [displayReviews, visibleCount]);
+
+    const hasMoreReviews = visibleCount < displayReviews.length;
+    const remainingReviews = displayReviews.length - visibleCount;
+
+    // Target Resolution: Decide whether to highlight in-place (top 5) or mount targeted container (deep items)
+    useEffect(() => {
+        if (!urlCritiqueId || isFetchingReviews || hasResolvedTarget) return;
+
+        const index = sortedReviews.findIndex(r => r.id === urlCritiqueId);
+
+        if (index >= 0 && index < REVIEWS_PER_PAGE) {
+            // Case 1: In the first 5 visible items -> highlight in place
+            setHasResolvedTarget(true);
+            setTargetedCritique(null);
+            setHighlightedCritiqueId(urlCritiqueId);
+        } else if (index >= REVIEWS_PER_PAGE) {
+            // Case 2: Deep in list (index 5+) -> promote to Targeted Critique container
+            setHasResolvedTarget(true);
+            setTargetedCritique(sortedReviews[index]);
+            setHighlightedCritiqueId(urlCritiqueId);
+        } else if (index === -1) {
+            // Case 3: Not in currently loaded reviews -> fetch single critique from database
+            let isCurrent = true;
+            fetchCritiqueById(urlCritiqueId).then(fetched => {
+                if (!isCurrent) return;
+                setHasResolvedTarget(true);
+                if (fetched) {
+                    setTargetedCritique(fetched);
+                    setHighlightedCritiqueId(urlCritiqueId);
+                } else {
+                    showToast('This critique or reply is no longer available.', 'error');
+                }
+            }).catch(() => {
+                if (!isCurrent) return;
+                setHasResolvedTarget(true);
+                showToast('Unable to load targeted critique.', 'error');
+            });
+            return () => { isCurrent = false; };
+        }
+    }, [urlCritiqueId, isFetchingReviews, sortedReviews, hasResolvedTarget]);
+
+    // Smooth Scroll to Target Critique once mounted
+    useEffect(() => {
+        if (!urlCritiqueId || !hasResolvedTarget || hasScrolledToTargetRef.current) return;
+
+        const timer = setTimeout(() => {
+            const el = document.getElementById(`critique-${urlCritiqueId}`);
+            if (el) {
+                hasScrolledToTargetRef.current = true;
+                if (!urlReplyId) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (critiquesSectionRef.current && !urlReplyId) {
+                critiquesSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 150);
+
+        return () => clearTimeout(timer);
+    }, [urlCritiqueId, hasResolvedTarget, targetedCritique, urlReplyId]);
+
+    // Auto-clear highlight after 4.5s
+    useEffect(() => {
+        if (!highlightedCritiqueId) return;
+        const timer = setTimeout(() => {
+            setHighlightedCritiqueId(null);
+        }, 4500);
+        return () => clearTimeout(timer);
+    }, [highlightedCritiqueId]);
 
     const handleReviewSubmit = async (ratings: Partial<Record<keyof Review, number>>, comment: string, reviewer_name: string) => {
         if (currentAvatar && post.avatar_id === currentAvatar.id) return;
@@ -593,15 +728,16 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             return;
         }
 
-        const newReview = {
+        const newReview: Review = {
             id: `r_new_${Date.now()}`,
             post_id: post.id,
-            ratings: ratings,
+            ratings: ratings as Record<string, number>,
             comment,
-            reviewer_id: currentAvatar?.id,
+            reviewer_id: currentAvatar?.id || '',
             reviewer_name: currentAvatar ? currentAvatar.name : reviewer_name,
+            author: currentAvatar || undefined,
             created_at: new Date().toISOString()
-        } as Review;
+        };
 
         try {
             // Submit the review to the database first (Blocking UI)
@@ -613,10 +749,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
             // SUCCESS: Now apply updates strictly synchronized with the backend
             
-            // 1. Merge the backend response to ensure full consistency
-            const finalReview = result.review ? {
+            // 1. Merge the backend response to ensure full consistency, preserving author
+            const finalReview: Review = result.review ? {
                 ...newReview,
                 id: result.review.id,
+                author: currentAvatar || newReview.author || undefined,
                 created_at: result.review.created_at,
                 updated_at: result.review.updated_at
             } : newReview;
@@ -654,7 +791,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             if (!result.ok) throw new Error(result.error);
 
             // Update both userReviews (if created this session) and dbReviews (if fetched on mount)
-            const updated = { ...oldReview, ratings, comment };
+            const updated: Review = { 
+                ...oldReview, 
+                ratings: ratings as Record<string, number>, 
+                comment,
+                author: oldReview.author || (currentAvatar?.id === oldReview.reviewer_id ? currentAvatar : undefined)
+            };
             setUserReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
             setDbReviews(prev => prev.map(r => r.id === editingReview.id ? updated : r));
             
@@ -703,7 +845,190 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
     };
 
     const handleLoadMore = () => {
-        setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, sortedReviews.length));
+        setVisibleCount(prev => Math.min(prev + REVIEWS_PER_PAGE, displayReviews.length));
+    };
+
+    const renderCritiqueCard = (review: Review, isTargetedBanner: boolean = false) => {
+        let sum = 0;
+        let count = 0;
+        modeConfig.criteria.forEach(c => {
+            const val = review.ratings?.[c.dbKey];
+            if (typeof val === 'number') {
+                sum += val;
+                count++;
+            }
+        });
+        const ratingAvg = count > 0 ? sum / count : 0;
+
+        const timeLabel = formatTimestamp(review.created_at, now);
+        const fullTime = getFullTimestamp(review.created_at);
+
+        const reviewerProfile = review.author || (review.reviewer_id ? allAvatars[review.reviewer_id] : undefined);
+        const avatarUrl = reviewerProfile?.avatar_url || null;
+        const username = reviewerProfile?.username;
+        const displayName = reviewerProfile?.name || getReviewerDisplayName(review);
+        const hasProfile = Boolean(username);
+        const isTargeted = highlightedCritiqueId === review.id || isTargetedBanner;
+
+        return (
+            <motion.div
+                key={review.id}
+                id={`critique-${review.id}`}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className={cn(
+                    "rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4 scroll-mt-24 transition-all duration-500",
+                    isTargeted
+                        ? "bg-amber-50/25 border-2 border-primary/50 ring-4 ring-primary/10 shadow-sm"
+                        : "bg-white border border-gray-200"
+                )}
+            >
+                <div className="w-full">
+                    <div className="flex items-center gap-3 mb-3">
+                        {hasProfile ? (
+                            <Link
+                                href={`/@${username}`}
+                                scroll={false}
+                                onClick={(e) => e.stopPropagation()}
+                                className="transition-all block shrink-0 rounded-full hover:ring-1 ring-primary focus:outline-none"
+                            >
+                                <UserAvatar 
+                                    avatarUrl={avatarUrl} 
+                                    size="xs"
+                                    className="w-7 h-7"
+                                    iconClassName="w-3/4 h-3/4"
+                                />
+                            </Link>
+                        ) : (
+                            <div className="shrink-0">
+                                <UserAvatar 
+                                    avatarUrl={avatarUrl} 
+                                    size="xs"
+                                    className="w-7 h-7"
+                                    iconClassName="w-3/4 h-3/4"
+                                />
+                            </div>
+                        )}
+                        <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
+                            <div className="flex items-center gap-2 min-w-0">
+                                {hasProfile ? (
+                                    <Link
+                                        href={`/@${username}`}
+                                        scroll={false}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors hover:text-primary cursor-pointer focus:outline-none"
+                                    >
+                                        {displayName}
+                                    </Link>
+                                ) : (
+                                    <span className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none">
+                                        {displayName}
+                                    </span>
+                                )}
+                                {!review.reviewer_id && (
+                                    <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
+                                        Guest
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="flex gap-0.5">
+                                    <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
+                                </div>
+                                <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
+                                    {ratingAvg.toFixed(1)}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
+                            <span
+                                className="text-xs text-gray-400 font-medium"
+                                title={fullTime}
+                                suppressHydrationWarning
+                            >
+                                {timeLabel}
+                            </span>
+                            {currentAvatar?.id === review.reviewer_id ? (
+                                <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
+                                    <button 
+                                        onClick={() => {
+                                            if (editingReview && editingReview.id !== review.id) {
+                                                if (!window.confirm("You have unsaved changes. Discard and edit this review instead?")) {
+                                                    return;
+                                                }
+                                            }
+                                            setEditingReview(review);
+                                            setReviewToDelete(null);
+                                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="hover:text-primary transition-colors"
+                                    >
+                                        Edit
+                                    </button>
+                                    <span>•</span>
+                                    {reviewToDelete === review.id ? (
+                                        <div className="flex items-center gap-1 text-red-500">
+                                            <span>Are you sure?</span>
+                                            <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
+                                            <span>/</span>
+                                            <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={() => setReviewToDelete(review.id)}
+                                            className="hover:text-red-500 transition-colors"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex items-center text-xs font-medium text-gray-400">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setReportTarget({ targetType: 'review', targetId: review.id })}
+                                        className="hover:text-red-500 transition-colors focus:outline-none"
+                                    >
+                                        Report
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {review.comment && (
+                        <div className="text-sm text-black leading-relaxed mb-3">
+                            <div className="markdown-content text-sm wrap-break-word">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
+                                    {review.comment}
+                                </ReactMarkdown>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex items-center gap-4 mt-2">
+                        <div className="flex flex-wrap gap-3 xs:gap-4">
+                            {modeConfig.criteria.map(c => (
+                                <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
+                                    <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
+                                    {review.ratings?.[c.dbKey] || '-'}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Threaded Critique Replies */}
+                    <CritiqueReplyThread
+                        critique={review}
+                        post={post}
+                        initialExpanded={urlCritiqueId === review.id}
+                        targetReplyId={urlCritiqueId === review.id ? urlReplyId : null}
+                        onOpenReportModal={(type, targetId) => setReportTarget({ targetType: type, targetId })}
+                    />
+                </div>
+            </motion.div>
+        );
     };
 
     const avatar = allAvatars[post.avatar_id] || post.author;
@@ -717,56 +1042,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
             transition={{ duration: 0.25, ease: "easeOut" }}
             className="w-full bg-white relative min-h-screen"
         >
-            <div className="max-w-300 mx-auto px-4 sm:px-6 pt-0 pb-8">
-
-                {/* HEADER: Back Button & Navigation Controls */}
-                <div className="mb-8 flex items-center justify-between sticky top-0 bg-transparent pt-8 pb-2 z-50">
-                    {/* Gradient Blur Background Layer */}
-                    <div
-                        style={{
-                            position: 'absolute',
-                            top: '-32px',
-                            bottom: '-10px',
-                            left: '-24px',
-                            right: '-24px',
-                            opacity: headerOpacity,
-                            background: 'linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 1) 85%, rgba(255, 255, 255, 0) 100%)',
-                            zIndex: -1,
-                            pointerEvents: 'none',
-                            transition: 'opacity 0.1s ease-out'
-                        }}
-                    ></div>
-                    <Button
-                        variant="secondary"
-                        onClick={handleClose}
-                        className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-black" />
-                        Back
-                    </Button>
-
-                    {/* Desktop Navigation Controls */}
-                    <div className="hidden md:flex items-center gap-2">
-                        <Button
-                            variant="secondary"
-                            onClick={handlePrev}
-                            disabled={!prevPostId}
-                            className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
-                            aria-label="Previous post"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-black" />
-                        </Button>
-                        <Button
-                            variant="secondary"
-                            onClick={handleNext}
-                            disabled={!nextPostId}
-                            className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all"
-                            aria-label="Next post"
-                        >
-                            <ChevronRight className="w-5 h-5 text-black" />
-                        </Button>
-                    </div>
-                </div>
+            <div className="max-w-300 mx-auto px-4 sm:px-6 pt-4 md:pt-6 pb-8">
 
                 {/* MAIN GRID */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-15 relative">
@@ -894,7 +1170,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                 <Tooltip
                                     content={
                                         <p className="leading-relaxed text-center">
-                                            {isHot ? "This design is getting high attention based on recent reviews" : "Number of structured reviews this design has received"}
+                                            {isHot ? "This work is receiving high attention based on recent critiques" : "Number of structured critiques this work has received"}
                                         </p>
                                     }
                                     position="top"
@@ -902,7 +1178,12 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     width="w-[calc(100vw-3rem)] xs:w-64"
                                     triggerClassName="relative inline-flex items-center shrink-0"
                                 >
-                                    <span className="text-sm font-medium sm:medium text-gray-800 flex items-center whitespace-nowrap cursor-help">
+                                    <button
+                                        type="button"
+                                        onClick={scrollToCritiques}
+                                        aria-label="Scroll to critiques"
+                                        className="text-sm font-medium text-gray-800 hover:text-primary transition-colors flex items-center whitespace-nowrap cursor-pointer focus:outline-none"
+                                    >
                                         {isHot && (
                                             <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
                                                 {!hotLottieLoaded && <span className="absolute text-[16px]">🔥</span>}
@@ -920,7 +1201,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                             </div>
                                         )}
                                         {metrics?.review_count || 0} {(metrics?.review_count === 1) ? 'critique' : 'critiques'}
-                                    </span>
+                                    </button>
                                 </Tooltip>
                                 {metrics?.view_count !== undefined && (
                                     <Tooltip
@@ -939,48 +1220,36 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                         </div>
 
                         {/* 4. Description */}
-                        <div className="text-sm leading-relaxed text-gray-600">
-                            <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
-                                <div className="markdown-content">
-                                    <ReactMarkdown 
-                                        remarkPlugins={[remarkGfm]}
-                                        components={{
-                                            a: ({ node, href, children, ...props }) => {
-                                                let url = href || '';
-                                                // If it doesn't start with a protocol (http://, https://, mailto:, etc.) 
-                                                // and doesn't start with a slash, prepend https://
-                                                if (url && !url.match(/^[a-zA-Z]+:/) && !url.startsWith('/')) {
-                                                    url = 'https://' + url;
-                                                }
-                                                return (
-                                                    <a href={url} target="_blank" rel="noopener noreferrer" {...props}>
-                                                        {children}
-                                                    </a>
-                                                );
-                                            }
-                                        }}
-                                    >
-                                        {post.description}
-                                    </ReactMarkdown>
+                        {post.description && post.description.trim().length > 0 && (
+                            <div className="text-sm leading-relaxed text-gray-600">
+                                <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
+                                    <div className="markdown-content">
+                                        <ReactMarkdown 
+                                            remarkPlugins={[remarkGfm]}
+                                            components={safeMarkdownComponents}
+                                        >
+                                            {post.description}
+                                        </ReactMarkdown>
+                                    </div>
+                                    {isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
+                                        <button
+                                            onClick={() => setIsExpanded(false)}
+                                            className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
+                                        >
+                                            Show less
+                                        </button>
+                                    )}
                                 </div>
-                                {isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
+                                {!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
                                     <button
-                                        onClick={() => setIsExpanded(false)}
+                                        onClick={() => setIsExpanded(true)}
                                         className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
                                     >
-                                        Show less
+                                        Read more
                                     </button>
                                 )}
                             </div>
-                            {!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
-                                <button
-                                    onClick={() => setIsExpanded(true)}
-                                    className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
-                                >
-                                    Read more
-                                </button>
-                            )}
-                        </div>
+                        )}
 
                         {/* AI Badge & Prompt */}
                         {post.uses_ai && (
@@ -1063,6 +1332,8 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                             >
                                 <UserAvatar 
                                     avatarUrl={avatar?.avatar_url} 
+                                    size="sm"
+                                    priority={true}
                                     className="w-10 h-10 shrink-0 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
                                 />
                                 <div className="text-left flex flex-col min-w-0">
@@ -1100,11 +1371,18 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
 
                         {isReportOpen && (
                             <ReportPostOverlay
+                                postId={post.id}
+                                targetType="post"
+                                targetId={post.id}
                                 onClose={() => setIsReportOpen(false)}
-                                onSubmit={(reason, details) => {
-                                    console.log('Report submitted:', reason, details);
-                                    setIsReportOpen(false);
-                                }}
+                            />
+                        )}
+
+                        {reportTarget && (
+                            <ReportPostOverlay
+                                targetType={reportTarget.targetType}
+                                targetId={reportTarget.targetId}
+                                onClose={() => setReportTarget(null)}
                             />
                         )}
 
@@ -1287,9 +1565,11 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                 </div>
 
                 {/* BOTTOM SECTION: Reviews List */}
-                <div className="border-t border-gray-100 pt-8 xs:pt-15">
+                <div ref={critiquesSectionRef} id="critiques-section" className="border-t border-gray-100 pt-8 xs:pt-15 scroll-mt-6 sm:scroll-mt-10">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                        <h2 className="text-lg font-medium text-black shrink-0">Critiques ({allReviews.length})</h2>
+                        <h2 className="text-lg font-medium text-black shrink-0">
+                            Critiques ({isFetchingReviews ? (metrics.review_count ?? post.review_count ?? 0) : allReviews.length})
+                        </h2>
 
                         <div className="flex flex-wrap gap-2 sm:ml-auto">
                             {['Recent', 'Top', 'Critical', 'Oldest'].map((option) => (
@@ -1319,7 +1599,7 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                  onRetry={() => setRetryCount(0)}
                                />
                             </div>
-                        ) : allReviews.length === 0 ? (
+                        ) : allReviews.length === 0 && !targetedCritique ? (
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -1333,153 +1613,34 @@ export function PostDetailCore({ post, onClose, isAdjacent, onDisableSwipe, disa
                                     Your critique helps the creator sharpen their craft and provides valuable insights for the studio.
                                 </p>
                             </motion.div>
-                        ) : visibleReviews.map((review) => {
-                            // Calculate dynamic rating average based on mode criteria
-                            let sum = 0;
-                            let count = 0;
-                            modeConfig.criteria.forEach(c => {
-                                const val = review.ratings?.[c.dbKey];
-                                if (typeof val === 'number') {
-                                    sum += val;
-                                    count++;
-                                }
-                            });
-                            const ratingAvg = count > 0 ? sum / count : 0;
-
-                            const timeLabel = formatTimestamp(review.created_at, now);
-                            const fullTime = getFullTimestamp(review.created_at);
-
-                            return (
-                                <motion.div
-                                    key={review.id}
-                                    initial={{ opacity: 0, y: 16 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.35, ease: "easeOut" }}
-                                    className="bg-white border border-gray-200 rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4"
-                                >
-                                    <div className="w-full">
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div
-                                                className={`transition-all ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer' : ''}`}
-                                                onClick={(e) => {
-                                                    if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
-                                                        e.stopPropagation();
-                                                        router.push(`/@${allAvatars[review.reviewer_id].username}`, { scroll: false });
-                                                    }
-                                                }}
-                                            >
-                                                {review.reviewer_id && allAvatars[review.reviewer_id] ? (
-                                                    <UserAvatar 
-                                                        avatarUrl={allAvatars[review.reviewer_id].avatar_url} 
-                                                        className="w-7 h-7 hover:ring-1 ring-primary transition-all"
-                                                        iconClassName="w-3/4 h-3/4"
-                                                    />
-                                                ) : (
-                                                    <UserAvatar 
-                                                        avatarUrl={null} 
-                                                        className="w-7 h-7"
-                                                        iconClassName="w-3/4 h-3/4"
-                                                    />
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col xs:flex-row xs:items-center gap-0.5 xs:gap-3 min-w-0 flex-1 xs:flex-none">
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span
-                                                        className={`font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors ${review.reviewer_id && allAvatars[review.reviewer_id] ? 'cursor-pointer hover:text-primary' : ''}`}
-                                                        onClick={(e) => {
-                                                            if (review.reviewer_id && allAvatars[review.reviewer_id]?.username) {
-                                                                e.stopPropagation();
-                                                                router.push(`/@${allAvatars[review.reviewer_id].username}`, { scroll: false });
-                                                            }
-                                                        }}
-                                                    >
-                                                        {getReviewerDisplayName(review)}
-                                                    </span>
-                                                    {!review.reviewer_id && (
-                                                        <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
-                                                            Guest
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className="flex gap-0.5">
-                                                        <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
-                                                    </div>
-                                                    <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
-                                                        {ratingAvg.toFixed(1)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
-                                                <span
-                                                    className="text-xs text-gray-400 font-medium"
-                                                    title={fullTime}
-                                                    suppressHydrationWarning
-                                                >
-                                                    {timeLabel}
+                        ) : (
+                            <>
+                                {targetedCritique && (
+                                    <div className="mb-6 pb-6 border-b border-gray-200/80 flex flex-col gap-3">
+                                        <div className="flex items-center justify-between px-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary border border-primary/25">
+                                                    <Sparkles className="w-3.5 h-3.5" />
+                                                    Targeted Critique
                                                 </span>
-                                                {currentAvatar?.id === review.reviewer_id && (
-                                                    <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
-                                                        <button 
-                                                            onClick={() => {
-                                                                if (editingReview && editingReview.id !== review.id) {
-                                                                    if (!window.confirm("You have unsaved changes. Discard and edit this review instead?")) {
-                                                                        return;
-                                                                    }
-                                                                }
-                                                                setEditingReview(review);
-                                                                setReviewToDelete(null);
-                                                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                            }}
-                                                            className="hover:text-primary transition-colors"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <span>•</span>
-                                                        {reviewToDelete === review.id ? (
-                                                            <div className="flex items-center gap-1 text-red-500">
-                                                                <span>Are you sure?</span>
-                                                                <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
-                                                                <span>/</span>
-                                                                <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
-                                                            </div>
-                                                        ) : (
-                                                            <button 
-                                                                onClick={() => setReviewToDelete(review.id)}
-                                                                className="hover:text-red-500 transition-colors"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <span className="text-xs text-gray-400">
+                                                    Referenced in notification
+                                                </span>
                                             </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setTargetedCritique(null)}
+                                                className="text-xs font-medium text-gray-400 hover:text-black transition-colors focus:outline-none"
+                                            >
+                                                Dismiss
+                                            </button>
                                         </div>
-
-                                        {review.comment && (
-                                            <div className="text-sm text-black leading-relaxed mb-4">
-                                                <div className="markdown-content text-sm wrap-break-word">
-                                                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                        {review.comment}
-                                                    </ReactMarkdown>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-center gap-4 pt-3 xs:pt-0 border-t xs:border-t-0 border-gray-100 mt-2">
-                                            <div className="flex flex-wrap gap-3 xs:gap-4">
-                                                {modeConfig.criteria.map(c => (
-                                                    <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
-                                                        <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
-                                                        {review.ratings?.[c.dbKey] || '-'}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                        {renderCritiqueCard(targetedCritique, true)}
                                     </div>
-                                </motion.div>
-                            );
-                        })}
+                                )}
+                                {visibleReviews.map((review) => renderCritiqueCard(review, false))}
+                            </>
+                        )}
                     </div>
 
 

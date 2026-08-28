@@ -3,24 +3,15 @@
 // StatusFooter Section - Rater Landing Page
 // Combined Status + Footer in one unified island container
 // Status: gradient text statement + large "Rater" typographic stamp
-// Footer: logo, tagline, copyright — horizontal on desktop, stacked on mobile
+// Footer: logo, tagline, copyright & comprehensive legal/support links
 
 const logoRater = '/assets/landing/footer/rater-logo-black-bg.svg';
+import Link from 'next/link';
 import { useScrollReveal } from '../../../hooks/useScrollReveal';
-import { useState } from 'react';
-import { LegalModal } from '../../../components/LegalModal';
 
 export function StatusFooter() {
   const { ref: sectionRef, state } = useScrollReveal<HTMLDivElement>({ triggerOnce: true, enterThreshold: 0.25 });
   const stateClass = state === 'visible' ? 'reveal-visible' : '';
-
-  const [legalModal, setLegalModal] = useState<{isOpen: boolean, title: string, url: string}>({
-    isOpen: false, title: '', url: ''
-  });
-
-  const openLegal = (title: string, url: string) => {
-    setLegalModal({ isOpen: true, title, url });
-  };
 
   return (
     <section id="status-footer" className="pt-4 pb-6 md:pt-24 md:pb-24 relative z-10 bg-white" ref={sectionRef}>
@@ -49,10 +40,10 @@ export function StatusFooter() {
           </div>
 
           {/* ══════ FOOTER BLOCK ══════ */}
-          <div className={`status-footer-bar reveal-fade reveal-delay-300 ${stateClass}`}>
+          <div className={`status-footer-bar flex-col md:flex-row items-center justify-between gap-4 px-6 md:px-12 py-6 reveal-fade reveal-delay-300 ${stateClass}`}>
 
-            {/* Left: Logo */}
-            <div className="flex items-center justify-center">
+            {/* Left: Logo & Tagline */}
+            <div className="flex items-center gap-3">
               <img
                 src={logoRater}
                 alt="Rater logo"
@@ -61,34 +52,46 @@ export function StatusFooter() {
                 loading="lazy"
                 className="w-8 h-8 md:w-9 md:h-9"
               />
+              <p className="text-[12px] md:text-[13px] text-gray-600 font-medium">
+                A design exploration experiment.
+              </p>
             </div>
 
-            {/* Center: Tagline */}
-            <p className="text-[12px] md:text-[14px] text-black font-medium">
-              A design exploration experiment.
-            </p>
+            {/* Middle: Support & Resources */}
+            <div className="flex items-center gap-2 text-[12px] md:text-[13px] text-gray-600 font-medium">
+              <Link href="/feedback" className="hover:text-black transition-colors">
+                Feedback
+              </Link>
+              <span className="text-gray-300">•</span>
+              <a href="mailto:support@raterapp.site" className="hover:text-black transition-colors">
+                Contact Support
+              </a>
+            </div>
 
-            {/* Right: Copyright & Legal */}
-            <div className="flex flex-wrap items-center justify-center gap-1.5 md:gap-2 text-[13px] md:text-[14px] text-black font-medium">
-              <span>©2026</span>
+            {/* Right: Legal Links & Copyright */}
+            <div className="flex flex-wrap items-center justify-center gap-2 text-[12px] md:text-[13px] text-gray-600 font-medium">
+              <Link href="/legal/community-guidelines" className="hover:text-black transition-colors">
+                Guidelines
+              </Link>
               <span className="text-gray-300">•</span>
-              <a href="/legal/Rater Terms of Service.md" onClick={(e) => { e.preventDefault(); openLegal('Terms of Service', '/legal/Rater Terms of Service.md'); }} className="hover:text-primary transition-colors">Terms</a>
+              <Link href="/legal/ai-insights" className="hover:text-black transition-colors">
+                AI & Insights
+              </Link>
               <span className="text-gray-300">•</span>
-              <a href="/legal/Rater Privacy Policy.md" onClick={(e) => { e.preventDefault(); openLegal('Privacy Policy', '/legal/Rater Privacy Policy.md'); }} className="hover:text-primary transition-colors">Privacy</a>
+              <Link href="/legal/terms" className="hover:text-black transition-colors">
+                Terms
+              </Link>
               <span className="text-gray-300">•</span>
-              <a href="/legal/Rater Community Guidelines.md" onClick={(e) => { e.preventDefault(); openLegal('Community Guidelines', '/legal/Rater Community Guidelines.md'); }} className="hover:text-primary transition-colors">Guidelines</a>
+              <Link href="/legal/privacy" className="hover:text-black transition-colors">
+                Privacy
+              </Link>
+              <span className="text-gray-300">•</span>
+              <span className="text-gray-400">©2026 Rater</span>
             </div>
           </div>
 
         </div>
       </div>
-
-      <LegalModal
-        isOpen={legalModal.isOpen}
-        onClose={() => setLegalModal(prev => ({ ...prev, isOpen: false }))}
-        title={legalModal.title}
-        docUrl={legalModal.url}
-      />
     </section>
   );
 }

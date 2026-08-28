@@ -70,20 +70,52 @@ export interface Avatar {
   previous_usernames?: string[];      // Ordered list of past usernames (oldest first)
   social_links?: SocialLink[];
   onboarding_completed?: boolean;
+  acquisition_source?: string | null;
+  acquisition_detail?: string | null;
+  campaign_tag?: string | null;
+  referred_by?: string | null;
 }
 
-// ─── Reviews ──────────────────────────────────────────────────────────────────
+// ─── Reviews & Critique Replies ───────────────────────────────────────────────
+
+export interface CritiqueReply {
+  id: string;
+  critique_id: string;
+  author_id: string;
+  parent_reply_id?: string | null;
+  parent_reply_author_username?: string | null;
+  parent_reply_author_name?: string | null;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  author?: Avatar;
+  has_children?: boolean;
+  is_tombstone?: boolean;
+  is_optimistic?: boolean;
+}
+
+export interface CritiqueRepliesResponse {
+  replies: CritiqueReply[];
+  nextCursor: string | null;
+  totalCount: number;
+}
 
 export interface Review {
   id: string;
   post_id: string;
   reviewer_id: string;
   reviewer_name?: string;
+  author?: Avatar;
   ratings: Record<string, number>;
 
   comment?: string;
   created_at: string;
   updated_at?: string;
+  reply_count?: number;
+  latest_reply_at?: string | null;
+  has_unread_replies?: boolean;
 }
 
 // ─── Media & Posts ─────────────────────────────────────────────────────────────
@@ -199,16 +231,7 @@ export interface PulseSession {
 
 // ─── Notifications ────────────────────────────────────────────────────────────
 
-export interface Notification {
-  id: string;
-  avatar_id: string;
-  actor_id?: string;
-  type: 'new_review' | 'badge_awarded' | 'pulse_vote' | 'system' | string;
-  post_id?: string;
-  message?: string;
-  is_read: boolean;
-  created_at: string;
-}
+export * from './notifications';
 
 // ─── Insight Output ───────────────────────────────────────────────────────────
 
@@ -223,6 +246,285 @@ export interface InsightOutput {
 
 import type { Database } from './supabase';
 
-export type FeedbackRequest = Database['public']['Views']['feedback_requests_with_stats']['Row'];
-export type FeedbackComment = Database['public']['Tables']['feedback_comments']['Row'];
+export type FeedbackType = 'Feature Request' | 'Improvement' | 'Bug Report' | 'General Feedback';
+export type FeedbackStatus = 'New' | 'Under Review' | 'Planned' | 'In Progress' | 'Completed' | 'Declined' | 'Resolved Duplicate';
+export type FeedbackCategory = 'UI' | 'Search' | 'Performance' | 'Profiles' | 'Reviews' | 'Mobile' | 'Accessibility' | 'Notifications' | 'General';
+
+export type FeedbackRequest = Database['public']['Views']['feedback_requests_with_stats']['Row'] & {
+  author?: {
+    name: string;
+    username: string;
+    avatar_url: string | null;
+    bg_color?: string | null;
+  } | null;
+  has_voted?: boolean;
+  is_following?: boolean;
+};
+
+export type FeedbackComment = Database['public']['Tables']['feedback_comments']['Row'] & {
+  author?: {
+    name: string;
+    username: string;
+    avatar_url: string | null;
+    bg_color?: string | null;
+  } | null;
+};
+
 export type FeedbackVote = Database['public']['Tables']['feedback_votes']['Row'];
+export type FeedbackFollow = Database['public']['Tables']['feedback_follows']['Row'];
+
+// ─── Moderation & Reports ───────────────────────────────────────────────────
+
+export type ReportTargetType = 'post' | 'profile' | 'reply' | 'review';
+export type ReportStatus = 'pending' | 'under_review' | 'resolved' | 'dismissed';
+
+export interface Report {
+  id: string;
+  reporter_id: string | null;
+  target_type: ReportTargetType;
+  target_id: string;
+  reason: string;
+  details: string | null;
+  status: ReportStatus;
+  action_taken: string | null;
+  admin_notes: string | null;
+  resolved_by: string | null;
+  created_at: string;
+  updated_at: string;
+  reporter?: Avatar | null;
+  target_post?: Post | null;
+  target_profile?: Avatar | null;
+  target_review?: (Review & { post?: { id: string; title: string; image_url?: string } | null; reviewer?: Avatar | null }) | null;
+  target_reply?: (CritiqueReply & { critique?: { id: string; post_id: string } | null; post?: { id: string; title: string; image_url?: string } | null }) | null;
+}
+
+export interface AdminAuditLog {
+  id: string;
+  admin_id: string;
+  action: string;
+  target_type: string;
+  target_id: string;
+  details: Record<string, any> | null;
+  created_at: string;
+  admin?: Avatar | null;
+}
+
+export interface PlatformSetting {
+  key: string;
+  value: Record<string, any>;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface AdminDashboardStats {
+  totalProfiles: number;
+  totalPosts: number;
+  totalReviews: number;
+  totalViews: number;
+  pendingReports: number;
+  activeFeedback: number;
+  profilesLast7Days: number;
+  postsLast7Days: number;
+  reviewsLast7Days: number;
+  recentActivity: Array<{
+    id: string;
+    type: 'post' | 'report' | 'feedback' | 'user';
+    title: string;
+    subtitle: string;
+    timestamp: string;
+    link: string;
+    status?: string;
+  }>;
+}
+
+// ─── Campaigns & Links ────────────────────────────────────────────────────────
+
+export type CampaignStatus = 'active' | 'paused' | 'completed';
+
+export interface Campaign {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: CampaignStatus;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  links_count?: number;
+  creator?: {
+    id: string;
+    username: string;
+    name: string;
+    avatar_url?: string | null;
+  } | null;
+}
+
+export interface CampaignLink {
+  id: string;
+  campaign_id: string;
+  source: string;
+  detail: string | null;
+  created_at: string;
+  tracking_url?: string;
+}
+
+// ─── Share Events ─────────────────────────────────────────────────────────────
+
+export interface ShareEvent {
+  id: string;
+  user_id: string;
+  post_id: string;
+  share_method: 'native' | 'copy_link' | string;
+  created_at: string;
+}
+
+// ─── Analytics Interfaces ─────────────────────────────────────────────────────
+
+export interface TrendMetric {
+  current: number;
+  previous: number;
+  changePct: number | null; // null when previous = 0 or not applicable
+}
+
+export interface AnalyticsDateRange {
+  from: string; // ISO 8601 UTC
+  to: string;   // ISO 8601 UTC
+}
+
+export interface AnalyticsPlatformOverview {
+  totalUsers: number;
+  totalPosts: number;
+  totalViews: number;
+  totalReviews: number;
+  users7dDelta: number;
+  posts7dDelta: number;
+  reviews7dDelta: number;
+}
+
+export interface ActivationMetrics {
+  newRegistrations: TrendMetric;
+  ratersCount: TrendMetric;       // Users who gave >= 1 valid review
+  uploadersCount: TrendMetric;    // Users who uploaded >= 1 valid post
+  activatedUsers: TrendMetric;    // Both uploaded >= 1 AND reviewed >= 1
+  activationRate: TrendMetric;    // (activated / new registrations) * 100
+}
+
+export interface CoreLoopMetrics {
+  postsSubmitted: TrendMetric;
+  reviewsGiven: TrendMetric;
+  reviewsReceived: TrendMetric;
+  avgReviewsPerPost: TrendMetric;
+  postsUnlocked: TrendMetric;
+  shareActions: TrendMetric;
+  usersWhoShared: TrendMetric;
+  referralSignups: TrendMetric;
+}
+
+export interface RatingLiquidityMetrics {
+  pctPostsWithReviews: number;      // % of active posts with >= 1 review
+  pctPostsUnlocked: number;         // % of active posts unlocked
+  postsAwaitingFirstReview: number; // count with 0 reviews
+  postsAwaitingUnlock: number;      // count with 1..2 reviews (review_count < 3)
+  medianTimeToFirstReviewMinutes: number | null; // minutes to first review
+  totalPostsInPeriod: number;
+}
+
+export interface GrowthLoopCohortStage {
+  id: string;
+  name: string;
+  count: number;
+  conversionRate: number; // % of registered cohort
+  description: string;
+}
+
+export interface GrowthLoopCohortData {
+  registeredCount: number;
+  stages: GrowthLoopCohortStage[];
+  stage5Details: {
+    sharedCount: number;
+    invitedCount: number;
+    sharedOrInvitedCount: number;
+  };
+}
+
+export interface AcquisitionSourceRow {
+  source: string;
+  usersCount: number;
+  activatedCount: number;
+  activationRate: number;
+}
+
+export interface ReferralAcquisitionStats {
+  totalReferredUsers: number;
+  activatedReferredUsers: number;
+  referralActivationRate: number;
+  topReferrers: Array<{
+    referrerId: string;
+    username: string;
+    name: string;
+    avatar_url: string | null;
+    referralCount: number;
+  }>;
+}
+
+export interface AcquisitionComparison {
+  marketingCount: number;
+  marketingActivated: number;
+  marketingRate: number;
+  referralCount: number;
+  referralActivated: number;
+  referralRate: number;
+  directOrUnknownCount: number;
+  directOrUnknownActivated: number;
+  directOrUnknownRate: number;
+}
+
+export interface AcquisitionBreakdownData {
+  sources: AcquisitionSourceRow[];
+  referralStats: ReferralAcquisitionStats;
+  comparison: AcquisitionComparison;
+}
+
+export interface RetentionMetrics {
+  d1RetentionRate: number;   // %
+  d7RetentionRate: number;   // %
+  d30RetentionRate: number;  // %
+  repeatUploadRate: number;  // % of uploaders with >= 2 posts
+  repeatReviewRate: number;  // % of reviewers with >= 2 reviews
+  totalCohortUsers: number;
+}
+
+export interface CampaignBreakdownRow {
+  campaignId: string | null;
+  campaignSlug: string;
+  campaignName: string;
+  status: string;
+  usersCount: number;
+  activatedCount: number;
+  activationRate: number;
+  referralsGenerated: number;
+}
+
+export interface SharingMetrics {
+  totalShareActions: TrendMetric;
+  uniquePostsShared: TrendMetric;
+  sharesByMethod: Array<{
+    method: string;
+    count: number;
+  }>;
+}
+
+export interface SearchMetricRow {
+  query: string;
+  count: number;
+}
+
+export interface SearchIntelligenceMetrics {
+  totalSearches: number;
+  zeroResultCount: number;
+  popularSearches: SearchMetricRow[];
+  trendingSearches: SearchMetricRow[];
+  noResultSearches: SearchMetricRow[];
+}
+
+

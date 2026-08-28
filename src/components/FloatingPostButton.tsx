@@ -12,21 +12,29 @@ export function FloatingPostButton() {
   const pathname = usePathname();
   const params = useParams();
 
-  // Only show on profile pages (/@username) for logged in users
-  const isProfilePage = pathname.startsWith('/@');
-  if (!currentProfile || !isProfilePage) return null;
+  if (!currentProfile) return null;
 
-  // Only show the post button on OUR OWN profile
-  if (params.alias) {
+  const isBrowsePage = pathname === '/browse' || pathname === '/browse/';
+  const isProfilePage = pathname.startsWith('/@');
+
+  // Show on Browse page for authenticated users
+  if (isBrowsePage) {
+    // allow rendering
+  } else if (isProfilePage) {
+    // Only show on OUR OWN profile
+    if (params.alias) {
       const routeAlias = decodeURIComponent(params.alias as string);
       if (routeAlias.startsWith('@')) {
-          const routeUsername = routeAlias.slice(1).toLowerCase();
-          if (routeUsername !== currentProfile.username.toLowerCase()) return null;
+        const routeUsername = routeAlias.slice(1).toLowerCase();
+        if (routeUsername !== currentProfile.username.toLowerCase()) return null;
       }
+    }
+  } else {
+    return null;
   }
 
   return (
-    <div className="fixed bottom-6 right-6 md:right-12 lg:right-18 xl:right-30 z-45 group pointer-events-none">
+    <div className="fixed bottom-6 right-6 md:right-8 lg:right-8 xl:right-10 z-45 group pointer-events-none">
         <div className="pointer-events-auto">
             <Button
                 variant="outline" 
@@ -47,7 +55,7 @@ export function FloatingPostButton() {
                     <span className="hidden sm:flex items-center text-lg font-medium text-black group-hover:text-white transition-colors">
                         Publish
                         <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-30 xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                            <span className="pl-1.5 whitespace-nowrap">work</span>
+                            <span className="pl-1.5 whitespace-nowrap">your work</span>
                         </span>
                     </span>
                 </div>
