@@ -9,6 +9,7 @@ import { SuspendedAccountOverlay } from './SuspendedAccountOverlay';
 import { SettingsOverlay, type SettingsTab } from './SettingsOverlay';
 import { InviteModal } from './InviteModal';
 import { InstallAppModal } from './InstallAppModal';
+import { WhatsNewModal } from './WhatsNewModal';
 import { FeedbackDrawer } from './feedback/FeedbackDrawer';
 import { useOverlayStore } from '@/store/overlayStore';
 import { usePosts } from '../context/PostContext';
@@ -127,6 +128,9 @@ function SettingsUrlSync({ onOpen }: { onOpen: (tab: SettingsTab) => void }) {
   return null;
 }
 
+const CURRENT_WHATS_NEW_VERSION = '1.2.0';
+const WHATS_NEW_STORAGE_KEY = 'rater_whats_new_seen_version';
+
 /**
  * A root-level component responsible for rendering globally accessible UI overlays.
  * Includes modals (Edit/Delete post, Settings), install prompts, offline status indicators, 
@@ -139,11 +143,39 @@ export function GlobalOverlays() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isInstallOpen, setIsInstallOpen] = useState(false);
+  const [isWhatsNewOpen, setIsWhatsNewOpen] = useState(false);
   const [settingsTab, setSettingsTab] = useState<SettingsTab>('general');
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const { undoDelete } = usePosts();
   const { isSuspended } = useAuthState();
   const { dismissSuspendedNotice } = useAuthActions();
+
+  // Check if browser has not yet dismissed What's New for current version
+  useEffect(() => {
+    try {
+      const seenVersion = localStorage.getItem(WHATS_NEW_STORAGE_KEY);
+      if (seenVersion !== CURRENT_WHATS_NEW_VERSION) {
+        const timer = setTimeout(() => {
+          setIsWhatsNewOpen(true);
+        }, 300);
+        return () => clearTimeout(timer);
+      }
+    } catch {
+      // Gracefully handle restricted storage environments
+    }
+  }, []);
+
+  const handleDismissWhatsNew = useCallback(() => {
+    setIsWhatsNewOpen(false);
+    try {
+      localStorage.setItem(WHATS_NEW_STORAGE_KEY, CURRENT_WHATS_NEW_VERSION);
+    } catch {}
+  }, []);
+
+  const handleLearnMoreWhatsNew = useCallback(() => {
+    handleDismissWhatsNew();
+    triggerSettings('about');
+  }, [handleDismissWhatsNew]);
 
   const handleOpenSettings = useCallback((tab: SettingsTab = 'general') => {
     setSettingsTab(tab);
@@ -221,6 +253,11 @@ export function GlobalOverlays() {
       <SettingsOverlay isOpen={isSettingsOpen} initialTab={settingsTab} onClose={handleCloseSettings} />
       <InviteModal isOpen={isInviteOpen} onClose={() => setIsInviteOpen(false)} />
       <InstallAppModal isOpen={isInstallOpen} onClose={() => setIsInstallOpen(false)} />
+      <WhatsNewModal
+        isOpen={isWhatsNewOpen}
+        onClose={handleDismissWhatsNew}
+        onLearnMore={handleLearnMoreWhatsNew}
+      />
       <FeedbackDrawer />
       <InstallPromptUI />
       <OfflineStatus />

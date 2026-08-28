@@ -21,6 +21,7 @@ import { FullscreenAvatarOverlay } from './FullscreenAvatarOverlay';
 import { SocialLinksRow } from './SocialLinksRow';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { safeMarkdownComponents } from '@/lib/markdownComponents';
 import { type SocialLink } from '../utils/socialLinksUtils';
 import { showToast } from './GlobalOverlays';
 import { uploadMedia } from '@/lib/cloudinary/uploads';
@@ -720,7 +721,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             ) : targetAvatar.bio || isMe ? (
               <div className="text-gray-600 leading-relaxed markdown-content [&_p]:my-1">
                 {targetAvatar.bio ? (
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
                     {targetAvatar.bio}
                   </ReactMarkdown>
                 ) : (

@@ -16,6 +16,7 @@ import {
 import { getPostMetrics as calculatePostMetrics } from '@/lib/metrics';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { safeMarkdownComponents } from '@/lib/markdownComponents';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useAuthState } from '@/context/AuthContext';
 import { usePosts } from '@/context/PostContext';
@@ -999,7 +1000,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                     {review.comment && (
                         <div className="text-sm text-black leading-relaxed mb-3">
                             <div className="markdown-content text-sm wrap-break-word">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
                                     {review.comment}
                                 </ReactMarkdown>
                             </div>
@@ -1225,21 +1226,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     <div className="markdown-content">
                                         <ReactMarkdown 
                                             remarkPlugins={[remarkGfm]}
-                                            components={{
-                                                a: ({ node, href, children, ...props }) => {
-                                                    let url = href || '';
-                                                    // If it doesn't start with a protocol (http://, https://, mailto:, etc.) 
-                                                    // and doesn't start with a slash, prepend https://
-                                                    if (url && !url.match(/^[a-zA-Z]+:/) && !url.startsWith('/')) {
-                                                        url = 'https://' + url;
-                                                    }
-                                                    return (
-                                                        <a href={url} target="_blank" rel="noopener noreferrer" {...props}>
-                                                            {children}
-                                                        </a>
-                                                    );
-                                                }
-                                            }}
+                                            components={safeMarkdownComponents}
                                         >
                                             {post.description}
                                         </ReactMarkdown>
