@@ -145,7 +145,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                       className="w-7 h-7 object-contain"
                     />
                   </div>
-                  <span className="text-[11px] font-bold text-amber-400 tracking-wider uppercase">
+                  <span className="text-[11px] font-semibold text-amber-400 tracking-wider uppercase">
                     Rater v1.2.0
                   </span>
                 </div>
@@ -168,7 +168,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
               <div>
                 <h2
                   id="whats-new-title"
-                  className="text-xl font-bold text-gray-950 tracking-tight"
+                  className="text-xl font-medium text-gray-950 tracking-tight"
                 >
                   Rater v1.2.0
                 </h2>
@@ -188,7 +188,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                     💬
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <h3 className="text-xs font-bold text-gray-950 tracking-tight">
+                    <h3 className="text-xs font-semibold text-gray-950 tracking-tight">
                       Critiques are now conversations
                     </h3>
                     <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
@@ -203,7 +203,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                     🔍
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <h3 className="text-xs font-bold text-gray-950 tracking-tight">
+                    <h3 className="text-xs font-semibold text-gray-950 tracking-tight">
                       Find creators &amp; work faster
                     </h3>
                     <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
@@ -218,7 +218,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                     🔔
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <h3 className="text-xs font-bold text-gray-950 tracking-tight">
+                    <h3 className="text-xs font-semibold text-gray-950 tracking-tight">
                       Stay in the loop
                     </h3>
                     <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
@@ -234,7 +234,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                   type="button"
                   variant="outline"
                   onClick={onLearnMore}
-                  className="w-full sm:flex-1 h-11 rounded-2xl text-xs font-bold text-gray-800 border-gray-200 hover:bg-gray-50 cursor-pointer"
+                  className="w-full sm:flex-1 h-11 rounded-full text-sm font-semibold cursor-pointer"
                 >
                   Learn More
                 </Button>
@@ -243,7 +243,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                   type="button"
                   variant="primary"
                   onClick={onClose}
-                  className="w-full sm:flex-1 h-11 rounded-2xl text-xs font-bold shadow-xs cursor-pointer"
+                  className="w-full sm:flex-1 h-11 rounded-full text-sm font-semibold cursor-pointer"
                 >
                   Got it
                 </Button>
