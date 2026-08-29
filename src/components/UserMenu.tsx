@@ -397,7 +397,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                           <span>About Rater</span>
                         </div>
                         <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/20 text-gray-900 leading-none">
-                          v1.2.0
+                          v1.2.2
                         </span>
                       </button>
                       <Link
@@ -508,7 +508,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                           <span>About Rater</span>
                         </div>
                         <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/20 text-gray-900 leading-none">
-                          v1.2.0
+                          v1.2.2
                         </span>
                       </button>
                       <Link

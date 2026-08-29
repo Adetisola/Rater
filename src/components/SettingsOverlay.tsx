@@ -1374,7 +1374,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         <div className="flex items-center gap-2">
                           <h3 className="text-base font-medium text-gray-900 tracking-tight">Rater</h3>
                           <span className="text-xs text-gray-400 font-normal">
-                            v1.2.0
+                            v1.2.2
                           </span>
                         </div>
                         <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">

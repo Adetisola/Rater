@@ -4,6 +4,20 @@ All notable changes to Rater are documented here.
 
 ---
 
+## [1.2.2] — 2026-08-29
+
+### Fixed
+- **Mobile Browse feed single-column collapse** — corrected responsive breakpoint threshold in `useMasonryColumns.ts` so that standard mobile viewports (300px–640px, including 320px, 360px Samsung Galaxy, and 375px iPhone SE/11 Pro) consistently render the intended 2-column grid instead of collapsing to 1 column.
+- **Post view tracking column schema alignment** — fixed column selection in `POST /api/posts/[id]/view` to correctly query `view_count` on post lookup and fallback updates.
+- **Post deletion relationship cascades** — ensured hard-deleting a post via admin panel correctly purges associated critique replies and reply read tracking rows.
+
+### Improved
+- **Mobile WebView & PWA scaling reliability** — explicitly specified `width: "device-width", initialScale: 1` in Next.js root layout `viewport` metadata.
+- **View tracking visibility sensitivity** — tuned intersection observer visibility threshold in `useViewTracker.ts` to `0.2` for smoother viewport engagement capture.
+- **Conversational engagement analytics** — added `getEngagementMetrics` query in admin service to report discussion volume, participating critique ratios, and thread engagement without altering core review ratings.
+
+---
+
 ## [1.2.1] — 2026-08-28
 
 ### Fixed

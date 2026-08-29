@@ -36,7 +36,8 @@ import type {
   RetentionMetrics,
   CampaignBreakdownRow,
   SharingMetrics,
-  SearchIntelligenceMetrics
+  SearchIntelligenceMetrics,
+  EngagementMetrics
 } from '@/types';
 import { deleteAsset } from '@/lib/cloudinary/service';
 import { extractPublicId } from '@/lib/cloudinary/transforms';
@@ -485,6 +486,17 @@ export async function hardDeletePostAdmin(postId: string) {
   }
 
   // 3. Delete dependent relational entries
+  const { data: postReviews } = await adminSupabase
+    .from('reviews')
+    .select('id')
+    .eq('post_id', postId);
+
+  const reviewIds = (postReviews || []).map((r: any) => r.id);
+  if (reviewIds.length > 0) {
+    await adminSupabase.from('critique_replies').delete().in('critique_id', reviewIds);
+    await adminSupabase.from('critique_reply_reads').delete().in('critique_id', reviewIds);
+  }
+
   await adminSupabase.from('reviews').delete().eq('post_id', postId);
   await adminSupabase.from('post_views').delete().eq('post_id', postId);
   await adminSupabase.from('insight_cache').delete().eq('post_id', postId);
@@ -2263,6 +2275,71 @@ export async function getSearchIntelligenceAnalytics(
     popularSearches,
     trendingSearches,
     noResultSearches,
+  };
+}
+
+/**
+ * Section 11: Engagement / Conversation Metrics
+ *
+ * Tracks threaded critique reply activity, conversation volume, and participation rates.
+ * Strictly separates conversational engagement from core review counts and ratings.
+ */
+export async function getEngagementMetrics(range?: AnalyticsDateRange): Promise<EngagementMetrics> {
+  await verifyAdminSession();
+  const adminSupabase = getAdminSupabase();
+  const windows = computeComparisonWindows(range);
+
+  // 1. Fetch active replies within window with joined critique & post info
+  let replyQuery = adminSupabase
+    .from('critique_replies')
+    .select('id, critique_id, author_id, created_at, critique:reviews!critique_replies_critique_id_fkey(post_id)')
+    .is('deleted_at', null);
+
+  if (!windows.isAllTime && windows.current.from) {
+    replyQuery = replyQuery.gte('created_at', windows.current.from).lte('created_at', windows.current.to);
+  }
+
+  const { data: replyRows } = await replyQuery;
+  const rows = replyRows || [];
+  const totalReplies = rows.length;
+
+  // 2. Distinct critiques with >= 1 active reply
+  const critiquesWithRepliesSet = new Set(rows.map((r: any) => r.critique_id).filter(Boolean));
+  const critiquesWithReplies = critiquesWithRepliesSet.size;
+
+  // 3. Distinct posts with active discussions
+  const postsWithConversationsSet = new Set(
+    rows.map((r: any) => r.critique?.post_id).filter(Boolean)
+  );
+  const postsWithConversations = postsWithConversationsSet.size;
+
+  // 4. Total critiques (reviews) in period to calculate conversation percentage
+  let totalCritiquesQuery = adminSupabase
+    .from('reviews')
+    .select('id', { count: 'exact', head: true });
+
+  if (!windows.isAllTime && windows.current.from) {
+    totalCritiquesQuery = totalCritiquesQuery.gte('created_at', windows.current.from).lte('created_at', windows.current.to);
+  }
+
+  const { count: totalCritiquesCount } = await totalCritiquesQuery;
+  const totalCritiques = totalCritiquesCount || 0;
+
+  const pctCritiquesWithReplies = totalCritiques > 0
+    ? Number(((critiquesWithReplies / totalCritiques) * 100).toFixed(1))
+    : 0;
+
+  const avgRepliesPerCritiqueWithReplies = critiquesWithReplies > 0
+    ? Number((totalReplies / critiquesWithReplies).toFixed(1))
+    : 0;
+
+  return {
+    totalReplies,
+    critiquesWithReplies,
+    totalCritiques,
+    pctCritiquesWithReplies,
+    postsWithConversations,
+    avgRepliesPerCritiqueWithReplies,
   };
 }
 

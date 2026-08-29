@@ -128,7 +128,7 @@ function SettingsUrlSync({ onOpen }: { onOpen: (tab: SettingsTab) => void }) {
   return null;
 }
 
-const CURRENT_WHATS_NEW_VERSION = '1.2.1';
+const CURRENT_WHATS_NEW_VERSION = '1.2.2';
 const WHATS_NEW_STORAGE_KEY = 'rater_whats_new_seen_version';
 
 /**

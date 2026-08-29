@@ -40,7 +40,14 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const badge = usePostStore(state => state.badgeMap[postId]);
     const isHot = usePostStore(state => state.hotPostIds.has(postId));
 
-    const { trackView, containerRef } = useViewTracker(postId);
+    const { trackView, containerRef } = useViewTracker(postId, () => {
+        const currentPost = usePostStore.getState().posts[postId];
+        if (currentPost) {
+            usePostStore.getState().updatePostMetrics(postId, {
+                view_count: (currentPost.view_count || 0) + 1
+            });
+        }
+    });
 
     const [hasError, setHasError] = useState(false);
     const [topRatedLottieLoaded, setTopRatedLottieLoaded] = useState(false);

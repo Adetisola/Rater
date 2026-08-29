@@ -2,10 +2,18 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useInView } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 
-export function useViewTracker(postId: string, onIncrement?: () => void) {
+export interface UseViewTrackerOptions {
+    amount?: 'some' | 'all' | number;
+}
+
+export function useViewTracker(
+    postId: string, 
+    onIncrement?: () => void,
+    options?: UseViewTrackerOptions
+) {
     const viewState = useRef<'idle' | 'pending' | 'completed'>('idle');
     const containerRef = useRef<HTMLDivElement>(null);
-    const isInView = useInView(containerRef, { amount: 0.5 }); // 50% visibility
+    const isInView = useInView(containerRef, { amount: options?.amount ?? 0.2 });
     const onIncrementRef = useRef(onIncrement);
 
     useEffect(() => {

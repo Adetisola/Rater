@@ -527,4 +527,11 @@ export interface SearchIntelligenceMetrics {
   noResultSearches: SearchMetricRow[];
 }
 
-
+export interface EngagementMetrics {
+  totalReplies: number;
+  critiquesWithReplies: number;
+  totalCritiques: number;
+  pctCritiquesWithReplies: number;
+  postsWithConversations: number;
+  avgRepliesPerCritiqueWithReplies: number;
+}
