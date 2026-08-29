@@ -15,13 +15,15 @@ export function useMasonryColumns(containerRef?: RefObject<HTMLElement | null>) 
         ? targetElement.offsetWidth
         : document.documentElement.clientWidth;
       
-      // Explicit viewport breakpoints for Mobile and Tablet explicitly requested by design
-      if (width <= 375) {
+      // Ultra-narrow viewports (< 300px, e.g. Fold outer displays or extreme zoom)
+      if (width < 300) {
         setColumns(1);
         return;
       }
       
-      if (width > 375 && width <= 640) {
+      // Standard mobile viewports (300px–640px, e.g. 320px, 360px, 375px, 390px, 412px, 430px)
+      // explicitly render a high-density 2-column grid
+      if (width <= 640) {
         setColumns(2);
         return;
       }
@@ -33,8 +35,8 @@ export function useMasonryColumns(containerRef?: RefObject<HTMLElement | null>) 
       // Calculate how many times a 'minimum sized column + gap' fits into the available space
       const calculatedColumns = Math.floor((availableWidth + GAP) / (MIN_COLUMN_WIDTH + GAP));
       
-      // Enforce at least 1 column, and max out safely so it doesn't span endlessly on ultra-wides
-      setColumns(Math.max(1, Math.min(10, calculatedColumns)));
+      // Enforce at least 2 columns for tablet/desktop, and max out safely so it doesn't span endlessly on ultra-wides
+      setColumns(Math.max(2, Math.min(10, calculatedColumns)));
     };
 
     updateColumns();

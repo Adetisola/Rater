@@ -28,6 +28,11 @@ export {
 /**
  * Invalidate (clear) the cached insight for a post.
  * Called when new reviews are submitted or a post is updated.
+ *
+ * INTENTIONAL: Reply creation does NOT call this function.
+ * Replies represent a conversational engagement layer and do not alter the
+ * structured rating/critique data that Insights synthesizes. Perception cache
+ * remains valid until a new critique (review) is submitted or deleted.
  */
 export async function invalidateInsights(postId: string): Promise<void> {
   const { supabase } = await import('@/lib/supabase/client');

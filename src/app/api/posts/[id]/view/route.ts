@@ -67,7 +67,7 @@ export async function POST(
         // Server-Side Validation: Ensure post exists and is not deleted
         const { data: post, error: postError } = await adminClient
             .from('posts')
-            .select('avatar_id, is_deleted, deleted_at, views_count')
+            .select('avatar_id, is_deleted, deleted_at, view_count')
             .eq('id', postId)
             .single();
             
@@ -124,7 +124,7 @@ export async function POST(
                 // Graceful fallback to avoid 500 errors if RPC migration is not applied
                 await adminClient
                     .from('posts')
-                    .update({ views_count: (post.views_count || 0) + 1 })
+                    .update({ view_count: (post.view_count || 0) + 1 })
                     .eq('id', postId);
             } catch (fallbackErr) {
                 console.warn('[ViewTracking] Direct view update fallback notice:', fallbackErr);

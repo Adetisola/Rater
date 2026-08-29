@@ -146,7 +146,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                     />
                   </div>
                   <span className="text-[11px] font-semibold text-amber-400 tracking-wider uppercase">
-                    Rater v1.2.0
+                    Rater v1.2.2
                   </span>
                 </div>
               )}
@@ -170,7 +170,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
                   id="whats-new-title"
                   className="text-xl font-medium text-gray-950 tracking-tight"
                 >
-                  Rater v1.2.0
+                  Rater v1.2.2
                 </h2>
                 <p
                   id="whats-new-desc"
