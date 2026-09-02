@@ -24,7 +24,7 @@ export function UserAvatar({
   priority = false,
   className, 
   iconClassName,
-  alt = "User Avatar"
+  alt = "User profile picture"
 }: UserAvatarProps) {
   const [hasError, setHasError] = useState(false);
 

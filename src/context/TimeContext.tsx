@@ -2,12 +2,13 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const TimeContext = createContext<number>(Date.now());
+const TimeContext = createContext<number | null>(null);
 
 export function TimeProvider({ children }: { children: React.ReactNode }) {
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
+    setNow(Date.now());
     const interval = setInterval(() => {
       setNow(Date.now());
     }, 60000);

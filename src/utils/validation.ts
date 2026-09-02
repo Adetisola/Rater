@@ -41,7 +41,7 @@ export function isValidEmailFormat(email: string): boolean {
  */
 export function validatePasskey(passkey: string): string | null {
   if (passkey.length < 8) {
-    return 'Passkey must be at least 8 characters long.';
+    return 'Password must be at least 8 characters long.';
   }
   return null;
 }

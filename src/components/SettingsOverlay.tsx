@@ -490,7 +490,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
                                 <KeyRound size={15} className="text-gray-400 shrink-0" />
-                                <span>Passkey / Password</span>
+                                <span>Password</span>
                               </p>
                               <p className="text-xs sm:text-[13px] text-gray-500 mt-1">Set or update your account password.</p>
                             </div>

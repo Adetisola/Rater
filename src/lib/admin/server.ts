@@ -1407,10 +1407,10 @@ export async function getActivationMetrics(range?: AnalyticsDateRange): Promise<
     });
     const raters = raterSet.size;
 
-    // 4. Activated = both uploaded >= 1 AND reviewed >= 1
+    // 4. Activated = uploaded >= 1 OR reviewed >= 1
     let activated = 0;
     userIds.forEach((uid) => {
-      if (uploaderSet.has(uid) && raterSet.has(uid)) {
+      if (uploaderSet.has(uid) || raterSet.has(uid)) {
         activated++;
       }
     });
@@ -1780,7 +1780,7 @@ export async function getAcquisitionBreakdown(range?: AnalyticsDateRange): Promi
     }
   });
 
-  const isActivated = (uid: string) => uploaderSet.has(uid) && reviewerSet.has(uid);
+  const isActivated = (uid: string) => uploaderSet.has(uid) || reviewerSet.has(uid);
 
   // Group marketing sources
   const sourceMap: Record<string, { total: number; activated: number }> = {};
@@ -2066,7 +2066,7 @@ export async function getCampaignBreakdown(range?: AnalyticsDateRange): Promise<
     }
   });
 
-  const isActivated = (uid: string) => uploaderSet.has(uid) && reviewerSet.has(uid);
+  const isActivated = (uid: string) => uploaderSet.has(uid) || reviewerSet.has(uid);
 
   // Group by campaign tag
   const campaignDataMap: Record<string, { total: number; activated: number; referrals: number }> = {};
@@ -2342,5 +2342,4 @@ export async function getEngagementMetrics(range?: AnalyticsDateRange): Promise<
     avgRepliesPerCritiqueWithReplies,
   };
 }
-
 

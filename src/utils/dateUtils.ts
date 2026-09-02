@@ -2,8 +2,10 @@
  * Standardized timestamp formatting for the Rater app.
  */
 
-export function formatTimestamp(date: string | Date, currentNow?: number | Date): string {
-  const now = currentNow ? new Date(currentNow) : new Date();
+export function formatTimestamp(date: string | Date, currentNow?: number | Date | null): string {
+  // TimeContext intentionally starts at null so the server and first client render match.
+  if (currentNow === null) return '';
+  const now = currentNow === undefined ? new Date() : new Date(currentNow);
   const past = new Date(date);
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
 

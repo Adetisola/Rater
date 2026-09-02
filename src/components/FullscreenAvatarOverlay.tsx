@@ -84,7 +84,7 @@ export function FullscreenAvatarOverlay({ isOpen, onClose, avatarUrl, name }: Fu
             
             {/* Action Button - Matching Post Detail Page style */}
             <div className="absolute top-6 right-6 z-20">
-                <Tooltip content="Download Avatar" position="bottom" align="end">
+                <Tooltip content="Download profile picture" position="bottom" align="end">
                     <button 
                         onClick={handleDownload}
                         className="w-11 h-11 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-all group"

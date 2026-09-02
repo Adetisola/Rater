@@ -14,6 +14,7 @@ import { useAuthState } from '@/context/AuthContext';
 import { getFeedPosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import useSWR from 'swr';
+import { trackSearchEvent } from '@/lib/searchAnalytics';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -200,6 +201,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   const [sortedPostIds, setSortedPostIds] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(true);
   const [lastProcessedSignature, setLastProcessedSignature] = useState('');
+  const lastTrackedSearchRef = useRef('');
 
   const currentSignature = `${feedPostIds.join(',')}-${urlQuery}-${selectedCategories.join(',')}-${sortBy}-${avatarId || ''}`;
   const isEffectivelyProcessing = isProcessing || isFetchingPage || lastProcessedSignature !== currentSignature;
@@ -215,11 +217,10 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
   }, [avatarId, profileMap]);
 
   // Logic dependencies
-  const postsSearchSignature = feedPostIds.join(',');
   const searchIndexes = useMemo(() => {
     const loadedPosts = feedPostIds.map(id => usePostStore.getState().posts[id]).filter(Boolean);
     return buildSearchIndexes(loadedPosts, profileMap, CATEGORIES);
-  }, [postsSearchSignature, profileMap]);
+  }, [feedPostIds, profileMap]);
 
   const updateUrl = (updates: Record<string, string | string[] | null>) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -318,6 +319,16 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
             if (isMounted) {
                 setSortedPostIds(finalPosts.map(p => p.id));
                 setLastProcessedSignature(currentSignature);
+
+                const committedQuery = urlQuery.trim();
+                const trackingSignature = `${committedQuery.toLowerCase()}|${selectedCategories.join(',')}|${avatarId || ''}`;
+                if (committedQuery.length >= 2 && trackingSignature !== lastTrackedSearchRef.current) {
+                    lastTrackedSearchRef.current = trackingSignature;
+                    void trackSearchEvent({
+                        query: committedQuery,
+                        resultCount: finalPosts.length,
+                    });
+                }
             }
         } catch (error) {
             const normalized = await import('@/lib/errors/normalizeError').then(m => m.normalizeError(error, {
@@ -339,7 +350,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
 
     processPosts();
     return () => { isMounted = false; };
-  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds]); // intentionally removed currentSignature as a dependency
+  }, [searchIndexes, urlQuery, selectedCategories, sortBy, selectedAvatar, feedPostIds, avatarId, currentSignature, localRecentUpload]);
 
   return (
     <>
@@ -360,6 +371,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                     <span className="text-sm font-bold text-black">{selectedAvatar.name}</span>
                     <button 
                       onClick={clearAvatarFilter}
+                      aria-label="Clear creative filter"
                       className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
                     >
                       <X className="w-3 h-3 text-white" />
@@ -376,6 +388,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                         <span className="text-xs font-medium text-black">{SORT_LABELS[sortBy] ?? sortBy}</span>
                         <button 
                           onClick={() => setSortBy('balanced')}
+                          aria-label="Reset sort"
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
                         >
                           <X className="w-2.5 h-2.5 text-white" />
@@ -388,6 +401,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                         <span className="text-xs font-medium text-black">{cat}</span>
                         <button 
                           onClick={() => handleCategoryChange(selectedCategories.filter(c => c !== cat))}
+                          aria-label={`Remove ${cat} category filter`}
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
                         >
                           <X className="w-2.5 h-2.5 text-white" />

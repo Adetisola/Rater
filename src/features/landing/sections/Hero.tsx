@@ -226,12 +226,12 @@ export function Hero({ onReady, animationReady, activeSection, onSectionClick }:
               className="mt-10 sm:mt-8 md:mt-6 xl:mt-8 flex items-center justify-center gap-5 sm:gap-4 md:gap-5 xl:gap-6 w-full pointer-events-auto"
             >
               {/* Primary CTA */}
-              <button 
-                onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
+              <Link
+                href="/browse"
                 className="px-7 py-2.5 md:px-5 md:py-1.5 lg:px-6 lg:py-2 rounded-full bg-primary text-[15px] md:text-[13px] lg:text-[14px] xl:text-[15px] font-medium text-white hover:bg-[#e6b00f] transition-all duration-300"
               >
                 Try it Now
-              </button>
+              </Link>
 
               {/* Secondary CTA */}
               <a 

@@ -75,10 +75,11 @@ export function NotificationItem({
   };
 
   return (
-    <div
+    <button
+      type="button"
       onClick={handleClick}
       className={cn(
-        "group relative flex items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 cursor-pointer",
+        "group relative flex w-full items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer",
         notification.is_read
           ? "bg-white hover:bg-gray-50/90 border-gray-100"
           : "bg-amber-50/25 hover:bg-amber-50/50 border-primary/25 ring-1 ring-primary/10"
@@ -143,6 +144,6 @@ export function NotificationItem({
           />
         </div>
       )}
-    </div>
+    </button>
   );
 }

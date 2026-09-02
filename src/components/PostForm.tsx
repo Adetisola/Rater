@@ -1132,6 +1132,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               <button
                 type="button"
                 role="switch"
+                aria-label="Disclose AI assistance"
                 aria-checked={usesAI}
                 onClick={() => {
                   setUsesAI(!usesAI);

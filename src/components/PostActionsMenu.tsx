@@ -264,6 +264,7 @@ export function PostActionsMenu({
       {/* Share Button (always visible unless mobile + card context) */}
       <button
         type="button"
+        aria-label="Share work"
         onClick={handleShare}
         className={cn(
           btnClass, 
@@ -281,6 +282,8 @@ export function PostActionsMenu({
       <button
         ref={moreBtnRef}
         type="button"
+        aria-label={isOpen ? "Close work actions" : "Open work actions"}
+        aria-expanded={isOpen}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

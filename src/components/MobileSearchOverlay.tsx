@@ -590,16 +590,17 @@ interface AvatarResultItemProps {
 
 function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
   return (
-    <div
+    <button
+      type="button"
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
       className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
     >
       <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10" />
       <div className="flex-1 min-w-0">
         <span className="font-medium text-sm text-black">{avatar.name}</span>
-        <p className="text-xs text-gray-400">{avatar.role || 'Avatar'}</p>
+        <p className="text-xs text-gray-400">{avatar.role || 'Creative'}</p>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -646,4 +647,3 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
     </div>
   );
 }
-

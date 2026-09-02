@@ -252,7 +252,7 @@ export function AnalyticsDashboard() {
               Activation Engine
             </h2>
             <p className="text-xs text-gray-400">
-              Measuring registered users who both upload design(s) and review other designers.
+              Measuring registered users who upload a design or review another designer.
             </p>
           </div>
           <span className="text-xs font-semibold text-gray-400">
@@ -282,7 +282,7 @@ export function AnalyticsDashboard() {
           <TrendCard
             title="Activated Users"
             metric={activation?.activatedUsers}
-            tooltip="Activated: Registered user who has BOTH uploaded ≥1 design AND submitted ≥1 valid review on another user's post."
+            tooltip="Activated: Registered user who has uploaded ≥1 design OR submitted ≥1 valid review on another user's post."
             highlight
             isLoading={isLoading}
           />

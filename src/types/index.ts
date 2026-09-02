@@ -405,7 +405,7 @@ export interface ActivationMetrics {
   newRegistrations: TrendMetric;
   ratersCount: TrendMetric;       // Users who gave >= 1 valid review
   uploadersCount: TrendMetric;    // Users who uploaded >= 1 valid post
-  activatedUsers: TrendMetric;    // Both uploaded >= 1 AND reviewed >= 1
+  activatedUsers: TrendMetric;    // Uploaded >= 1 OR reviewed >= 1
   activationRate: TrendMetric;    // (activated / new registrations) * 100
 }
 

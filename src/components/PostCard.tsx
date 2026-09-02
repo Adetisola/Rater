@@ -67,7 +67,34 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     const router = useRouter();
     const now = useNow();
 
+    const optimizedFallback = useMemo(() => {
+        const mediaData = post?.media?.[0];
+        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
+        if (publicId) {
+            return generateResponsiveUrls(publicId);
+        }
+        return null;
+    }, [post]);
 
+    const bgUrl = useMemo(() => {
+        const mediaData = post?.media?.[0];
+        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
+        if (publicId) {
+            return generateThumbnail(publicId, 400, 300);
+        }
+        return post?.image_url;
+    }, [post]);
+
+    const cachedAvatar = post ? profileMap[post.avatar_id] || post.author : undefined;
+
+    // Background fetch if avatar is completely missing (e.g., Algolia search results)
+    const { data: fetchedAvatar } = useSWR(
+        post && !cachedAvatar ? `profile_${post.avatar_id}` : null,
+        () => post
+            ? import('@/lib/profiles').then(m => m.getProfileById(post.avatar_id))
+            : Promise.resolve(null),
+        { revalidateOnFocus: false, dedupingInterval: 60000 }
+    );
 
     const showSkeleton = parentLoading || metricsLoading;
 
@@ -96,12 +123,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             <div className="hidden xs:block h-4 w-8 bg-[#d1d5db] rounded animate-pulse" />
                             <div className="flex gap-0.5 animate-pulse">
                                 {[1, 2, 3, 4, 5].map((i) => (
-                                    <img
-                                        key={i}
-                                        src="/icons/star-filled.svg"
-                                        className="w-4 h-4 xs:w-3 xs:h-3 opacity-30 grayscale invert-0"
-                                        alt=""
-                                    />
+                                    <img key={i} src="/icons/star-filled.svg" className="w-4 h-4 xs:w-3 xs:h-3 opacity-30 grayscale invert-0" alt="" />
                                 ))}
                             </div>
                         </div>
@@ -111,39 +133,10 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
         );
     }
 
-    const optimizedFallback = useMemo(() => {
-        const mediaData = post?.media?.[0];
-        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
-        if (publicId) {
-            return generateResponsiveUrls(publicId);
-        }
-        return null;
-    }, [post?.media, post?.image_url]);
-
-    const bgUrl = useMemo(() => {
-        const mediaData = post?.media?.[0];
-        const publicId = mediaData?.public_id || (post?.image_url ? extractPublicId(post.image_url) : null);
-        if (publicId) {
-            return generateThumbnail(publicId, 400, 300);
-        }
-        return post?.image_url;
-    }, [post?.media, post?.image_url]);
-
     if (!post) return null;
 
     const isTopRated = badge === 'top_rated_active';
-    let avatar = profileMap[post.avatar_id] || post.author;
-
-    // Background fetch if avatar is completely missing (e.g., Algolia search results)
-    const { data: fetchedAvatar } = useSWR(
-        !avatar ? `profile_${post.avatar_id}` : null,
-        () => import('@/lib/profiles').then(m => m.getProfileById(post.avatar_id)),
-        { revalidateOnFocus: false, dedupingInterval: 60000 }
-    );
-    
-    if (!avatar && fetchedAvatar) {
-        avatar = fetchedAvatar;
-    }
+    const avatar = cachedAvatar || fetchedAvatar || undefined;
 
     const isEdited = !!post.edited_at;
 
@@ -408,4 +401,3 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
     </motion.div>
     );
 }
-

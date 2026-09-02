@@ -10,7 +10,6 @@ import { CATEGORIES } from '@/constants/categories';
 import { AI_TOOLS } from '@/types';
 import { ProfileCache } from '@/lib/profiles';
 import { algoliaClient } from './client';
-import { trackSearchEvent } from '@/lib/searchAnalytics';
 import {
   createSearchIndexes,
   searchAll as fuseSearchAll,
@@ -218,12 +217,6 @@ export async function searchAll(
           categories: matchingCategories,
         };
 
-        const totalCount = mappedAvatars.length + mappedPosts.length + matchingCategories.length;
-        trackSearchEvent({
-          query: trimmed,
-          resultCount: totalCount,
-        });
-
         return finalResults;
       }
     } catch (e) {
@@ -233,11 +226,6 @@ export async function searchAll(
 
   // 2. Emergency Fallback: Local Fuse Index
   const fallbackResults = await fuseSearchAll(indexes, trimmed, defaultLimits);
-  const totalFallback = fallbackResults.avatars.length + fallbackResults.posts.length + fallbackResults.categories.length;
-  trackSearchEvent({
-    query: trimmed,
-    resultCount: totalFallback,
-  });
   return fallbackResults;
 }
 

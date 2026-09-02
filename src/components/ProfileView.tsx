@@ -391,6 +391,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             {targetAvatar.avatar_url ? (
               <button
                 onClick={() => setShowFullscreenAvatar(true)}
+                aria-label={`View ${targetAvatar.name || 'user'} profile picture`}
                 className="w-full h-full cursor-zoom-in group/avatar"
                 disabled={isUploadingAvatar}
               >
@@ -430,6 +431,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                     <Tooltip content="Change Profile Picture" position="top">
                       <button
                         onClick={() => fileInputRef.current?.click()}
+                        aria-label="Change profile picture"
                         className="p-2 rounded-full bg-white/20 hover:bg-primary text-white transition-all transform hover:scale-110"
                       >
                         <Camera className="w-5 h-5" />
@@ -439,6 +441,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       <Tooltip content="Remove Profile Picture" position="top">
                         <button
                           onClick={handleAvatarRemove}
+                          aria-label="Remove profile picture"
                           className="p-2 rounded-full bg-white/20 hover:bg-red-500 text-white transition-all transform hover:scale-110"
                         >
                           <Trash2 className="w-5 h-5" />
@@ -457,6 +460,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       <Tooltip content="Yes, remove" position="top">
                         <button
                           onClick={handleAvatarRemove}
+                          aria-label="Confirm profile picture removal"
                           className="w-7 h-7 flex items-center justify-center rounded-full bg-green-500 text-white hover:scale-110 transition-transform"
                         >
                           <Check className="w-4 h-4" />
@@ -465,6 +469,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       <Tooltip content="Cancel" position="top">
                         <button
                           onClick={(e) => { e.stopPropagation(); setIsConfirmingRemove(false); }}
+                          aria-label="Cancel profile picture removal"
                           className="w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white hover:scale-110 transition-transform"
                         >
                           <X className="w-4 h-4" />
@@ -479,6 +484,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
           {isMe && editState === 'idle' && (
             <button
               onClick={() => fileInputRef.current?.click()}
+              aria-label="Change profile picture"
               className="md:hidden absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow border border-gray-100 text-gray-700 z-10 active:scale-95 transition-transform"
             >
               <Camera className="w-4 h-4" />

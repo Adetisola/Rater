@@ -62,6 +62,7 @@ export const RichTextarea = React.forwardRef<HTMLTextAreaElement, RichTextareaPr
           blockquote: false,
           horizontalRule: false,
           code: false,
+          link: false,
           bold: { HTMLAttributes: { class: 'font-bold' } },
           italic: { HTMLAttributes: { class: 'italic' } },
           strike: { HTMLAttributes: { class: 'line-through' } },
