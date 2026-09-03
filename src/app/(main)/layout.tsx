@@ -5,7 +5,7 @@ import { BrowseVisibilityController } from "@/components/BrowseVisibilityControl
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen w-full min-w-full bg-white flex flex-col font-sans text-black">
+    <div className="min-h-screen w-full min-w-full bg-canvas flex flex-col font-sans text-text-primary">
       <Header />
       <BrowseVisibilityController>
         {children}

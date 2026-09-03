@@ -122,7 +122,7 @@ export const OptimizedMedia = forwardRef<HTMLImageElement, OptimizedMediaProps>(
 
   // Thumbnail variant: fill container with crop (object-cover)
   return (
-    <div className={cn("relative overflow-hidden bg-[#d1d5db]", className)}>
+    <div className={cn("relative overflow-hidden bg-art-canvas", className)}>
       {/* Blur Placeholder */}
       {optimizedData && (
         <img

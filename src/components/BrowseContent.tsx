@@ -366,15 +366,15 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
             >
               {selectedAvatar && (
                 <div className="max-w-400 mx-auto px-6 mb-6">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full">
-                    <span className="text-sm font-medium text-gray-600">Creative:</span>
-                    <span className="text-sm font-bold text-black">{selectedAvatar.name}</span>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-surface-subtle border border-border-default rounded-full">
+                    <span className="text-sm font-medium text-text-secondary">Creative:</span>
+                    <span className="text-sm font-bold text-text-primary">{selectedAvatar.name}</span>
                     <button 
                       onClick={clearAvatarFilter}
                       aria-label="Clear creative filter"
-                      className="w-5 h-5 flex items-center justify-center rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+                      className="w-5 h-5 flex items-center justify-center rounded-full bg-surface-interactive hover:bg-surface-hover transition-colors text-text-primary"
                     >
-                      <X className="w-3 h-3 text-white" />
+                      <X className="w-3 h-3 text-text-primary" />
                     </button>
                   </div>
                 </div>
@@ -385,26 +385,26 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                   <div className="flex flex-wrap items-center gap-2">
                     {sortBy !== 'balanced' && (
                       <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
-                        <span className="text-xs font-medium text-black">{SORT_LABELS[sortBy] ?? sortBy}</span>
+                        <span className="text-xs font-medium text-text-primary">{SORT_LABELS[sortBy] ?? sortBy}</span>
                         <button 
                           onClick={() => setSortBy('balanced')}
                           aria-label="Reset sort"
                           className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
                         >
-                          <X className="w-2.5 h-2.5 text-white" />
+                          <X className="w-2.5 h-2.5 text-black" />
                         </button>
                       </div>
                     )}
                     
                     {selectedCategories.map(cat => (
-                      <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                        <span className="text-xs font-medium text-black">{cat}</span>
+                      <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-subtle border border-border-default rounded-full">
+                        <span className="text-xs font-medium text-text-primary">{cat}</span>
                         <button 
                           onClick={() => handleCategoryChange(selectedCategories.filter(c => c !== cat))}
                           aria-label={`Remove ${cat} category filter`}
-                          className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
+                          className="w-4 h-4 flex items-center justify-center rounded-full bg-surface-interactive hover:bg-surface-hover transition-colors text-text-primary"
                         >
-                          <X className="w-2.5 h-2.5 text-white" />
+                          <X className="w-2.5 h-2.5 text-text-primary" />
                         </button>
                       </div>
                     ))}
@@ -415,7 +415,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                           setSortBy('balanced');
                           handleCategoryChange([]);
                         }}
-                        className="text-xs font-medium text-gray-500 hover:text-black underline transition-colors"
+                        className="text-xs font-medium text-text-muted hover:text-text-primary underline transition-colors"
                       >
                         Clear all
                       </button>
@@ -427,21 +427,21 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               {urlQuery.trim().length >= 2 && !selectedAvatar && (
                 <div className="max-w-400 mx-auto px-6 mb-5">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="text-sm text-gray-500 font-medium">Results for</span>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#111111] rounded-full">
-                      <span className="text-sm font-semibold text-white">"{urlQuery.trim()}"</span>
+                    <span className="text-sm text-text-secondary font-medium">Results for</span>
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-surface-interactive rounded-full">
+                      <span className="text-sm font-semibold text-text-primary">"{urlQuery.trim()}"</span>
                       <button
                         onClick={() => {
                             setSearchQuery('');
                             handleSearchSubmit('');
                         }}
-                        className="w-4 h-4 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                        className="w-4 h-4 flex items-center justify-center rounded-full bg-surface-hover transition-colors"
                         aria-label="Clear search"
                       >
-                        <X className="w-2.5 h-2.5 text-white" />
+                        <X className="w-2.5 h-2.5 text-text-primary" />
                       </button>
                     </div>
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-text-muted">
                       {isEffectivelyProcessing ? 'Searching...' : (
                         sortedPostIds.length === 0
                           ? 'No matching works found'
@@ -466,7 +466,7 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
               })()}
 
               {!isEffectivelyProcessing && (
-                <div className="max-w-400 mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-gray-50 mt-10">
+                <div className="max-w-400 mx-auto px-6 py-12 flex flex-col items-center justify-center border-t border-border-subtle mt-10">
                     {loadError ? (
                         <div className="w-full">
                            <AppErrorState 
@@ -482,8 +482,8 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                         <div ref={bottomRef} className="h-10 w-full" />
                     ) : (
                         <>
-                            <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
-                            <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
+                            <div className="w-1.5 h-1.5 rounded-full bg-border-default mb-4" />
+                            <p className="text-[12px] font-semibold text-text-muted tracking-wider select-none">
                                 {sortedPostIds.length > 0 
                                 ? "You've viewed all works"
                                 : sortedPostIds.length === 0 && urlQuery.trim() 

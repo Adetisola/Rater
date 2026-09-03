@@ -833,7 +833,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
                   {/* Horizontal Thumbnail Row */}
                   {mediaPreviews.length > 1 && (
-                    <div className="w-full bg-white px-3 pt-2.5 text-[9px] text-gray-400 font-semibold tracking-wider select-none border-t border-gray-100 flex items-center gap-1.5">
+                    <div className="w-full bg-surface-primary px-3 pt-2.5 text-[9px] text-text-muted font-semibold tracking-wider select-none border-t border-border-subtle flex items-center gap-1.5">
                       <span>Drag to reorder</span>
                       <span>•</span>
                       <span className="normal-case tracking-normal">(First image is cover)</span>
@@ -842,8 +842,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   <div
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
-                      "w-full bg-white p-2 flex gap-2 overflow-x-auto shrink-0 relative z-20",
-                      (mediaPreviews.length > 1) ? "" : "border-t border-gray-100"
+                      "w-full bg-surface-primary p-2 flex gap-2 overflow-x-auto shrink-0 relative z-20",
+                      (mediaPreviews.length > 1) ? "" : "border-t border-border-subtle"
                     )}
                   >
                     {mediaPreviews.map((preview, idx) => (
@@ -858,7 +858,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                           "relative w-16 h-16 shrink-0 rounded-md overflow-hidden border cursor-pointer group/thumb transition-all duration-150 select-none",
                           activePreviewIndex === idx
                             ? "border-primary ring-2 ring-primary/20 scale-95"
-                            : "border-gray-200 hover:border-gray-300",
+                            : "border-border-default hover:border-border-strong",
                           draggedIndex === idx && "opacity-40 scale-90"
                         )}
                       >
@@ -904,7 +904,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); triggerFileInput(); }}
-                        className="w-16 h-16 shrink-0 rounded-md border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors"
+                        className="w-16 h-16 shrink-0 rounded-md border-2 border-dashed border-border-default flex items-center justify-center text-text-muted hover:text-text-primary hover:border-border-strong transition-colors"
                       >
                         +
                       </button>
@@ -985,14 +985,14 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             </div>
 
             <div className="space-y-2">
-              <h3 className="font-medium text-[16px] text-black">Description</h3>
+              <h3 className="font-medium text-[16px] text-text-primary">Description</h3>
               <div className="relative">
                 <RichTextarea
                   placeholder="Description"
                   value={description}
                   maxLength={400}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="min-h-45 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 resize-none font-medium"
+                  className="min-h-45 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder resize-none font-medium"
                 />
               </div>
             </div>
@@ -1000,7 +1000,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
           {/* CATEGORIES */}
           <div className="space-y-2" ref={categoryRef}>
-            <h3 className="font-medium text-[16px] text-black">Category Tag</h3>
+            <h3 className="font-medium text-[16px] text-text-primary">Category Tag</h3>
             <div className="relative">
               <Input
                 type="text"
@@ -1043,7 +1043,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               />
 
               {isCategoryDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-surface-elevated border border-border-default rounded-xl shadow-elevated z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((cat, index) => {
                       const isHighlighted = index === highlightedIndex;
@@ -1057,8 +1057,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                         <div
                           key={cat}
                           className={cn(
-                            "px-4 py-3 cursor-pointer text-sm font-medium transition-colors flex items-center justify-between",
-                            isHighlighted ? "bg-gray-50" : "hover:bg-gray-50",
+                            "px-4 py-3 cursor-pointer text-sm font-medium transition-colors flex items-center justify-between text-text-primary",
+                            isHighlighted ? "bg-surface-hover" : "hover:bg-surface-hover",
                             isSelected && "bg-primary/10"
                           )}
                           onClick={() => {
@@ -1085,7 +1085,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                       );
                     })
                   ) : (
-                    <div className="px-4 py-3 text-sm text-gray-500 font-medium">
+                    <div className="px-4 py-3 text-sm text-text-muted font-medium">
                       No categories found
                     </div>
                   )}
@@ -1100,7 +1100,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           </div>
 
           {/* AI PROMPT SHARING */}
-          <div className="space-y-4 pt-4 border-t border-gray-100">
+          <div className="space-y-4 pt-4 border-t border-border-subtle">
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2">
@@ -1125,9 +1125,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                       fill="url(#rater-star-grad-title)" 
                     />
                   </svg>
-                  <h3 className="font-medium text-[16px] text-black">AI Disclosure</h3>
+                  <h3 className="font-medium text-[16px] text-text-primary">AI Disclosure</h3>
                 </div>
-                <p className="text-sm text-gray-500 mt-0.5">Disclose if you used AI to create or assist with this work.</p>
+                <p className="text-sm text-text-secondary mt-0.5">Disclose if you used AI to create or assist with this work.</p>
               </div>
               <button
                 type="button"
@@ -1139,7 +1139,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 }}
                 className={cn(
                   "relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                  usesAI ? "bg-primary" : "bg-gray-200"
+                  usesAI ? "bg-primary" : "bg-surface-interactive"
                 )}
               >
                 <span
@@ -1160,17 +1160,16 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   exit={{ opacity: 0, height: 0, marginTop: 0, overflow: 'hidden' }}
                   className="w-full"
                 >
-                  <div className="space-y-6 pl-4 border-l-2 border-gray-100">
+                  <div className="space-y-6 pl-4 border-l-2 border-border-subtle">
                     {/* AI Tool Dropdown */}
                     <div className="space-y-2 relative">
-                      <h3 className="font-medium text-[15px] text-black">AI Tool <span className="text-red-500">*</span></h3>
+                      <h3 className="font-medium text-[15px] text-text-primary">AI Tool <span className="text-red-500">*</span></h3>
                       <button
                         type="button"
                         onClick={() => setIsAiToolDropdownOpen(!isAiToolDropdownOpen)}
                         className={cn(
-                          "w-full h-12 text-base text-left px-4 rounded-xl border focus-visible:border-primary font-medium flex items-center justify-between transition-colors bg-white",
-                          isAiToolDropdownOpen ? "border-primary" : "border-gray-200",
-                          aiTool ? "text-black" : "text-gray-400"
+                          "w-full h-12 text-base text-left px-4 rounded-xl border focus-visible:border-primary font-medium flex items-center justify-between transition-colors bg-input-bg border-input-border text-text-primary",
+                          isAiToolDropdownOpen && "border-primary"
                         )}
                       >
                         <span className="flex items-center gap-2.5">
@@ -1287,14 +1286,14 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         {/* RIGHT COLUMN: Onboarding & Actions */}
         {!isOverlay && (
           <div className="space-y-8 sticky top-32 lg:max-w-sm">
-            <div className="bg-gray-50/50 border border-gray-200/60 rounded-3xl p-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="bg-surface-primary border border-border-default rounded-3xl p-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <CloudUpload className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-medium text-lg text-black">Share your craft</h3>
+                <h3 className="font-medium text-lg text-text-primary">Share your craft</h3>
               </div>
-              <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+              <p className="text-sm text-text-secondary mb-6 leading-relaxed">
                 Share your creative work and receive structured critique.
               </p>
               <ul className="space-y-3 mb-8">
@@ -1304,8 +1303,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   "Give it a sharp title to tell your story"
                 ].map((point, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-gray-300 mt-1.5 shrink-0" />
-                    <span className="text-xs font-medium text-gray-500 leading-normal tracking-wide">{point}</span>
+                    <div className="w-1.5 h-1.5 rounded-full bg-border-default mt-1.5 shrink-0" />
+                    <span className="text-xs font-medium text-text-secondary leading-normal tracking-wide">{point}</span>
                   </li>
                 ))}
               </ul>

@@ -100,27 +100,27 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
     if (showSkeleton) {
         return (
-            <div className="bg-[#ebebeb] p-1.5 rounded-3xl overflow-hidden h-full">
+            <div className="bg-surface-primary border border-border-default p-1.5 rounded-3xl overflow-hidden h-full">
                 <div className="relative z-10 h-full flex flex-col">
-                    <div className="w-full aspect-4/3 bg-[#d1d5db] rounded-3xl animate-pulse mb-4" />
+                    <div className="w-full aspect-4/3 bg-surface-interactive rounded-3xl animate-pulse mb-4" />
                     <div className="px-2 xs:px-4 pt-0 pb-2 flex-1 flex flex-col">
                         <div className="flex justify-between items-center mb-4">
-                            <div className="h-5 w-20 bg-[#d1d5db] rounded-full animate-pulse" />
-                            <div className="h-3 w-10 bg-[#d1d5db] rounded-full animate-pulse" />
+                            <div className="h-5 w-20 bg-surface-interactive rounded-full animate-pulse" />
+                            <div className="h-3 w-10 bg-surface-interactive rounded-full animate-pulse" />
                         </div>
-                        <div className="h-5 xs:h-7 w-3/4 bg-[#d1d5db] rounded-lg animate-pulse mb-3" />
+                        <div className="h-5 xs:h-7 w-3/4 bg-surface-interactive rounded-lg animate-pulse mb-3" />
                         <div className="hidden min-[769px]:block space-y-2 mb-6">
-                            <div className="h-3 w-full bg-[#d1d5db] rounded animate-pulse" />
-                            <div className="h-3 w-11/12 bg-[#d1d5db] rounded animate-pulse" />
-                            <div className="h-3 w-2/3 bg-[#d1d5db] rounded animate-pulse" />
+                            <div className="h-3 w-full bg-surface-interactive rounded animate-pulse" />
+                            <div className="h-3 w-11/12 bg-surface-interactive rounded animate-pulse" />
+                            <div className="h-3 w-2/3 bg-surface-interactive rounded animate-pulse" />
                         </div>
                         <div className="flex-1" />
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="w-5 h-5 rounded-full bg-[#d1d5db] animate-pulse" />
-                            <div className="h-3 w-20 bg-[#d1d5db] rounded animate-pulse" />
+                            <div className="w-5 h-5 rounded-full bg-surface-interactive animate-pulse" />
+                            <div className="h-3 w-20 bg-surface-interactive rounded-full animate-pulse" />
                         </div>
-                        <div className="pt-4 border-t border-black/5 flex items-center justify-between">
-                            <div className="hidden xs:block h-4 w-8 bg-[#d1d5db] rounded animate-pulse" />
+                        <div className="pt-4 border-t border-border-subtle flex items-center justify-between">
+                            <div className="hidden xs:block h-4 w-8 bg-surface-interactive rounded animate-pulse" />
                             <div className="flex gap-0.5 animate-pulse">
                                 {[1, 2, 3, 4, 5].map((i) => (
                                     <img key={i} src="/icons/star-filled.svg" className="w-4 h-4 xs:w-3 xs:h-3 opacity-30 grayscale invert-0" alt="" />
@@ -163,7 +163,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             if (onClick) onClick();
                         }}
                     >
-            <div className={`bg-[#ebebeb] p-1.5 rounded-3xl relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
+            <div className={`bg-surface-primary border border-border-default p-1.5 rounded-3xl relative overflow-hidden transition-all duration-500 ${isTopRated ? 'group-hover:scale-[1.015] group-hover:shadow-[0_12px_40px_rgb(0,0,0,0.12)]' : ''}`}>
                 {!hasError && bgUrl && (
                     <div className="absolute inset-0 z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
                         <div
@@ -249,11 +249,11 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
 
                     <div className="px-2 xs:px-4 pt-2 xs:pt-2 pb-1">
                         <div className="flex justify-between items-center mb-2">
-                            <span className="bg-transparent text-gray-500 text-[8px] md:text-[9px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-gray-300 truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-25 xs:max-w-none block">
+                            <span className="bg-transparent text-text-muted text-[8px] md:text-[9px] font-semibold tracking-wider px-2 py-1 md:px-3 rounded-full border border-border-default truncate group-hover/card:text-gray-200 group-hover/card:border-gray-300/30 transition-colors max-w-25 xs:max-w-none block">
                                 {post.category}
                             </span>
                             <span
-                                className="text-[12px] text-muted font-medium group-hover/card:text-white/80 transition-colors shrink-0 ml-2"
+                                className="text-[12px] text-text-muted font-medium group-hover/card:text-white/80 transition-colors shrink-0 ml-2"
                                 title={getFullTimestamp(post.created_at)}
                                 suppressHydrationWarning
                             >
@@ -267,12 +267,12 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                             </span>
                         </div>
 
-                        <h3 className="font-medium mb-1 text-sm xs:text-[12px] text-black leading-tight group-hover/card:text-white transition-colors truncate">
+                        <h3 className="font-medium mb-1 text-sm xs:text-[12px] text-text-primary leading-tight group-hover/card:text-white transition-colors truncate">
                             {post.title}
                         </h3>
 
                         <div className="hidden mb-2">
-                            <p className="text-xs text-black leading-relaxed line-clamp-3 group-hover/card:text-white/90 transition-colors truncate">
+                            <p className="text-xs text-text-primary leading-relaxed line-clamp-3 group-hover/card:text-white/90 transition-colors truncate">
                                 {post.description}
                             </p>
                         </div>
@@ -294,17 +294,17 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                 className="w-5 h-5 md:w-5 md:h-5 ring-0 group-hover/avatar:ring-1 ring-primary transition-all shrink-0" 
                                 iconClassName="w-3/4 h-3/4"
                             />
-                            <div className="flex-1 min-w-0 truncate text-black group-hover/card:text-white transition-colors">
-                                <span className="text-xs font-medium sm:text-[10px] text-black leading-tight group-hover/card:text-white group-hover/avatar:text-primary transition-colors">
+                            <div className="flex-1 min-w-0 truncate text-text-primary group-hover/card:text-white transition-colors">
+                                <span className="text-xs font-medium sm:text-[10px] text-text-primary leading-tight group-hover/card:text-white group-hover/avatar:text-primary transition-colors">
                                     {avatar?.name || 'Unknown'}
                                 </span>
-                                <span className="ml-1.5 text-[10px] text-gray-400 font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors">
+                                <span className="ml-1.5 text-[10px] text-text-muted font-medium tracking-wider leading-tight group-hover/card:text-white/70 transition-colors">
                                     @{avatar?.username || post.avatar_id}
                                 </span>
                             </div>
                         </div>
 
-                        <div className="pt-2 sm:pt-1 border-t border-black/5 group-hover/card:border-white/20 flex items-center justify-between transition-colors">
+                        <div className="pt-2 sm:pt-1 border-t border-border-subtle group-hover/card:border-white/20 flex items-center justify-between transition-colors">
                                 <div className="flex items-center gap-2 xs:gap-3">
                                     {/* Review Count */}
                                     <Tooltip
@@ -324,7 +324,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                     >
                                         <div className="flex items-center gap-1 xs:gap-1">
                                             <img src="/icons/review-count.svg" alt="reviews" className="w-3.5 h-3.5 md:w-3.5 md:h-3.5 -mt-0.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
-                                            <span className="text-xs md:text-xs font-medium text-black group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
+                                            <span className="text-xs md:text-xs font-medium text-text-primary group-hover/card:text-white transition-colors flex items-center gap-0.5 xs:gap-1">
                                                 {metrics?.review_count || 0}
                                                 {isHot && (
                                                     <div className="w-5 h-5 md:w-6 md:h-6 -ml-1 -mr-0.5 -mt-2 relative flex items-center justify-center shrink-0">
@@ -357,8 +357,8 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                             content={<p className="leading-relaxed text-center">Total number of intentional views</p>}
                                         >
                                             <div className="flex items-center gap-1 xs:gap-1">
-                                                <Eye className="w-3.5 h-3.5 md:w-4 md:h-4 text-black group-hover/card:text-white transition-colors" strokeWidth={1.3} />
-                                                <span className="text-xs md:text-xs font-medium text-black group-hover/card:text-white transition-colors">
+                                                <Eye className="w-3.5 h-3.5 md:w-4 md:h-4 text-text-primary group-hover/card:text-white transition-colors" strokeWidth={1.3} />
+                                                <span className="text-xs md:text-xs font-medium text-text-primary group-hover/card:text-white transition-colors">
                                                     {metrics?.view_count || 0}
                                                 </span>
                                             </div>
@@ -376,7 +376,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                         content={<p className="leading-relaxed text-center font-medium">Overall score unlocks after 3 critiques</p>}
                                     >
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover/card:brightness-0 group-hover/card:invert transition-all" />
-                                        <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black group-hover/card:brightness-0 group-hover/card:invert transition-all" />
+                                        <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-text-primary group-hover/card:brightness-0 group-hover/card:invert transition-all" />
                                     </Tooltip>
                                 ) : (
                                     <>
@@ -387,7 +387,7 @@ export function PostCard({ postId, isLoading: parentLoading = false, onClick }: 
                                                 alt="rating"
                                             />
                                         </div>
-                                        <span className="text-sm md:text-[12px] font-medium text-black group-hover/card:text-white transition-colors">
+                                        <span className="text-sm md:text-[12px] font-medium text-text-primary group-hover/card:text-white transition-colors">
                                             {metrics.average_score}
                                         </span>
                                     </>
