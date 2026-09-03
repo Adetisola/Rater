@@ -33,7 +33,7 @@ export function Tooltip({
   position = 'top',
   align = 'start',
   width = 'w-max max-w-xs',
-  contentClassName = 'p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl',
+  contentClassName = 'p-3 bg-surface-elevated border-2 border-primary text-text-primary text-[11px] rounded-xl shadow-elevated',
   triggerClassName = 'group relative inline-flex items-center',
   disabled = false,
   contentStyle,

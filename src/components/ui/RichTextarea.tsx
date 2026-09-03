@@ -96,7 +96,7 @@ export const RichTextarea = React.forwardRef<HTMLTextAreaElement, RichTextareaPr
       editorProps: {
         attributes: {
           class: cn(
-            "flex-col min-h-[120px] w-full rounded-xl border border-gray-200 bg-white px-4 pt-2 pb-3 ring-offset-white focus-visible:outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50 resize-y transition-all font-sans text-sm outline-none",
+            "flex-col min-h-[120px] w-full rounded-xl border border-input-border bg-input-bg text-text-primary px-4 pt-2 pb-3 ring-offset-canvas focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-focus-ring/20 disabled:cursor-not-allowed disabled:opacity-50 resize-y transition-all font-sans text-sm outline-none",
             "[&_p]:my-1 [&_p:first-child]:mt-0 [&_a]:text-primary [&_a]:underline [&_a:hover]:opacity-80 [&_strong]:font-bold [&_em]:italic [&_s]:line-through [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pl-5 [&_ol]:pl-5 [&_li]:leading-normal",
             className
           ),

@@ -395,7 +395,7 @@ function HeaderContent({
   const showBackButton = !isBrowsePage && hasMeaningfulHistory;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
+    <header className="sticky top-0 z-50 w-full bg-canvas/80 backdrop-blur-xl py-2 md:py-4 border-b border-border-subtle rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
       <div className={`relative max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center gap-2 sm:gap-3 md:gap-6 min-h-[48px] ${hideControls ? 'justify-center' : 'justify-between'}`}>
 
         {/* ========================================================================= */}
@@ -406,9 +406,9 @@ function HeaderContent({
             <Button
               variant="secondary"
               onClick={handleBackClick}
-              className="rounded-full gap-2 pl-3 pr-5 bg-white border-2 border-gray-100 font-semibold hover:bg-gray-50 h-10 sm:h-12 shrink-0 transition-all active:scale-95"
+              className="rounded-full gap-2 pl-3 pr-5 bg-surface-primary border border-border-default font-semibold hover:bg-surface-hover text-text-primary h-10 sm:h-12 shrink-0 transition-all active:scale-95"
             >
-              <ArrowLeft className="w-5 h-5 text-black" />
+              <ArrowLeft className="w-5 h-5 text-text-primary" />
               Back
             </Button>
           ) : (
@@ -443,11 +443,11 @@ function HeaderContent({
                 <Search className={`absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 z-10 transition-opacity pointer-events-none ${isSearching ? 'opacity-20' : 'opacity-40 group-focus-within:opacity-100'}`} />
 
                 <div
-                  className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-primary bg-white flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-primary/10"
+                  className="w-full min-h-[48px] pl-12 pr-16 py-1.5 rounded-full border-2 border-primary bg-input-bg flex items-center flex-wrap gap-2 transition-all group-focus-within:ring-4 group-focus-within:ring-primary/10"
                   onClick={() => searchInputRef.current?.focus()}
                 >
                   {selectedCategories.map(cat => (
-                    <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-black whitespace-nowrap animate-in fade-in zoom-in duration-200">
+                    <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-subtle text-xs font-bold text-text-primary whitespace-nowrap animate-in fade-in zoom-in duration-200">
                       {cat}
                       <button
                         onClick={(e) => {
@@ -455,9 +455,9 @@ function HeaderContent({
                           const newCats = selectedCategories.filter(c => c !== cat);
                           handleCategoryChange(newCats);
                         }}
-                        className="p-0.5 rounded-full hover:bg-gray-200 transition-colors"
+                        className="p-0.5 rounded-full hover:bg-surface-hover transition-colors"
                       >
-                        <X size={12} className="text-gray-500" />
+                        <X size={12} className="text-text-muted" />
                       </button>
                     </span>
                   ))}
@@ -485,7 +485,7 @@ function HeaderContent({
                         }
                       }}
                       placeholder=""
-                      className="w-full h-full bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 relative z-1"
+                      className="w-full h-full bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base text-text-primary placeholder:text-input-placeholder relative z-1"
                     />
                     <AmbientPlaceholder
                       text={ambientPlaceholder.currentText}
@@ -507,7 +507,7 @@ function HeaderContent({
                             e.stopPropagation();
                             handleClearSearch();
                           }}
-                          className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                          className="w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-interactive transition-colors"
                         >
                           <X size={16} strokeWidth={2.5} />
                         </motion.button>
@@ -517,7 +517,7 @@ function HeaderContent({
 
                   <button
                     onClick={() => setIsFilterOpen(true)}
-                    className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-gray-100"
+                    className="w-9 h-9 flex items-center justify-center rounded-full transition-all hover:bg-surface-interactive text-text-primary"
                     aria-label="Filter options"
                   >
                     <ListFilter className="h-5 w-5" />
@@ -582,7 +582,7 @@ function HeaderContent({
                   setIsMobileSearchOpen(true);
                 }
               }}
-              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-primary bg-white hover:bg-primary transition-all shrink-0 group overflow-hidden"
+              className="flex xs:hidden w-[44px] h-[44px] items-center justify-center rounded-full border-2 border-primary bg-surface-primary hover:bg-primary transition-all shrink-0 group overflow-hidden"
               style={{ borderRadius: 9999 }}
               aria-label="Open mobile search"
             >
@@ -601,7 +601,7 @@ function HeaderContent({
                     setIsMobileSearchOpen(true);
                   }
                 }}
-                className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors group overflow-hidden"
+                className="w-full max-w-[180px] sm:max-w-[200px] flex items-center justify-between min-h-[44px] sm:min-h-[48px] pl-4 pr-4 rounded-full border-2 border-primary bg-surface-primary hover:bg-surface-hover transition-colors group overflow-hidden"
                 style={{ borderRadius: 9999 }}
                 aria-label="Open tablet search"
               >
@@ -609,12 +609,12 @@ function HeaderContent({
                   <img src="/icons/search.svg" alt="Search" className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" />
                   <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
                     {selectedCategories.length > 0 ? (
-                      <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-gray-100 text-[10px] sm:text-xs font-bold text-black whitespace-nowrap overflow-hidden">
+                      <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-surface-subtle text-[10px] sm:text-xs font-bold text-text-primary whitespace-nowrap overflow-hidden">
                         <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedCategories[0]}</span>
-                        {selectedCategories.length > 1 && <span className="ml-1 text-gray-500 shrink-0">+{selectedCategories.length - 1}</span>}
+                        {selectedCategories.length > 1 && <span className="ml-1 text-text-muted shrink-0">+{selectedCategories.length - 1}</span>}
                       </span>
                     ) : (
-                      <span className="text-sm font-sans text-gray-400 truncate w-full text-left">
+                      <span className="text-sm font-sans text-text-muted truncate w-full text-left">
                         {searchQuery || "Search..."}
                       </span>
                     )}
@@ -630,19 +630,19 @@ function HeaderContent({
                   variant="secondary"
                   onClick={handlePrevPost}
                   disabled={!prevPostId}
-                  className="w-10 h-10 sm:w-11 sm:h-11 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all shrink-0 active:scale-95"
+                  className="w-10 h-10 sm:w-11 sm:h-11 p-0 rounded-full bg-surface-primary border border-border-default hover:bg-surface-hover flex items-center justify-center disabled:opacity-20 transition-all shrink-0 active:scale-95"
                   aria-label="Previous post"
                 >
-                  <ChevronLeft className="w-5 h-5 text-black" />
+                  <ChevronLeft className="w-5 h-5 text-text-primary" />
                 </Button>
                 <Button
                   variant="secondary"
                   onClick={handleNextPost}
                   disabled={!nextPostId}
-                  className="w-10 h-10 sm:w-11 sm:h-11 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center disabled:opacity-20 transition-all shrink-0 active:scale-95"
+                  className="w-10 h-10 sm:w-11 sm:h-11 p-0 rounded-full bg-surface-primary border border-border-default hover:bg-surface-hover flex items-center justify-center disabled:opacity-20 transition-all shrink-0 active:scale-95"
                   aria-label="Next post"
                 >
-                  <ChevronRight className="w-5 h-5 text-black" />
+                  <ChevronRight className="w-5 h-5 text-text-primary" />
                 </Button>
               </div>
             )}
@@ -655,7 +655,7 @@ function HeaderContent({
               </div>
             ) : isLoading ? (
               <div className="flex items-center gap-2 h-10 sm:h-12 px-2">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100/70 animate-pulse" />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-surface-interactive animate-pulse" />
               </div>
             ) : (
               /* Auth Buttons (Logged out - shown on all pages or when prev/next navigation is hidden on post page) */
@@ -664,14 +664,14 @@ function HeaderContent({
                   <Button
                     variant='outline'
                     onClick={() => { setAuthTab('login'); setShowAuthOverlay(true); }}
-                    className="hidden sm:flex items-center justify-center h-10 sm:h-12 px-5 sm:px-6 rounded-full font-medium text-[16px] sm:text-[17px] text-black hover:bg-primary hover:text-white transition-all"
+                    className="hidden sm:flex items-center justify-center h-10 sm:h-12 px-5 sm:px-6 rounded-full font-medium text-[16px] sm:text-[17px] text-text-primary hover:bg-primary hover:text-brand-primary-fg transition-all"
                   >
                     Log In
                   </Button>
                   <Button
                     variant="primary"
                     onClick={() => { setAuthTab('signup'); setShowAuthOverlay(true); }}
-                    className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-white font-medium text-[16px] sm:text-[17px]"
+                    className="h-10 sm:h-12 rounded-full px-4 sm:px-6 text-brand-primary-fg font-semibold text-[16px] sm:text-[17px]"
                   >
                     Sign Up
                   </Button>
@@ -715,7 +715,7 @@ function HeaderContent({
 export function Header(props: HeaderProps) {
   return (
     <Suspense fallback={
-      <header className="sticky top-0 z-50 w-full bg-white/60 backdrop-blur-xl py-2 md:py-4 border-b border-white/20 rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
+      <header className="sticky top-0 z-50 w-full bg-canvas/80 backdrop-blur-xl py-2 md:py-4 border-b border-border-subtle rounded-bl-[20px] rounded-br-[20px] md:rounded-bl-[30px] md:rounded-br-[30px]">
         <div className="max-w-[1600px] mx-auto px-3 sm:px-4 md:px-6 flex items-center justify-between min-h-[48px]">
           <div className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl" />
         </div>

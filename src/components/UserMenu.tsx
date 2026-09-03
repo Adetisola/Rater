@@ -160,14 +160,14 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
             exit={{ opacity: 0, y: 6, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className={cn(
-              "absolute top-full mt-2 w-[260px] bg-white rounded-2xl shadow-xl border border-gray-100/80 overflow-visible z-100",
+              "absolute top-full mt-2 w-[260px] bg-surface-elevated rounded-2xl shadow-elevated border border-border-default overflow-visible z-100",
               align === 'right' ? 'right-0' : 'left-0'
             )}
             role="menu"
             aria-label="User navigation menu"
           >
             {/* Desktop / Mobile Container Wrapper */}
-            <div className="relative overflow-hidden rounded-2xl bg-white">
+            <div className="relative overflow-hidden rounded-2xl bg-surface-elevated">
               
               {/* MAIN MENU PANEL (slides only on mobile, stays static on desktop) */}
               <motion.div
@@ -181,43 +181,43 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                   <Link
                     href={`/@${currentProfile.username}`}
                     onClick={handleCloseAll}
-                    className="flex items-center justify-between p-3.5 hover:bg-gray-50/80 transition-colors border-b border-gray-100 group"
+                    className="flex items-center justify-between p-3.5 hover:bg-surface-hover transition-colors border-b border-border-subtle group"
                     role="menuitem"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <UserAvatar avatarUrl={currentProfile.avatar_url} size="xs" className="w-8 h-8 shrink-0" />
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 truncate group-hover:text-black transition-colors leading-snug">
+                        <p className="font-semibold text-sm text-text-primary truncate transition-colors leading-snug">
                           {currentProfile.name}
                         </p>
-                        <p className="text-xs text-gray-400 truncate leading-snug">
+                        <p className="text-xs text-text-muted truncate leading-snug">
                           @{currentProfile.username}
                         </p>
                       </div>
                     </div>
-                    <ChevronRight size={15} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0 ml-2" />
+                    <ChevronRight size={15} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0 ml-2" />
                   </Link>
                 )}
 
                 {/* 2. Primary Creative Actions */}
-                <div className="p-1.5 space-y-0.5 border-b border-gray-100">
+                <div className="p-1.5 space-y-0.5 border-b border-border-subtle">
                   {onEditProfile ? (
                     <button
                       onClick={() => { handleCloseAll(); onEditProfile(); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left"
                       role="menuitem"
                     >
-                      <Edit2 size={16} className="text-gray-400" />
+                      <Edit2 size={16} className="text-text-secondary" />
                       <span>Edit Profile</span>
                     </button>
                   ) : (
                     <Link
                       href={`/@${currentProfile.username}?edit=true`}
                       onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left"
                       role="menuitem"
                     >
-                      <Edit2 size={16} className="text-gray-400" />
+                      <Edit2 size={16} className="text-text-secondary" />
                       <span>Edit Profile</span>
                     </Link>
                   )}
@@ -228,33 +228,33 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                       handleCloseAll();
                       window.dispatchEvent(new Event('app-navigation-start'));
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left"
                     role="menuitem"
                   >
-                    <CloudUpload size={16} className="text-gray-400" />
+                    <CloudUpload size={16} className="text-text-secondary" />
                     <span>Publish Work</span>
                   </Link>
 
                   <button
                     onClick={() => { handleCloseAll(); showInviteModal(); }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/invite"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left group/invite"
                     role="menuitem"
                   >
                     <div className="flex items-center gap-2.5">
-                      <UserPlus size={16} className="text-gray-400 group-hover/invite:text-black transition-colors" />
+                      <UserPlus size={16} className="text-text-secondary group-hover/invite:text-text-primary transition-colors" />
                       <span>Invite Designers</span>
                     </div>
-                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary/20 text-black leading-none">
+                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary text-brand-primary-fg leading-none">
                       New
                     </span>
                   </button>
 
                   <button
                     onClick={() => { handleCloseAll(); setShowQrCode(true); }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left"
                     role="menuitem"
                   >
-                    <QrCode size={16} className="text-gray-400" />
+                    <QrCode size={16} className="text-text-secondary" />
                     <span>Share Profile</span>
                   </button>
                 </div>
@@ -263,14 +263,14 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                 <div className="p-1.5 space-y-0.5">
                   <button
                     onClick={() => { handleCloseAll(); showSettings(); }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/settings"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left group/settings"
                     role="menuitem"
                   >
                     <div className="flex items-center gap-2.5">
-                      <Settings size={16} className="text-gray-400 group-hover/settings:text-black transition-colors" />
+                      <Settings size={16} className="text-text-secondary group-hover/settings:text-text-primary transition-colors" />
                       <span>Settings</span>
                     </div>
-                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary/20 text-black leading-none">
+                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-primary text-brand-primary-fg leading-none">
                       New
                     </span>
                   </button>
@@ -283,50 +283,50 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-2 rounded-xl transition-colors text-xs text-left group/help",
                       showHelpSubmenu && !isMobile 
-                        ? "bg-gray-100 text-gray-900 font-semibold" 
-                        : "hover:bg-gray-50 text-gray-700 font-medium"
+                        ? "bg-surface-interactive text-text-primary font-semibold" 
+                        : "hover:bg-surface-hover text-text-primary font-medium"
                     )}
                     role="menuitem"
                   >
                     <div className="flex items-center gap-2.5">
-                      <LifeBuoy size={16} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-black" : "text-gray-400 group-hover/help:text-black")} />
+                      <LifeBuoy size={16} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-text-primary" : "text-text-secondary group-hover/help:text-text-primary")} />
                       <span>Help & Resources</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-primary/20 text-black leading-none">
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-primary text-brand-primary-fg leading-none">
                         New
                       </span>
-                      <ChevronRight size={14} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-gray-700" : "text-gray-300 group-hover/help:text-gray-600")} />
+                      <ChevronRight size={14} className={cn("transition-colors", showHelpSubmenu && !isMobile ? "text-text-primary" : "text-text-muted group-hover/help:text-text-secondary")} />
                     </div>
                   </button>
                 </div>
 
                 {/* 4. Admin Dashboard (Admin Only) */}
                 {currentProfile.is_admin && (
-                  <div className="p-1.5 border-t border-gray-100">
+                  <div className="p-1.5 border-t border-border-subtle">
                     <Link
                       href="/admin/dashboard"
                       onClick={handleCloseAll}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-amber-50/70 text-amber-700 transition-colors font-medium text-xs text-left"
+                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-amber-500/10 text-amber-500 transition-colors font-medium text-xs text-left"
                       role="menuitem"
                     >
-                      <ShieldCheck size={16} className="text-amber-600" />
+                      <ShieldCheck size={16} className="text-amber-500" />
                       <span>Admin Dashboard</span>
                     </Link>
                   </div>
                 )}
 
                 {/* 5. Logout */}
-                <div className="p-1.5 border-t border-gray-100">
+                <div className="p-1.5 border-t border-border-subtle">
                   <button
                     onClick={() => {
                       handleCloseAll();
                       setShowLogoutConfirm(true);
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-50/80 hover:text-red-600 transition-colors text-gray-700 font-medium text-xs text-left group/logout"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-colors text-text-primary font-medium text-xs text-left group/logout"
                     role="menuitem"
                   >
-                    <LogOut size={16} className="text-gray-400 group-hover/logout:text-red-500" />
+                    <LogOut size={16} className="text-text-secondary group-hover/logout:text-red-400" />
                     <span>Log out</span>
                   </button>
                 </div>
@@ -338,13 +338,13 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                   initial={false}
                   animate={{ x: showHelpSubmenu ? '0%' : '100%' }}
                   transition={{ duration: 0.2, ease: "easeInOut" }}
-                  className="absolute inset-0 bg-white flex flex-col z-20"
+                  className="absolute inset-0 bg-surface-elevated flex flex-col z-20"
                 >
                   {/* Back Button Header */}
-                  <div className="p-2 border-b border-gray-100 flex items-center">
+                  <div className="p-2 border-b border-border-subtle flex items-center">
                     <button
                       onClick={() => setShowHelpSubmenu(false)}
-                      className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-gray-600 hover:text-black rounded-lg hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-hover transition-colors"
                     >
                       <ChevronLeft size={16} />
                       <span>Back to Menu</span>
@@ -355,15 +355,15 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                   <div className="p-1.5 space-y-3 overflow-y-auto max-h-[340px]">
                     {/* Support & Feedback */}
                     <div className="space-y-0.5">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Support & Feedback
                       </p>
                       <a
                         href="mailto:support@raterapp.site"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                       >
-                        <Mail size={16} className="text-gray-400" />
+                        <Mail size={16} className="text-text-secondary" />
                         <span>Contact Support</span>
                       </a>
                       <button
@@ -372,16 +372,16 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                           handleCloseAll();
                           openFeedbackDrawer();
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left"
                       >
-                        <MessageSquarePlus size={16} className="text-gray-400" />
+                        <MessageSquarePlus size={16} className="text-text-secondary" />
                         <span>Share Feedback</span>
                       </button>
                     </div>
 
                     {/* Resources */}
-                    <div className="space-y-0.5 border-t border-gray-100 pt-2">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="space-y-0.5 border-t border-border-subtle pt-2">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Resources
                       </p>
                       <button
@@ -390,53 +390,53 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                           handleCloseAll();
                           showSettings('about');
                         }}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/about"
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left group/about"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Info size={16} className="text-gray-400 group-hover/about:text-black transition-colors" />
+                          <Info size={16} className="text-text-secondary group-hover/about:text-text-primary transition-colors" />
                           <span>About Rater</span>
                         </div>
-                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/20 text-gray-900 leading-none">
+                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary text-brand-primary-fg leading-none">
                           v1.2.2
                         </span>
                       </button>
                       <Link
                         href="/legal/community-guidelines"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                       >
-                        <BookOpen size={16} className="text-gray-400" />
+                        <BookOpen size={16} className="text-text-secondary" />
                         <span>Community Guidelines</span>
                       </Link>
                       <Link
                         href="/legal/ai-insights"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                       >
-                        <Sparkles size={16} className="text-gray-400" />
+                        <Sparkles size={16} className="text-text-secondary" />
                         <span>AI Insights Disclosure</span>
                       </Link>
                     </div>
 
                     {/* Legal */}
-                    <div className="space-y-0.5 border-t border-gray-100 pt-2">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="space-y-0.5 border-t border-border-subtle pt-2">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Legal
                       </p>
                       <Link
                         href="/legal/terms"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                       >
-                        <FileText size={16} className="text-gray-400" />
+                        <FileText size={16} className="text-text-secondary" />
                         <span>Terms of Service</span>
                       </Link>
                       <Link
                         href="/legal/privacy"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                       >
-                        <Lock size={16} className="text-gray-400" />
+                        <Lock size={16} className="text-text-secondary" />
                         <span>Privacy Policy</span>
                       </Link>
                     </div>
@@ -455,24 +455,24 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     exit={{ opacity: 0, x: align === 'right' ? 8 : -8, scale: 0.98 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
                     className={cn(
-                      "absolute top-0 w-[240px] bg-white rounded-2xl shadow-xl border border-gray-100/80 p-1.5 z-105",
+                      "absolute top-0 w-[240px] bg-surface-elevated rounded-2xl shadow-elevated border border-border-default p-1.5 z-105",
                       align === 'right' ? 'right-full mr-2' : 'left-full ml-2'
                     )}
                     role="menu"
                     aria-label="Help & Resources submenu"
                   >
                     {/* Support & Feedback */}
-                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-gray-100">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-border-subtle">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Support & Feedback
                       </p>
                       <a
                         ref={firstSubmenuItemRef}
                         href="mailto:support@raterapp.site?subject=Rater%20Support%20Inquiry"
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                         role="menuitem"
                       >
-                        <Mail size={16} className="text-gray-400" />
+                        <Mail size={16} className="text-text-secondary" />
                         <span>Contact Support</span>
                       </a>
                       <button
@@ -481,17 +481,17 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                           handleCloseAll();
                           openFeedbackDrawer({ defaultType: 'Feature Request' });
                         }}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left"
                         role="menuitem"
                       >
-                        <MessageSquarePlus size={16} className="text-gray-400" />
+                        <MessageSquarePlus size={16} className="text-text-secondary" />
                         <span>Share Feedback</span>
                       </button>
                     </div>
 
                     {/* Resources */}
-                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-gray-100">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-border-subtle">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Resources
                       </p>
                       <button
@@ -500,58 +500,58 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                           handleCloseAll();
                           showSettings('about');
                         }}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs text-left group/about"
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs text-left group/about"
                         role="menuitem"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Info size={16} className="text-gray-400 group-hover/about:text-black transition-colors" />
+                          <Info size={16} className="text-text-secondary group-hover/about:text-text-primary transition-colors" />
                           <span>About Rater</span>
                         </div>
-                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary/20 text-gray-900 leading-none">
+                        <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-primary text-brand-primary-fg leading-none">
                           v1.2.2
                         </span>
                       </button>
                       <Link
                         href="/legal/community-guidelines"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                         role="menuitem"
                       >
-                        <BookOpen size={16} className="text-gray-400" />
+                        <BookOpen size={16} className="text-text-secondary" />
                         <span>Community Guidelines</span>
                       </Link>
                       <Link
                         href="/legal/ai-insights"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                         role="menuitem"
                       >
-                        <Sparkles size={16} className="text-gray-400" />
+                        <Sparkles size={16} className="text-text-secondary" />
                         <span>AI Insights Disclosure</span>
                       </Link>
                     </div>
 
                     {/* Legal */}
                     <div className="space-y-0.5">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Legal
                       </p>
                       <Link
                         href="/legal/terms"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                         role="menuitem"
                       >
-                        <FileText size={16} className="text-gray-400" />
+                        <FileText size={16} className="text-text-secondary" />
                         <span>Terms of Service</span>
                       </Link>
                       <Link
                         href="/legal/privacy"
                         onClick={handleCloseAll}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors text-gray-700 font-medium text-xs"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-surface-hover transition-colors text-text-primary font-medium text-xs"
                         role="menuitem"
                       >
-                        <Lock size={16} className="text-gray-400" />
+                        <Lock size={16} className="text-text-secondary" />
                         <span>Privacy Policy</span>
                       </Link>
                     </div>

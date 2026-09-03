@@ -11,13 +11,13 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', isLoading, icon, children, ...props }, ref) => {
     
-    const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-all active:scale-95 focus-visible:outline-none disabled:opacity-50 disabled:pointer-events-none";
+    const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-all active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-canvas disabled:opacity-50 disabled:pointer-events-none";
     
     const variants = {
-      primary: "bg-primary text-white hover:bg-[#E5B011] active:bg-[#CC9C0F] border border-transparent",
-      secondary: "bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50",
-      ghost: "bg-transparent text-black md:text-gray-600 hover:text-black transition-all duration-300",
-      outline: "bg-white border-2 border-[#FEC312] text-black hover:bg-[#FEC312] hover:text-white transition-all duration-300"
+      primary: "bg-primary text-brand-primary-fg hover:bg-[#E5B011] active:bg-[#CC9C0F] border border-transparent font-semibold",
+      secondary: "bg-surface-subtle border border-border-default text-text-primary hover:bg-surface-hover",
+      ghost: "bg-transparent text-text-secondary hover:text-text-primary hover:bg-surface-interactive transition-all duration-300",
+      outline: "bg-surface-primary border-2 border-primary text-text-primary hover:bg-primary hover:text-brand-primary-fg transition-all duration-300"
     };
 
     const sizes = "h-10 px-4 py-2 text-sm"; // Standard size
