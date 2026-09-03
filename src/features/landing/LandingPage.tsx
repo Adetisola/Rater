@@ -213,7 +213,7 @@ export function LandingPage() {
         )}
       </AnimatePresence>
 
-      <div className="bg-white min-h-screen">
+      <div data-theme-scope="light" className="bg-canvas text-text-primary min-h-screen">
         {/* Hero automatically triggers handleHeroReady when images download */}
         <Hero
         onReady={handleHeroReady} 
