@@ -41,6 +41,7 @@ import { showToast, showInviteModal, showInstallAppModal } from './GlobalOverlay
 import { useOverlayStore } from '@/store/overlayStore';
 import { deleteOwnAccount } from '@/lib/account/server';
 import { cn } from '@/lib/utils';
+import { useTheme } from '@/context/ThemeContext';
 import { 
   getNotificationPreferences, 
   updateNotificationPreferences, 
@@ -63,6 +64,7 @@ interface SettingsOverlayProps {
 export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: SettingsOverlayProps) {
   const { currentProfile } = useAuthState();
   const searchParams = useSearchParams();
+  const { preference, setPreference, isHydrated } = useTheme();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
   const [expandedChangelog, setExpandedChangelog] = useState<string | null>('replies');
@@ -274,14 +276,14 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.98, y: 8 }}
           transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-3xl bg-white sm:rounded-[28px] shadow-2xl border border-gray-100 flex flex-col overflow-hidden z-10"
+          className="relative w-full h-full sm:h-auto sm:max-h-[85vh] sm:max-w-3xl bg-surface-primary sm:rounded-[28px] shadow-2xl border border-border-default flex flex-col overflow-hidden z-10"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-            <h2 className="text-lg font-medium text-gray-900 tracking-tight">Settings</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle shrink-0">
+            <h2 className="text-lg font-medium text-text-primary tracking-tight">Settings</h2>
             <button
               onClick={onClose}
-              className="w-9 h-9 rounded-full bg-gray-100/80 hover:bg-gray-200/80 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+              className="w-9 h-9 rounded-full bg-surface-interactive hover:bg-surface-hover flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
               aria-label="Close settings"
             >
               <X size={17} />
@@ -289,7 +291,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
           </div>
 
           {/* Mobile Top Segmented Tab Switcher */}
-          <div className="sm:hidden px-3 py-2 bg-gray-50/70 border-b border-gray-100 flex gap-1 shrink-0 overflow-x-auto">
+          <div className="sm:hidden px-3 py-2 bg-surface-subtle border-b border-border-subtle flex gap-1 shrink-0 overflow-x-auto">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -300,11 +302,11 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs sm:text-[13px] font-semibold transition-all whitespace-nowrap",
                     isActive 
-                      ? "bg-white text-gray-900 shadow-2xs border border-gray-200/70" 
-                      : "text-gray-500 hover:text-gray-900"
+                      ? "bg-surface-primary text-text-primary shadow-2xs border border-border-default" 
+                      : "text-text-muted hover:text-text-primary"
                   )}
                 >
-                  <Icon size={15} className={isActive ? "text-black" : "text-gray-400"} />
+                  <Icon size={15} className={isActive ? "text-text-primary" : "text-text-muted"} />
                   <span>{tab.label}</span>
                 </button>
               );
@@ -314,7 +316,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
           {/* Body: Two-Column layout on desktop */}
           <div className="flex-1 flex flex-col sm:flex-row overflow-hidden min-h-0">
             {/* Desktop Left Sidebar */}
-            <div className="hidden sm:flex flex-col w-48 border-r border-gray-100 p-2.5 gap-1 bg-gray-50/40 shrink-0">
+            <div className="hidden sm:flex flex-col w-48 border-r border-border-subtle p-2.5 gap-1 bg-surface-subtle shrink-0">
               {TABS.map(tab => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -325,11 +327,11 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     className={cn(
                       "w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all text-left",
                       isActive
-                        ? "bg-gray-100/90 text-gray-900 font-semibold"
-                        : "text-gray-600 hover:bg-gray-100/50 hover:text-gray-900"
+                        ? "bg-surface-interactive text-text-primary font-semibold"
+                        : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
                     )}
                   >
-                    <Icon size={16} className={isActive ? "text-black" : "text-gray-400"} />
+                    <Icon size={16} className={isActive ? "text-text-primary" : "text-text-muted"} />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -351,35 +353,68 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Appearance Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Appearance</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Appearance</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary p-4 space-y-3.5">
                         <div className="flex items-center justify-between gap-4">
                           <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-gray-900">Interface Theme</p>
-                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/50 uppercase tracking-wider">
-                                Coming soon
-                              </span>
-                            </div>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">Switch between Light, Dark, or System themes.</p>
+                            <p className="text-sm font-semibold text-text-primary">Interface Theme</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
+                              Switch between Light, Dark, or System themes.
+                            </p>
                           </div>
                         </div>
 
                         {/* Theme Segmented Switcher */}
-                        <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-100/70 rounded-full">
-                          {['System', 'Light', 'Dark'].map((theme, i) => (
-                            <div
-                              key={theme}
-                              className={cn(
-                                "py-2 px-3 rounded-full text-center select-none text-xs sm:text-[13px] font-semibold transition-all cursor-not-allowed opacity-60",
-                                i === 0 ? "bg-white text-gray-900" : "text-gray-500"
-                              )}
-                            >
-                              {theme}
-                            </div>
-                          ))}
-                        </div>
+                        {!isHydrated ? (
+                          <div className="grid grid-cols-3 gap-1.5 p-1 bg-surface-interactive rounded-full animate-pulse">
+                            <div className="h-8 rounded-full bg-surface-subtle" />
+                            <div className="h-8 rounded-full bg-surface-subtle" />
+                            <div className="h-8 rounded-full bg-surface-subtle" />
+                          </div>
+                        ) : (
+                          <div
+                            role="radiogroup"
+                            aria-label="Interface Theme"
+                            className="grid grid-cols-3 gap-1.5 p-1 bg-surface-interactive rounded-full"
+                          >
+                            {(['system', 'light', 'dark'] as const).map((mode) => {
+                              const label = mode === 'system' ? 'System' : mode === 'light' ? 'Light' : 'Dark';
+                              const isSelected = preference === mode;
+                              return (
+                                <button
+                                  key={mode}
+                                  type="button"
+                                  role="radio"
+                                  aria-checked={isSelected}
+                                  tabIndex={isSelected ? 0 : -1}
+                                  onClick={() => setPreference(mode)}
+                                  onKeyDown={(e) => {
+                                    const modes: Array<'system' | 'light' | 'dark'> = ['system', 'light', 'dark'];
+                                    const currentIndex = modes.indexOf(preference);
+                                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                                      e.preventDefault();
+                                      const nextMode = modes[(currentIndex + 1) % modes.length];
+                                      setPreference(nextMode);
+                                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                                      e.preventDefault();
+                                      const prevMode = modes[(currentIndex - 1 + modes.length) % modes.length];
+                                      setPreference(prevMode);
+                                    }
+                                  }}
+                                  className={cn(
+                                    "py-2 px-3 rounded-full text-center select-none text-xs sm:text-[13px] font-semibold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none",
+                                    isSelected
+                                      ? "bg-surface-primary text-text-primary shadow-sm"
+                                      : "text-text-muted hover:text-text-primary"
+                                  )}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
 
