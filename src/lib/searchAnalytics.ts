@@ -16,6 +16,26 @@ export interface SearchMetricItem {
 }
 
 /**
+ * Constructs a normalized signature for a committed Browse search.
+ * Ensures identical queries, category filters, and avatar filters produce matching signatures
+ * for robust deduplication.
+ */
+export function buildBrowseTrackingSignature(
+  query: string,
+  categories: readonly string[] | string[],
+  avatarId?: string | null
+): string {
+  return `${query.trim().toLowerCase()}|${categories.join(',')}|${avatarId || ''}`;
+}
+
+/**
+ * Validates whether a query meets the minimum length requirement to be recorded as a search event.
+ */
+export function isSearchEligibleForTracking(query: string): boolean {
+  return query.trim().length >= 2;
+}
+
+/**
  * Record a search event to Supabase (permanent historical intelligence)
  * and update Redis counters for fast autocomplete and trending aggregation.
  */

@@ -43,6 +43,7 @@ import { deleteAsset } from '@/lib/cloudinary/service';
 import { extractPublicId } from '@/lib/cloudinary/transforms';
 import { normalizeCampaignSlug, normalizeSourceDetail } from '@/utils/attributionNormalize';
 import { NotificationEngine } from '@/lib/notifications/engine';
+import { isUserActivated } from './activation';
 
 // ─── Infrastructure Helpers ───────────────────────────────────────────────────
 
@@ -1410,7 +1411,7 @@ export async function getActivationMetrics(range?: AnalyticsDateRange): Promise<
     // 4. Activated = uploaded >= 1 OR reviewed >= 1
     let activated = 0;
     userIds.forEach((uid) => {
-      if (uploaderSet.has(uid) || raterSet.has(uid)) {
+      if (isUserActivated(uid, uploaderSet, raterSet)) {
         activated++;
       }
     });
@@ -1780,7 +1781,7 @@ export async function getAcquisitionBreakdown(range?: AnalyticsDateRange): Promi
     }
   });
 
-  const isActivated = (uid: string) => uploaderSet.has(uid) || reviewerSet.has(uid);
+  const isActivated = (uid: string) => isUserActivated(uid, uploaderSet, reviewerSet);
 
   // Group marketing sources
   const sourceMap: Record<string, { total: number; activated: number }> = {};
@@ -2066,7 +2067,7 @@ export async function getCampaignBreakdown(range?: AnalyticsDateRange): Promise<
     }
   });
 
-  const isActivated = (uid: string) => uploaderSet.has(uid) || reviewerSet.has(uid);
+  const isActivated = (uid: string) => isUserActivated(uid, uploaderSet, reviewerSet);
 
   // Group by campaign tag
   const campaignDataMap: Record<string, { total: number; activated: number; referrals: number }> = {};

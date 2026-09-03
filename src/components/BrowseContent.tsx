@@ -14,7 +14,7 @@ import { useAuthState } from '@/context/AuthContext';
 import { getFeedPosts } from '@/lib/posts';
 import { usePostStore } from '@/store/postStore';
 import useSWR from 'swr';
-import { trackSearchEvent } from '@/lib/searchAnalytics';
+import { trackSearchEvent, buildBrowseTrackingSignature, isSearchEligibleForTracking } from '@/lib/searchAnalytics';
 
 const SORT_LABELS: Record<string, string> = {
   balanced: '✨Balanced',
@@ -321,8 +321,8 @@ export default function BrowseContent({ initialPosts = EMPTY_ARRAY }: { initialP
                 setLastProcessedSignature(currentSignature);
 
                 const committedQuery = urlQuery.trim();
-                const trackingSignature = `${committedQuery.toLowerCase()}|${selectedCategories.join(',')}|${avatarId || ''}`;
-                if (committedQuery.length >= 2 && trackingSignature !== lastTrackedSearchRef.current) {
+                const trackingSignature = buildBrowseTrackingSignature(committedQuery, selectedCategories, avatarId);
+                if (isSearchEligibleForTracking(committedQuery) && trackingSignature !== lastTrackedSearchRef.current) {
                     lastTrackedSearchRef.current = trackingSignature;
                     void trackSearchEvent({
                         query: committedQuery,
