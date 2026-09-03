@@ -71,6 +71,7 @@ export const metadata: Metadata = {
   },
 };
 
+import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { PostProvider } from "@/context/PostContext";
 import { TimeProvider } from "@/context/TimeContext";
@@ -91,6 +92,37 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var preference = 'system';
+                try {
+                  var stored = localStorage.getItem('rater_theme');
+                  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+                    preference = stored;
+                  }
+                } catch (e) {}
+
+                var isDark =
+                  preference === 'dark' ||
+                  (preference === 'system' &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+                var root = document.documentElement;
+                if (isDark) {
+                  root.classList.add('dark');
+                  root.setAttribute('data-theme', 'dark');
+                } else {
+                  root.classList.remove('dark');
+                  root.setAttribute('data-theme', 'light');
+                }
+                root.setAttribute('data-theme-preference', preference);
+                root.style.colorScheme = isDark ? 'dark' : 'light';
+              })();
+            `,
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -127,23 +159,25 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body suppressHydrationWarning>
+      <body>
         <StructuredData />
         <GlobalErrorBoundary>
-          <AuthProvider>
-            <ReferralCapture />
-            <PostProvider>
-              <TimeProvider>
-                <ScrollRestorationProvider>
-                  <PWARegistry />
-                  <GlobalRouteLoader />
-                  <GlobalOverlays />
-                  <MaintenanceBanner />
-                  {children}
-                </ScrollRestorationProvider>
-              </TimeProvider>
-            </PostProvider>
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <ReferralCapture />
+              <PostProvider>
+                <TimeProvider>
+                  <ScrollRestorationProvider>
+                    <PWARegistry />
+                    <GlobalRouteLoader />
+                    <GlobalOverlays />
+                    <MaintenanceBanner />
+                    {children}
+                  </ScrollRestorationProvider>
+                </TimeProvider>
+              </PostProvider>
+            </AuthProvider>
+          </ThemeProvider>
         </GlobalErrorBoundary>
       </body>
     </html>
