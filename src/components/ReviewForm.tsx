@@ -41,14 +41,14 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
       triggerClassName="group relative flex items-center cursor-help"
       alignClassName="left-0 min-[769px]:left-1/2 min-[769px]:-translate-x-1/2"
       width="w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64"
-      contentClassName="p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl"
+      contentClassName="p-4 bg-surface-elevated border-2 border-primary text-text-primary text-[11px] rounded-xl shadow-elevated"
       content={
         <>
           <p className="font-semibold mb-2.5 leading-relaxed">{info.question}</p>
-          <ul className="space-y-1.5 text-gray-700">
+          <ul className="space-y-1.5 text-text-secondary">
             {info.points.map(point => (
               <li key={point} className="flex items-start gap-2">
-                <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+                <span className="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0" />
                 {point}
               </li>
             ))}
@@ -56,9 +56,9 @@ function CriteriaLabel({ label, info, iconUrl }: { label: string, info: { questi
         </>
       }
     >
-      <div className="flex items-center gap-2 border-b-2 border-dotted border-gray-300 pb-0.5 transition-colors group-hover:border-black select-none">
+      <div className="flex items-center gap-2 border-b-2 border-dotted border-border-default pb-0.5 transition-colors group-hover:border-primary select-none">
         {iconUrl && <img src={iconUrl} alt={`${label} icon`} className="w-5 h-5 object-contain" />}
-        <span className="text-[14px] xs:text-base font-medium text-black group-hover:text-black">
+        <span className="text-[14px] xs:text-base font-medium text-text-primary group-hover:text-text-primary">
           {label}
         </span>
       </div>

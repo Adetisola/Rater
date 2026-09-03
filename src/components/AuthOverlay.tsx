@@ -51,13 +51,13 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
       />
 
       {/* Modal Container */}
-      <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden relative z-10 shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 h-140 max-h-[90vh]">
+      <div className="bg-surface-primary border border-border-default w-full max-w-md rounded-3xl overflow-hidden relative z-10 shadow-elevated flex flex-col animate-in zoom-in-95 duration-200 h-140 max-h-[90vh]">
 
         {/* Tab Header */}
-        <div className="flex border-b border-gray-100 shrink-0">
+        <div className="flex border-b border-border-subtle shrink-0">
           <button
             onClick={() => setActiveTab('login')}
-            className={`flex-1 py-6 text-sm font-medium tracking-wider transition-all relative ${activeTab === 'login' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+            className={`flex-1 py-6 text-sm font-medium tracking-wider transition-all relative ${activeTab === 'login' ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'
               }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -73,7 +73,7 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
           </button>
           <button
             onClick={() => setActiveTab('signup')}
-            className={`flex-1 py-6 text-sm font-medium tracking-wider transition-all relative ${activeTab === 'signup' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+            className={`flex-1 py-6 text-sm font-medium tracking-wider transition-all relative ${activeTab === 'signup' ? 'text-text-primary' : 'text-text-muted hover:text-text-primary'
               }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -101,8 +101,8 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                 className="w-full flex flex-col items-center my-auto py-2"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-medium text-black mb-1">Welcome Back</h2>
-                  <p className="text-gray-500 text-sm">Enter your @username/email to continue</p>
+                  <h2 className="text-2xl font-medium text-text-primary mb-1">Welcome Back</h2>
+                  <p className="text-text-secondary text-sm">Enter your @username/email to continue</p>
                 </div>
                 <AccessAvatarForm
                   onSuccess={handleLoginSuccess}
@@ -118,8 +118,8 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
                 className="w-full flex-1 flex flex-col items-center"
               >
                 <div className="text-center mb-2 shrink-0">
-                  <h2 className="text-2xl font-medium text-black">Create Profile</h2>
-                  <p className="text-gray-500 text-sm mb-2">Join Rater's design critique studio</p>
+                  <h2 className="text-2xl font-medium text-text-primary">Create Profile</h2>
+                  <p className="text-text-secondary text-sm mb-2">Join Rater's design critique studio</p>
                 </div>
 
                 {/* Embedded Signup Form without the extra fixed overlay wrapper */}
@@ -144,12 +144,12 @@ export function AuthOverlay({ onClose, initialTab = 'login', prefillName, redire
 
         {/* Footer Link */}
         {activeTab === 'login' && (
-          <div className="p-4 text-center border-t border-gray-100 shrink-0 bg-gray-50/50">
-            <p className="text-[11px] text-gray-400">
+          <div className="p-4 text-center border-t border-border-subtle shrink-0 bg-surface-subtle">
+            <p className="text-[11px] text-text-muted">
               By continuing, you agree to Rater's{' '}
-              <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Terms of Service</a>{' '}
+              <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-text-secondary hover:text-text-primary transition-colors underline">Terms of Service</a>{' '}
               and{' '}
-              <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Privacy Policy</a>.
+              <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-text-secondary hover:text-text-primary transition-colors underline">Privacy Policy</a>.
             </p>
           </div>
         )}

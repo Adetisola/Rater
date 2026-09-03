@@ -880,8 +880,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                 className={cn(
                     "rounded-[20px] p-5 xs:p-5 xs:px-6 flex flex-col gap-4 scroll-mt-24 transition-all duration-500",
                     isTargeted
-                        ? "bg-amber-50/25 border-2 border-primary/50 ring-4 ring-primary/10 shadow-sm"
-                        : "bg-white border border-gray-200"
+                        ? "bg-amber-500/10 border-2 border-primary/50 ring-4 ring-primary/10 shadow-sm"
+                        : "bg-surface-primary border border-border-default"
                 )}
             >
                 <div className="w-full">
@@ -917,17 +917,17 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                         href={`/@${username}`}
                                         scroll={false}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none transition-colors hover:text-primary cursor-pointer focus:outline-none"
+                                        className="font-medium text-sm text-text-primary truncate max-w-37.5 xs:max-w-none transition-colors hover:text-primary cursor-pointer focus:outline-none"
                                     >
                                         {displayName}
                                     </Link>
                                 ) : (
-                                    <span className="font-medium text-sm text-black truncate max-w-37.5 xs:max-w-none">
+                                    <span className="font-medium text-sm text-text-primary truncate max-w-37.5 xs:max-w-none">
                                         {displayName}
                                     </span>
                                 )}
                                 {!review.reviewer_id && (
-                                    <span className="bg-gray-100 text-gray-400 text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
+                                    <span className="bg-surface-subtle text-text-muted text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md select-none shrink-0">
                                         Guest
                                     </span>
                                 )}
@@ -936,14 +936,14 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 <div className="flex gap-0.5">
                                     <img src="/icons/star-active-yellow.svg" className="w-3.5 h-3.5" alt="" />
                                 </div>
-                                <span className="text-xs font-semibold text-gray-500 tabular-nums select-none">
+                                <span className="text-xs font-semibold text-text-secondary tabular-nums select-none">
                                     {ratingAvg.toFixed(1)}
                                 </span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 ml-auto xs:ml-0 shrink-0 self-start xs:self-center mt-1 xs:mt-0">
                             <span
-                                className="text-xs text-gray-400 font-medium"
+                                className="text-xs text-text-muted font-medium"
                                 title={fullTime}
                                 suppressHydrationWarning
                             >
@@ -1053,7 +1053,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                         {/* 1. Image Preview */}
                         <div className="w-full md:flex md:justify-center">
                             <div
-                                className={`group relative w-full md:w-fit ${imageError ? 'aspect-video' : ''} rounded-3xl overflow-hidden bg-gray-50 ${!imageError ? 'cursor-zoom-in' : ''}`}
+                                className={`group relative w-full md:w-fit ${imageError ? 'aspect-video' : ''} rounded-3xl overflow-hidden bg-art-canvas ${!imageError ? 'cursor-zoom-in' : ''}`}
                                 onClick={() => { if (!imageError) setIsImageFullscreen(true); }}
                                 onPointerDownCapture={(e) => {
                                     // Stop propagation so Framer Motion doesn't intercept horizontal swipes on the carousel
@@ -1094,7 +1094,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 <PostActionsMenu
                                     post={post}
                                     className="flex gap-3"
-                                    buttonClassName="w-10 h-10 bg-white hover:bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-black"
+                                    buttonClassName="w-10 h-10 bg-surface-primary hover:bg-surface-hover border border-border-default backdrop-blur-md rounded-full flex items-center justify-center transition-transform text-text-primary"
                                     iconSizeClass="w-5 h-5"
                                     onReport={() => setIsReportOpen(true)}
                                     trackView={trackView}
@@ -1106,7 +1106,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                         {/* 2. Metadata Row */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 xs:gap-3">
-                                <span className="text-[10px] font-semibold tracking-wider bg-transparent text-gray-600 px-3 py-1.5 rounded-full border border-gray-200">
+                                <span className="text-[10px] font-semibold tracking-wider bg-transparent text-text-secondary px-3 py-1.5 rounded-full border border-border-default">
                                     {post.category}
                                 </span>
                                 {badge && (
@@ -1163,7 +1163,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
 
                         {/* 3. Title */}
                         <div className="flex items-center justify-between mb-2 gap-4">
-                            <h1 className="text-lg xs:text-xl font-medium text-black leading-tight">
+                            <h1 className="text-lg xs:text-xl font-medium text-text-primary leading-tight">
                                 {post.title}
                             </h1>
                             <div className="flex items-center gap-3">
@@ -1182,7 +1182,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                         type="button"
                                         onClick={scrollToCritiques}
                                         aria-label="Scroll to critiques"
-                                        className="text-sm font-medium text-gray-800 hover:text-primary transition-colors flex items-center whitespace-nowrap cursor-pointer focus:outline-none"
+                                        className="text-sm font-medium text-text-secondary hover:text-primary transition-colors flex items-center whitespace-nowrap cursor-pointer focus:outline-none"
                                     >
                                         {isHot && (
                                             <div className="w-8 h-8 -ml-2 -mt-3 relative flex items-center justify-center shrink-0">
@@ -1211,7 +1211,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                         width="w-[calc(100vw-3rem)] xs:w-48"
                                         triggerClassName="relative inline-flex items-center shrink-0"
                                     >
-                                        <span className="text-sm font-medium sm:font-medium text-gray-800 flex items-center gap-1 whitespace-nowrap cursor-help">
+                                        <span className="text-sm font-medium sm:font-medium text-text-secondary flex items-center gap-1 whitespace-nowrap cursor-help">
                                             <Eye className="w-4 h-4" /> {metrics.view_count.toLocaleString()}
                                         </span>
                                     </Tooltip>
@@ -1221,7 +1221,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
 
                         {/* 4. Description */}
                         {post.description && post.description.trim().length > 0 && (
-                            <div className="text-sm leading-relaxed text-gray-600">
+                            <div className="text-sm leading-relaxed text-text-secondary">
                                 <div className={!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) ? 'line-clamp-4' : ''}>
                                     <div className="markdown-content">
                                         <ReactMarkdown 
@@ -1234,7 +1234,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     {isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
                                         <button
                                             onClick={() => setIsExpanded(false)}
-                                            className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
+                                            className="font-semibold text-text-primary hover:text-primary transition-colors mt-1"
                                         >
                                             Show less
                                         </button>
@@ -1243,7 +1243,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 {!isExpanded && (getVisibleTextLength(post.description) > 300 || post.description.trim().split(/\n+/).length > 4) && (
                                     <button
                                         onClick={() => setIsExpanded(true)}
-                                        className="font-semibold text-gray-800 hover:text-primary transition-colors mt-1"
+                                        className="font-semibold text-text-primary hover:text-primary transition-colors mt-1"
                                     >
                                         Read more
                                     </button>
@@ -1402,24 +1402,24 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 ];
 
                                 return (
-                                    <div className="bg-white border-2 border-gray-100 rounded-3xl">
+                                    <div className="bg-surface-primary border-2 border-border-default rounded-3xl">
                                         {/* Tabs */}
-                                        <div className="flex items-center border-b border-gray-100">
+                                        <div className="flex items-center border-b border-border-subtle">
                                             {tabs.map((tab) => (
                                                 <button
                                                     key={tab.key}
                                                     type="button"
                                                     onClick={() => setActiveTab(tab.key)}
                                                     className={`relative flex-1 py-3.5 text-[13px] font-medium transition-colors duration-150 flex items-center justify-center gap-1.5 ${activeTab === tab.key
-                                                        ? 'text-black'
-                                                        : 'text-gray-400 hover:text-gray-600'
+                                                        ? 'text-text-primary font-semibold'
+                                                        : 'text-text-muted hover:text-text-primary'
                                                         }`}
                                                 >
                                                     {tab.label}
                                                     {(tab.key === 'pulse' || tab.key === 'insights') && (
                                                         <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider leading-none mt-px ${activeTab === tab.key
                                                             ? 'bg-primary/20 text-[#D9A000]'
-                                                            : 'bg-gray-100 text-gray-500'
+                                                            : 'bg-surface-subtle text-text-muted'
                                                             }`}>
                                                             Beta
                                                         </span>

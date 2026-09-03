@@ -140,9 +140,9 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
           </Button>
 
           <div className="relative flex items-center py-2">
-            <div className="grow border-t border-gray-100"></div>
-            <span className="shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
-            <div className="grow border-t border-gray-100"></div>
+            <div className="grow border-t border-border-subtle"></div>
+            <span className="shrink-0 mx-4 text-text-muted text-[11px] font-bold tracking-widest uppercase">or</span>
+            <div className="grow border-t border-border-subtle"></div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -155,7 +155,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
 
           <div className="space-y-1">
             <div className="flex justify-between items-end ml-1 mb-1">
-              <label className="text-xs font-semibold text-gray-600 tracking-wider">
+              <label className="text-xs font-semibold text-text-secondary tracking-wider">
                 {loginMode === 'username' ? 'Username' : 'Email'}
               </label>
               <button
@@ -165,13 +165,13 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                   setIdentifier('');
                   setError('');
                 }}
-                className="text-[11px] font-medium text-gray-400 hover:text-primary transition-colors"
+                className="text-[11px] font-medium text-text-muted hover:text-primary transition-colors"
               >
                 {loginMode === 'username' ? 'Use email instead' : 'Log in with username'}
               </button>
             </div>
             <div className="relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-opacity duration-200">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none transition-opacity duration-200">
                 {loginMode === 'username' ? <AtSign className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
               </div>
               <Input
@@ -180,7 +180,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
                 value={identifier}
                 onChange={handleIdentifierInput}
                 className={cn(
-                  "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-normal transition-all duration-200",
+                  "h-12 text-sm pl-10 pr-4 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder font-normal transition-all duration-200",
                   identifier && !isIdentifierValid(loginMode === 'username' ? normalizeUsername(identifier) : identifier) && "border-red-300 focus-visible:border-red-400"
                 )}
                 disabled={isLoading}
@@ -195,20 +195,20 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-gray-600 tracking-wider ml-1">Password</label>
+            <label className="text-xs font-semibold text-text-secondary tracking-wider ml-1">Password</label>
             <div className="relative">
               <Input
                 type={showPasskey ? "text" : "password"}
                 placeholder="Enter your password"
                 value={passkey}
                 onChange={(e) => setPasskey(e.target.value)}
-                className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-normal"
+                className="h-12 text-sm px-4 pr-12 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder font-normal"
                 disabled={isLoading}
               />
               <button
                 type="button"
                 onClick={() => setShowPasskey(!showPasskey)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
                 tabIndex={-1}
                 disabled={isLoading}
               >
@@ -219,7 +219,7 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
               <button
                 type="button"
                 onClick={() => setShowForgotOverlay(true)}
-                className="text-xs font-medium text-gray-500 hover:text-primary transition-colors"
+                className="text-xs font-medium text-text-secondary hover:text-primary transition-colors"
                 disabled={isLoading}
               >
                 Forgot password?
@@ -243,11 +243,11 @@ export function AccessAvatarForm({ onSuccess, onCreateNew }: AccessAvatarFormPro
       )}
 
       <div className="text-center pt-2">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-text-secondary">
           Don't have a profile?{' '}
           <button
             onClick={onCreateNew}
-            className="text-black font-medium hover:text-primary"
+            className="text-text-primary font-medium hover:text-primary"
             disabled={isLoading}
           >
             Create one

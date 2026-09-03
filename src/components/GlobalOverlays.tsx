@@ -273,10 +273,10 @@ export function GlobalOverlays() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               layout
-              className="flex items-center gap-4 px-6 py-4 bg-[#111111] text-white rounded-2xl shadow-2xl border border-white/10 pointer-events-auto w-max max-w-full"
+              className="flex items-center gap-4 px-6 py-4 bg-surface-elevated text-text-primary rounded-2xl shadow-elevated border border-border-default pointer-events-auto w-max max-w-full"
             >
               <span className="text-sm font-medium">Work removed</span>
-              <div className="w-px h-4 bg-white/20" />
+              <div className="w-px h-4 bg-border-subtle" />
               <button 
                 onClick={handleUndo}
                 className="text-sm font-bold text-primary hover:text-[#FFD342] transition-colors"
@@ -285,9 +285,9 @@ export function GlobalOverlays() {
               </button>
               <button 
                 onClick={() => setUndoPostId(null)}
-                className="p-1 hover:bg-white/10 rounded-full transition-colors"
+                className="p-1 hover:bg-surface-hover rounded-full transition-colors text-text-muted hover:text-text-primary"
               >
-                <X className="w-4 h-4 opacity-50" />
+                <X className="w-4 h-4" />
               </button>
             </motion.div>
           )}
@@ -304,8 +304,8 @@ export function GlobalOverlays() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 layout
-                className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl pointer-events-auto text-white w-max max-w-full
-                  ${isError ? 'bg-red-500' : isSuccess ? 'bg-green-500' : 'bg-[#111111]'}`}
+                className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-elevated pointer-events-auto w-max max-w-full
+                  ${isError ? 'bg-red-500 text-white' : isSuccess ? 'bg-emerald-600 text-white' : 'bg-surface-elevated text-text-primary border border-border-default'}`}
               >
                 {isError && <AlertCircle className="w-5 h-5 shrink-0" />}
                 {isSuccess && <CheckCircle className="w-5 h-5 shrink-0" />}
@@ -315,9 +315,9 @@ export function GlobalOverlays() {
                 
                 <button 
                   onClick={() => removeToast(toast.id)}
-                  className="p-1 ml-2 hover:bg-black/10 rounded-full transition-colors"
+                  className="p-1 ml-2 hover:bg-surface-hover rounded-full transition-colors opacity-80 hover:opacity-100"
                 >
-                  <X className="w-4 h-4 opacity-80" />
+                  <X className="w-4 h-4" />
                 </button>
               </motion.div>
             );

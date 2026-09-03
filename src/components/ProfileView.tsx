@@ -370,7 +370,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
         <div className="md:hidden flex justify-end mb-4">
           <button
             onClick={() => setShowQrCode(true)}
-            className="w-11 h-11 flex items-center justify-center rounded-full bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-all active:scale-95 text-gray-700"
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-surface-primary border border-border-default shadow-sm hover:bg-surface-hover transition-all active:scale-95 text-text-primary"
             aria-label="Share profile"
           >
             <QrCode className="w-5 h-5" />
@@ -635,15 +635,15 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                 </div>
               ) : (
                 <div className="flex flex-col items-center md:flex-row md:items-baseline md:gap-2 w-full">
-                  <h1 className="text-xl md:text-2xl font-medium text-black tracking-tight break-all w-full md:w-auto px-4 md:px-0">
+                  <h1 className="text-xl md:text-2xl font-medium text-text-primary tracking-tight break-all w-full md:w-auto px-4 md:px-0">
                     {targetAvatar.name}
                   </h1>
                   <div className="flex items-center justify-center md:justify-start gap-2 w-full md:w-auto">
-                    <p className="text-[15px] text-gray-400 font-medium break-all px-4 md:px-0">@{targetAvatar.username}</p>
+                    <p className="text-[15px] text-text-muted font-medium break-all px-4 md:px-0">@{targetAvatar.username}</p>
                     {isMe && editState === 'idle' && (
                       <button
                         onClick={() => startEditing()}
-                        className="hidden md:flex p-2 rounded-full hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 text-gray-400 hover:text-primary"
+                        className="hidden md:flex p-2 rounded-full hover:bg-surface-hover transition-all hover:scale-110 active:scale-95 text-text-muted hover:text-primary"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -665,23 +665,23 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                     placeholder="Role"
                     maxLength={50}
                     className={cn(
-                      "text-[16px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-900 w-full placeholder:text-gray-300 pr-12",
+                      "text-[16px] font-medium bg-transparent outline-none border-b border-transparent focus:border-border-default transition-all text-text-primary w-full placeholder:text-input-placeholder pr-12",
                       editRole.length > 50 && "text-red-500 border-red-300 focus:border-red-400"
                     )}
                   />
-                  <span className="absolute right-0 bottom-1 text-[10px] font-medium text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                  <span className="absolute right-0 bottom-1 text-[10px] font-medium text-text-muted opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
                     {editRole.length}/50
                   </span>
                 </div>
               ) : targetAvatar.role || isMe ? (
                 targetAvatar.role ? (
-                  <span className="text-[16px] font-medium text-gray-400">
+                  <span className="text-[16px] font-medium text-text-muted">
                     {targetAvatar.role}
                   </span>
                 ) : (
                   <button
                     onClick={() => startEditing('role')}
-                    className="text-[16px] font-base text-gray-400 hover:text-primary transition-colors focus:outline-none"
+                    className="text-[16px] font-base text-text-muted hover:text-primary transition-colors focus:outline-none"
                   >
                     Tell us your creative role
                   </button>
@@ -689,7 +689,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
               ) : null}
               {/* Joined badge - Desktop only here */}
               {editState === 'idle' && (
-                <span className="hidden md:inline-flex px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider ml-1 self-center">
+                <span className="hidden md:inline-flex px-3 py-1 rounded-full bg-surface-subtle text-text-muted text-[10px] font-semibold tracking-wider ml-1 self-center">
                   Joined {joinedDate}
                 </span>
               )}
@@ -698,7 +698,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
 
           {editState === 'idle' && (
             <div className="flex gap-2 justify-center md:hidden mb-6">
-              <span className="px-3 py-1 rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold tracking-wider">
+              <span className="px-3 py-1 rounded-full bg-surface-subtle text-text-muted text-[10px] font-semibold tracking-wider">
                 Joined {joinedDate}
               </span>
             </div>
@@ -826,23 +826,23 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
           </div>
 
           <div className="flex items-center justify-center md:justify-start gap-4">
-            <div className="text-center md:text-left pr-8 border-r border-gray-100">
-              <span className="block text-2xl text-black">
+            <div className="text-center md:text-left pr-8 border-r border-border-subtle">
+              <span className="block text-2xl text-text-primary">
                 <AnimatedMetric value={avatarPosts.length} />
               </span>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Works</span>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">Works</span>
             </div>
-            <div className="text-center md:text-left pr-8 border-r border-gray-100">
-              <span className="block text-2xl text-black">
+            <div className="text-center md:text-left pr-8 border-r border-border-subtle">
+              <span className="block text-2xl text-text-primary">
                 <AnimatedMetric value={stats.totalReviews} />
               </span>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Critiques</span>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">Critiques</span>
             </div>
             <div className="text-center md:text-left">
-              <span className="block text-2xl text-black">
+              <span className="block text-2xl text-text-primary">
                 <AnimatedMetric value={stats.avgRating} isFloat />
               </span>
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Overall Score</span>
+              <span className="text-xs font-semibold text-text-muted uppercase tracking-widest">Overall Score</span>
             </div>
           </div>
         </div>
@@ -851,7 +851,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
           <div className="hidden md:flex flex-col gap-3 ml-auto shrink-0 mt-2">
             <Button
               variant="ghost"
-              className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-black"
+              className="h-11 rounded-full px-5 flex items-center gap-2 font-semibold text-text-primary"
               onClick={() => setShowQrCode(true)}
             >
               <QrCode className="w-4 h-4" />
@@ -862,14 +862,14 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8">
+      <div className="border-b border-border-subtle mb-12 flex justify-center md:justify-start gap-8">
         <button
           onClick={() => setActiveTab('posts')}
           className={cn(
             "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
             activeTab === 'posts'
-              ? "border-[#111111] text-black"
-              : "border-transparent text-gray-400 hover:text-gray-600"
+              ? "border-primary text-text-primary"
+              : "border-transparent text-text-muted hover:text-text-primary"
           )}
         >
           <Grid className="w-4 h-4" />
@@ -881,8 +881,8 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             className={cn(
               "flex items-center gap-2 py-4 border-b-2 text-sm font-semibold uppercase tracking-wider transition-all",
               activeTab === 'saved'
-                ? "border-[#111111] text-black"
-                : "border-transparent text-gray-400 hover:text-gray-600"
+                ? "border-primary text-text-primary"
+                : "border-transparent text-text-muted hover:text-text-primary"
             )}
           >
             <Heart className="w-4 h-4" />
@@ -909,10 +909,10 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                 />
               </div>
             ) : (
-              <div className="py-20 text-center bg-gray-50 rounded-4xl border-2 border-dashed border-gray-200">
-                <Grid className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                <h3 className="text-xl font-medium mb-2">No works published yet</h3>
-                <p className="text-gray-500 mb-8">{isMe ? "Publish your first creative work to receive structured critique." : "This creative hasn't published any work yet."}</p>
+              <div className="py-20 text-center bg-surface-subtle rounded-4xl border-2 border-dashed border-border-default">
+                <Grid className="w-12 h-12 text-border-default mx-auto mb-4" />
+                <h3 className="text-xl font-medium mb-2 text-text-primary">No works published yet</h3>
+                <p className="text-text-secondary mb-8">{isMe ? "Publish your first creative work to receive structured critique." : "This creative hasn't published any work yet."}</p>
                 {isMe && (
                   <Link href="/submit" scroll={false}>
                     <Button variant="primary" className="text-lg rounded-full">Publish Work</Button>
