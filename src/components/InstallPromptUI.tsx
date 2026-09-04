@@ -94,7 +94,7 @@ export function InstallPromptUI({ className = '', variant = 'banner' }: InstallP
   return (
     <button
       onClick={handleAction}
-      className={`flex items-center gap-2 text-black hover:text-primary transition-colors font-medium ${className}`}
+      className={`flex items-center gap-2 text-text-primary hover:text-primary transition-colors font-medium ${className}`}
       aria-label="Install Rater"
     >
       <Download size={18} />

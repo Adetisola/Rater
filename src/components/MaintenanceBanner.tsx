@@ -27,14 +27,14 @@ export function MaintenanceBanner() {
   }
 
   return (
-    <div className="sticky top-0 z-[60] w-full bg-black text-white px-4 py-2.5 text-xs font-semibold flex items-center justify-between border-b border-white/10 shadow-sm animate-in slide-in-from-top duration-300">
+    <div className="sticky top-0 z-[60] w-full bg-surface-interactive text-text-primary px-4 py-2.5 text-xs font-semibold flex items-center justify-between border-b border-border-default shadow-sm animate-in slide-in-from-top duration-300">
       <div className="flex items-center gap-2 max-w-5xl mx-auto flex-1 justify-center px-4">
         <Megaphone size={14} className="text-primary shrink-0" />
         <span className="leading-snug">{bannerData.message}</span>
       </div>
       <button
         onClick={() => setIsDismissed(true)}
-        className="p-1 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors shrink-0"
+        className="p-1 text-text-muted hover:text-text-primary rounded-lg hover:bg-surface-hover transition-colors shrink-0"
         aria-label="Dismiss banner"
       >
         <X size={14} />

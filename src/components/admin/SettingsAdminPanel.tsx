@@ -59,31 +59,31 @@ export function SettingsAdminPanel() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+        <h1 className="text-xl font-semibold text-text-primary tracking-tight">
           Platform Settings
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-text-secondary mt-1">
           Global platform controls, announcement banners, and registration switches.
         </p>
       </div>
 
       {isLoading ? (
-        <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center text-gray-400 text-sm">
-          <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-gray-300" />
+        <div className="bg-surface-primary border border-border-default rounded-3xl p-16 text-center text-text-muted text-sm">
+          <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-text-muted" />
           Loading platform configurations...
         </div>
       ) : (
         <div className="space-y-6">
           {/* Announcement / Maintenance Banner */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+          <div className="bg-surface-primary border border-border-default rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
                   <Megaphone size={18} />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-gray-900">Announcement & Maintenance Banner</h2>
-                  <p className="text-xs text-gray-500">Displays a dismissible notification bar across the top of all public pages.</p>
+                  <h2 className="text-base font-bold text-text-primary">Announcement & Maintenance Banner</h2>
+                  <p className="text-xs text-text-secondary">Displays a dismissible notification bar across the top of all public pages.</p>
                 </div>
               </div>
 
@@ -101,12 +101,12 @@ export function SettingsAdminPanel() {
                   }))}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+                <div className="w-11 h-6 bg-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-transparent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-700 block">Banner Message</label>
+              <label className="text-xs font-bold text-text-secondary block">Banner Message</label>
               <textarea
                 value={settings.maintenance_banner?.message || ''}
                 onChange={(e) => setSettings(prev => ({
@@ -117,7 +117,7 @@ export function SettingsAdminPanel() {
                   }
                 }))}
                 placeholder="e.g. 🛠️ We're performing scheduled server optimizations from 2:00 AM - 3:00 AM UTC."
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-3.5 text-xs font-medium focus:outline-none focus:border-black h-20 resize-none"
+                className="w-full bg-surface-subtle border border-border-default rounded-2xl p-3.5 text-xs font-medium text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary h-20 resize-none"
               />
             </div>
 
@@ -146,14 +146,14 @@ export function SettingsAdminPanel() {
           </div>
 
           {/* Registration / Sign-up Control */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm flex items-center justify-between gap-4">
+          <div className="bg-surface-primary border border-border-default rounded-3xl p-6 sm:p-8 shadow-card flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
                 <UserPlus size={18} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-gray-900">User Registrations</h2>
-                <p className="text-xs text-gray-500">Allow new users to sign up and create public profiles on Rater.</p>
+                <h2 className="text-base font-bold text-text-primary">User Registrations</h2>
+                <p className="text-xs text-text-secondary">Allow new users to sign up and create public profiles on Rater.</p>
               </div>
             </div>
 
@@ -169,20 +169,20 @@ export function SettingsAdminPanel() {
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+                <div className="w-11 h-6 bg-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-transparent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
           </div>
 
           {/* Feedback Submission Control */}
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-sm flex items-center justify-between gap-4">
+          <div className="bg-surface-primary border border-border-default rounded-3xl p-6 sm:p-8 shadow-card flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
                 <MessageSquare size={18} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-gray-900">Community Feedback Portal</h2>
-                <p className="text-xs text-gray-500">Allow users to submit new feature requests and product feedback ideas.</p>
+                <h2 className="text-base font-bold text-text-primary">Community Feedback Portal</h2>
+                <p className="text-xs text-text-secondary">Allow users to submit new feature requests and product feedback ideas.</p>
               </div>
             </div>
 
@@ -198,7 +198,7 @@ export function SettingsAdminPanel() {
                   }}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black"></div>
+                <div className="w-11 h-6 bg-surface-hover peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-transparent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
           </div>

@@ -179,23 +179,23 @@ export function FeedbackAdminPanel() {
       {/* 1. Header & Quick Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-gray-950 tracking-tight">
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">
             Feedback & Roadmap Moderation
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-text-secondary mt-0.5">
             Manage community ideas, publish official responses, and update roadmap statuses.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={15} />
             <input 
               type="text"
               placeholder="Search feedback..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-gray-200/80 rounded-xl pl-9 pr-4 py-2 text-xs font-medium focus:outline-none focus:border-black transition-colors"
+              className="w-full bg-surface-primary border border-border-default rounded-xl pl-9 pr-4 py-2 text-xs font-medium text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
           </div>
 
@@ -203,7 +203,7 @@ export function FeedbackAdminPanel() {
             variant="outline"
             onClick={fetchRequests}
             disabled={isLoading}
-            className="h-9 px-3 rounded-xl text-xs font-bold bg-white shadow-2xs"
+            className="h-9 px-3 rounded-xl text-xs font-bold bg-surface-primary border-border-default text-text-primary hover:bg-surface-hover shadow-2xs"
           >
             <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
           </Button>
@@ -218,8 +218,8 @@ export function FeedbackAdminPanel() {
           className={cn(
             "p-3 rounded-2xl border text-left transition-all",
             statusFilter === 'All'
-              ? "bg-black text-white border-black shadow-2xs"
-              : "bg-white border-gray-100 hover:border-gray-200 text-gray-700"
+              ? "bg-surface-interactive text-text-primary border-border-strong shadow-2xs font-semibold"
+              : "bg-surface-primary border-border-default hover:border-border-strong text-text-secondary"
           )}
         >
           <p className="text-[11px] font-bold uppercase tracking-wider opacity-70">All Submissions</p>
@@ -232,11 +232,11 @@ export function FeedbackAdminPanel() {
           className={cn(
             "p-3 rounded-2xl border text-left transition-all",
             statusFilter === 'New'
-              ? "bg-gray-900 text-white border-gray-900 shadow-2xs"
-              : "bg-white border-gray-100 hover:border-gray-200 text-gray-700"
+              ? "bg-surface-interactive text-text-primary border-border-strong shadow-2xs font-semibold"
+              : "bg-surface-primary border-border-default hover:border-border-strong text-text-secondary"
           )}
         >
-          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">New</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-text-muted">New</p>
           <p className="text-lg font-bold mt-0.5">{counts.new}</p>
         </button>
 
@@ -246,11 +246,11 @@ export function FeedbackAdminPanel() {
           className={cn(
             "p-3 rounded-2xl border text-left transition-all",
             statusFilter === 'Under Review'
-              ? "bg-amber-500 text-white border-amber-500 shadow-2xs"
-              : "bg-white border-gray-100 hover:border-gray-200 text-gray-700"
+              ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500 shadow-2xs font-semibold"
+              : "bg-surface-primary border-border-default hover:border-border-strong text-text-secondary"
           )}
         >
-          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">Under Review</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Under Review</p>
           <p className="text-lg font-bold mt-0.5">{counts.underReview}</p>
         </button>
 
@@ -260,11 +260,11 @@ export function FeedbackAdminPanel() {
           className={cn(
             "p-3 rounded-2xl border text-left transition-all",
             statusFilter === 'Planned'
-              ? "bg-blue-600 text-white border-blue-600 shadow-2xs"
-              : "bg-white border-gray-100 hover:border-gray-200 text-gray-700"
+              ? "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500 shadow-2xs font-semibold"
+              : "bg-surface-primary border-border-default hover:border-border-strong text-text-secondary"
           )}
         >
-          <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600">Planned</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Planned</p>
           <p className="text-lg font-bold mt-0.5">{counts.planned}</p>
         </button>
 
@@ -274,11 +274,11 @@ export function FeedbackAdminPanel() {
           className={cn(
             "p-3 rounded-2xl border text-left transition-all",
             statusFilter === 'In Progress'
-              ? "bg-purple-600 text-white border-purple-600 shadow-2xs"
-              : "bg-white border-gray-100 hover:border-gray-200 text-gray-700"
+              ? "bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500 shadow-2xs font-semibold"
+              : "bg-surface-primary border-border-default hover:border-border-strong text-text-secondary"
           )}
         >
-          <p className="text-[11px] font-bold uppercase tracking-wider text-purple-600">In Progress</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">In Progress</p>
           <p className="text-lg font-bold mt-0.5">{counts.inProgress}</p>
         </button>
 
@@ -288,21 +288,21 @@ export function FeedbackAdminPanel() {
           className={cn(
             "p-3 rounded-2xl border text-left transition-all",
             statusFilter === 'Completed'
-              ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-              : "bg-white border-gray-100 hover:border-gray-200 text-gray-700"
+              ? "bg-status-success-bg text-status-success-fg border-status-success-fg shadow-2xs font-semibold"
+              : "bg-surface-primary border-border-default hover:border-border-strong text-text-secondary"
           )}
         >
-          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Completed</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-status-success-fg">Completed</p>
           <p className="text-lg font-bold mt-0.5">{counts.completed}</p>
         </button>
       </div>
 
       {/* 3. Feedback Submissions Table */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-2xs overflow-hidden">
+      <div className="bg-surface-primary border border-border-default rounded-3xl shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/75 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              <tr className="bg-surface-subtle/75 border-b border-border-default text-[11px] font-bold text-text-muted uppercase tracking-wider">
                 <th className="px-6 py-4">Title & Context</th>
                 <th className="px-6 py-4 w-36">Status</th>
                 <th className="px-6 py-4 w-32">Category</th>
@@ -310,23 +310,23 @@ export function FeedbackAdminPanel() {
                 <th className="px-6 py-4 w-44 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-xs sm:text-[13px]">
+            <tbody className="divide-y divide-border-subtle text-xs sm:text-[13px]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-gray-400">
-                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-gray-300" />
+                  <td colSpan={5} className="px-6 py-16 text-center text-text-muted">
+                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-text-muted" />
                     Loading feedback submissions...
                   </td>
                 </tr>
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-gray-400">
+                  <td colSpan={5} className="px-6 py-16 text-center text-text-muted">
                     No feedback requests match the current filters.
                   </td>
                 </tr>
               ) : (
                 filteredRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50/60 transition-colors">
+                  <tr key={req.id} className="hover:bg-surface-hover/60 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-start gap-2.5">
                         <div className="flex flex-col gap-1 mt-0.5">
@@ -336,7 +336,7 @@ export function FeedbackAdminPanel() {
                             </span>
                           )}
                           {req.is_locked && (
-                            <span title="Discussion locked" className="text-gray-400">
+                            <span title="Discussion locked" className="text-text-muted">
                               <Lock size={13} />
                             </span>
                           )}
@@ -344,16 +344,16 @@ export function FeedbackAdminPanel() {
 
                         <div className="min-w-0 space-y-0.5">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-950 line-clamp-1">{req.title}</span>
+                            <span className="font-bold text-text-primary line-clamp-1">{req.title}</span>
                             {req.official_response && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-50 text-amber-900 border border-primary/20 shrink-0">
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-primary/20 shrink-0">
                                 <Sparkles size={10} className="text-primary" />
                                 <span>Responded</span>
                               </span>
                             )}
                           </div>
-                          <p className="text-gray-500 line-clamp-1 text-xs">{req.description}</p>
-                          <div className="text-[11px] text-gray-400 font-medium pt-0.5">
+                          <p className="text-text-secondary line-clamp-1 text-xs">{req.description}</p>
+                          <div className="text-[11px] text-text-muted font-medium pt-0.5">
                             {format(new Date(req.created_at), 'MMM d, yyyy')} •{' '}
                             <Link
                               href={`/feedback/${req.slug}`}
@@ -372,13 +372,13 @@ export function FeedbackAdminPanel() {
                       <span
                         className={cn(
                           "inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border",
-                          req.status === 'Planned' && "bg-blue-50 text-blue-700 border-blue-200/60",
-                          req.status === 'In Progress' && "bg-purple-50 text-purple-700 border-purple-200/60",
-                          req.status === 'Completed' && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
-                          req.status === 'Under Review' && "bg-amber-50 text-amber-800 border-amber-200/60",
-                          req.status === 'Declined' && "bg-red-50 text-red-700 border-red-200/60",
-                          req.status === 'Resolved Duplicate' && "bg-gray-100 text-gray-600 border-gray-200/60",
-                          (!req.status || req.status === 'New') && "bg-gray-50 text-gray-600 border-gray-200/60"
+                          req.status === 'Planned' && "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
+                          req.status === 'In Progress' && "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30",
+                          req.status === 'Completed' && "bg-status-success-bg text-status-success-fg border-status-success-fg/30",
+                          req.status === 'Under Review' && "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+                          req.status === 'Declined' && "bg-status-error-bg text-status-error-fg border-status-error-border",
+                          req.status === 'Resolved Duplicate' && "bg-surface-interactive text-text-secondary border-border-default",
+                          (!req.status || req.status === 'New') && "bg-surface-subtle text-text-secondary border-border-default"
                         )}
                       >
                         {req.status || 'New'}
@@ -386,22 +386,22 @@ export function FeedbackAdminPanel() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-semibold text-text-secondary bg-surface-interactive px-2.5 py-1 rounded-lg">
                         {req.category}
                       </span>
                     </td>
 
                     <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2.5 text-xs text-gray-600 font-bold">
+                      <div className="flex items-center justify-center gap-2.5 text-xs text-text-secondary font-bold">
                         <span className="inline-flex items-center gap-1" title="Upvotes">
                           <ThumbsUp size={12} className="text-primary" />
                           {req.upvote_count || 0}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-gray-400" title="Comments">
+                        <span className="inline-flex items-center gap-1 text-text-muted" title="Comments">
                           <MessageSquare size={12} />
                           {req.comment_count || 0}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-amber-700" title="Followers">
+                        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400" title="Followers">
                           <BookmarkCheck size={12} />
                           {req.follow_count || 0}
                         </span>
@@ -415,7 +415,7 @@ export function FeedbackAdminPanel() {
                           onClick={() => handleTogglePin(req.id, Boolean(req.is_pinned))}
                           className={cn(
                             "h-8 w-8 p-0 rounded-xl",
-                            req.is_pinned ? "text-amber-600 border-amber-200 bg-amber-50/50" : "text-gray-400"
+                            req.is_pinned ? "text-amber-600 border-amber-500/30 bg-amber-500/10" : "text-text-muted hover:text-text-primary"
                           )}
                           title={req.is_pinned ? 'Unpin from top' : 'Pin to top'}
                         >
@@ -427,7 +427,7 @@ export function FeedbackAdminPanel() {
                           onClick={() => handleToggleLock(req.id, Boolean(req.is_locked))}
                           className={cn(
                             "h-8 w-8 p-0 rounded-xl",
-                            req.is_locked ? "text-amber-600 border-amber-200 bg-amber-50/50" : "text-gray-400"
+                            req.is_locked ? "text-amber-600 border-amber-500/30 bg-amber-500/10" : "text-text-muted hover:text-text-primary"
                           )}
                           title={req.is_locked ? 'Unlock comments' : 'Lock comments'}
                         >
@@ -437,7 +437,7 @@ export function FeedbackAdminPanel() {
                         <Button 
                           variant="outline" 
                           onClick={() => handleOpenEdit(req)} 
-                          className="h-8 px-2.5 text-xs font-bold rounded-xl inline-flex items-center gap-1 bg-white"
+                          className="h-8 px-2.5 text-xs font-bold rounded-xl inline-flex items-center gap-1 bg-surface-primary border-border-default text-text-primary hover:bg-surface-hover"
                         >
                           <Edit2 size={12} />
                           <span>Respond</span>
@@ -454,18 +454,18 @@ export function FeedbackAdminPanel() {
 
       {/* 4. Edit / Official Response Modal */}
       {editingRequest && (
-        <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-overlay-backdrop backdrop-blur-xs">
+          <div className="w-full max-w-2xl bg-surface-primary rounded-3xl shadow-elevated border border-border-default overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal Header */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
+            <div className="p-6 border-b border-border-default flex items-center justify-between bg-surface-primary">
               <div className="space-y-0.5">
-                <h3 className="text-base font-bold text-gray-950">Respond & Moderate Feedback</h3>
-                <p className="text-xs text-gray-500 line-clamp-1">{editingRequest.title}</p>
+                <h3 className="text-base font-bold text-text-primary">Respond & Moderate Feedback</h3>
+                <p className="text-xs text-text-secondary line-clamp-1">{editingRequest.title}</p>
               </div>
 
               <button
                 onClick={handleCloseEdit}
-                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+                className="w-8 h-8 rounded-full bg-surface-interactive hover:bg-surface-hover flex items-center justify-center text-text-muted hover:text-text-primary transition-colors"
               >
                 <X size={15} />
               </button>
@@ -476,11 +476,11 @@ export function FeedbackAdminPanel() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Status Selector */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700">Lifecycle Status</label>
+                  <label className="text-xs font-bold text-text-secondary">Lifecycle Status</label>
                   <select
                     value={editStatus}
                     onChange={e => setEditStatus(e.target.value as FeedbackStatus)}
-                    className="w-full h-10 border border-gray-200 rounded-xl px-3 text-xs font-semibold bg-gray-50/80 focus:outline-none focus:border-black"
+                    className="w-full h-10 border border-border-default rounded-xl px-3 text-xs font-semibold bg-surface-subtle text-text-primary focus:outline-none focus:border-primary"
                   >
                     {STATUSES.map(s => (
                       <option key={s} value={s}>
@@ -492,11 +492,11 @@ export function FeedbackAdminPanel() {
 
                 {/* Category Selector */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-700">Category</label>
+                  <label className="text-xs font-bold text-text-secondary">Category</label>
                   <select
                     value={editCategory}
                     onChange={e => setEditCategory(e.target.value as FeedbackCategory)}
-                    className="w-full h-10 border border-gray-200 rounded-xl px-3 text-xs font-semibold bg-gray-50/80 focus:outline-none focus:border-black"
+                    className="w-full h-10 border border-border-default rounded-xl px-3 text-xs font-semibold bg-surface-subtle text-text-primary focus:outline-none focus:border-primary"
                   >
                     {CATEGORIES.map(c => (
                       <option key={c} value={c}>
@@ -510,45 +510,45 @@ export function FeedbackAdminPanel() {
               {/* Public Official Response */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-text-primary flex items-center gap-1.5">
                     <Sparkles size={13} className="text-primary" />
                     <span>Official Team Response (Public)</span>
                   </label>
-                  <span className="text-[11px] text-gray-400">Visible to all community members</span>
+                  <span className="text-[11px] text-text-muted">Visible to all community members</span>
                 </div>
                 <textarea
                   value={editOfficialResponse}
                   onChange={e => setEditOfficialResponse(e.target.value)}
                   placeholder="e.g., We've added this to our Q3 roadmap and work has started..."
                   rows={4}
-                  className="w-full border border-gray-200 rounded-2xl p-3.5 text-xs sm:text-[13px] bg-white focus:outline-none focus:border-black resize-none"
+                  className="w-full border border-border-default rounded-2xl p-3.5 text-xs sm:text-[13px] bg-surface-subtle text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary resize-none"
                 />
               </div>
 
               {/* Private Internal Admin Notes */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-gray-700">
+                  <label className="text-xs font-bold text-text-secondary">
                     Internal Admin Notes (Private)
                   </label>
-                  <span className="text-[11px] text-amber-700 font-semibold">Staff only (hidden from public)</span>
+                  <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">Staff only (hidden from public)</span>
                 </div>
                 <textarea
                   value={editAdminNotes}
                   onChange={e => setEditAdminNotes(e.target.value)}
                   placeholder="Internal team notes, Jira ticket references, technical implementation details..."
                   rows={3}
-                  className="w-full border border-gray-200 rounded-2xl p-3.5 text-xs bg-amber-50/30 focus:outline-none focus:border-black resize-none"
+                  className="w-full border border-border-default rounded-2xl p-3.5 text-xs bg-surface-subtle text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary resize-none"
                 />
               </div>
 
               {/* Modal Footer Actions */}
-              <div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-2">
+              <div className="pt-4 border-t border-border-default flex items-center justify-end gap-2">
                 <Button
                   type="button"
                   variant="ghost"
                   onClick={handleCloseEdit}
-                  className="h-10 px-4 rounded-xl text-xs font-semibold text-gray-600"
+                  className="h-10 px-4 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary"
                 >
                   Cancel
                 </Button>

@@ -222,10 +222,10 @@ export function CampaignManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-semibold text-text-primary tracking-tight flex items-center gap-2.5">
             Campaign Management
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             Create marketing campaigns, generate tracked URLs, and monitor growth attribution channels.
           </p>
         </div>
@@ -243,7 +243,7 @@ export function CampaignManagement() {
           <Button
             variant="primary"
             onClick={() => setIsCreateModalOpen(true)}
-            className="h-9 px-4 rounded-xl text-xs inline-flex items-center gap-2 bg-black text-white hover:bg-gray-800"
+            className="h-9 px-4 rounded-xl text-xs inline-flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <Plus size={14} />
             New Campaign
@@ -252,9 +252,9 @@ export function CampaignManagement() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium flex items-center justify-between">
           <span>{error}</span>
-          <Button variant="ghost" onClick={fetchCampaigns} className="text-xs text-red-700 h-8">
+          <Button variant="ghost" onClick={fetchCampaigns} className="text-xs text-red-600 dark:text-red-400 h-8">
             Retry
           </Button>
         </div>
@@ -262,47 +262,47 @@ export function CampaignManagement() {
 
       {/* Summary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Campaigns</div>
-            <div className="text-3xl font-medium text-gray-900 mt-1">{isLoading ? '...' : activeCount}</div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Active Campaigns</div>
+            <div className="text-3xl font-medium text-text-primary mt-1">{isLoading ? '...' : activeCount}</div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             <Play size={20} />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Paused Campaigns</div>
-            <div className="text-3xl font-medium text-gray-900 mt-1">{isLoading ? '...' : pausedCount}</div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Paused Campaigns</div>
+            <div className="text-3xl font-medium text-text-primary mt-1">{isLoading ? '...' : pausedCount}</div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <Pause size={20} />
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+        <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tracked Links Generated</div>
-            <div className="text-3xl font-medium text-gray-900 mt-1">{isLoading ? '...' : totalLinksCount}</div>
+            <div className="text-xs font-semibold text-text-secondary uppercase tracking-wider">Tracked Links Generated</div>
+            <div className="text-3xl font-medium text-text-primary mt-1">{isLoading ? '...' : totalLinksCount}</div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
             <LinkIcon size={20} />
           </div>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
+      <div className="bg-surface-primary p-4 rounded-2xl border border-border-default shadow-xs flex flex-col sm:flex-row gap-4 items-center justify-between">
         <div className="relative w-full sm:w-80">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
           <input
             type="text"
             placeholder="Search campaigns or slugs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-surface-secondary border border-border-default rounded-xl text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
           />
         </div>
 
@@ -313,8 +313,8 @@ export function CampaignManagement() {
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize transition-colors ${
                 statusFilter === status
-                  ? 'bg-black text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-surface-inverted text-text-inverted shadow-xs'
+                  : 'bg-surface-secondary text-text-secondary hover:bg-surface-tertiary'
               }`}
             >
               {status}
@@ -324,10 +324,10 @@ export function CampaignManagement() {
       </div>
 
       {/* Campaigns Table */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-surface-primary border border-border-default rounded-3xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50/75 border-b border-gray-100 text-gray-400 font-semibold uppercase tracking-wider">
+            <thead className="bg-surface-secondary/75 border-b border-border-default text-text-muted font-semibold uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-4">Campaign Name</th>
                 <th className="px-6 py-4">Slug (Tag)</th>
@@ -337,16 +337,16 @@ export function CampaignManagement() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-gray-700">
+            <tbody className="divide-y divide-border-default text-text-secondary">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-400">
+                  <td colSpan={6} className="py-12 text-center text-text-muted">
                     Loading campaigns...
                   </td>
                 </tr>
               ) : filteredCampaigns.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-400">
+                  <td colSpan={6} className="py-12 text-center text-text-muted">
                     No campaigns found. Create one to get started!
                   </td>
                 </tr>
@@ -354,38 +354,38 @@ export function CampaignManagement() {
                 filteredCampaigns.map((campaign) => (
                   <tr
                     key={campaign.id}
-                    className="hover:bg-gray-50/50 transition-colors group cursor-pointer"
+                    className="hover:bg-surface-secondary/50 transition-colors group cursor-pointer"
                     onClick={() => handleOpenDetail(campaign)}
                   >
-                    <td className="px-6 py-4 font-semibold text-gray-900">
+                    <td className="px-6 py-4 font-semibold text-text-primary">
                       <div>{campaign.name}</div>
                       {campaign.description && (
-                        <div className="text-[11px] text-gray-400 font-normal truncate max-w-xs mt-0.5">
+                        <div className="text-[11px] text-text-muted font-normal truncate max-w-xs mt-0.5">
                           {campaign.description}
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 font-mono text-gray-600">
-                      <span className="px-2 py-1 bg-gray-100 rounded-md font-semibold text-[11px]">
+                    <td className="px-6 py-4 font-mono text-text-secondary">
+                      <span className="px-2 py-1 bg-surface-secondary rounded-md font-semibold text-[11px]">
                         {campaign.slug}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${
-                        campaign.status === 'active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                        campaign.status === 'paused' ? 'bg-amber-50 text-amber-700 border border-amber-100' :
-                        'bg-gray-100 text-gray-700'
+                        campaign.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                        campaign.status === 'paused' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' :
+                        'bg-surface-secondary text-text-secondary border border-border-default'
                       }`}>
                         {campaign.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-medium">
-                      <span className="inline-flex items-center gap-1 text-gray-900 font-semibold">
-                        <LinkIcon size={12} className="text-gray-400" />
+                      <span className="inline-flex items-center gap-1 text-text-primary font-semibold">
+                        <LinkIcon size={12} className="text-text-muted" />
                         {campaign.links_count || 0} links
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500">
+                    <td className="px-6 py-4 text-text-secondary">
                       {campaign.created_at ? format(new Date(campaign.created_at), 'MMM d, yyyy') : '—'}
                     </td>
                     <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
@@ -398,7 +398,7 @@ export function CampaignManagement() {
                             setEditDesc(campaign.description || '');
                             setEditStatus(campaign.status);
                           }}
-                          className="h-8 px-2.5 rounded-lg text-xs text-gray-600 hover:text-black"
+                          className="h-8 px-2.5 rounded-lg text-xs text-text-secondary hover:text-text-primary"
                           title="Edit Campaign"
                         >
                           <Edit3 size={13} />
@@ -424,32 +424,32 @@ export function CampaignManagement() {
       {activeCampaign && (
         <div className="fixed inset-0 z-60 flex justify-end animate-in fade-in duration-200">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
             onClick={() => setActiveCampaign(null)}
           />
 
-          <div className="relative w-full max-w-2xl bg-white h-full shadow-2xl z-10 flex flex-col overflow-hidden animate-in slide-in-from-right duration-200">
+          <div className="relative w-full max-w-2xl bg-surface-primary border-l border-border-default h-full shadow-2xl z-10 flex flex-col overflow-hidden animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+            <div className="p-6 border-b border-border-default flex items-center justify-between bg-surface-secondary/50">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="text-lg font-semibold text-gray-900">{activeCampaign.name}</h2>
+                  <h2 className="text-lg font-semibold text-text-primary">{activeCampaign.name}</h2>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold capitalize ${
-                    activeCampaign.status === 'active' ? 'bg-emerald-100 text-emerald-800' :
-                    activeCampaign.status === 'paused' ? 'bg-amber-100 text-amber-800' :
-                    'bg-gray-200 text-gray-800'
+                    activeCampaign.status === 'active' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                    activeCampaign.status === 'paused' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
+                    'bg-surface-secondary text-text-secondary'
                   }`}>
                     {activeCampaign.status}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400 mt-1 font-mono">
-                  campaign_tag: <span className="text-gray-700 font-semibold">{activeCampaign.slug}</span>
+                <p className="text-xs text-text-muted mt-1 font-mono">
+                  campaign_tag: <span className="text-text-secondary font-semibold">{activeCampaign.slug}</span>
                 </p>
               </div>
 
               <button
                 onClick={() => setActiveCampaign(null)}
-                className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-secondary transition-colors"
               >
                 <X size={18} />
               </button>
@@ -458,8 +458,8 @@ export function CampaignManagement() {
             {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               {/* Generate New Tracking Link Form */}
-              <div className="bg-gray-50 p-5 rounded-2xl border border-gray-200/80 space-y-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 flex items-center gap-2">
+              <div className="bg-surface-secondary p-5 rounded-2xl border border-border-default space-y-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-2">
                   <Plus size={14} className="text-primary" />
                   Generate New Tracking Link
                 </h3>
@@ -467,7 +467,7 @@ export function CampaignManagement() {
                 <form onSubmit={handleAddLinkSubmit} className="space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      <label className="block text-[11px] font-semibold text-text-secondary mb-1">
                         Acquisition Source <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -475,13 +475,13 @@ export function CampaignManagement() {
                         placeholder="e.g. instagram, tiktok, discord"
                         value={newLinkSource}
                         onChange={(e) => setNewLinkSource(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors"
+                        className="w-full px-3 py-2 bg-surface-primary border border-border-default rounded-xl text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      <label className="block text-[11px] font-semibold text-text-secondary mb-1">
                         Source Detail (Optional)
                       </label>
                       <input
@@ -489,20 +489,20 @@ export function CampaignManagement() {
                         placeholder="e.g. @designwithme, bio-link"
                         value={newLinkDetail}
                         onChange={(e) => setNewLinkDetail(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-black transition-colors"
+                        className="w-full px-3 py-2 bg-surface-primary border border-border-default rounded-xl text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
                       />
                     </div>
                   </div>
 
                   {/* Quick-chips for common sources */}
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                    <span className="text-[10px] text-gray-400 font-semibold mr-1">Quick sources:</span>
+                    <span className="text-[10px] text-text-muted font-semibold mr-1">Quick sources:</span>
                     {QUICK_SOURCES.map((src) => (
                       <button
                         type="button"
                         key={src}
                         onClick={() => setNewLinkSource(src)}
-                        className="px-2 py-0.5 rounded-lg bg-white border border-gray-200 text-[10px] text-gray-600 hover:border-black transition-colors"
+                        className="px-2 py-0.5 rounded-lg bg-surface-primary border border-border-default text-[10px] text-text-secondary hover:border-primary hover:text-text-primary transition-colors"
                       >
                         {src}
                       </button>
@@ -511,21 +511,21 @@ export function CampaignManagement() {
 
                   {/* Live URL Preview */}
                   {newLinkSource.trim() && (
-                    <div className="p-3 bg-white rounded-xl border border-gray-200 text-[11px] font-mono text-gray-600 break-all">
-                      <span className="text-gray-400">Preview: </span>
+                    <div className="p-3 bg-surface-primary rounded-xl border border-border-default text-[11px] font-mono text-text-secondary break-all">
+                      <span className="text-text-muted">Preview: </span>
                       {`https://www.raterapp.site/?source=${encodeURIComponent(normalizeSourceDetail(newLinkSource))}${newLinkDetail ? `&detail=${encodeURIComponent(normalizeSourceDetail(newLinkDetail))}` : ''}&campaign=${encodeURIComponent(activeCampaign.slug)}`}
                     </div>
                   )}
 
                   {linkError && (
-                    <div className="text-xs text-red-600 font-medium">{linkError}</div>
+                    <div className="text-xs text-red-600 dark:text-red-400 font-medium">{linkError}</div>
                   )}
 
                   <div className="flex justify-end pt-1">
                     <Button
                       type="submit"
                       disabled={isAddingLink || !newLinkSource.trim()}
-                      className="h-8 px-4 rounded-xl text-xs bg-black text-white hover:bg-gray-800"
+                      className="h-8 px-4 rounded-xl text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       {isAddingLink ? 'Generating...' : 'Create Tracking Link'}
                     </Button>
@@ -535,14 +535,14 @@ export function CampaignManagement() {
 
               {/* Existing Tracking Links */}
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">
                   Active Tracking Links ({activeLinks.length})
                 </h3>
 
                 {isLoadingLinks ? (
-                  <div className="py-8 text-center text-xs text-gray-400">Loading links...</div>
+                  <div className="py-8 text-center text-xs text-text-muted">Loading links...</div>
                 ) : activeLinks.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                  <div className="py-8 text-center text-xs text-text-muted bg-surface-secondary rounded-2xl border border-dashed border-border-default">
                     No tracking links created for this campaign yet.
                   </div>
                 ) : (
@@ -550,15 +550,15 @@ export function CampaignManagement() {
                     {activeLinks.map((link) => (
                       <div
                         key={link.id}
-                        className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm space-y-2.5 hover:border-gray-300 transition-colors"
+                        className="p-4 bg-surface-primary rounded-2xl border border-border-default shadow-xs space-y-2.5 hover:border-border-muted transition-colors"
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs uppercase">
+                            <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-xs uppercase">
                               {link.source}
                             </span>
                             {link.detail && (
-                              <span className="px-2 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-mono">
+                              <span className="px-2 py-0.5 rounded-lg bg-surface-secondary text-text-secondary text-xs font-mono">
                                 {link.detail}
                               </span>
                             )}
@@ -572,8 +572,8 @@ export function CampaignManagement() {
                             >
                               {copiedKey === link.id ? (
                                 <>
-                                  <Check size={12} className="text-emerald-600" />
-                                  <span className="text-emerald-600">Copied!</span>
+                                  <Check size={12} className="text-emerald-600 dark:text-emerald-400" />
+                                  <span className="text-emerald-600 dark:text-emerald-400">Copied!</span>
                                 </>
                               ) : (
                                 <>
@@ -586,7 +586,7 @@ export function CampaignManagement() {
                             <Button
                               variant="ghost"
                               onClick={() => handleDeleteLink(link.id)}
-                              className="h-7 w-7 p-0 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50"
+                              className="h-7 w-7 p-0 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-500/10"
                               title="Delete Link"
                             >
                               <Trash2 size={13} />
@@ -594,7 +594,7 @@ export function CampaignManagement() {
                           </div>
                         </div>
 
-                        <div className="p-2 bg-gray-50 rounded-lg text-[11px] font-mono text-gray-500 break-all select-all">
+                        <div className="p-2 bg-surface-secondary rounded-lg text-[11px] font-mono text-text-secondary break-all select-all">
                           {getTrackingUrl(link)}
                         </div>
                       </div>
@@ -611,19 +611,19 @@ export function CampaignManagement() {
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
             onClick={() => setIsCreateModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Create New Campaign</h2>
-            <p className="text-xs text-gray-500 mb-4">
+          <div className="relative w-full max-w-md bg-surface-primary rounded-3xl p-6 shadow-2xl border border-border-default z-10 animate-in zoom-in-95 duration-200">
+            <h2 className="text-lg font-semibold text-text-primary mb-1">Create New Campaign</h2>
+            <p className="text-xs text-text-secondary mb-4">
               Enter the campaign name. A URL-safe slug will automatically be generated for attribution tracking.
             </p>
 
             <form onSubmit={handleCreateCampaignSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">
                   Campaign Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -631,20 +631,20 @@ export function CampaignManagement() {
                   placeholder="e.g. First 1,000 Designers"
                   value={newCampaignName}
                   onChange={(e) => setNewCampaignName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border-default rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary transition-colors"
                   required
                 />
               </div>
 
               {newCampaignName.trim() && (
-                <div className="p-2.5 bg-gray-50 rounded-xl border border-gray-200 text-xs font-mono text-gray-600">
-                  <span className="text-gray-400">Generated slug: </span>
-                  <span className="font-semibold text-gray-900">{normalizeCampaignSlug(newCampaignName)}</span>
+                <div className="p-2.5 bg-surface-secondary rounded-xl border border-border-default text-xs font-mono text-text-secondary">
+                  <span className="text-text-muted">Generated slug: </span>
+                  <span className="font-semibold text-text-primary">{normalizeCampaignSlug(newCampaignName)}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">
                   Description (Optional)
                 </label>
                 <textarea
@@ -652,12 +652,12 @@ export function CampaignManagement() {
                   value={newCampaignDesc}
                   onChange={(e) => setNewCampaignDesc(e.target.value)}
                   rows={3}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-black transition-colors resize-none"
+                  className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border-default rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary transition-colors resize-none"
                 />
               </div>
 
               {createError && (
-                <div className="text-xs text-red-600 font-medium">{createError}</div>
+                <div className="text-xs text-red-600 dark:text-red-400 font-medium">{createError}</div>
               )}
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -673,7 +673,7 @@ export function CampaignManagement() {
                   variant="primary"
                   type="submit"
                   disabled={isCreatingCampaign || !newCampaignName.trim()}
-                  className="h-9 px-5 rounded-xl text-xs bg-black text-white hover:bg-gray-800"
+                  className="h-9 px-5 rounded-xl text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {isCreatingCampaign ? 'Creating...' : 'Create Campaign'}
                 </Button>
@@ -687,32 +687,32 @@ export function CampaignManagement() {
       {editingCampaign && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs animate-in fade-in duration-200"
             onClick={() => setEditingCampaign(null)}
           />
 
-          <div className="relative w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl z-10 animate-in zoom-in-95 duration-200">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Edit Campaign</h2>
-            <p className="text-xs text-gray-500 mb-4 font-mono">slug: {editingCampaign.slug}</p>
+          <div className="relative w-full max-w-md bg-surface-primary rounded-3xl p-6 shadow-2xl border border-border-default z-10 animate-in zoom-in-95 duration-200">
+            <h2 className="text-lg font-semibold text-text-primary mb-1">Edit Campaign</h2>
+            <p className="text-xs text-text-secondary mb-4 font-mono">slug: {editingCampaign.slug}</p>
 
             <form onSubmit={handleUpdateCampaignSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Campaign Name</label>
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Campaign Name</label>
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border-default rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary transition-colors"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Status</label>
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Status</label>
                 <select
                   value={editStatus}
                   onChange={(e) => setEditStatus(e.target.value as CampaignStatus)}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border-default rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary transition-colors"
                 >
                   <option value="active">Active</option>
                   <option value="paused">Paused</option>
@@ -721,12 +721,12 @@ export function CampaignManagement() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Description</label>
                 <textarea
                   value={editDesc}
                   onChange={(e) => setEditDesc(e.target.value)}
                   rows={3}
-                  className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-black transition-colors resize-none"
+                  className="w-full px-3.5 py-2.5 bg-surface-secondary border border-border-default rounded-xl text-xs text-text-primary focus:outline-none focus:border-primary transition-colors resize-none"
                 />
               </div>
 
@@ -743,7 +743,7 @@ export function CampaignManagement() {
                   variant="primary"
                   type="submit"
                   disabled={isUpdating || !editName.trim()}
-                  className="h-9 px-5 rounded-xl text-xs bg-black text-white hover:bg-gray-800"
+                  className="h-9 px-5 rounded-xl text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {isUpdating ? 'Saving...' : 'Save Changes'}
                 </Button>

@@ -43,16 +43,16 @@ export function FloatingPostButton() {
                   router.push('/submit', { scroll: false });
                 }}
                 className={cn(
-                    "w-14 h-14 sm:w-auto sm:h-14 rounded-full px-4 sm:px-6 shadow-2xl border-2 border-primary bg-white transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap",
+                    "w-14 h-14 sm:w-auto sm:h-14 rounded-full px-4 sm:px-6 shadow-2xl border-2 border-primary bg-surface-primary transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] whitespace-nowrap",
                     "hover:bg-primary hover:scale-105 active:scale-95"
                 )}
             >
                 <div className="flex items-center gap-2">
                     <CloudUpload 
                         strokeWidth={2.25} 
-                        className="h-6 w-6 shrink-0 transition-colors group-hover:text-white" 
+                        className="h-6 w-6 shrink-0 transition-colors group-hover:text-brand-primary-fg" 
                     />
-                    <span className="hidden sm:flex items-center text-lg font-medium text-black group-hover:text-white transition-colors">
+                    <span className="hidden sm:flex items-center text-lg font-medium text-text-primary group-hover:text-brand-primary-fg transition-colors">
                         Publish
                         <span className="max-w-0 opacity-0 overflow-hidden xl:group-hover:max-w-30 xl:group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
                             <span className="pl-1.5 whitespace-nowrap">your work</span>

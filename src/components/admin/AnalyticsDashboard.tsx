@@ -140,28 +140,28 @@ export function AnalyticsDashboard() {
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-300 pb-16">
       {/* Top Header & Refresh & Global Date Filter */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-gray-100">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-border-default">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
-            <BarChart2 className="w-6 h-6 text-black" />
+          <h1 className="text-xl font-semibold text-text-primary tracking-tight flex items-center gap-2.5">
+            <BarChart2 className="w-6 h-6 text-text-primary" />
             Growth & Activation Analytics
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             Measuring the Rater loop: Upload → Review → Feedback → Score → Share → Invite → Repeat.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Preset Buttons */}
-          <div className="flex items-center bg-gray-100 p-1 rounded-2xl border border-gray-200/80">
+          <div className="flex items-center bg-surface-secondary p-1 rounded-2xl border border-border-default">
             {(['7d', '30d', '90d', 'all'] as const).map((p) => (
               <button
                 key={p}
                 onClick={() => setPreset(p)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
                   preset === p
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-500 hover:text-black'
+                    ? 'bg-surface-primary text-text-primary shadow-xs'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {p === 'all' ? 'All Time' : p}
@@ -169,7 +169,7 @@ export function AnalyticsDashboard() {
             ))}
           </div>
 
-          <span className="text-xs text-gray-400 font-medium hidden sm:inline-flex items-center gap-1">
+          <span className="text-xs text-text-muted font-medium hidden sm:inline-flex items-center gap-1">
             <Clock size={12} />
             {formatDistanceToNow(lastRefreshed, { addSuffix: true })}
           </span>
@@ -187,9 +187,9 @@ export function AnalyticsDashboard() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700 text-sm font-medium flex items-center justify-between">
+        <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium flex items-center justify-between">
           <span>{error}</span>
-          <Button variant="ghost" onClick={loadAllAnalytics} className="text-xs text-red-700 h-8">
+          <Button variant="ghost" onClick={loadAllAnalytics} className="text-xs text-red-600 dark:text-red-400 h-8">
             Retry
           </Button>
         </div>
@@ -199,10 +199,10 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight">Platform Overview</h2>
-            <p className="text-xs text-gray-400">Total volume across Rater (All time cumulative)</p>
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight">Platform Overview</h2>
+            <p className="text-xs text-text-muted">Total volume across Rater (All time cumulative)</p>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 uppercase tracking-wider">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-surface-secondary text-text-secondary uppercase tracking-wider">
             All Time
           </span>
         </div>
@@ -212,7 +212,7 @@ export function AnalyticsDashboard() {
             title="Total Users"
             value={overview?.totalUsers}
             icon={<Users size={18} />}
-            iconBg="bg-blue-50 text-blue-600"
+            iconBg="bg-blue-500/10 text-blue-600 dark:text-blue-400"
             subtext={`+${overview?.users7dDelta || 0} past 7 days`}
             isLoading={isLoading}
           />
@@ -220,7 +220,7 @@ export function AnalyticsDashboard() {
             title="Total Posts"
             value={overview?.totalPosts}
             icon={<FileText size={18} />}
-            iconBg="bg-purple-50 text-purple-600"
+            iconBg="bg-purple-500/10 text-purple-600 dark:text-purple-400"
             subtext={`+${overview?.posts7dDelta || 0} past 7 days`}
             isLoading={isLoading}
           />
@@ -228,7 +228,7 @@ export function AnalyticsDashboard() {
             title="Total Reviews"
             value={overview?.totalReviews}
             icon={<Star size={18} />}
-            iconBg="bg-amber-50 text-amber-600"
+            iconBg="bg-amber-500/10 text-amber-600 dark:text-amber-400"
             subtext={`+${overview?.reviews7dDelta || 0} past 7 days`}
             isLoading={isLoading}
           />
@@ -236,7 +236,7 @@ export function AnalyticsDashboard() {
             title="Total Views"
             value={overview?.totalViews}
             icon={<Eye size={18} />}
-            iconBg="bg-emerald-50 text-emerald-600"
+            iconBg="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
             subtext="Total post impressions"
             isLoading={isLoading}
           />
@@ -247,15 +247,15 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
               <Sparkles size={16} className="text-primary" />
               Activation Engine
             </h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-text-muted">
               Measuring registered users who upload a design or review another designer.
             </p>
           </div>
-          <span className="text-xs font-semibold text-gray-400">
+          <span className="text-xs font-semibold text-text-muted">
             Comparing vs previous {preset === 'all' ? 'period' : preset}
           </span>
         </div>
@@ -301,77 +301,77 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-              <Timer size={16} className="text-purple-600" />
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
+              <Timer size={16} className="text-purple-600 dark:text-purple-400" />
               Rating Liquidity & Marketplace Health
             </h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-text-muted">
               Measuring whether uploaded designs receive enough community feedback and unlocking speed.
             </p>
           </div>
-          <span className="text-[11px] font-semibold text-gray-400 italic">
+          <span className="text-[11px] font-semibold text-text-muted italic">
             Posts created during selected period
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>% With ≥1 Review</span>
               <Tooltip text="Percentage of active designs in period that received at least one review." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${liquidity?.pctPostsWithReviews ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">Community coverage</div>
+            <div className="text-[11px] text-text-muted mt-2">Community coverage</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>% Posts Unlocked</span>
               <Tooltip text="Canonical unlock: Percentage of active designs reaching ≥3 reviews (post_metrics.rating_unlocked)." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${liquidity?.pctPostsUnlocked ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">Reached canonical unlock</div>
+            <div className="text-[11px] text-text-muted mt-2">Reached canonical unlock</div>
           </div>
 
-          <div className="p-5 rounded-3xl border border-amber-100/80 bg-amber-50/20 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-amber-800 font-semibold mb-2">
+          <div className="p-5 rounded-3xl border border-amber-500/20 bg-amber-500/10 shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-semibold mb-2">
               <span>Awaiting First Review</span>
               <Tooltip text="Operational metric: Count of posts in period with exactly 0 reviews. Needs community feedback." />
             </div>
-            <div className="text-3xl font-medium text-amber-900">
+            <div className="text-3xl font-medium text-amber-700 dark:text-amber-300">
               {isLoading ? '...' : liquidity?.postsAwaitingFirstReview ?? 0}
             </div>
-            <div className="text-[11px] text-amber-700 mt-2">Unrated designs</div>
+            <div className="text-[11px] text-amber-600 dark:text-amber-400 mt-2">Unrated designs</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>Awaiting Unlock</span>
               <Tooltip text="Count of posts with 1 or 2 reviews, needing further critique to reach full unlocked score." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : liquidity?.postsAwaitingUnlock ?? 0}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">1–2 reviews received</div>
+            <div className="text-[11px] text-text-muted mt-2">1–2 reviews received</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>Median Time to 1st Review</span>
               <Tooltip text="Median minutes from post upload until first valid review is submitted." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading
                 ? '...'
                 : liquidity?.medianTimeToFirstReviewMinutes !== null && liquidity?.medianTimeToFirstReviewMinutes !== undefined
                 ? `${liquidity.medianTimeToFirstReviewMinutes}m`
                 : '—'}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">Time to initial feedback</div>
+            <div className="text-[11px] text-text-muted mt-2">Time to initial feedback</div>
           </div>
         </div>
       </section>
@@ -380,22 +380,22 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-emerald-600" />
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-600 dark:text-emerald-400" />
               Growth Loop Cohort
             </h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-text-muted">
               Percentage of registered users who have reached each growth behavior (non-chronological).
             </p>
           </div>
-          <span className="text-[11px] font-semibold text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+          <span className="text-[11px] font-semibold text-text-muted bg-surface-secondary px-3 py-1 rounded-full border border-border-default">
             Cohort size: {cohort?.registeredCount ?? 0} users
           </span>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-          <div className="p-3 bg-amber-50/70 border border-amber-200/60 rounded-2xl text-[11px] text-amber-800 flex items-center gap-2 font-medium">
-            <HelpCircle size={14} className="shrink-0 text-amber-600" />
+        <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs space-y-4">
+          <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-[11px] text-amber-700 dark:text-amber-300 flex items-center gap-2 font-medium">
+            <HelpCircle size={14} className="shrink-0 text-amber-600 dark:text-amber-400" />
             <span>Note: These milestones represent platform behaviors attained by the registered cohort, not sequential steps.</span>
           </div>
 
@@ -404,29 +404,29 @@ export function AnalyticsDashboard() {
               <div key={stage.id} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-700 font-bold text-[10px] flex items-center justify-center">
+                    <span className="w-5 h-5 rounded-full bg-surface-secondary text-text-primary font-bold text-[10px] flex items-center justify-center">
                       {idx + 1}
                     </span>
-                    <span className="font-semibold text-gray-900">{stage.name}</span>
-                    <span className="text-[11px] text-gray-400 hidden sm:inline">— {stage.description}</span>
+                    <span className="font-semibold text-text-primary">{stage.name}</span>
+                    <span className="text-[11px] text-text-muted hidden sm:inline">— {stage.description}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 font-medium">{stage.count.toLocaleString()} users</span>
-                    <span className="text-xs font-bold text-gray-900 w-12 text-right">{stage.conversionRate}%</span>
+                    <span className="text-xs text-text-secondary font-medium">{stage.count.toLocaleString()} users</span>
+                    <span className="text-xs font-bold text-text-primary w-12 text-right">{stage.conversionRate}%</span>
                   </div>
                 </div>
 
-                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-3 bg-surface-secondary rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-black rounded-full transition-all duration-500"
+                    className="h-full bg-surface-inverted rounded-full transition-all duration-500"
                     style={{ width: `${Math.min(Math.max(stage.conversionRate, 2), 100)}%` }}
                   />
                 </div>
 
                 {stage.id === 'shared_or_invited' && cohort.stage5Details && (
-                  <div className="flex items-center gap-4 text-[11px] text-gray-400 pl-7 pt-0.5">
-                    <span>Shared posts: <strong className="text-gray-700">{cohort.stage5Details.sharedCount}</strong></span>
-                    <span>Invited users: <strong className="text-gray-700">{cohort.stage5Details.invitedCount}</strong></span>
+                  <div className="flex items-center gap-4 text-[11px] text-text-muted pl-7 pt-0.5">
+                    <span>Shared posts: <strong className="text-text-primary">{cohort.stage5Details.sharedCount}</strong></span>
+                    <span>Invited users: <strong className="text-text-primary">{cohort.stage5Details.invitedCount}</strong></span>
                   </div>
                 )}
               </div>
@@ -439,11 +439,11 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-              <UserPlus size={16} className="text-blue-600" />
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
+              <UserPlus size={16} className="text-blue-600 dark:text-blue-400" />
               Acquisition Channels
             </h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-text-muted">
               Comparing Marketing Attribution, User Referrals, and Direct traffic.
             </p>
           </div>
@@ -451,44 +451,44 @@ export function AnalyticsDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Comparison Overview */}
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs space-y-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
               Channel Breakdown
             </h3>
 
             <div className="space-y-3">
-              <div className="p-4 rounded-2xl bg-blue-50/40 border border-blue-100 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between">
                 <div>
-                  <div className="text-xs font-bold text-blue-900">Marketing Attribution</div>
-                  <div className="text-[11px] text-blue-700 mt-0.5">
+                  <div className="text-xs font-bold text-blue-700 dark:text-blue-300">Marketing Attribution</div>
+                  <div className="text-[11px] text-blue-600 dark:text-blue-400 mt-0.5">
                     {acquisition?.comparison.marketingActivated || 0} activated of {acquisition?.comparison.marketingCount || 0} users
                   </div>
                 </div>
-                <div className="text-lg font-bold text-blue-900">
+                <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
                   {acquisition?.comparison.marketingRate || 0}%
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-emerald-50/40 border border-emerald-100 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between">
                 <div>
-                  <div className="text-xs font-bold text-emerald-900">User Referrals</div>
-                  <div className="text-[11px] text-emerald-700 mt-0.5">
+                  <div className="text-xs font-bold text-emerald-700 dark:text-emerald-300">User Referrals</div>
+                  <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5">
                     {acquisition?.comparison.referralActivated || 0} activated of {acquisition?.comparison.referralCount || 0} users
                   </div>
                 </div>
-                <div className="text-lg font-bold text-emerald-900">
+                <div className="text-lg font-bold text-emerald-700 dark:text-emerald-300">
                   {acquisition?.comparison.referralRate || 0}%
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-gray-50 border border-gray-200/80 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-surface-secondary border border-border-default flex items-center justify-between">
                 <div>
-                  <div className="text-xs font-bold text-gray-900">Direct / Organic</div>
-                  <div className="text-[11px] text-gray-500 mt-0.5">
+                  <div className="text-xs font-bold text-text-primary">Direct / Organic</div>
+                  <div className="text-[11px] text-text-secondary mt-0.5">
                     {acquisition?.comparison.directOrUnknownActivated || 0} activated of {acquisition?.comparison.directOrUnknownCount || 0} users
                   </div>
                 </div>
-                <div className="text-lg font-bold text-gray-900">
+                <div className="text-lg font-bold text-text-primary">
                   {acquisition?.comparison.directOrUnknownRate || 0}%
                 </div>
               </div>
@@ -496,17 +496,17 @@ export function AnalyticsDashboard() {
 
             {/* Top Referrers */}
             <div className="pt-2">
-              <h4 className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+              <h4 className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-2">
                 Top Community Referrers
               </h4>
               {!acquisition?.referralStats.topReferrers || acquisition.referralStats.topReferrers.length === 0 ? (
-                <div className="text-xs text-gray-400 italic py-2">No user referrals recorded yet.</div>
+                <div className="text-xs text-text-muted italic py-2">No user referrals recorded yet.</div>
               ) : (
                 <div className="space-y-2">
                   {acquisition.referralStats.topReferrers.map((ref) => (
                     <div key={ref.referrerId} className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-gray-900">@{ref.username}</span>
-                      <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                      <span className="font-semibold text-text-primary">@{ref.username}</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md">
                         {ref.referralCount} invited
                       </span>
                     </div>
@@ -517,16 +517,16 @@ export function AnalyticsDashboard() {
           </div>
 
           {/* Marketing Source Table */}
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between">
+          <div className="lg:col-span-2 bg-surface-primary rounded-3xl border border-border-default shadow-xs overflow-hidden flex flex-col justify-between">
             <div className="p-6 pb-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                 Marketing Sources Detail
               </h3>
             </div>
 
             <div className="overflow-x-auto flex-1">
               <table className="w-full text-left text-xs">
-                <thead className="bg-gray-50/75 border-y border-gray-100 text-gray-400 font-semibold uppercase tracking-wider">
+                <thead className="bg-surface-secondary/75 border-y border-border-default text-text-muted font-semibold uppercase tracking-wider">
                   <tr>
                     <th className="px-6 py-3">Source Channel</th>
                     <th className="px-6 py-3">Users</th>
@@ -534,22 +534,22 @@ export function AnalyticsDashboard() {
                     <th className="px-6 py-3 text-right">Activation Rate</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 text-gray-700">
+                <tbody className="divide-y divide-border-default text-text-secondary">
                   {!acquisition?.sources || acquisition.sources.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-gray-400">
+                      <td colSpan={4} className="py-8 text-center text-text-muted">
                         No marketing source parameters logged for this period yet.
                       </td>
                     </tr>
                   ) : (
                     acquisition.sources.map((s) => (
-                      <tr key={s.source} className="hover:bg-gray-50/50">
-                        <td className="px-6 py-3 font-semibold text-gray-900 uppercase tracking-wide">
+                      <tr key={s.source} className="hover:bg-surface-secondary/50">
+                        <td className="px-6 py-3 font-semibold text-text-primary uppercase tracking-wide">
                           {s.source}
                         </td>
                         <td className="px-6 py-3">{s.usersCount}</td>
-                        <td className="px-6 py-3 text-emerald-600 font-semibold">{s.activatedCount}</td>
-                        <td className="px-6 py-3 text-right font-bold text-gray-900">
+                        <td className="px-6 py-3 text-emerald-600 dark:text-emerald-400 font-semibold">{s.activatedCount}</td>
+                        <td className="px-6 py-3 text-right font-bold text-text-primary">
                           {s.activationRate}%
                         </td>
                       </tr>
@@ -559,10 +559,10 @@ export function AnalyticsDashboard() {
               </table>
             </div>
 
-            <div className="p-4 bg-gray-50 border-t border-gray-100 text-right">
+            <div className="p-4 bg-surface-secondary border-t border-border-default text-right">
               <Link
                 href="/admin/campaigns"
-                className="text-xs font-semibold text-gray-700 hover:text-black inline-flex items-center gap-1"
+                className="text-xs font-semibold text-text-secondary hover:text-text-primary inline-flex items-center gap-1"
               >
                 <span>Manage Tracking Links</span>
                 <ArrowRight size={13} />
@@ -575,8 +575,8 @@ export function AnalyticsDashboard() {
       {/* ─── SECTION 6: Core Loop Secondary Metrics ───────────────────────────── */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900 tracking-tight">Core Loop Activity</h2>
-          <p className="text-xs text-gray-400">Design critiques, unlock velocities, and referral signups.</p>
+          <h2 className="text-sm font-semibold text-text-primary tracking-tight">Core Loop Activity</h2>
+          <p className="text-xs text-text-muted">Design critiques, unlock velocities, and referral signups.</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -611,73 +611,73 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-              <Percent size={16} className="text-emerald-600" />
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
+              <Percent size={16} className="text-emerald-600 dark:text-emerald-400" />
               Meaningful-Action Retention
             </h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-text-muted">
               Calendar-day (UTC) cohort retention: user uploaded a design or submitted a valid review after signup.
             </p>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 uppercase tracking-wider">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-surface-secondary text-text-secondary uppercase tracking-wider border border-border-default">
             All-Time Cohort ({retention?.totalCohortUsers ?? 0} Users)
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>D1 Retention</span>
               <Tooltip text="User returned and uploaded a post or wrote a review on the calendar day immediately following signup." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${retention?.d1RetentionRate ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">Day 1 return rate</div>
+            <div className="text-[11px] text-text-muted mt-2">Day 1 return rate</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>D7 Retention</span>
               <Tooltip text="User returned and uploaded a post or wrote a review on any day within days 1–7 after signup." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${retention?.d7RetentionRate ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">Week 1 return rate</div>
+            <div className="text-[11px] text-text-muted mt-2">Week 1 return rate</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>D30 Retention</span>
               <Tooltip text="User returned and uploaded a post or wrote a review on any day within days 1–30 after signup." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${retention?.d30RetentionRate ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">Month 1 return rate</div>
+            <div className="text-[11px] text-text-muted mt-2">Month 1 return rate</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>Repeat Uploaders</span>
               <Tooltip text="Percentage of designers who have uploaded 2 or more designs." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${retention?.repeatUploadRate ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">≥2 designs published</div>
+            <div className="text-[11px] text-text-muted mt-2">≥2 designs published</div>
           </div>
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm relative group">
-            <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs relative group">
+            <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
               <span>Repeat Reviewers</span>
               <Tooltip text="Percentage of reviewers who have submitted 2 or more critiques." />
             </div>
-            <div className="text-3xl font-medium text-gray-900">
+            <div className="text-3xl font-medium text-text-primary">
               {isLoading ? '...' : `${retention?.repeatReviewRate ?? 0}%`}
             </div>
-            <div className="text-[11px] text-gray-400 mt-2">≥2 reviews given</div>
+            <div className="text-[11px] text-text-muted mt-2">≥2 reviews given</div>
           </div>
         </div>
       </section>
@@ -686,25 +686,25 @@ export function AnalyticsDashboard() {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-              <Megaphone size={16} className="text-purple-600" />
+            <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
+              <Megaphone size={16} className="text-purple-600 dark:text-purple-400" />
               Campaign Performance
             </h2>
-            <p className="text-xs text-gray-400">Users, activation, and viral referrals generated per marketing campaign.</p>
+            <p className="text-xs text-text-muted">Users, activation, and viral referrals generated per marketing campaign.</p>
           </div>
           <Link
             href="/admin/campaigns"
-            className="text-xs font-semibold text-gray-700 hover:text-black inline-flex items-center gap-1"
+            className="text-xs font-semibold text-text-secondary hover:text-text-primary inline-flex items-center gap-1"
           >
             <span>Campaign Center</span>
             <ArrowRight size={13} />
           </Link>
         </div>
 
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-surface-primary rounded-3xl border border-border-default shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50/75 border-b border-gray-100 text-gray-400 font-semibold uppercase tracking-wider">
+              <thead className="bg-surface-secondary/75 border-b border-border-default text-text-muted font-semibold uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-4">Campaign Name</th>
                   <th className="px-6 py-4">Tag / Slug</th>
@@ -715,29 +715,29 @@ export function AnalyticsDashboard() {
                   <th className="px-6 py-4 text-right">Referrals Generated</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 text-gray-700">
+              <tbody className="divide-y divide-border-default text-text-secondary">
                 {campaigns.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-400">
+                    <td colSpan={7} className="py-8 text-center text-text-muted">
                       No campaign records found. Create campaigns in Campaign Center!
                     </td>
                   </tr>
                 ) : (
                   campaigns.map((c) => (
-                    <tr key={c.campaignSlug} className="hover:bg-gray-50/50">
-                      <td className="px-6 py-4 font-semibold text-gray-900">{c.campaignName}</td>
-                      <td className="px-6 py-4 font-mono text-gray-500">{c.campaignSlug}</td>
+                    <tr key={c.campaignSlug} className="hover:bg-surface-secondary/50">
+                      <td className="px-6 py-4 font-semibold text-text-primary">{c.campaignName}</td>
+                      <td className="px-6 py-4 font-mono text-text-muted">{c.campaignSlug}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
-                          c.status === 'active' ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-600'
+                          c.status === 'active' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-surface-secondary text-text-secondary'
                         }`}>
                           {c.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-semibold text-gray-900">{c.usersCount}</td>
-                      <td className="px-6 py-4 text-emerald-600 font-semibold">{c.activatedCount}</td>
-                      <td className="px-6 py-4 font-bold text-gray-900">{c.activationRate}%</td>
-                      <td className="px-6 py-4 text-right font-bold text-blue-600">
+                      <td className="px-6 py-4 font-semibold text-text-primary">{c.usersCount}</td>
+                      <td className="px-6 py-4 text-emerald-600 dark:text-emerald-400 font-semibold">{c.activatedCount}</td>
+                      <td className="px-6 py-4 font-bold text-text-primary">{c.activationRate}%</td>
+                      <td className="px-6 py-4 text-right font-bold text-blue-600 dark:text-blue-400">
                         {c.referralsGenerated}
                       </td>
                     </tr>
@@ -752,11 +752,11 @@ export function AnalyticsDashboard() {
       {/* ─── SECTION 9: Sharing Analytics ─────────────────────────────────────── */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-            <Share2 size={16} className="text-blue-500" />
+          <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
+            <Share2 size={16} className="text-blue-500 dark:text-blue-400" />
             Social & Sharing Telemetry
           </h2>
-          <p className="text-xs text-gray-400">Post share actions and methods across the community.</p>
+          <p className="text-xs text-text-muted">Post share actions and methods across the community.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -773,18 +773,18 @@ export function AnalyticsDashboard() {
             isLoading={isLoading}
           />
 
-          <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-2">
-            <div className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+          <div className="bg-surface-primary p-5 rounded-3xl border border-border-default shadow-xs space-y-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">
               Shares by Method
             </div>
             {!sharing?.sharesByMethod || sharing.sharesByMethod.length === 0 ? (
-              <div className="text-xs text-gray-400 italic py-2">No share actions recorded in period.</div>
+              <div className="text-xs text-text-muted italic py-2">No share actions recorded in period.</div>
             ) : (
               <div className="space-y-2">
                 {sharing.sharesByMethod.map((m) => (
                   <div key={m.method} className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-gray-900 uppercase">{m.method}</span>
-                    <span className="font-mono text-gray-500">{m.count} actions</span>
+                    <span className="font-semibold text-text-primary uppercase">{m.method}</span>
+                    <span className="font-mono text-text-muted">{m.count} actions</span>
                   </div>
                 ))}
               </div>
@@ -796,33 +796,33 @@ export function AnalyticsDashboard() {
       {/* ─── SECTION 10: Search Intelligence & Discovery Telemetry ────────────── */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900 tracking-tight flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-text-primary tracking-tight flex items-center gap-2">
             <Search size={16} className="text-primary" />
             Search Intelligence & Discovery Telemetry
           </h2>
-          <p className="text-xs text-gray-400">Search patterns, popular platform queries, and zero-result product demand signals.</p>
+          <p className="text-xs text-text-muted">Search patterns, popular platform queries, and zero-result product demand signals.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* 1. Top Popular Searches */}
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+          <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Popular Queries</span>
-              <span className="text-[11px] font-mono text-gray-400">Total: {searchSummary?.totalSearches ?? 0} searches</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">Popular Queries</span>
+              <span className="text-[11px] font-mono text-text-muted">Total: {searchSummary?.totalSearches ?? 0} searches</span>
             </div>
-            <p className="text-[11px] text-gray-400">Most frequent search terms across the platform.</p>
+            <p className="text-[11px] text-text-muted">Most frequent search terms across the platform.</p>
 
             {!searchSummary?.popularSearches || searchSummary.popularSearches.length === 0 ? (
-              <div className="text-xs text-gray-400 italic py-4 text-center">No search events recorded yet.</div>
+              <div className="text-xs text-text-muted italic py-4 text-center">No search events recorded yet.</div>
             ) : (
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {searchSummary.popularSearches.map((item, idx) => (
-                  <div key={`pop-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 text-xs">
+                  <div key={`pop-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-surface-secondary text-xs">
                     <div className="flex items-center gap-2 truncate pr-2">
-                      <span className="w-4 font-mono text-gray-400 font-bold">{idx + 1}.</span>
-                      <span className="font-semibold text-gray-900 truncate">{item.query}</span>
+                      <span className="w-4 font-mono text-text-muted font-bold">{idx + 1}.</span>
+                      <span className="font-semibold text-text-primary truncate">{item.query}</span>
                     </div>
-                    <span className="font-mono text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-200 shrink-0">{item.count} searches</span>
+                    <span className="font-mono text-text-secondary bg-surface-primary px-2 py-0.5 rounded-full border border-border-default shrink-0">{item.count} searches</span>
                   </div>
                 ))}
               </div>
@@ -830,27 +830,27 @@ export function AnalyticsDashboard() {
           </div>
 
           {/* 2. Trending / Rising Searches */}
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+          <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                 <TrendingUp size={14} className="text-emerald-500" />
                 Trending (48h)
               </span>
-              <span className="text-[11px] font-mono text-emerald-600/80">Velocity</span>
+              <span className="text-[11px] font-mono text-emerald-600/80 dark:text-emerald-400/80">Velocity</span>
             </div>
-            <p className="text-[11px] text-gray-400">Queries with high search volume over the last 48 hours.</p>
+            <p className="text-[11px] text-text-muted">Queries with high search volume over the last 48 hours.</p>
 
             {!searchSummary?.trendingSearches || searchSummary.trendingSearches.length === 0 ? (
-              <div className="text-xs text-gray-400 italic py-4 text-center">No trending searches in window.</div>
+              <div className="text-xs text-text-muted italic py-4 text-center">No trending searches in window.</div>
             ) : (
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {searchSummary.trendingSearches.map((item, idx) => (
-                  <div key={`trend-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/50 border border-emerald-100 text-xs">
+                  <div key={`trend-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
                     <div className="flex items-center gap-2 truncate pr-2">
                       <span className="w-4 font-mono text-emerald-500 font-bold">{idx + 1}.</span>
-                      <span className="font-semibold text-gray-900 truncate">{item.query}</span>
+                      <span className="font-semibold text-text-primary truncate">{item.query}</span>
                     </div>
-                    <span className="font-mono text-emerald-700 bg-white px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">{item.count} recent</span>
+                    <span className="font-mono text-emerald-600 dark:text-emerald-400 bg-surface-primary px-2 py-0.5 rounded-full border border-emerald-500/20 shrink-0">{item.count} recent</span>
                   </div>
                 ))}
               </div>
@@ -858,27 +858,27 @@ export function AnalyticsDashboard() {
           </div>
 
           {/* 3. Zero-Result Search Opportunities */}
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-3">
+          <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 flex items-center gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                 Zero-Result Demands
               </span>
-              <span className="text-[11px] font-mono text-amber-600/80">{searchSummary?.zeroResultCount ?? 0} unfulfilled</span>
+              <span className="text-[11px] font-mono text-amber-600/80 dark:text-amber-400/80">{searchSummary?.zeroResultCount ?? 0} unfulfilled</span>
             </div>
-            <p className="text-[11px] text-gray-400">Queries returning 0 creators or works — content opportunities.</p>
+            <p className="text-[11px] text-text-muted">Queries returning 0 creators or works — content opportunities.</p>
 
             {!searchSummary?.noResultSearches || searchSummary.noResultSearches.length === 0 ? (
-              <div className="text-xs text-gray-400 italic py-4 text-center">No unfulfilled queries recorded yet.</div>
+              <div className="text-xs text-text-muted italic py-4 text-center">No unfulfilled queries recorded yet.</div>
             ) : (
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {searchSummary.noResultSearches.map((item, idx) => (
-                  <div key={`zero-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-amber-50/60 border border-amber-100 text-xs">
+                  <div key={`zero-${item.query}-${idx}`} className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs">
                     <div className="flex items-center gap-2 truncate pr-2">
                       <span className="w-4 font-mono text-amber-500 font-bold">{idx + 1}.</span>
-                      <span className="font-semibold text-gray-900 truncate">{item.query}</span>
+                      <span className="font-semibold text-text-primary truncate">{item.query}</span>
                     </div>
-                    <span className="font-mono text-amber-700 bg-white px-2 py-0.5 rounded-full border border-amber-200 shrink-0">{item.count} misses</span>
+                    <span className="font-mono text-amber-600 dark:text-amber-400 bg-surface-primary px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">{item.count} misses</span>
                   </div>
                 ))}
               </div>
@@ -895,8 +895,8 @@ export function AnalyticsDashboard() {
 function Tooltip({ text }: { text: string }) {
   return (
     <div className="relative group/tip inline-flex items-center">
-      <HelpCircle size={13} className="text-gray-400 hover:text-gray-600 cursor-help transition-colors" />
-      <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/tip:block w-56 p-2 bg-gray-900 text-white text-[10px] rounded-xl shadow-xl z-50 pointer-events-none leading-relaxed">
+      <HelpCircle size={13} className="text-text-muted hover:text-text-secondary cursor-help transition-colors" />
+      <div className="absolute right-0 bottom-full mb-1.5 hidden group-hover/tip:block w-56 p-2 bg-surface-inverted text-text-inverted text-[10px] rounded-xl shadow-xl z-50 pointer-events-none leading-relaxed border border-border-default">
         {text}
       </div>
     </div>
@@ -919,17 +919,17 @@ function MetricCard({
   isLoading: boolean;
 }) {
   return (
-    <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-gray-200 transition-all">
+    <div className="bg-surface-primary p-6 rounded-3xl border border-border-default shadow-xs relative overflow-hidden group hover:border-border-muted transition-all">
       <div className="flex items-center justify-between mb-4">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">{title}</span>
+        <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{title}</span>
         <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${iconBg}`}>
           {icon}
         </div>
       </div>
-      <div className="text-3xl font-medium text-gray-900">
+      <div className="text-3xl font-medium text-text-primary">
         {isLoading ? '...' : (value ?? 0).toLocaleString()}
       </div>
-      <div className="mt-3 text-xs text-gray-400 font-medium">{subtext}</div>
+      <div className="mt-3 text-xs text-text-muted font-medium">{subtext}</div>
     </div>
   );
 }
@@ -957,31 +957,31 @@ function TrendCard({
   const isNegative = changePct !== null && changePct < 0;
 
   return (
-    <div className={`p-5 rounded-3xl border shadow-sm transition-all group ${
-      highlight ? 'bg-white border-primary/40 ring-1 ring-primary/20' : 'bg-white border-gray-100 hover:border-gray-200'
+    <div className={`p-5 rounded-3xl border shadow-xs transition-all group ${
+      highlight ? 'bg-surface-primary border-primary/40 ring-1 ring-primary/20' : 'bg-surface-primary border-border-default hover:border-border-muted'
     }`}>
-      <div className="flex items-center justify-between text-xs text-gray-500 font-semibold mb-2">
+      <div className="flex items-center justify-between text-xs text-text-secondary font-semibold mb-2">
         <span className="truncate pr-1">{title}</span>
         {tooltip && <Tooltip text={tooltip} />}
       </div>
 
-      <div className="text-3xl font-medium text-gray-900">
+      <div className="text-3xl font-medium text-text-primary">
         {isLoading ? '...' : isPercentage ? `${current}%` : current.toLocaleString()}
       </div>
 
       <div className="mt-3 flex items-center justify-between text-xs">
         {changePct !== null ? (
           <span className={`font-semibold flex items-center gap-0.5 ${
-            isPositive ? 'text-emerald-600' : isNegative ? 'text-red-500' : 'text-gray-400'
+            isPositive ? 'text-emerald-600 dark:text-emerald-400' : isNegative ? 'text-red-500 dark:text-red-400' : 'text-text-muted'
           }`}>
             {isPositive ? <TrendingUp size={12} /> : isNegative ? <TrendingDown size={12} /> : null}
             {isPositive ? `+${changePct}%` : `${changePct}%`}
           </span>
         ) : (
-          <span className="text-gray-400 font-medium">—</span>
+          <span className="text-text-muted font-medium">—</span>
         )}
 
-        <span className="text-gray-400 text-[10px]">prev: {isPercentage ? `${previous}%` : previous}</span>
+        <span className="text-text-muted text-[10px]">prev: {isPercentage ? `${previous}%` : previous}</span>
       </div>
     </div>
   );

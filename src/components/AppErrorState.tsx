@@ -20,18 +20,18 @@ export function AppErrorState({
         {icon || <AlertCircle className="w-12 h-12 opacity-50" />}
       </div>
       
-      <h3 className="text-lg font-medium text-black dark:text-white mb-2">
+      <h3 className="text-lg font-medium text-text-primary mb-2">
         {title}
       </h3>
       
-      <p className="text-sm text-gray-500 max-w-70 mb-6">
+      <p className="text-sm text-text-secondary max-w-70 mb-6">
         {description}
       </p>
       
       {onRetry && (
         <button
           onClick={onRetry}
-          className="flex items-center gap-2 px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black rounded-full font-medium hover:scale-105 transition-transform active:scale-95"
+          className="flex items-center gap-2 px-6 py-2.5 bg-surface-interactive text-text-primary hover:bg-surface-hover rounded-full font-medium hover:scale-105 transition-transform active:scale-95"
         >
           <RefreshCcw className="w-4 h-4" />
           Retry

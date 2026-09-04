@@ -40,7 +40,7 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
 
         if (reportsRes.count !== null) setPendingReportsCount(reportsRes.count);
         if (feedbackRes.count !== null) setActiveFeedbackCount(feedbackRes.count);
-      } catch (err) {
+      } catch {
         // Fallback silently if offline or initial load
       }
     }
@@ -100,9 +100,9 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
   }
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-white border-r border-gray-100 w-64 shrink-0">
+    <div className="flex flex-col h-full bg-surface-primary border-r border-border-default w-64 shrink-0">
       {/* Brand Header */}
-      <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+      <div className="p-6 border-b border-border-default flex items-center justify-between">
         <Link href="/admin/dashboard" className="flex items-center gap-2.5 group">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 relative">
             <img
@@ -117,7 +117,7 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
             />
           </div>
           <div>
-            <div className="text-base font-semibold text-gray-900 tracking-tight leading-none">
+            <div className="text-base font-semibold text-text-primary tracking-tight leading-none">
               Rater
             </div>
             <div className="text-[10px] font-semibold text-primary tracking-wider mt-0.5">
@@ -129,7 +129,7 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
         {onCloseMobile && (
           <button
             onClick={onCloseMobile}
-            className="p-1.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-50 lg:hidden"
+            className="p-1.5 text-text-muted hover:text-text-primary rounded-xl hover:bg-surface-hover lg:hidden"
             aria-label="Close menu"
           >
             <X size={18} />
@@ -139,7 +139,7 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1 custom-scrollbar">
-        <div className="text-xs font-semibold text-gray-400 tracking-wider mb-3 px-3">
+        <div className="text-xs font-semibold text-text-muted tracking-wider mb-3 px-3">
           Management
         </div>
 
@@ -153,15 +153,15 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
               onClick={onCloseMobile}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl font-medium text-sm transition-all duration-150 group ${
                 isActive
-                  ? 'bg-black text-white font-semibold shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'bg-surface-interactive text-text-primary font-semibold shadow-sm'
+                  : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
               }`}
             >
               <div className="flex items-center gap-3">
                 <item.icon
                   size={18}
                   className={`transition-colors ${
-                    isActive ? 'text-primary' : 'text-gray-400 group-hover:text-gray-900'
+                    isActive ? 'text-primary' : 'text-text-muted group-hover:text-text-primary'
                   }`}
                 />
                 <span>{item.label}</span>
@@ -173,8 +173,8 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
                     isActive
                       ? 'bg-primary text-black'
                       : item.badgeVariant === 'danger'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-gray-100 text-gray-700'
+                      ? 'bg-status-error-bg text-status-error-fg'
+                      : 'bg-surface-hover text-text-secondary'
                   }`}
                 >
                   {item.badge}
@@ -186,10 +186,10 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
       </nav>
 
       {/* Footer Quick Links */}
-      <div className="p-4 border-t border-gray-100 space-y-2">
+      <div className="p-4 border-t border-border-default space-y-2">
         <Link
           href="/"
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary font-bold text-xs transition-colors"
         >
           <ArrowLeft size={14} />
           Back to Live App
@@ -197,7 +197,7 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
         <Link
           href="/browse"
           target="_blank"
-          className="flex items-center justify-center gap-1.5 w-full py-2 text-gray-400 hover:text-gray-700 font-semibold text-[11px] transition-colors"
+          className="flex items-center justify-center gap-1.5 w-full py-2 text-text-muted hover:text-text-secondary font-semibold text-[11px] transition-colors"
         >
           Open App in New Tab
           <ExternalLink size={12} />
@@ -218,11 +218,11 @@ export function AdminSidebar({ isMobileOpen = false, onCloseMobile }: AdminSideb
         <div className="fixed inset-0 z-60 lg:hidden">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 bg-overlay-backdrop backdrop-blur-sm animate-in fade-in duration-200"
             onClick={onCloseMobile}
           />
           {/* Drawer Content */}
-          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+          <div className="fixed inset-y-0 left-0 w-64 bg-surface-primary shadow-elevated z-10 animate-in slide-in-from-left duration-200">
             {sidebarContent}
           </div>
         </div>

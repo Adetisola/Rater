@@ -101,17 +101,17 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="w-full max-w-md bg-white rounded-[32px] p-8 sm:p-10 shadow-2xl relative z-10 text-center border border-gray-100 overflow-hidden"
+        className="w-full max-w-md bg-surface-primary rounded-[32px] p-8 sm:p-10 shadow-2xl relative z-10 text-center border border-border-default overflow-hidden"
       >
-        <h2 className="text-xl font-medium text-black mb-1">Invite Designers</h2>
-        <p className="text-sm text-gray-500 mb-5">Invite fellow creatives to join Rater.</p>
+        <h2 className="text-xl font-medium text-text-primary mb-1">Invite Designers</h2>
+        <p className="text-sm text-text-secondary mb-5">Invite fellow creatives to join Rater.</p>
 
         {/* URL Input */}
-        <div className="flex items-center gap-2 border-2 border-[#111111] rounded-xl px-4 py-3 mb-6">
+        <div className="flex items-center gap-2 border-2 border-border-default rounded-xl px-4 py-3 mb-6 bg-surface-secondary">
           <input 
             readOnly
             value={inviteUrl}
-            className="flex-1 bg-transparent text-sm text-gray-500 outline-none w-full select-all font-medium"
+            className="flex-1 bg-transparent text-sm text-text-secondary outline-none w-full select-all font-medium"
           />
         </div>
 
@@ -119,7 +119,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         <div className="flex items-center justify-center gap-4 mb-7">
           <Button 
             variant="ghost"
-            className="h-10 px-6 rounded-full text-base font-medium transition-all text-gray-700 hover:text-black"
+            className="h-10 px-6 rounded-full text-base font-medium transition-all text-text-secondary hover:text-text-primary"
             onClick={onClose}
           >
             Close
@@ -128,7 +128,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
             onClick={handleCopy}
             variant="outline"
             className={cn(
-              "px-8 h-12 rounded-full text-lg font-medium transition-all flex items-center gap-2 border-primary text-black hover:bg-primary/10",
+              "px-8 h-12 rounded-full text-lg font-medium transition-all flex items-center gap-2 border-primary text-text-primary hover:bg-primary/10",
               copied && "bg-[#10b981] border-[#10b981] text-white hover:bg-[#0e9f6e] hover:border-[#0e9f6e] hover:text-white"
             )}
           >
@@ -178,11 +178,11 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         </div>
 
         {/* In-Person QR Code Toggle */}
-        <div className="pt-2 border-t border-gray-100 flex flex-col items-center">
+        <div className="pt-2 border-t border-border-default flex flex-col items-center">
           <button
             type="button"
             onClick={() => setShowQr(!showQr)}
-            className="text-xs font-semibold text-gray-500 hover:text-black inline-flex items-center gap-1.5 py-1.5 transition-colors"
+            className="text-xs font-semibold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 py-1.5 transition-colors"
           >
             <QrCode size={14} />
             <span>{showQr ? 'Hide In-Person QR Code' : 'Show In-Person Invite QR Code'}</span>
@@ -194,16 +194,18 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-3 p-4 bg-white rounded-2xl border border-gray-200/80 shadow-2xs flex flex-col items-center overflow-hidden"
+                className="mt-3 p-4 bg-surface-secondary rounded-2xl border border-border-default shadow-2xs flex flex-col items-center overflow-hidden"
                 ref={qrRef}
               >
-                <QRCodeCanvas
-                  value={inviteUrl}
-                  size={160}
-                  level="H"
-                  includeMargin
-                />
-                <span className="text-[10px] text-gray-400 mt-2">
+                <div className="p-2 bg-white rounded-xl">
+                  <QRCodeCanvas
+                    value={inviteUrl}
+                    size={160}
+                    level="H"
+                    includeMargin
+                  />
+                </div>
+                <span className="text-[10px] text-text-muted mt-2">
                   Scan with phone camera to join
                 </span>
               </motion.div>
@@ -212,7 +214,7 @@ export function InviteModal({ isOpen, onClose }: InviteModalProps) {
         </div>
 
         {/* Footer Note */}
-        <p className="text-[10px] text-gray-400 italic mt-3">
+        <p className="text-[10px] text-text-muted italic mt-3">
           When a designer joins with this link, you will be credited as their referrer.
         </p>
 

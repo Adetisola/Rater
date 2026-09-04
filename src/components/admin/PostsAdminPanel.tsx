@@ -207,10 +207,10 @@ export function PostsAdminPanel() {
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+          <h1 className="text-xl font-semibold text-text-primary tracking-tight">
             Post Moderation
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             Audit published designs, inspect media & AI prompts, manage categories, and soft/hard delete posts.
           </p>
         </div>
@@ -218,13 +218,13 @@ export function PostsAdminPanel() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
             <input
               type="text"
               placeholder="Search title, description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2 text-xs font-semibold focus:outline-none focus:border-black transition-colors"
+              className="w-full bg-surface-primary border border-border-default rounded-xl pl-10 pr-4 py-2 text-xs font-semibold text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
           </div>
 
@@ -234,7 +234,7 @@ export function PostsAdminPanel() {
               setCategoryFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-black"
+            className="bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary"
           >
             {CATEGORIES.map(c => (
               <option key={c} value={c}>{c === 'All' ? 'All Categories' : c}</option>
@@ -247,7 +247,7 @@ export function PostsAdminPanel() {
               setStatusFilter(e.target.value as any);
               setPage(1);
             }}
-            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-black"
+            className="bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active Only</option>
@@ -258,7 +258,7 @@ export function PostsAdminPanel() {
             variant="outline"
             onClick={loadPosts}
             disabled={isLoading}
-            className="h-9 px-3 rounded-xl text-xs font-bold bg-white"
+            className="h-9 px-3 rounded-xl text-xs font-bold bg-surface-primary border-border-default text-text-primary hover:bg-surface-hover"
           >
             <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
           </Button>
@@ -266,11 +266,11 @@ export function PostsAdminPanel() {
       </div>
 
       {/* Posts Table */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-surface-primary border border-border-default rounded-3xl shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/75 border-b border-gray-100 text-[11px] font-semibold text-gray-400 tracking-wider">
+              <tr className="bg-surface-subtle/75 border-b border-border-default text-[11px] font-semibold text-text-muted tracking-wider">
                 <th className="px-6 py-4">Post & Media</th>
                 <th className="px-6 py-4">Author</th>
                 <th className="px-6 py-4">Category</th>
@@ -279,17 +279,17 @@ export function PostsAdminPanel() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-border-subtle text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-gray-400 text-sm">
-                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-gray-300" />
+                  <td colSpan={6} className="px-6 py-16 text-center text-text-muted text-sm">
+                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-text-muted" />
                     Loading posts...
                   </td>
                 </tr>
               ) : posts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-gray-500 text-sm">
+                  <td colSpan={6} className="px-6 py-16 text-center text-text-secondary text-sm">
                     No posts match the current filter criteria.
                   </td>
                 </tr>
@@ -297,7 +297,7 @@ export function PostsAdminPanel() {
                 posts.map((post) => (
                   <tr 
                     key={post.id}
-                    className="hover:bg-gray-50/60 transition-colors cursor-pointer"
+                    className="hover:bg-surface-hover/60 transition-colors cursor-pointer"
                     onClick={() => {
                       setPreviewPost(post);
                       setIsEditing(false);
@@ -316,16 +316,16 @@ export function PostsAdminPanel() {
                           alt={post.title}
                         />
                         <div className="min-w-0">
-                          <div className="font-medium text-gray-900 truncate max-w-xs flex items-center gap-1.5">
+                          <div className="font-medium text-text-primary truncate max-w-xs flex items-center gap-1.5">
                             {post.title}
                             {post.uses_ai && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-50 text-purple-700">
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-purple-500/10 text-purple-600 dark:text-purple-400">
                                 <Sparkles size={9} />
                                 AI
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-400 truncate max-w-xs mt-0.5">
+                          <div className="text-xs text-text-muted truncate max-w-xs mt-0.5">
                             {post.created_at ? format(new Date(post.created_at), 'MMM d, yyyy') : '—'}
                           </div>
                         </div>
@@ -337,39 +337,39 @@ export function PostsAdminPanel() {
                       {post.author ? (
                         <div className="flex items-center gap-2">
                           <UserAvatar avatarUrl={post.author.avatar_url} size="xs" className="w-6 h-6" />
-                          <div className="text-xs font-semibold text-gray-700">
+                          <div className="text-xs font-semibold text-text-secondary">
                             @{post.author.username}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400">—</span>
+                        <span className="text-xs text-text-muted">—</span>
                       )}
                     </td>
 
                     {/* Category */}
                     <td className="px-6 py-4">
-                      <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-semibold text-text-secondary bg-surface-interactive px-2.5 py-1 rounded-lg">
                         {post.category}
                       </span>
                     </td>
 
                     {/* Score / Reviews */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-text-primary">
                         <Star size={13} className="text-primary fill-primary" />
                         <span>{post.average_score ? Number(post.average_score).toFixed(1) : '—'}</span>
-                        <span className="text-gray-400 font-normal">({post.review_count || 0})</span>
+                        <span className="text-text-muted font-normal">({post.review_count || 0})</span>
                       </div>
                     </td>
 
                     {/* Status */}
                     <td className="px-6 py-4">
                       {post.is_deleted ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-red-100 text-red-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-status-error-bg text-status-error-fg border border-status-error-border">
                           Hidden
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 text-emerald-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
                           Published
                         </span>
                       )}
@@ -386,7 +386,7 @@ export function PostsAdminPanel() {
                             setEditTitle(post.title);
                             setEditCategory(post.category);
                           }}
-                          className="h-8 px-3 text-xs font-bold rounded-xl"
+                          className="h-8 px-3 text-xs font-bold rounded-xl border-border-default text-text-primary hover:bg-surface-hover"
                         >
                           Inspect
                         </Button>
@@ -395,8 +395,8 @@ export function PostsAdminPanel() {
                           onClick={() => handleToggleSoftDelete(post)}
                           className={`h-8 px-3 text-xs font-bold rounded-xl ${
                             post.is_deleted
-                              ? 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                              : 'text-amber-700 hover:bg-amber-50 border-amber-200'
+                              ? 'text-status-success-fg hover:bg-status-success-bg border-status-success-fg/30'
+                              : 'text-amber-600 hover:bg-amber-500/10 border-amber-500/30'
                           }`}
                         >
                           {post.is_deleted ? 'Restore' : 'Hide'}
@@ -404,7 +404,7 @@ export function PostsAdminPanel() {
                         <Button
                           variant="outline"
                           onClick={() => handleHardDelete(post)}
-                          className="h-8 px-2.5 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                          className="h-8 px-2.5 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                           title="Permanently Delete Post"
                         >
                           <Trash2 size={13} />
@@ -419,10 +419,10 @@ export function PostsAdminPanel() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
+        <div className="p-4 border-t border-border-default flex items-center justify-between text-xs text-text-secondary font-medium">
           <div>
-            Showing <span className="font-bold text-gray-900">{posts.length}</span> of{' '}
-            <span className="font-bold text-gray-900">{totalCount}</span> posts
+            Showing <span className="font-bold text-text-primary">{posts.length}</span> of{' '}
+            <span className="font-bold text-text-primary">{totalCount}</span> posts
           </div>
 
           <div className="flex items-center gap-2">
@@ -430,18 +430,18 @@ export function PostsAdminPanel() {
               variant="outline"
               disabled={page <= 1 || isLoading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="h-8 px-2.5 rounded-lg text-xs"
+              className="h-8 px-2.5 rounded-lg text-xs border-border-default text-text-primary hover:bg-surface-hover"
             >
               <ChevronLeft size={14} />
             </Button>
-            <span className="font-bold text-gray-700">
+            <span className="font-bold text-text-secondary">
               {page} / {totalPages || 1}
             </span>
             <Button
               variant="outline"
               disabled={page >= totalPages || isLoading}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 px-2.5 rounded-lg text-xs"
+              className="h-8 px-2.5 rounded-lg text-xs border-border-default text-text-primary hover:bg-surface-hover"
             >
               <ChevronRight size={14} />
             </Button>
@@ -453,20 +453,20 @@ export function PostsAdminPanel() {
       {previewPost && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 bg-overlay-backdrop backdrop-blur-sm animate-in fade-in duration-200"
             onClick={() => setPreviewPost(null)}
           />
 
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-200 border border-gray-100">
+          <div className="relative w-full max-w-2xl bg-surface-primary rounded-3xl p-6 sm:p-8 shadow-elevated z-10 max-h-[90vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 duration-200 border border-border-default">
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
+            <div className="flex items-center justify-between pb-4 border-b border-border-default mb-6">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Post Inspection</h2>
-                <span className="text-xs text-gray-400 font-mono">ID: {previewPost.id}</span>
+                <h2 className="text-lg font-bold text-text-primary">Post Inspection</h2>
+                <span className="text-xs text-text-muted font-mono">ID: {previewPost.id}</span>
               </div>
               <button
                 onClick={() => setPreviewPost(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100"
+                className="p-1.5 text-text-muted hover:text-text-primary rounded-xl hover:bg-surface-hover"
               >
                 <X size={18} />
               </button>
@@ -475,11 +475,11 @@ export function PostsAdminPanel() {
             {/* Media Gallery Preview */}
             <div className="mb-6">
               {Array.isArray(previewPost.media) && previewPost.media.length > 0 ? (
-                <div className="rounded-2xl overflow-hidden bg-gray-900 border border-gray-200">
+                <div className="rounded-2xl overflow-hidden bg-art-canvas border border-art-canvas-border">
                   <MediaCarousel media={previewPost.media} variant="detail" className="max-h-80" />
                 </div>
               ) : previewPost.image_url ? (
-                <div className="rounded-2xl overflow-hidden bg-gray-900 border border-gray-200 flex items-center justify-center max-h-80">
+                <div className="rounded-2xl overflow-hidden bg-art-canvas border border-art-canvas-border flex items-center justify-center max-h-80">
                   <OptimizedMedia
                     media={{ url: previewPost.image_url, type: 'image' }}
                     variant="detail"
@@ -489,7 +489,7 @@ export function PostsAdminPanel() {
                   />
                 </div>
               ) : (
-                <div className="rounded-2xl bg-gray-100 p-8 flex items-center justify-center text-gray-400">
+                <div className="rounded-2xl bg-surface-subtle p-8 flex items-center justify-center text-text-muted">
                   <ImageIcon size={32} />
                 </div>
               )}
@@ -498,22 +498,22 @@ export function PostsAdminPanel() {
             {/* Post Metadata Editing */}
             <div className="space-y-4 mb-6">
               {isEditing ? (
-                <div className="p-4 bg-gray-50 rounded-2xl space-y-3 border border-gray-200">
+                <div className="p-4 bg-surface-subtle rounded-2xl space-y-3 border border-border-default">
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Post Title</label>
+                    <label className="text-xs font-bold text-text-secondary block mb-1">Post Title</label>
                     <input
                       type="text"
                       value={editTitle}
                       onChange={(e) => setEditTitle(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-black"
+                      className="w-full bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-gray-700 block mb-1">Category</label>
+                    <label className="text-xs font-bold text-text-secondary block mb-1">Category</label>
                     <select
                       value={editCategory}
                       onChange={(e) => setEditCategory(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-black"
+                      className="w-full bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary"
                     >
                       {CATEGORIES.filter(c => c !== 'All').map(c => (
                         <option key={c} value={c}>{c}</option>
@@ -539,31 +539,31 @@ export function PostsAdminPanel() {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 bg-gray-50 rounded-2xl space-y-3 text-xs">
+                <div className="p-4 bg-surface-subtle rounded-2xl space-y-3 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Title</span>
-                    <span className="font-bold text-gray-900">{previewPost.title}</span>
+                    <span className="text-text-secondary">Title</span>
+                    <span className="font-bold text-text-primary">{previewPost.title}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Category</span>
-                    <span className="font-semibold text-gray-900">{previewPost.category}</span>
+                    <span className="text-text-secondary">Category</span>
+                    <span className="font-semibold text-text-primary">{previewPost.category}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Author</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="text-text-secondary">Author</span>
+                    <span className="font-semibold text-text-primary">
                       @{previewPost.author?.username || previewPost.avatar_id}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Uploaded</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="text-text-secondary">Uploaded</span>
+                    <span className="font-semibold text-text-primary">
                       {previewPost.created_at ? format(new Date(previewPost.created_at), 'MMMM d, yyyy h:mm a') : '—'}
                     </span>
                   </div>
                   {previewPost.description && (
-                    <div className="pt-2 border-t border-gray-200">
-                      <span className="text-gray-500 block mb-1">Description</span>
-                      <p className="text-gray-700 italic">"{previewPost.description}"</p>
+                    <div className="pt-2 border-t border-border-default">
+                      <span className="text-text-secondary block mb-1">Description</span>
+                      <p className="text-text-secondary italic">"{previewPost.description}"</p>
                     </div>
                   )}
                 </div>
@@ -572,16 +572,16 @@ export function PostsAdminPanel() {
 
             {/* AI Attribution Inspection */}
             {previewPost.uses_ai && (
-              <div className="p-4 bg-purple-50/60 rounded-2xl border border-purple-100 mb-6 space-y-2">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900">
+              <div className="p-4 bg-purple-500/10 rounded-2xl border border-purple-500/30 mb-6 space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400">
                   <Sparkles size={14} className="text-purple-600" />
                   AI Generation Attribution
                 </div>
-                <div className="text-xs text-purple-800">
+                <div className="text-xs text-purple-600 dark:text-purple-300">
                   <span className="font-semibold">Tool:</span> {previewPost.ai_tool || 'Not specified'}
                 </div>
                 {previewPost.ai_prompt && (
-                  <div className="text-xs text-purple-700 bg-white/80 p-2.5 rounded-xl border border-purple-200/60 italic">
+                  <div className="text-xs text-purple-600 dark:text-purple-300 bg-surface-primary p-2.5 rounded-xl border border-purple-500/30 italic">
                     "{previewPost.ai_prompt}"
                   </div>
                 )}
@@ -589,12 +589,12 @@ export function PostsAdminPanel() {
             )}
 
             {/* Action Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-gray-100">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-border-default">
               <div className="flex items-center gap-2">
                 <Link
                   href={`/post/${previewPost.id}`}
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border-default text-xs font-bold text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
                 >
                   <ExternalLink size={13} />
                   View Live
@@ -603,7 +603,7 @@ export function PostsAdminPanel() {
                   <Button
                     variant="outline"
                     onClick={() => setIsEditing(true)}
-                    className="h-9 px-3.5 text-xs font-bold rounded-xl inline-flex items-center gap-1.5"
+                    className="h-9 px-3.5 text-xs font-bold rounded-xl inline-flex items-center gap-1.5 border-border-default text-text-primary hover:bg-surface-hover"
                   >
                     <Edit2 size={13} />
                     Edit Info
@@ -617,8 +617,8 @@ export function PostsAdminPanel() {
                   onClick={() => handleToggleSoftDelete(previewPost)}
                   className={`h-9 px-4 text-xs font-bold rounded-xl ${
                     previewPost.is_deleted
-                      ? 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                      : 'text-amber-700 hover:bg-amber-50 border-amber-200'
+                      ? 'text-status-success-fg hover:bg-status-success-bg border-status-success-fg/30'
+                      : 'text-amber-600 hover:bg-amber-500/10 border-amber-500/30'
                   }`}
                 >
                   {previewPost.is_deleted ? 'Restore to Feed' : 'Hide from Feed'}
@@ -626,7 +626,7 @@ export function PostsAdminPanel() {
                 <Button
                   variant="primary"
                   onClick={() => handleHardDelete(previewPost)}
-                  className="h-9 px-4 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-none"
+                  className="h-9 px-4 text-xs font-bold rounded-xl bg-status-error-bg text-status-error-fg hover:bg-status-error-bg/80 border border-status-error-border shadow-none"
                 >
                   Hard Delete
                 </Button>

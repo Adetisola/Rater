@@ -47,15 +47,15 @@ export function ConfirmDialog({
   if (!mounted || !isOpen) return null;
 
   const icons = {
-    danger: <AlertCircle className="w-6 h-6 text-red-600" />,
-    warning: <AlertTriangle className="w-6 h-6 text-amber-600" />,
-    default: <Info className="w-6 h-6 text-blue-600" />,
+    danger: <AlertCircle className="w-6 h-6 text-status-error-fg" />,
+    warning: <AlertTriangle className="w-6 h-6 text-status-warning-fg" />,
+    default: <Info className="w-6 h-6 text-primary" />,
   };
 
   const bgColors = {
-    danger: 'bg-red-50',
-    warning: 'bg-amber-50',
-    default: 'bg-blue-50',
+    danger: 'bg-status-error-bg',
+    warning: 'bg-status-warning-bg',
+    default: 'bg-primary/10',
   };
 
   return createPortal(
@@ -67,17 +67,17 @@ export function ConfirmDialog({
       }}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" />
+      <div className="absolute inset-0 bg-overlay-backdrop backdrop-blur-sm animate-in fade-in duration-200" />
 
       {/* Dialog */}
       <div 
-        className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-gray-100 relative z-10 animate-in zoom-in-95 duration-200"
+        className="w-full max-w-md bg-surface-primary rounded-3xl p-6 sm:p-8 shadow-elevated border border-border-default relative z-10 animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onCancel}
           disabled={isLoading}
-          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors rounded-full p-1 hover:bg-gray-100 disabled:opacity-50"
+          className="absolute top-5 right-5 text-text-muted hover:text-text-primary transition-colors rounded-full p-1 hover:bg-surface-hover disabled:opacity-50"
           aria-label="Close dialog"
         >
           <X size={18} />
@@ -88,17 +88,17 @@ export function ConfirmDialog({
             {icons[variant]}
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900 tracking-tight">{title}</h3>
-            <p className="text-sm text-gray-500 mt-1 leading-relaxed">{description}</p>
+            <h3 className="text-xl font-bold text-text-primary tracking-tight">{title}</h3>
+            <p className="text-sm text-text-secondary mt-1 leading-relaxed">{description}</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-border-default">
           <Button
             variant="ghost"
             onClick={onCancel}
             disabled={isLoading}
-            className="h-10 px-4 rounded-xl text-sm font-semibold text-gray-600 hover:text-gray-900"
+            className="h-10 px-4 rounded-xl text-sm font-semibold text-text-secondary hover:text-text-primary"
           >
             {cancelLabel}
           </Button>

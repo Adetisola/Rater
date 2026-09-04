@@ -119,7 +119,7 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ scale: 0.96, opacity: 0, y: 16 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-md bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-gray-100 max-h-[90vh]"
+            className="relative w-full max-w-md bg-surface-primary rounded-[32px] shadow-2xl overflow-hidden flex flex-col border border-border-default max-h-[90vh]"
           >
             {/* Top 35–40% Media Area */}
             <div className="relative w-full aspect-[16/9] sm:aspect-[16/8.5] bg-gray-950 overflow-hidden rounded-t-[32px] shrink-0">
@@ -168,13 +168,13 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
               <div>
                 <h2
                   id="whats-new-title"
-                  className="text-xl font-medium text-gray-950 tracking-tight"
+                  className="text-xl font-medium text-text-primary tracking-tight"
                 >
                   Rater v1.2.2
                 </h2>
                 <p
                   id="whats-new-desc"
-                  className="text-xs text-gray-500 font-medium mt-1"
+                  className="text-xs text-text-secondary font-medium mt-1"
                 >
                   A better way to share, discover &amp; discuss design.
                 </p>
@@ -184,14 +184,14 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
               <div className="space-y-3.5">
                 {/* 1. Critiques */}
                 <div className="flex items-start gap-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shrink-0 text-base shadow-2xs select-none">
+                  <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center shrink-0 text-base shadow-2xs select-none">
                     💬
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <h3 className="text-xs font-semibold text-gray-950 tracking-tight">
+                    <h3 className="text-xs font-semibold text-text-primary tracking-tight">
                       Critiques are now conversations
                     </h3>
-                    <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <p className="text-[11px] text-text-secondary leading-snug mt-0.5">
                       Reply to critiques and mention other creators.
                     </p>
                   </div>
@@ -199,14 +199,14 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
 
                 {/* 2. Search & Discovery */}
                 <div className="flex items-start gap-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 text-base shadow-2xs select-none">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center shrink-0 text-base shadow-2xs select-none">
                     🔍
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <h3 className="text-xs font-semibold text-gray-950 tracking-tight">
+                    <h3 className="text-xs font-semibold text-text-primary tracking-tight">
                       Find creators &amp; work faster
                     </h3>
-                    <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <p className="text-[11px] text-text-secondary leading-snug mt-0.5">
                       Smarter search and creator discovery.
                     </p>
                   </div>
@@ -214,14 +214,14 @@ export function WhatsNewModal({ isOpen, onClose, onLearnMore }: WhatsNewModalPro
 
                 {/* 3. Notifications */}
                 <div className="flex items-start gap-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0 text-base shadow-2xs select-none">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center shrink-0 text-base shadow-2xs select-none">
                     🔔
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
-                    <h3 className="text-xs font-semibold text-gray-950 tracking-tight">
+                    <h3 className="text-xs font-semibold text-text-primary tracking-tight">
                       Stay in the loop
                     </h3>
-                    <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                    <p className="text-[11px] text-text-secondary leading-snug mt-0.5">
                       Real-time notifications and web push.
                     </p>
                   </div>

@@ -221,10 +221,10 @@ export function UsersAdminPanel() {
       {/* Page Title & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
+          <h1 className="text-xl font-semibold text-text-primary tracking-tight">
             User Management
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             Manage registered accounts, roles, access permissions, and account moderation.
           </p>
         </div>
@@ -232,13 +232,13 @@ export function UsersAdminPanel() {
         {/* Search & Filter Toolbar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
             <input
               type="text"
               placeholder="Search by username, name, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold focus:outline-none focus:border-black transition-colors"
+              className="w-full bg-surface-primary border border-border-default rounded-xl pl-10 pr-4 py-2.5 text-xs font-semibold text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
           </div>
 
@@ -249,7 +249,7 @@ export function UsersAdminPanel() {
                 setStatusFilter(e.target.value as any);
                 setPage(1);
               }}
-              className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:outline-none focus:border-black transition-colors"
+              className="bg-surface-primary border border-border-default rounded-xl px-3 py-2.5 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary transition-colors"
             >
               <option value="all">All Accounts</option>
               <option value="active">Active Only</option>
@@ -261,7 +261,7 @@ export function UsersAdminPanel() {
               variant="outline"
               onClick={loadUsers}
               disabled={isLoading}
-              className="h-9 px-3 rounded-xl text-xs font-bold bg-white"
+              className="h-9 px-3 rounded-xl text-xs font-bold bg-surface-primary border-border-default text-text-primary hover:bg-surface-hover"
             >
               <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
             </Button>
@@ -270,11 +270,11 @@ export function UsersAdminPanel() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
+      <div className="bg-surface-primary border border-border-default rounded-3xl shadow-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/75 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+              <tr className="bg-surface-subtle/75 border-b border-border-default text-[11px] font-bold text-text-muted uppercase tracking-wider">
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Status</th>
@@ -282,17 +282,17 @@ export function UsersAdminPanel() {
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm">
+            <tbody className="divide-y divide-border-subtle text-sm">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-gray-400 text-sm">
-                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-gray-300" />
+                  <td colSpan={5} className="px-6 py-16 text-center text-text-muted text-sm">
+                    <RefreshCw size={20} className="animate-spin mx-auto mb-2 text-text-muted" />
                     Loading user directory...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-16 text-center text-gray-500 text-sm">
+                  <td colSpan={5} className="px-6 py-16 text-center text-text-secondary text-sm">
                     No users match the current search filters.
                   </td>
                 </tr>
@@ -300,23 +300,23 @@ export function UsersAdminPanel() {
                 users.map((user) => (
                   <tr 
                     key={user.id} 
-                    className="hover:bg-gray-50/60 transition-colors cursor-pointer"
+                    className="hover:bg-surface-hover/60 transition-colors cursor-pointer"
                     onClick={() => handleOpenUser(user)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <UserAvatar avatarUrl={user.avatar_url} size="xs" className="w-9 h-9" />
                         <div>
-                          <div className="font-semibold text-gray-900 flex items-center gap-1.5">
+                          <div className="font-semibold text-text-primary flex items-center gap-1.5">
                             {user.name}
                             {user.is_admin && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-primary/20 text-black">
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-primary/20 text-text-primary">
                                 <ShieldCheck size={10} />
                                 Admin
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-400 font-medium">
+                          <div className="text-xs text-text-muted font-medium">
                             @{user.username} {user.email && `• ${user.email}`}
                           </div>
                         </div>
@@ -324,26 +324,26 @@ export function UsersAdminPanel() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-lg">
+                      <span className="text-xs font-semibold text-text-secondary bg-surface-interactive px-2.5 py-1 rounded-lg">
                         {user.role || 'Member'}
                       </span>
                     </td>
 
                     <td className="px-6 py-4">
                       {user.is_blocked ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-red-100 text-red-700">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-status-error-bg text-status-error-fg border border-status-error-border">
                           <UserX size={11} />
                           Blocked
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-emerald-50 text-emerald-700">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
                           <UserCheck size={11} />
                           Active
                         </span>
                       )}
                     </td>
 
-                    <td className="px-6 py-4 text-xs text-gray-400 font-medium">
+                    <td className="px-6 py-4 text-xs text-text-muted font-medium">
                       {user.created_at ? format(new Date(user.created_at), 'MMM d, yyyy') : '—'}
                     </td>
 
@@ -352,7 +352,7 @@ export function UsersAdminPanel() {
                         <Button
                           variant="outline"
                           onClick={() => handleOpenUser(user)}
-                          className="h-8 px-3 text-xs font-semibold rounded-xl"
+                          className="h-8 px-3 text-xs font-semibold rounded-xl border-border-default text-text-primary hover:bg-surface-hover"
                         >
                           View
                         </Button>
@@ -361,8 +361,8 @@ export function UsersAdminPanel() {
                           onClick={() => handleToggleBlock(user)}
                           className={`h-8 px-3 text-xs font-semibold rounded-xl ${
                             user.is_blocked
-                              ? 'text-emerald-700 hover:bg-emerald-50 border-emerald-200'
-                              : 'text-red-700 border-red-200'
+                              ? 'text-status-success-fg hover:bg-status-success-bg border-status-success-fg/30'
+                              : 'text-status-error-fg hover:bg-status-error-bg border-status-error-border'
                           }`}
                         >
                           {user.is_blocked ? 'Unblock' : 'Block'}
@@ -377,10 +377,10 @@ export function UsersAdminPanel() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-medium">
+        <div className="p-4 border-t border-border-default flex items-center justify-between text-xs text-text-secondary font-medium">
           <div>
-            Showing <span className="font-bold text-gray-900">{users.length}</span> of{' '}
-            <span className="font-bold text-gray-900">{totalCount}</span> profiles
+            Showing <span className="font-bold text-text-primary">{users.length}</span> of{' '}
+            <span className="font-bold text-text-primary">{totalCount}</span> profiles
           </div>
 
           <div className="flex items-center gap-2">
@@ -388,18 +388,18 @@ export function UsersAdminPanel() {
               variant="outline"
               disabled={page <= 1 || isLoading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="h-8 px-2.5 rounded-lg text-xs"
+              className="h-8 px-2.5 rounded-lg text-xs border-border-default text-text-primary hover:bg-surface-hover"
             >
               <ChevronLeft size={14} />
             </Button>
-            <span className="font-bold text-gray-700">
+            <span className="font-bold text-text-secondary">
               {page} / {totalPages || 1}
             </span>
             <Button
               variant="outline"
               disabled={page >= totalPages || isLoading}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 px-2.5 rounded-lg text-xs"
+              className="h-8 px-2.5 rounded-lg text-xs border-border-default text-text-primary hover:bg-surface-hover"
             >
               <ChevronRight size={14} />
             </Button>
@@ -412,18 +412,18 @@ export function UsersAdminPanel() {
         <div className="fixed inset-0 z-60 flex justify-end">
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 bg-overlay-backdrop backdrop-blur-sm animate-in fade-in duration-200"
             onClick={() => setSelectedUser(null)}
           />
 
           {/* Drawer Content */}
-          <div className="relative w-full max-w-md bg-white h-full shadow-2xl z-10 flex flex-col overflow-hidden animate-in slide-in-from-right duration-200">
+          <div className="relative w-full max-w-md bg-surface-primary h-full shadow-elevated z-10 flex flex-col overflow-hidden animate-in slide-in-from-right duration-200 border-l border-border-default">
             {/* Drawer Header */}
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-900">User Details</h2>
+            <div className="p-6 border-b border-border-default flex items-center justify-between bg-surface-subtle/50">
+              <h2 className="text-lg font-bold text-text-primary">User Details</h2>
               <button
                 onClick={() => setSelectedUser(null)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors"
+                className="p-1.5 text-text-muted hover:text-text-primary rounded-xl hover:bg-surface-hover transition-colors"
               >
                 <X size={18} />
               </button>
@@ -432,18 +432,18 @@ export function UsersAdminPanel() {
             {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
               {/* Profile Card Snapshot */}
-              <div className="text-center pb-6 border-b border-gray-100">
-                <UserAvatar avatarUrl={selectedUser.avatar_url} className="w-18 h-18 mx-auto mb-3 ring-4 ring-gray-100" />
-                <h3 className="text-xl font-bold text-gray-900 flex items-center justify-center gap-1.5">
+              <div className="text-center pb-6 border-b border-border-default">
+                <UserAvatar avatarUrl={selectedUser.avatar_url} className="w-18 h-18 mx-auto mb-3 ring-4 ring-border-subtle" />
+                <h3 className="text-xl font-bold text-text-primary flex items-center justify-center gap-1.5">
                   {selectedUser.name}
                   {selectedUser.is_admin && (
                     <ShieldCheck size={16} className="text-primary" />
                   )}
                 </h3>
-                <div className="text-xs font-semibold text-gray-400">@{selectedUser.username}</div>
+                <div className="text-xs font-semibold text-text-muted">@{selectedUser.username}</div>
                 
                 {selectedUser.bio && (
-                  <p className="text-xs text-gray-600 mt-3 max-w-xs mx-auto leading-relaxed italic">
+                  <p className="text-xs text-text-secondary mt-3 max-w-xs mx-auto leading-relaxed italic">
                     "{selectedUser.bio}"
                   </p>
                 )}
@@ -452,14 +452,14 @@ export function UsersAdminPanel() {
                   <Link
                     href={`/@${selectedUser.username}`}
                     target="_blank"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border-default text-xs font-bold text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
                   >
                     Public Profile
                     <ExternalLink size={12} />
                   </Link>
                   <Link
                     href={`/admin/posts?search=${selectedUser.username}`}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-gray-800 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-surface-interactive text-text-primary text-xs font-bold hover:bg-surface-hover border border-border-default transition-colors"
                   >
                     <Layers size={12} />
                     View Posts
@@ -469,30 +469,30 @@ export function UsersAdminPanel() {
 
               {/* Account Metadata */}
               <div className="space-y-3">
-                <div className="text-xs font-bold text-gray-400 tracking-wider">
+                <div className="text-xs font-bold text-text-muted tracking-wider">
                   Account Info
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-2xl space-y-3 text-xs">
+                <div className="bg-surface-subtle border border-border-default p-4 rounded-2xl space-y-3 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Email Address</span>
-                    <span className="font-semibold text-gray-900">{selectedUser.email || '—'}</span>
+                    <span className="text-text-secondary">Email Address</span>
+                    <span className="font-semibold text-text-primary">{selectedUser.email || '—'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">User ID</span>
-                    <span className="font-mono text-[10px] text-gray-400 truncate max-w-[180px]">
+                    <span className="text-text-secondary">User ID</span>
+                    <span className="font-mono text-[10px] text-text-muted truncate max-w-[180px]">
                       {selectedUser.id}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Joined Date</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="text-text-secondary">Joined Date</span>
+                    <span className="font-semibold text-text-primary">
                       {selectedUser.created_at ? format(new Date(selectedUser.created_at), 'MMMM d, yyyy') : '—'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500">Status</span>
-                    <span className={`font-bold ${selectedUser.is_blocked ? 'text-red-600' : 'text-emerald-600'}`}>
+                    <span className="text-text-secondary">Status</span>
+                    <span className={`font-bold ${selectedUser.is_blocked ? 'text-status-error-fg' : 'text-status-success-fg'}`}>
                       {selectedUser.is_blocked ? 'Blocked' : 'Active Account'}
                     </span>
                   </div>
@@ -501,7 +501,7 @@ export function UsersAdminPanel() {
 
               {/* Role Title Management */}
               <div className="space-y-3">
-                <div className="text-xs font-bold text-gray-400 tracking-wider flex items-center justify-between">
+                <div className="text-xs font-bold text-text-muted tracking-wider flex items-center justify-between">
                   <span>Role Title</span>
                   {!isEditingRole && (
                     <button
@@ -521,7 +521,7 @@ export function UsersAdminPanel() {
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value)}
                       placeholder="e.g. Senior Designer"
-                      className="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-none focus:border-black"
+                      className="flex-1 bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-medium text-text-primary focus:outline-none focus:border-primary"
                     />
                     <Button
                       variant="primary"
@@ -534,13 +534,13 @@ export function UsersAdminPanel() {
                     <Button
                       variant="ghost"
                       onClick={() => setIsEditingRole(false)}
-                      className="h-8 px-2 text-xs text-gray-500 rounded-xl"
+                      className="h-8 px-2 text-xs text-text-secondary rounded-xl"
                     >
                       Cancel
                     </Button>
                   </div>
                 ) : (
-                  <div className="p-3 bg-gray-50 rounded-xl text-xs font-semibold text-gray-700">
+                  <div className="p-3 bg-surface-subtle border border-border-default rounded-xl text-xs font-semibold text-text-secondary">
                     {selectedUser.role || 'No custom role assigned (Default: Member)'}
                   </div>
                 )}
@@ -548,7 +548,7 @@ export function UsersAdminPanel() {
 
               {/* Growth & Attribution Metadata */}
               <div className="space-y-3">
-                <div className="text-xs font-bold text-gray-400 tracking-wider flex items-center justify-between">
+                <div className="text-xs font-bold text-text-muted tracking-wider flex items-center justify-between">
                   <span>Growth & Attribution</span>
                   {!isEditingAttribution && (
                     <button
@@ -562,48 +562,48 @@ export function UsersAdminPanel() {
                 </div>
 
                 {isEditingAttribution ? (
-                  <div className="bg-amber-50/40 p-4 rounded-2xl border border-amber-200/60 space-y-3 text-xs">
-                    <div className="text-[10px] text-amber-800 font-semibold uppercase tracking-wider">
+                  <div className="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/30 space-y-3 text-xs">
+                    <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wider">
                       Attribution Override (Admin Correction)
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Acquisition Source</label>
+                      <label className="block text-[10px] text-text-secondary font-semibold mb-1">Acquisition Source</label>
                       <input
                         type="text"
                         placeholder="e.g. instagram, tiktok, discord, direct"
                         value={editSource}
                         onChange={(e) => setEditSource(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black"
+                        className="w-full bg-surface-primary border border-border-default rounded-xl px-3 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Source Detail</label>
+                      <label className="block text-[10px] text-text-secondary font-semibold mb-1">Source Detail</label>
                       <input
                         type="text"
                         placeholder="e.g. @designwithme, event-name"
                         value={editDetail}
                         onChange={(e) => setEditDetail(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black"
+                        className="w-full bg-surface-primary border border-border-default rounded-xl px-3 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:border-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Campaign Tag</label>
+                      <label className="block text-[10px] text-text-secondary font-semibold mb-1">Campaign Tag</label>
                       <input
                         type="text"
                         placeholder="e.g. first-1000, get-rated"
                         value={editCampaign}
                         onChange={(e) => setEditCampaign(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black font-mono"
+                        className="w-full bg-surface-primary border border-border-default rounded-xl px-3 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:border-primary font-mono"
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-gray-500 font-semibold mb-1">Referred By (User UUID)</label>
+                      <label className="block text-[10px] text-text-secondary font-semibold mb-1">Referred By (User UUID)</label>
                       <input
                         type="text"
                         placeholder="e.g. UUID of referrer profile"
                         value={editReferredBy}
                         onChange={(e) => setEditReferredBy(e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:border-black font-mono"
+                        className="w-full bg-surface-primary border border-border-default rounded-xl px-3 py-1.5 text-xs font-medium text-text-primary focus:outline-none focus:border-primary font-mono"
                       />
                     </div>
                     <div className="flex items-center gap-2 pt-1">
@@ -611,42 +611,42 @@ export function UsersAdminPanel() {
                         variant="primary"
                         onClick={handleSaveAttribution}
                         disabled={isActionLoading}
-                        className="h-8 px-3 text-xs font-bold rounded-xl bg-black text-white hover:bg-gray-800"
+                        className="h-8 px-3 text-xs font-bold rounded-xl"
                       >
                         Save Correction
                       </Button>
                       <Button
                         variant="ghost"
                         onClick={() => setIsEditingAttribution(false)}
-                        className="h-8 px-2 text-xs text-gray-500 rounded-xl"
+                        className="h-8 px-2 text-xs text-text-secondary rounded-xl"
                       >
                         Cancel
                       </Button>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-gray-50 p-4 rounded-2xl space-y-2.5 text-xs">
+                  <div className="bg-surface-subtle border border-border-default p-4 rounded-2xl space-y-2.5 text-xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Marketing Source</span>
-                      <span className="font-semibold text-gray-900 uppercase tracking-wide">
+                      <span className="text-text-secondary">Marketing Source</span>
+                      <span className="font-semibold text-text-primary uppercase tracking-wide">
                         {selectedUser.acquisition_source || 'Direct / Organic'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Source Detail</span>
-                      <span className="font-mono text-gray-700 text-[11px]">
+                      <span className="text-text-secondary">Source Detail</span>
+                      <span className="font-mono text-text-secondary text-[11px]">
                         {selectedUser.acquisition_detail || '—'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Campaign Tag</span>
-                      <span className="font-mono text-gray-700 text-[11px]">
+                      <span className="text-text-secondary">Campaign Tag</span>
+                      <span className="font-mono text-text-secondary text-[11px]">
                         {selectedUser.campaign_tag || '—'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-500">Referred By</span>
-                      <span className="font-mono text-[10px] text-gray-700 truncate max-w-[170px]">
+                      <span className="text-text-secondary">Referred By</span>
+                      <span className="font-mono text-[10px] text-text-secondary truncate max-w-[170px]">
                         {selectedUser.referred_by || 'None'}
                       </span>
                     </div>
@@ -656,7 +656,7 @@ export function UsersAdminPanel() {
 
               {/* Moderation Actions */}
               <div className="space-y-3 pt-2">
-                <div className="text-xs font-bold text-gray-400 tracking-wider">
+                <div className="text-xs font-bold text-text-muted tracking-wider">
                   Moderation Controls
                 </div>
 
@@ -666,8 +666,8 @@ export function UsersAdminPanel() {
                     onClick={() => handleToggleBlock(selectedUser)}
                     className={`w-full h-11 rounded-2xl text-xs font-bold justify-between px-4 ${
                       selectedUser.is_blocked
-                        ? 'text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50 border-emerald-200'
-                        : 'text-red-700 hover:text-red-900 hover:bg-red-50 border-red-200'
+                        ? 'text-status-success-fg hover:text-status-success-fg hover:bg-status-success-bg border-status-success-fg/30'
+                        : 'text-status-error-fg hover:text-status-error-fg hover:bg-status-error-bg border-status-error-border'
                     }`}
                   >
                     <span>{selectedUser.is_blocked ? 'Unblock User Account' : 'Block User from Platform'}</span>
@@ -677,10 +677,10 @@ export function UsersAdminPanel() {
                   <Button
                     variant="outline"
                     onClick={() => handleToggleAdmin(selectedUser)}
-                    className="w-full h-11 rounded-2xl text-xs font-bold justify-between px-4 text-gray-700 hover:bg-gray-50 border-gray-200"
+                    className="w-full h-11 rounded-2xl text-xs font-bold justify-between px-4 text-text-secondary hover:text-text-primary hover:bg-surface-hover border-border-default"
                   >
                     <span>{selectedUser.is_admin ? 'Revoke Administrator Access' : 'Promote to Administrator'}</span>
-                    <ShieldCheck size={16} className={selectedUser.is_admin ? 'text-primary' : 'text-black'} />
+                    <ShieldCheck size={16} className={selectedUser.is_admin ? 'text-primary' : 'text-text-primary'} />
                   </Button>
                 </div>
               </div>

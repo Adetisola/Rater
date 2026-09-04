@@ -8,7 +8,7 @@ export function AdminLayoutShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-[#FBFBFC] overflow-hidden text-gray-900 antialiased font-sans">
+    <div className="flex h-screen bg-canvas overflow-hidden text-text-primary antialiased font-sans">
       {/* Sidebar (Desktop + Mobile Drawer) */}
       <AdminSidebar 
         isMobileOpen={mobileMenuOpen} 

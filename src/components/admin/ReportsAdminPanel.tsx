@@ -237,13 +237,13 @@ export function ReportsAdminPanel() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2.5">
+          <h1 className="text-xl font-semibold text-text-primary tracking-tight flex items-center gap-2.5">
             Reports & Safety Queue
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-status-error-bg text-status-error-fg border border-status-error-border">
               {totalCount} Reports
             </span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-text-secondary mt-1">
             Review user-submitted abuse reports, copyright violations, and inappropriate content.
           </p>
         </div>
@@ -256,7 +256,7 @@ export function ReportsAdminPanel() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-black"
+            className="bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending Only</option>
@@ -271,7 +271,7 @@ export function ReportsAdminPanel() {
               setTargetTypeFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-black"
+            className="bg-surface-primary border border-border-default rounded-xl px-3 py-2 text-xs font-semibold text-text-primary focus:outline-none focus:border-primary"
           >
             <option value="all">All Targets</option>
             <option value="post">Posts Only</option>
@@ -284,7 +284,7 @@ export function ReportsAdminPanel() {
             variant="outline"
             onClick={loadReports}
             disabled={isLoading}
-            className="h-9 px-3 rounded-xl text-xs font-bold bg-white"
+            className="h-9 px-3 rounded-xl text-xs font-bold bg-surface-primary border-border-default text-text-primary hover:bg-surface-hover"
           >
             <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
           </Button>
@@ -294,40 +294,40 @@ export function ReportsAdminPanel() {
       {/* Reports Queue List */}
       <div className="space-y-4">
         {isLoading ? (
-          <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center text-gray-400 text-sm">
-            <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-gray-300" />
+          <div className="bg-surface-primary border border-border-default rounded-3xl p-16 text-center text-text-muted text-sm">
+            <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-text-muted" />
             Loading safety queue...
           </div>
         ) : reports.length === 0 ? (
-          <div className="bg-white border border-gray-100 rounded-3xl p-16 text-center text-gray-500 text-sm">
+          <div className="bg-surface-primary border border-border-default rounded-3xl p-16 text-center text-text-secondary text-sm">
             <ShieldCheck size={36} className="text-emerald-500 mx-auto mb-3" />
-            <div className="font-bold text-gray-900 text-base">Safety Queue Clear</div>
-            <p className="text-xs text-gray-400 mt-1">No reports matching the selected filters.</p>
+            <div className="font-bold text-text-primary text-base">Safety Queue Clear</div>
+            <p className="text-xs text-text-muted mt-1">No reports matching the selected filters.</p>
           </div>
         ) : (
           reports.map((report) => (
             <div 
               key={report.id}
-              className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm hover:border-gray-200 transition-all space-y-4"
+              className="bg-surface-primary border border-border-default rounded-3xl p-6 shadow-card hover:border-border-strong transition-all space-y-4"
             >
               {/* Report Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border-default">
                 <div className="flex items-center gap-2">
                   <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide ${
-                    report.status === 'pending' ? 'bg-red-100 text-red-700' :
-                    report.status === 'under_review' ? 'bg-amber-100 text-amber-800' :
-                    report.status === 'resolved' ? 'bg-emerald-100 text-emerald-800' :
-                    'bg-gray-100 text-gray-600'
+                    report.status === 'pending' ? 'bg-status-error-bg text-status-error-fg border border-status-error-border' :
+                    report.status === 'under_review' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30' :
+                    report.status === 'resolved' ? 'bg-status-success-bg text-status-success-fg border border-status-success-fg/30' :
+                    'bg-surface-interactive text-text-secondary'
                   }`}>
                     {report.status.replace('_', ' ')}
                   </span>
 
                   <span className={cn(
                     "text-xs font-bold px-2.5 py-1 rounded-lg",
-                    report.target_type === 'post' && "bg-blue-50 text-blue-800",
-                    report.target_type === 'review' && "bg-purple-50 text-purple-800",
-                    report.target_type === 'reply' && "bg-amber-50 text-amber-900",
-                    report.target_type === 'profile' && "bg-gray-100 text-gray-900"
+                    report.target_type === 'post' && "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                    report.target_type === 'review' && "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+                    report.target_type === 'reply' && "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                    report.target_type === 'profile' && "bg-surface-interactive text-text-primary"
                   )}>
                     {report.target_type === 'post' ? 'Post Violation' :
                      report.target_type === 'review' ? 'Critique Report' :
@@ -335,16 +335,16 @@ export function ReportsAdminPanel() {
                      'Profile Violation'}
                   </span>
 
-                  <span className="text-xs text-gray-400 font-medium">
+                  <span className="text-xs text-text-muted font-medium">
                     Reported {format(new Date(report.created_at), 'MMM d, yyyy h:mm a')}
                   </span>
                 </div>
 
                 {report.reporter && (
-                  <div className="text-xs text-gray-500 flex items-center gap-1.5">
+                  <div className="text-xs text-text-secondary flex items-center gap-1.5">
                     <span>by</span>
                     <UserAvatar avatarUrl={report.reporter.avatar_url} className="w-5 h-5" />
-                    <span className="font-bold text-gray-700">@{report.reporter.username}</span>
+                    <span className="font-bold text-text-secondary">@{report.reporter.username}</span>
                   </div>
                 )}
               </div>
@@ -353,19 +353,19 @@ export function ReportsAdminPanel() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Reason description */}
                 <div className="space-y-2">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  <div className="text-xs font-bold text-text-muted uppercase tracking-wider">
                     Violation Reason
                   </div>
-                  <div className="text-sm font-bold text-red-900 bg-red-50/50 p-3 rounded-2xl border border-red-100/80">
+                  <div className="text-sm font-bold text-status-error-fg bg-status-error-bg p-3 rounded-2xl border border-status-error-border">
                     "{report.reason}"
                   </div>
                   {report.details && (
-                    <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-2xl italic">
+                    <div className="text-xs text-text-secondary bg-surface-subtle p-3 rounded-2xl italic">
                       "{report.details}"
                     </div>
                   )}
                   {report.action_taken && (
-                    <div className="text-xs text-emerald-800 bg-emerald-50 p-2.5 rounded-xl font-medium">
+                    <div className="text-xs text-status-success-fg bg-status-success-bg p-2.5 rounded-xl font-medium">
                       <span className="font-bold">Action Taken:</span> {report.action_taken}
                     </div>
                   )}
@@ -373,13 +373,13 @@ export function ReportsAdminPanel() {
 
                 {/* Right: Target Entity Preview */}
                 <div className="space-y-2">
-                  <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  <div className="text-xs font-bold text-text-muted uppercase tracking-wider">
                     Reported Content
                   </div>
 
                   {/* Post Preview */}
                   {report.target_type === 'post' && report.target_post && (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3 p-3 bg-surface-subtle rounded-2xl border border-border-default">
                       <PostThumbnail
                         publicId={report.target_post.media?.[0]?.public_id}
                         imageUrl={report.target_post.image_url}
@@ -387,10 +387,10 @@ export function ReportsAdminPanel() {
                         alt={report.target_post.title}
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-gray-900 truncate">
+                        <div className="text-sm font-bold text-text-primary truncate">
                           {report.target_post.title}
                         </div>
-                        <div className="text-xs text-gray-500 truncate">
+                        <div className="text-xs text-text-secondary truncate">
                           by @{report.target_post.author?.username || 'user'} • {report.target_post.category}
                         </div>
                         <Link
@@ -407,13 +407,13 @@ export function ReportsAdminPanel() {
 
                   {/* Profile Preview */}
                   {report.target_type === 'profile' && report.target_profile && (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3 p-3 bg-surface-subtle rounded-2xl border border-border-default">
                       <UserAvatar avatarUrl={report.target_profile.avatar_url} size="sm" className="w-10 h-10" />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-gray-900">
+                        <div className="text-sm font-bold text-text-primary">
                           {report.target_profile.name}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-text-secondary">
                           @{report.target_profile.username}
                         </div>
                         <Link
@@ -430,23 +430,23 @@ export function ReportsAdminPanel() {
 
                   {/* Critique / Review Preview */}
                   {report.target_type === 'review' && report.target_review && (
-                    <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2.5">
+                    <div className="p-3.5 bg-surface-subtle rounded-2xl border border-border-default space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <UserAvatar avatarUrl={report.target_review.reviewer?.avatar_url} size="xs" className="w-6 h-6" />
-                          <span className="text-xs font-bold text-gray-900 truncate">
+                          <span className="text-xs font-bold text-text-primary truncate">
                             {report.target_review.reviewer?.name || 'Reviewer'}
                           </span>
                           {report.target_review.reviewer?.username && (
-                            <span className="text-[11px] text-gray-500 truncate">
+                            <span className="text-[11px] text-text-secondary truncate">
                               @{report.target_review.reviewer.username}
                             </span>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0 bg-white px-2 py-0.5 rounded-full border border-gray-200/80">
+                        <div className="flex items-center gap-1 shrink-0 bg-surface-primary px-2 py-0.5 rounded-full border border-border-default">
                           <img src="/icons/star-active-yellow.svg" className="w-3 h-3" alt="" />
-                          <span className="text-[11px] font-bold text-gray-800">
+                          <span className="text-[11px] font-bold text-text-primary">
                             {(() => {
                               const ratings = report.target_review.ratings || {};
                               const vals = Object.values(ratings).filter(v => typeof v === 'number') as number[];
@@ -458,14 +458,14 @@ export function ReportsAdminPanel() {
                       </div>
 
                       {report.target_review.comment && (
-                        <div className="text-xs text-gray-800 bg-white p-2.5 rounded-xl border border-gray-100 leading-relaxed max-h-28 overflow-y-auto">
+                        <div className="text-xs text-text-primary bg-surface-primary p-2.5 rounded-xl border border-border-default leading-relaxed max-h-28 overflow-y-auto">
                           &ldquo;{report.target_review.comment}&rdquo;
                         </div>
                       )}
 
-                      <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[11px]">
-                        <div className="text-gray-500 truncate flex-1 min-w-0 mr-2">
-                          On work: <span className="font-semibold text-gray-800">{report.target_review.post?.title || 'Published Work'}</span>
+                      <div className="pt-2 border-t border-border-default flex items-center justify-between text-[11px]">
+                        <div className="text-text-secondary truncate flex-1 min-w-0 mr-2">
+                          On work: <span className="font-semibold text-text-primary">{report.target_review.post?.title || 'Published Work'}</span>
                         </div>
                         {report.target_review.post_id && (
                           <Link
@@ -483,34 +483,34 @@ export function ReportsAdminPanel() {
 
                   {/* Critique Reply Preview */}
                   {report.target_type === 'reply' && report.target_reply && (
-                    <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-2.5">
+                    <div className="p-3.5 bg-surface-subtle rounded-2xl border border-border-default space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           <UserAvatar avatarUrl={report.target_reply.author?.avatar_url} size="xs" className="w-6 h-6" />
-                          <span className="text-xs font-bold text-gray-900 truncate">
+                          <span className="text-xs font-bold text-text-primary truncate">
                             {report.target_reply.author?.name || 'User'}
                           </span>
                           {report.target_reply.author?.username && (
-                            <span className="text-[11px] text-gray-500 truncate">
+                            <span className="text-[11px] text-text-secondary truncate">
                               @{report.target_reply.author.username}
                             </span>
                           )}
                         </div>
 
                         {report.target_reply.is_tombstone && (
-                          <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
+                          <span className="text-[10px] font-bold text-status-error-fg bg-status-error-bg px-2 py-0.5 rounded-full border border-status-error-border">
                             Already Deleted
                           </span>
                         )}
                       </div>
 
-                      <div className="text-xs text-gray-800 bg-white p-2.5 rounded-xl border border-gray-100 leading-relaxed max-h-28 overflow-y-auto">
+                      <div className="text-xs text-text-primary bg-surface-primary p-2.5 rounded-xl border border-border-default leading-relaxed max-h-28 overflow-y-auto">
                         &ldquo;{report.target_reply.content}&rdquo;
                       </div>
 
-                      <div className="pt-2 border-t border-gray-200/60 flex items-center justify-between text-[11px]">
-                        <div className="text-gray-500 truncate flex-1 min-w-0 mr-2">
-                          On work: <span className="font-semibold text-gray-800">{report.target_reply.post?.title || 'Published Work'}</span>
+                      <div className="pt-2 border-t border-border-default flex items-center justify-between text-[11px]">
+                        <div className="text-text-secondary truncate flex-1 min-w-0 mr-2">
+                          On work: <span className="font-semibold text-text-primary">{report.target_reply.post?.title || 'Published Work'}</span>
                         </div>
                         {report.target_reply.critique?.post_id && (
                           <Link
@@ -531,7 +531,7 @@ export function ReportsAdminPanel() {
                     (report.target_type === 'profile' && !report.target_profile) ||
                     (report.target_type === 'review' && !report.target_review) ||
                     (report.target_type === 'reply' && !report.target_reply)) && (
-                    <div className="p-3 bg-gray-50 rounded-2xl text-xs text-gray-400 italic">
+                    <div className="p-3 bg-surface-subtle rounded-2xl text-xs text-text-muted italic">
                       Target content was deleted or no longer exists.
                     </div>
                   )}
@@ -539,14 +539,14 @@ export function ReportsAdminPanel() {
               </div>
 
               {/* Resolution Action Toolbar */}
-              <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+              <div className="pt-3 border-t border-border-default flex flex-wrap items-center justify-between gap-3">
                 <div className="flex-1 min-w-[200px] max-w-sm">
                   <input
                     type="text"
                     placeholder="Add internal resolution note..."
                     value={activeReportNotes[report.id] || ''}
                     onChange={(e) => setActiveReportNotes(prev => ({ ...prev, [report.id]: e.target.value }))}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-black"
+                    className="w-full bg-surface-subtle border border-border-default rounded-xl px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -556,7 +556,7 @@ export function ReportsAdminPanel() {
                       variant="outline"
                       onClick={() => handleUpdateStatus(report.id, 'under_review')}
                       disabled={isActionLoading}
-                      className="h-8 px-3 text-xs font-bold rounded-xl text-amber-700 hover:bg-amber-50 border-amber-200"
+                      className="h-8 px-3 text-xs font-bold rounded-xl text-amber-600 hover:bg-amber-500/10 border-amber-500/30"
                     >
                       Mark Under Review
                     </Button>
@@ -568,7 +568,7 @@ export function ReportsAdminPanel() {
                       variant="outline"
                       onClick={() => handleTakeActionAndResolve(report, 'hide_post')}
                       disabled={isActionLoading}
-                      className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                      className="h-8 px-3 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                     >
                       Hide Post & Resolve
                     </Button>
@@ -580,7 +580,7 @@ export function ReportsAdminPanel() {
                       variant="outline"
                       onClick={() => handleTakeActionAndResolve(report, 'block_user')}
                       disabled={isActionLoading}
-                      className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                      className="h-8 px-3 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                     >
                       Block User & Resolve
                     </Button>
@@ -593,7 +593,7 @@ export function ReportsAdminPanel() {
                         variant="outline"
                         onClick={() => handleTakeActionAndResolve(report, 'delete_review')}
                         disabled={isActionLoading}
-                        className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                        className="h-8 px-3 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                       >
                         Delete Critique & Resolve
                       </Button>
@@ -602,7 +602,7 @@ export function ReportsAdminPanel() {
                           variant="outline"
                           onClick={() => handleTakeActionAndResolve(report, 'block_reviewer')}
                           disabled={isActionLoading}
-                          className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                          className="h-8 px-3 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                         >
                           Block Reviewer
                         </Button>
@@ -617,7 +617,7 @@ export function ReportsAdminPanel() {
                         variant="outline"
                         onClick={() => handleTakeActionAndResolve(report, 'delete_reply')}
                         disabled={isActionLoading}
-                        className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                        className="h-8 px-3 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                       >
                         Remove Reply & Resolve
                       </Button>
@@ -626,7 +626,7 @@ export function ReportsAdminPanel() {
                           variant="outline"
                           onClick={() => handleTakeActionAndResolve(report, 'block_reply_author')}
                           disabled={isActionLoading}
-                          className="h-8 px-3 text-xs font-bold rounded-xl text-red-600 hover:bg-red-50 border-red-200"
+                          className="h-8 px-3 text-xs font-bold rounded-xl text-status-error-fg hover:bg-status-error-bg border-status-error-border"
                         >
                           Block Author
                         </Button>
@@ -639,7 +639,7 @@ export function ReportsAdminPanel() {
                       variant="ghost"
                       onClick={() => handleUpdateStatus(report.id, 'dismissed', 'Report dismissed by admin')}
                       disabled={isActionLoading}
-                      className="h-8 px-3 text-xs font-bold text-gray-500 rounded-xl"
+                      className="h-8 px-3 text-xs font-bold text-text-secondary hover:text-text-primary rounded-xl"
                     >
                       Dismiss
                     </Button>
@@ -664,10 +664,10 @@ export function ReportsAdminPanel() {
 
       {/* Pagination Footer */}
       {reports.length > 0 && (
-        <div className="bg-white p-4 border border-gray-100 rounded-2xl flex items-center justify-between text-xs text-gray-500 font-medium">
+        <div className="bg-surface-primary p-4 border border-border-default rounded-2xl flex items-center justify-between text-xs text-text-secondary font-medium">
           <div>
-            Showing <span className="font-bold text-gray-900">{reports.length}</span> of{' '}
-            <span className="font-bold text-gray-900">{totalCount}</span> reports
+            Showing <span className="font-bold text-text-primary">{reports.length}</span> of{' '}
+            <span className="font-bold text-text-primary">{totalCount}</span> reports
           </div>
 
           <div className="flex items-center gap-2">
@@ -675,18 +675,18 @@ export function ReportsAdminPanel() {
               variant="outline"
               disabled={page <= 1 || isLoading}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="h-8 px-2.5 rounded-lg text-xs"
+              className="h-8 px-2.5 rounded-lg text-xs border-border-default text-text-primary hover:bg-surface-hover"
             >
               <ChevronLeft size={14} />
             </Button>
-            <span className="font-bold text-gray-700">
+            <span className="font-bold text-text-secondary">
               {page} / {totalPages || 1}
             </span>
             <Button
               variant="outline"
               disabled={page >= totalPages || isLoading}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="h-8 px-2.5 rounded-lg text-xs"
+              className="h-8 px-2.5 rounded-lg text-xs border-border-default text-text-primary hover:bg-surface-hover"
             >
               <ChevronRight size={14} />
             </Button>

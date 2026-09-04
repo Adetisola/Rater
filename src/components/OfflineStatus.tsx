@@ -36,14 +36,14 @@ export function OfflineStatus() {
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-200 flex flex-row items-center gap-4 px-6 py-4 bg-[#111111] text-white rounded-2xl shadow-2xl border border-white/10 w-max max-w-[400px]"
+          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-200 flex flex-row items-center gap-4 px-6 py-4 bg-surface-elevated text-text-primary rounded-2xl shadow-elevated border border-border-default w-max max-w-[400px]"
         >
-          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/10 shrink-0">
-            <WifiOff className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-subtle shrink-0">
+            <WifiOff className="w-5 h-5 text-text-primary" />
           </div>
           <div className="flex flex-col items-start">
             <span className="text-base font-semibold">No internet connection</span>
-            <span className="text-sm font-medium text-white/60">Changes will sync when reconnected.</span>
+            <span className="text-sm font-medium text-text-secondary">Changes will sync when reconnected.</span>
           </div>
         </motion.div>
       )}
