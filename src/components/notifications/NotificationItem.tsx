@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   MessageSquare, 
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { Notification } from '@/types';
 import { UserAvatar } from '../UserAvatar';
+import { getOptimizedThumbnailUrl } from '@/lib/cloudinary/transforms';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +30,19 @@ export function NotificationItem({
   onCloseParent,
 }: NotificationItemProps) {
   const router = useRouter();
+  const [thumbnailError, setThumbnailError] = useState(false);
+
+  useEffect(() => {
+    setThumbnailError(false);
+  }, [notification.post?.image_url]);
+
+  const postThumbnailUrl = useMemo(() => {
+    if (!notification.post?.image_url) return null;
+    return getOptimizedThumbnailUrl(
+      { url: notification.post.image_url },
+      'POST_THUMBNAIL_SM'
+    );
+  }, [notification.post?.image_url]);
 
   const getCategoryIcon = (category?: string, type?: string) => {
     const t = type || '';
@@ -91,17 +106,18 @@ export function NotificationItem({
           <UserAvatar
             avatarUrl={notification.actor.avatar_url}
             size="sm"
-            className="w-10 h-10 rounded-full border border-border-default shadow-2xs"
+            alt={notification.actor.name || notification.actor.username || "User avatar"}
+            className="w-10 h-10 rounded-full border border-border-default"
           />
         ) : (
-          <div className="w-10 h-10 rounded-2xl bg-surface-interactive flex items-center justify-center border border-border-default shadow-2xs">
+          <div className="w-10 h-10 rounded-2xl bg-surface-interactive flex items-center justify-center border border-border-default">
             {getCategoryIcon(notification.category, notification.type)}
           </div>
         )}
 
         {/* Small Category Badge Indicator */}
         {notification.actor && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface-elevated flex items-center justify-center shadow-xs border border-border-default">
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface-elevated flex items-center justify-center border border-border-default">
             {getCategoryIcon(notification.category, notification.type)}
           </div>
         )}
@@ -127,20 +143,24 @@ export function NotificationItem({
 
         {/* Action Button */}
         <div className="flex items-center justify-between pt-0.5">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-surface-interactive border border-border-default group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-text-primary shadow-2xs transition-all">
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-surface-interactive border border-border-default group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-semibold text-text-primary transition-all">
             <span>{notification.action_label || 'View'}</span>
           </div>
         </div>
       </div>
 
       {/* Right Compact Post Thumbnail (if linked to a Work) */}
-      {notification.post?.image_url && (
-        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-surface-interactive border border-border-default shadow-2xs mt-0.5">
+      {postThumbnailUrl && !thumbnailError && (
+        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-surface-interactive border border-border-default mt-0.5">
           <img
-            src={notification.post.image_url}
-            alt={notification.post.title || "Work preview"}
-            className="w-full h-full object-cover"
+            src={postThumbnailUrl}
+            alt={notification.post?.title || "Work preview"}
+            width={56}
+            height={56}
             loading="lazy"
+            decoding="async"
+            onError={() => setThumbnailError(true)}
+            className="w-full h-full object-cover"
           />
         </div>
       )}

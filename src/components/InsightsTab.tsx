@@ -98,14 +98,14 @@ function InsightCriterionLabel({ children, info }: { children: React.ReactNode, 
     <Tooltip
       triggerClassName="group relative flex items-center cursor-help w-full"
       width="w-[calc(100vw-3rem)] min-[769px]:w-64 max-w-64"
-      contentClassName="p-4 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl"
+      contentClassName="p-4 bg-surface-elevated border-2 border-primary text-text-primary text-[11px] rounded-xl shadow-elevated"
       content={
         <>
           <p className="font-semibold mb-2.5 leading-relaxed whitespace-normal">{info.question}</p>
-          <ul className="space-y-1.5 text-gray-700">
+          <ul className="space-y-1.5 text-text-secondary">
             {info.points.map(point => (
               <li key={point} className="flex items-start gap-2 whitespace-normal text-left">
-                <span className="mt-1.5 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
+                <span className="mt-1.5 w-1 h-1 rounded-full bg-text-muted shrink-0" />
                 <span className="flex-1">{point}</span>
               </li>
             ))}
@@ -406,10 +406,10 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
   if (reviews.length === 0) {
     return (
       <div className="py-12 text-center">
-        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
-          <Sparkles className="w-5 h-5 text-gray-300" />
+        <div className="w-10 h-10 rounded-full bg-surface-subtle flex items-center justify-center mx-auto mb-3">
+          <Sparkles className="w-5 h-5 text-text-muted" />
         </div>
-        <p className="text-sm text-gray-400 font-medium">Insights appear after the first critique.</p>
+        <p className="text-sm text-text-muted font-medium">Insights appear after the first critique.</p>
       </div>
     );
   }
@@ -425,8 +425,8 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
     >
       {/* Overall Score */}
       <div className="text-center pb-1">
-        <div className="text-2xl font-semibold text-black">{roundedOverall}</div>
-        <p className="text-xs text-gray-400 mt-0.5">Overall Score from {reviews.length} {reviews.length === 1 ? 'critique' : 'critiques'}</p>
+        <div className="text-2xl font-semibold text-text-primary">{roundedOverall}</div>
+        <p className="text-xs text-text-muted mt-0.5">Overall Score from {reviews.length} {reviews.length === 1 ? 'critique' : 'critiques'}</p>
       </div>
 
       {/* Per-Criterion Breakdown */}
@@ -439,11 +439,11 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-black">{c.label}</span>
-                  <span className="text-sm font-semibold text-black tabular-nums">{c.average}</span>
+                  <span className="text-sm font-medium text-text-primary">{c.label}</span>
+                  <span className="text-sm font-semibold text-text-primary tabular-nums">{c.average}</span>
                 </div>
                 {/* Progress bar */}
-                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="w-full h-1.5 bg-surface-interactive rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${(c.average / 5) * 100}%` }}
@@ -452,7 +452,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                       ? 'bg-emerald-400'
                       : c.sentiment === 'needs_work'
                         ? 'bg-amber-400'
-                        : 'bg-gray-300'
+                        : 'bg-surface-active dark:bg-border-strong'
                       }`}
                   />
                 </div>
@@ -468,15 +468,15 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-8 py-8 px-3 bg-gray-50 rounded-[20px] border border-gray-100 flex flex-col items-center text-center"
+          className="mt-8 py-8 px-3 bg-surface-subtle rounded-[20px] border border-border-default flex flex-col items-center text-center"
         >
           <img
             src="/icons/rater-logo-white-bg.svg"
             alt="Rater"
             className="w-12 h-12 mb-4"
           />
-          <h3 className="text-md font-medium text-black mb-1.5">Unlock Perception Insights</h3>
-          <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
+          <h3 className="text-md font-medium text-text-primary mb-1.5">Unlock Perception Insights</h3>
+          <p className="text-xs text-text-secondary mb-6 max-w-65 leading-relaxed">
             Create a profile to unlock perception insights and see how this work is landing with the community.
           </p>
           <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
@@ -503,14 +503,14 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                 {/* Summary */}
                 {result.summary && (
                   <div className="flex items-start gap-2">
-                    <p className="text-[13px] text-gray-500 leading-relaxed">
+                    <p className="text-[13px] text-text-secondary leading-relaxed">
                       <FastTypewriter text={result.summary} delay={0} />
                     </p>
                     {/* Refresh button */}
                     <button
                       type="button"
                       onClick={() => generate(true)}
-                      className="shrink-0 mt-0.5 p-1 rounded-full text-gray-300 hover:text-gray-500 hover:bg-gray-50 transition-colors"
+                      className="shrink-0 mt-0.5 p-1 rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
                       title="Regenerate insights"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
@@ -521,7 +521,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                 {/* Strengths */}
                 {result.strengths && result.strengths.length > 0 && (
                   <div className="space-y-3 pt-2">
-                    <h4 className="text-sm font-semibold text-black flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
                       <TrendingUp className="w-4 h-4 text-emerald-500" />
                       Strengths
                     </h4>
@@ -529,7 +529,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                       {result.strengths.map((observation, i) => (
                         <div key={i} className="flex items-start gap-2.5">
                           <div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.75 shrink-0" />
-                          <p className="text-[13px] text-gray-600 leading-relaxed">
+                          <p className="text-[13px] text-text-secondary leading-relaxed">
                             <FastTypewriter text={observation} delay={300 + i * 150} />
                           </p>
                         </div>
@@ -541,7 +541,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                 {/* Areas to Improve */}
                 {result.areasToImprove && result.areasToImprove.length > 0 && (
                   <div className="space-y-3 pt-4">
-                    <h4 className="text-sm font-semibold text-black flex items-center gap-2">
+                    <h4 className="text-sm font-semibold text-text-primary flex items-center gap-2">
                       <TrendingDown className="w-4 h-4 text-amber-500" />
                       Areas to Improve
                     </h4>
@@ -549,7 +549,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                       {result.areasToImprove.map((observation, i) => (
                         <div key={i} className="flex items-start gap-2.5">
                           <div className="w-1 h-1 rounded-full bg-amber-400 mt-1.75 shrink-0" />
-                          <p className="text-[13px] text-gray-600 leading-relaxed">
+                          <p className="text-[13px] text-text-secondary leading-relaxed">
                             <FastTypewriter text={observation} delay={500 + (result.strengths.length * 150) + (i * 150)} />
                           </p>
                         </div>
@@ -561,26 +561,26 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
 
               {/* Bottom fade mask for scrollable area */}
               <div
-                className={`absolute bottom-9 left-0 right-2 h-8 bg-linear-to-t from-white to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
+                className={`absolute bottom-9 left-0 right-2 h-8 bg-linear-to-t from-surface-primary to-transparent pointer-events-none transition-opacity duration-300 ${isScrolledToBottom ? 'opacity-0' : 'opacity-100'}`}
               />
 
               {/* Footer info: Sources & Model indicator (Outside scroll area to prevent tooltip clipping) */}
-              <div className="flex justify-between items-center pt-3 pb-1 border-t border-gray-50 mt-1">
+              <div className="flex justify-between items-center pt-3 pb-1 border-t border-border-subtle mt-1">
                 <Tooltip
                   width="w-64"
                   gapClass="pb-1"
                   content={
                     <>
-                      <p className="leading-relaxed">
-                        Synthesized from <strong className="font-semibold">{reviews.length}</strong> community critiques, analyzing ratings and qualitative feedback.
+                      <p className="leading-relaxed text-text-primary">
+                        Synthesized from <strong className="font-semibold text-text-primary">{reviews.length}</strong> community critiques, analyzing ratings and qualitative feedback.
                       </p>
-                      <p className="text-[10px] text-gray-500 leading-relaxed border-t border-gray-100 pt-2 mt-2">
+                      <p className="text-[10px] text-text-muted leading-relaxed border-t border-border-subtle pt-2 mt-2">
                         AI-generated insights may be imperfect. Learn more in the{' '}
                         <a 
                           href="/legal/ai-insights"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-semibold text-gray-600 hover:text-black transition-colors underline"
+                          className="font-semibold text-text-secondary hover:text-text-primary transition-colors underline"
                         >
                           AI &amp; Insights Policy
                         </a>.
@@ -590,7 +590,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                 >
                   <button
                     type="button"
-                    className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-1.5 py-1 pr-4"
+                    className="text-[10px] text-text-muted hover:text-text-primary transition-colors flex items-center gap-1.5 py-1 pr-4"
                   >
                     <Info className="w-3 h-3" />
                     Sources
@@ -598,7 +598,7 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
                 </Tooltip>
 
                 {model && (
-                  <p className="text-[10px] text-gray-400">
+                  <p className="text-[10px] text-text-muted">
                     Synthesized with {model}
                   </p>
                 )}
@@ -629,15 +629,15 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
             >
-              <div className="flex items-start gap-2.5 py-3 px-4 bg-gray-50 rounded-2xl relative">
-                <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-                <p className="text-[13px] text-red-500 leading-relaxed pr-6">
+              <div className="flex items-start gap-2.5 py-3 px-4 bg-surface-subtle border border-border-subtle rounded-2xl relative">
+                <AlertCircle className="w-4 h-4 text-status-error-fg mt-0.5 shrink-0" />
+                <p className="text-[13px] text-status-error-fg leading-relaxed pr-6">
                   Unable to generate insights right now. Please check your connection and try again.
                 </p>
                 <button
                   type="button"
                   onClick={() => generate(true)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors"
                   title="Try again"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
@@ -674,9 +674,9 @@ export function InsightsTab({ reviews, postCategory, postTitle, postDescription,
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
             >
-              <div className="flex items-start gap-2.5 py-3 px-4 bg-gray-50 rounded-2xl">
-                <MessageCircle className="w-4 h-4 text-gray-300 mt-0.5 shrink-0" />
-                <p className="text-[13px] text-gray-400 leading-relaxed">
+              <div className="flex items-start gap-2.5 py-3 px-4 bg-surface-subtle border border-border-subtle rounded-2xl">
+                <MessageCircle className="w-4 h-4 text-text-muted mt-0.5 shrink-0" />
+                <p className="text-[13px] text-text-muted leading-relaxed">
                   Not enough feedback yet to generate meaningful insights.
                 </p>
               </div>

@@ -59,13 +59,13 @@ export function PostThumbnail({
         aspectRatio: presetConfig.cssAspectRatio,
       }}
       className={cn(
-        "relative rounded-2xl bg-gray-100 overflow-hidden shrink-0 border border-gray-200/80 select-none",
+        "relative rounded-2xl bg-surface-subtle overflow-hidden shrink-0 border border-border-default select-none",
         className
       )}
     >
       {/* Neutral Shimmer Placeholder while loading */}
       {hasImage && !isLoaded && (
-        <div className="absolute inset-0 bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse" />
+        <div className="absolute inset-0 bg-surface-interactive animate-pulse" />
       )}
 
       {hasImage ? (

@@ -83,14 +83,14 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
       {/* Interactive Tabs / Fallback Header */}
       {hasRelated && hasCreator ? (
         // Both feeds exist: Render interactive tactile tabs matching profile tabs style
-        <div className="border-b border-gray-100 mb-12 flex justify-center md:justify-start gap-8 px-2 xs:px-2 md:px-4">
+        <div className="border-b border-border-default mb-12 flex justify-center md:justify-start gap-8 px-2 xs:px-2 md:px-4">
           <button
             onClick={() => setActiveTab('related')}
             className={cn(
               "flex items-center gap-2 py-4 border-b-2 text-sm font-medium tracking-wider transition-all cursor-pointer select-none",
               activeTab === 'related'
-                ? "border-[#111111] text-black"
-                : "border-transparent text-gray-400 hover:text-gray-600"
+                ? "border-text-primary text-text-primary"
+                : "border-transparent text-text-muted hover:text-text-primary"
             )}
           >
             <Grid className="w-4 h-4" />
@@ -101,8 +101,8 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
             className={cn(
               "flex items-center gap-2 py-4 border-b-2 text-sm font-medium tracking-wider transition-all cursor-pointer select-none",
               activeTab === 'creator'
-                ? "border-[#111111] text-black"
-                : "border-transparent text-gray-400 hover:text-gray-600"
+                ? "border-text-primary text-text-primary"
+                : "border-transparent text-text-muted hover:text-text-primary"
             )}
           >
             <User className="w-4 h-4 shrink-0" />
@@ -114,12 +114,12 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
         </div>
       ) : hasRelated ? (
         // Only category posts exist: Render static "More Like This" header
-        <h2 className="text-lg font-medium text-black mb-8 px-2 xs:px-2 md:px-4 select-none">
+        <h2 className="text-lg font-medium text-text-primary mb-8 px-2 xs:px-2 md:px-4 select-none">
           Related
         </h2>
       ) : (
         // Only creator posts exist: Render static "More from Creator" header
-        <h2 className="text-lg font-medium text-black mb-6 px-2 xs:px-2 md:px-4 select-none truncate">
+        <h2 className="text-lg font-medium text-text-primary mb-6 px-2 xs:px-2 md:px-4 select-none truncate">
           More from {creatorName}
         </h2>
       )}
@@ -140,9 +140,9 @@ export function RelatedSection({ currentPost }: RelatedSectionProps) {
       </AnimatePresence>
 
       {/* Feed termination indicator matching Browse page style */}
-      <div className="w-full flex flex-col items-center justify-center py-12 border-t border-gray-50 mt-10">
-        <div className="w-1.5 h-1.5 rounded-full bg-gray-200 mb-4" />
-        <p className="text-[12px] font-semibold text-gray-400 tracking-wider select-none">
+      <div className="w-full flex flex-col items-center justify-center py-12 border-t border-border-default mt-10">
+        <div className="w-1.5 h-1.5 rounded-full bg-border-strong mb-4" />
+        <p className="text-[12px] font-semibold text-text-muted tracking-wider select-none">
           You've reached the end of the feed
         </p>
       </div>

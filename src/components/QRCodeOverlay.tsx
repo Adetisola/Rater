@@ -135,16 +135,16 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ scale: 0.96, opacity: 0, y: 16 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-[370px] bg-white rounded-[32px] p-6 shadow-2xl overflow-hidden flex flex-col items-center border border-gray-100"
+            className="relative w-full max-w-[370px] bg-surface-elevated rounded-[32px] p-6 shadow-2xl overflow-hidden flex flex-col items-center border border-border-default"
           >
             {/* Header */}
             <div className="w-full flex justify-between items-center mb-4">
-              <h3 className="font-medium text-base text-gray-950 tracking-tight">
+              <h3 className="font-medium text-base text-text-primary tracking-tight">
                 {mode === 'invite' ? 'Invite Referral Link' : 'Share Profile'}
               </h3>
               <button 
                 onClick={onClose}
-                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors bg-gray-50 text-gray-500"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-hover transition-colors bg-surface-subtle text-text-muted hover:text-text-primary"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
@@ -152,18 +152,18 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
             </div>
 
             {/* Mode Switcher Pills */}
-            <div className="w-full flex bg-gray-100/70 p-1 rounded-full mb-5">
+            <div className="w-full flex bg-surface-interactive p-1 rounded-full mb-5">
               <button
                 type="button"
                 onClick={() => setMode('profile')}
                 className={cn(
                   "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200",
                   mode === 'profile'
-                    ? "bg-white text-gray-950 border border-gray-200/50"
-                    : "text-gray-500 hover:text-gray-950"
+                    ? "bg-surface-elevated text-text-primary border border-border-default shadow-xs"
+                    : "text-text-muted hover:text-text-primary"
                 )}
               >
-                <User size={13} className={mode === 'profile' ? "text-gray-950" : "text-gray-400"} />
+                <User size={13} className={mode === 'profile' ? "text-text-primary" : "text-text-muted"} />
                 <span>Profile</span>
               </button>
               <button
@@ -172,11 +172,11 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
                 className={cn(
                   "flex-1 py-1.5 px-3 rounded-full text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200",
                   mode === 'invite'
-                    ? "bg-white text-gray-950 border border-gray-200/50"
-                    : "text-gray-500 hover:text-gray-950"
+                    ? "bg-surface-elevated text-text-primary border border-border-default shadow-xs"
+                    : "text-text-muted hover:text-text-primary"
                 )}
               >
-                <Users size={13} className={mode === 'invite' ? "text-gray-950" : "text-gray-400"} />
+                <Users size={13} className={mode === 'invite' ? "text-text-primary" : "text-text-muted"} />
                 <span>Invite Link</span>
               </button>
             </div>
@@ -184,7 +184,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
             {/* QR Code Container */}
             <div 
               ref={canvasRef}
-              className="bg-white p-4.5 rounded-3xl border border-gray-100 mb-4"
+              className="bg-white p-4.5 rounded-3xl border border-border-default mb-4"
             >
               <QRCodeCanvas 
                 value={activeUrl}
@@ -206,10 +206,10 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
 
             {/* User details and clean URL */}
             <div className="text-center mb-6 w-full px-2">
-              <p className="text-sm font-medium text-gray-950 mb-0.5 truncate">@{username}</p>
-              <p className="text-xs text-gray-500 font-medium truncate select-all">{displayUrl}</p>
+              <p className="text-sm font-medium text-text-primary mb-0.5 truncate">@{username}</p>
+              <p className="text-xs text-text-muted font-medium truncate select-all">{displayUrl}</p>
               {mode === 'invite' && (
-                <p className="text-[11px] text-gray-500 font-medium leading-relaxed mt-2 px-1">
+                <p className="text-[11px] text-text-muted font-medium leading-relaxed mt-2 px-1">
                   When a designer joins with this link, you will be credited as their referrer.
                 </p>
               )}
@@ -220,7 +220,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
               <button 
                 type="button"
                 onClick={handleCopy}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-gray-100/90 hover:bg-gray-200/90 text-gray-900 font-semibold text-xs transition-all active:scale-[0.98]"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full bg-surface-interactive hover:bg-surface-hover text-text-primary font-semibold text-xs transition-all active:scale-[0.98] border border-border-subtle"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 <span>{copied ? "Copied" : "Copy Link"}</span>
@@ -228,7 +228,7 @@ export function QRCodeOverlay({ isOpen, onClose, username, avatarUrl, initialMod
               <button 
                 type="button"
                 onClick={handleDownload}
-                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold text-xs transition-all shadow-xs active:scale-[0.98]"
+                className="flex-[1.2] flex items-center justify-center gap-2 py-3 rounded-full bg-primary hover:bg-[#E5B011] text-brand-primary-fg font-semibold text-xs transition-all shadow-xs active:scale-[0.98]"
               >
                 <Download className="w-4 h-4" />
                 <span>Download PNG</span>

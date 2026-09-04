@@ -102,7 +102,7 @@ export function SearchResults({
       
       {/* Results Dropdown Container */}
       <div 
-        className="absolute top-full left-0 right-0 mt-2 z-50 bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100 overflow-hidden max-h-[75vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-150"
+        className="absolute top-full left-0 right-0 mt-2 z-50 bg-surface-elevated rounded-2xl sm:rounded-3xl shadow-2xl border border-border-default overflow-hidden max-h-[75vh] overflow-y-auto custom-scrollbar animate-in fade-in zoom-in-95 duration-150"
         onMouseDown={(e) => e.stopPropagation()}
       >
         
@@ -110,19 +110,19 @@ export function SearchResults({
         {/* [ 1. EMPTY STATE / HYBRID HUB ]                                           */}
         {/* ========================================================================= */}
         {recentMode ? (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border-subtle">
             {/* Recent Searches Section */}
             {recentItems.length > 0 && (
               <div>
-                <div className="px-4 sm:px-5 py-3 bg-gray-50 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Recent Searches</span>
+                <div className="px-4 sm:px-5 py-3 bg-surface-subtle flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-secondary tracking-wider">Recent Searches</span>
                   <button 
                     onMouseDown={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       onClearRecent?.();
                     }}
-                    className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors px-2 py-1 rounded-full hover:bg-red-50"
+                    className="text-xs font-semibold text-text-muted hover:text-red-500 transition-colors px-2 py-1 rounded-full hover:bg-red-500/10"
                   >
                     Clear all
                   </button>
@@ -136,7 +136,7 @@ export function SearchResults({
                           e.stopPropagation(); 
                           onRemoveRecentItem?.(index); 
                         }}
-                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0 ml-1"
+                        className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all shrink-0 ml-1"
                         aria-label="Remove search item"
                       >
                         <X className="w-4 h-4" />
@@ -145,7 +145,7 @@ export function SearchResults({
 
                     if (item.type === 'search') {
                       return (
-                        <div key={`rec-search-${item.query}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                        <div key={`rec-search-${item.query}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                           <div
                             onMouseDown={(e) => { 
                               e.preventDefault(); 
@@ -154,12 +154,12 @@ export function SearchResults({
                             }}
                             className="flex-1 min-w-0 p-2.5 sm:p-3 flex items-center gap-3 cursor-pointer"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-500">
+                            <div className="w-8 h-8 rounded-lg bg-surface-interactive flex items-center justify-center shrink-0 text-text-muted">
                               <Search className="w-4 h-4" />
                             </div>
                             <div className="flex-1 min-w-0 flex items-center justify-between">
-                              <span className="font-medium text-sm text-black truncate">{item.query}</span>
-                              <span className="text-[11px] font-semibold text-gray-400">Search</span>
+                              <span className="font-medium text-sm text-text-primary truncate">{item.query}</span>
+                              <span className="text-[11px] font-semibold text-text-muted">Search</span>
                             </div>
                           </div>
                           {removeBtn}
@@ -171,7 +171,7 @@ export function SearchResults({
                       const avatar = profileMap[item.avatarId];
                       if (!avatar) return null;
                       return (
-                        <div key={`rec-av-${item.avatarId}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                        <div key={`rec-av-${item.avatarId}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                           <div className="flex-1 min-w-0" onMouseDown={() => onAvatarClick(avatar)}>
                             <AvatarResultItem avatar={avatar} onClick={() => onAvatarClick(avatar)} />
                           </div>
@@ -184,7 +184,7 @@ export function SearchResults({
                       const postObj = allPosts[item.postId];
                       if (!postObj) return null;
                       return (
-                        <div key={`rec-post-${item.postId}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                        <div key={`rec-post-${item.postId}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                           <div className="flex-1 min-w-0" onMouseDown={() => onPostClick(postObj)}>
                             <PostResultItem result={{ post: postObj, matches: [], score: 1 }} onClick={() => onPostClick(postObj)} />
                           </div>
@@ -195,7 +195,7 @@ export function SearchResults({
 
                     if (item.type === 'category') {
                       return (
-                        <div key={`rec-cat-${item.category}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                        <div key={`rec-cat-${item.category}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                           <div className="flex-1 min-w-0" onMouseDown={() => onCategoryClick(item.category)}>
                             <CategoryResultItem category={item.category} onClick={() => onCategoryClick(item.category)} />
                           </div>
@@ -220,7 +220,7 @@ export function SearchResults({
                       e.stopPropagation();
                       onRecentSearchClick?.(topic);
                     }}
-                    className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 transition-all active:scale-95 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-full bg-surface-interactive hover:bg-surface-hover text-xs font-semibold text-text-secondary hover:text-text-primary transition-all active:scale-95 cursor-pointer"
                   >
                     {topic}
                   </button>
@@ -233,11 +233,11 @@ export function SearchResults({
           /* [ 2. NO RESULTS RECOVERY STATE ]                                          */
           /* ========================================================================= */
           <div className="p-6 sm:p-8 text-center">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
+            <div className="w-12 h-12 rounded-full bg-surface-interactive flex items-center justify-center mx-auto mb-3 text-text-muted">
               <Search className="w-6 h-6" />
             </div>
-            <h4 className="font-medium text-base text-black mb-1">No results for "{searchQuery}"</h4>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto mb-5">
+            <h4 className="font-medium text-base text-text-primary mb-1">No results for "{searchQuery}"</h4>
+            <p className="text-xs text-text-secondary max-w-sm mx-auto mb-5">
               Try searching for a different keyword or creator name, or explore these popular categories:
             </p>
             <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
@@ -249,7 +249,7 @@ export function SearchResults({
                     e.stopPropagation();
                     onCategoryClick(cat);
                   }}
-                  className="px-3.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-semibold text-gray-700 transition-all active:scale-95 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-full bg-surface-interactive hover:bg-surface-hover text-xs font-semibold text-text-secondary hover:text-text-primary transition-all active:scale-95 cursor-pointer"
                 >
                   {cat}
                 </button>
@@ -260,14 +260,14 @@ export function SearchResults({
           /* ========================================================================= */
           /* [ 3. ACTIVE SEARCH RESULTS (SUGGESTIONS + CREATIVES + WORKS + CATEGORIES)]*/
           /* ========================================================================= */
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border-subtle">
             {/* Top Section: Query Suggestions with Dual-Action (44px touch targets) */}
             {suggestions.length > 0 && (
               <div className="p-2 sm:p-2.5">
                 {suggestions.map((sug) => (
                   <div 
                     key={`sug-${sug}`} 
-                    className="flex items-center rounded-xl hover:bg-gray-50 transition-colors group"
+                    className="flex items-center rounded-xl hover:bg-surface-hover transition-colors group"
                   >
                     {/* Primary Action: Execute Search */}
                     <div
@@ -278,8 +278,8 @@ export function SearchResults({
                       }}
                       className="flex-1 min-w-0 p-2.5 sm:p-3 flex items-center gap-3 cursor-pointer"
                     >
-                      <Search className="w-4 h-4 text-gray-400 shrink-0 transition-colors" />
-                      <span className="font-medium text-sm text-black truncate">{sug}</span>
+                      <Search className="w-4 h-4 text-text-muted shrink-0 transition-colors" />
+                      <span className="font-medium text-sm text-text-primary truncate">{sug}</span>
                     </div>
 
                     {/* Secondary Action: Populate Input without Submitting (44px min hit area) */}
@@ -290,7 +290,7 @@ export function SearchResults({
                           e.stopPropagation();
                           onPopulateSearch(sug);
                         }}
-                        className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-200/60 rounded-full transition-colors shrink-0 mr-1"
+                        className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-surface-interactive rounded-full transition-colors shrink-0 mr-1"
                         aria-label={`Complete search with "${sug}"`}
                         title="Fill search input"
                       >
@@ -305,9 +305,9 @@ export function SearchResults({
             {/* Creatives Section */}
             {results.avatars.length > 0 && (
               <div>
-                <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Creatives</span>
-                  <span className="text-[11px] font-semibold text-gray-400">{results.avatars.length} matching</span>
+                <div className="px-4 sm:px-5 py-2.5 bg-surface-subtle flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-secondary tracking-wider">Creatives</span>
+                  <span className="text-[11px] font-semibold text-text-muted">{results.avatars.length} matching</span>
                 </div>
                 <div className="p-2 sm:p-2.5">
                   {results.avatars.map(({ avatar }) => (
@@ -324,9 +324,9 @@ export function SearchResults({
             {/* Works Section */}
             {results.posts.length > 0 && (
               <div>
-                <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80 flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Works</span>
-                  <span className="text-[11px] font-semibold text-gray-400">{results.posts.length} matching</span>
+                <div className="px-4 sm:px-5 py-2.5 bg-surface-subtle flex items-center justify-between">
+                  <span className="text-xs font-semibold text-text-secondary tracking-wider">Works</span>
+                  <span className="text-[11px] font-semibold text-text-muted">{results.posts.length} matching</span>
                 </div>
                 <div className="p-2 sm:p-2.5">
                   {results.posts.map((result) => (
@@ -343,8 +343,8 @@ export function SearchResults({
             {/* Categories Section */}
             {results.categories.length > 0 && (
               <div>
-                <div className="px-4 sm:px-5 py-2.5 bg-gray-50/80">
-                  <span className="text-xs font-semibold text-gray-500 tracking-wider">Categories</span>
+                <div className="px-4 sm:px-5 py-2.5 bg-surface-subtle">
+                  <span className="text-xs font-semibold text-text-secondary tracking-wider">Categories</span>
                 </div>
                 <div className="p-2 sm:p-2.5">
                   {results.categories.map(({ category }) => (
@@ -381,21 +381,21 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
         e.stopPropagation();
         onClick();
       }}
-      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
+      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-surface-hover transition-colors flex gap-3 items-center cursor-pointer"
     >
-      <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10 border border-gray-100 shrink-0" />
+      <UserAvatar avatarUrl={avatar.avatar_url} size="xs" alt={avatar.name || avatar.username || "Creator avatar"} className="w-10 h-10 border border-border-default shrink-0" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-semibold text-sm text-black">
+          <span className="font-semibold text-sm text-text-primary">
             {avatar.name}
           </span>
           {avatar.role && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-surface-interactive text-text-secondary">
               {avatar.role}
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-400 truncate mt-0.5">@{avatar.username}</p>
+        <p className="text-xs text-text-muted truncate mt-0.5">@{avatar.username}</p>
       </div>
     </div>
   );
@@ -421,19 +421,19 @@ function PostResultItem({ result, onClick }: PostResultItemProps) {
       scroll={false}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 sm:gap-4 items-center cursor-pointer"
+      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-surface-hover transition-colors flex gap-3 sm:gap-4 items-center cursor-pointer"
     >
       <PostThumbnail
         imageUrl={post.image_url}
         preset="POST_SEARCH_THUMB"
-        className="rounded-lg shrink-0 border border-gray-100"
+        className="rounded-lg shrink-0 border border-border-default"
         alt={post.title}
       />
       <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-sm text-black truncate">
+        <h4 className="font-semibold text-sm text-text-primary truncate">
           <HighlightedText segments={titleSegments} />
         </h4>
-        <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">
+        <p className="text-xs text-text-secondary line-clamp-1 mt-0.5">
           <HighlightedText segments={descriptionSegments} />
         </p>
       </div>
@@ -458,12 +458,12 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
         e.stopPropagation();
         onClick();
       }}
-      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
+      className="w-full text-left p-2.5 sm:p-3 rounded-xl hover:bg-surface-hover transition-colors flex gap-3 items-center cursor-pointer"
     >
       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-primary">
         <Folder className="w-4 h-4" />
       </div>
-      <span className="font-semibold text-sm text-black">{category}</span>
+      <span className="font-semibold text-sm text-text-primary">{category}</span>
     </div>
   );
 }

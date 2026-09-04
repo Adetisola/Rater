@@ -347,8 +347,8 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
   if (!targetAvatar) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-8">
-        <h2 className="text-2xl font-semibold mb-4">This profile doesn't exist.</h2>
-        <p className="text-gray-500 mb-8">The creative you're looking for could not be found or may have changed their @username.</p>
+        <h2 className="text-2xl font-semibold mb-4 text-text-primary">This profile doesn't exist.</h2>
+        <p className="text-text-muted mb-8">The creative you're looking for could not be found or may have changed their @username.</p>
         <Link href="/browse" scroll={false}>
           <Button variant="outline" className="h-12 rounded-full px-8 text-lg">Return to Browse</Button>
         </Link>
@@ -385,7 +385,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
           <div
             className={cn(
               "w-30 h-30 md:w-34 md:h-34 -mb-2 rounded-full flex items-center justify-center text-white text-5xl font-semibold overflow-hidden transition-all shadow-sm relative",
-              !targetAvatar.avatar_url && "bg-gray-100 border border-gray-200/50"
+              !targetAvatar.avatar_url && "bg-surface-subtle border border-border-default"
             )}
           >
             {targetAvatar.avatar_url ? (
@@ -412,7 +412,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                 />
               </button>
             ) : (
-              <User className={cn("w-1/2 h-1/2 text-gray-400", isUploadingAvatar && "opacity-50")} strokeWidth={2.5} />
+              <User className={cn("w-1/2 h-1/2 text-text-muted", isUploadingAvatar && "opacity-50")} strokeWidth={2.5} />
             )}
             
             {isUploadingAvatar && (
@@ -485,7 +485,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             <button
               onClick={() => fileInputRef.current?.click()}
               aria-label="Change profile picture"
-              className="md:hidden absolute bottom-0 right-0 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow border border-gray-100 text-gray-700 z-10 active:scale-95 transition-transform"
+              className="md:hidden absolute bottom-0 right-0 w-9 h-9 bg-surface-elevated rounded-full flex items-center justify-center shadow border border-border-default text-text-primary z-10 active:scale-95 transition-transform"
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -494,7 +494,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             <div className="flex md:hidden items-center justify-center gap-2 mt-5 mb-1 z-10">
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-full transition-colors"
+                className="flex items-center gap-1.5 text-xs font-semibold text-text-primary bg-surface-interactive hover:bg-surface-hover px-3 py-1.5 rounded-full transition-colors"
               >
                 <Camera className="w-3.5 h-3.5" />
                 Change
@@ -512,7 +512,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                   }}
                   className={cn(
                     "flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors",
-                    isConfirmingRemove ? "bg-red-500 text-white" : "text-red-500 bg-red-50 hover:bg-red-100"
+                    isConfirmingRemove ? "bg-status-error-bg text-status-error-fg border border-status-error-border" : "text-status-error-fg bg-status-error-bg hover:opacity-90"
                   )}
                 >
                   {isConfirmingRemove ? (
@@ -557,17 +557,17 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       placeholder="Display Name"
                       maxLength={50}
                       className={cn(
-                        "text-xl font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-black w-full placeholder:text-gray-300 pr-12",
-                        editName.length > 50 && "text-red-500 border-red-300"
+                        "text-xl font-medium bg-transparent outline-none border-b border-transparent focus:border-border-default transition-all text-text-primary w-full placeholder:text-text-disabled pr-12",
+                        editName.length > 50 && "text-status-error-fg border-status-error-border"
                       )}
                     />
-                    <span className="absolute right-0 bottom-1 text-[10px] font-medium text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                    <span className="absolute right-0 bottom-1 text-[10px] font-medium text-text-muted opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
                       {editName.length}/50
                     </span>
                   </div>
                   {/* Username */}
                   <div className="relative flex items-center gap-1.5 mt-1 group">
-                    <AtSign className="w-4 h-4 text-gray-400 shrink-0" />
+                    <AtSign className="w-4 h-4 text-text-muted shrink-0" />
                     <input
                       ref={usernameInputRef}
                       type="text"
@@ -579,35 +579,35 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       placeholder="username"
                       maxLength={20}
                       className={cn(
-                        "text-[15px] font-medium bg-transparent outline-none border-b border-transparent focus:border-gray-300 transition-all text-gray-600 placeholder:text-gray-300 flex-1 pr-12",
-                        usernameValidation.status === 'taken' && "text-red-500 border-red-300 focus:border-red-400",
+                        "text-[15px] font-medium bg-transparent outline-none border-b border-transparent focus:border-border-default transition-all text-text-secondary placeholder:text-text-disabled flex-1 pr-12",
+                        usernameValidation.status === 'taken' && "text-status-error-fg border-status-error-border focus:border-status-error-border",
                         usernameValidation.status === 'valid' && "border-green-300 focus:border-green-400",
-                        usernameValidation.status === 'cooldown' && "text-amber-600 border-amber-300"
+                        usernameValidation.status === 'cooldown' && "text-amber-500 border-amber-300"
                       )}
                     />
-                    <span className="absolute right-0 bottom-1 text-[10px] font-medium text-gray-400 opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
+                    <span className="absolute right-0 bottom-1 text-[10px] font-medium text-text-muted opacity-0 group-focus-within:opacity-100 transition-opacity duration-200">
                       {editUsername.length}/20
                     </span>
                     {/* Validation indicator */}
                     {usernameValidation.status === 'checking' && (
-                      <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-500 rounded-full animate-spin shrink-0" />
+                      <div className="w-3.5 h-3.5 border-2 border-border-default border-t-text-muted rounded-full animate-spin shrink-0" />
                     )}
                     {usernameValidation.status === 'valid' && (
                       <Check className="w-4 h-4 text-green-500 shrink-0" />
                     )}
                     {(usernameValidation.status === 'taken' || usernameValidation.status === 'invalid_format') && (
-                      <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                      <AlertCircle className="w-4 h-4 text-status-error-fg shrink-0" />
                     )}
                   </div>
                   {/* Validation message */}
                   {usernameValidation.message && usernameValidation.status !== 'unchanged' && (
                     <p className={cn(
                       "text-xs mt-0.5 ml-6",
-                      usernameValidation.status === 'valid' && "text-green-600",
-                      usernameValidation.status === 'taken' && "text-red-500",
-                      usernameValidation.status === 'invalid_format' && "text-red-500",
-                      usernameValidation.status === 'cooldown' && "text-amber-600",
-                      usernameValidation.status === 'checking' && "text-gray-400"
+                      usernameValidation.status === 'valid' && "text-green-500",
+                      usernameValidation.status === 'taken' && "text-status-error-fg",
+                      usernameValidation.status === 'invalid_format' && "text-status-error-fg",
+                      usernameValidation.status === 'cooldown' && "text-amber-500",
+                      usernameValidation.status === 'checking' && "text-text-muted"
                     )}>
                       {usernameValidation.message}
                     </p>
@@ -619,7 +619,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                         <button
                           key={s}
                           onClick={() => handleUsernameChange(s)}
-                          className="text-xs px-2.5 py-1 rounded-full bg-gray-100 hover:bg-primary/20 hover:text-[#b38a00] border border-gray-200 transition-all font-medium text-gray-600"
+                          className="text-xs px-2.5 py-1 rounded-full bg-surface-interactive hover:bg-primary/20 hover:text-text-primary border border-border-default transition-all font-medium text-text-secondary"
                         >
                           @{s}
                         </button>
@@ -628,7 +628,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                   )}
                   {/* Helper text */}
                   {(!usernameValidation.message || usernameValidation.status === 'unchanged' || usernameValidation.status === 'idle') && (
-                    <p className="text-[11px] text-gray-400 ml-6 mt-0.5">
+                    <p className="text-[11px] text-text-muted ml-6 mt-0.5">
                       Usernames are unique and used in your profile link. You can change your @username every 14 days.
                     </p>
                   )}
@@ -717,15 +717,15 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                   placeholder="Tell people what you create..."
                   maxLength={200}
                   className={cn(
-                    "w-full bg-transparent leading-relaxed resize-none outline-none border border-transparent rounded-lg p-3 -ml-3 transition-all text-gray-900 overflow-hidden pb-8",
-                    "focus:bg-gray-50",
-                    editBio.length > 200 && "text-red-500 focus:border-red-300 focus:bg-red-50",
+                    "w-full bg-transparent leading-relaxed resize-none outline-none border border-transparent rounded-lg p-3 -ml-3 transition-all text-text-primary overflow-hidden pb-8",
+                    "focus:bg-surface-subtle",
+                    editBio.length > 200 && "text-status-error-fg focus:border-status-error-border focus:bg-status-error-bg",
                     editState === 'saving' && "opacity-70 pointer-events-none"
                   )}
                 />
               </div>
             ) : targetAvatar.bio || isMe ? (
-              <div className="text-gray-600 leading-relaxed markdown-content [&_p]:my-1">
+              <div className="text-text-secondary leading-relaxed markdown-content [&_p]:my-1">
                 {targetAvatar.bio ? (
                   <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
                     {targetAvatar.bio}
@@ -733,7 +733,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                 ) : (
                   <button
                     onClick={() => startEditing('bio')}
-                    className="text-gray-500 hover:text-primary transition-colors"
+                    className="text-text-muted hover:text-primary transition-colors"
                   >
                     Say a little about yourself...
                   </button>
@@ -766,9 +766,9 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                       checked={editShowEmail}
                       onChange={(e) => setEditShowEmail(e.target.checked)}
                       disabled={editState === 'saving'}
-                      className="w-4 h-4 rounded-sm border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                      className="w-4 h-4 rounded-sm border-border-default text-primary focus:ring-primary cursor-pointer"
                     />
-                    <span className="text-[13px] font-medium text-gray-500 group-hover:text-gray-800 transition-colors">Show email on profile</span>
+                    <span className="text-[13px] font-medium text-text-muted group-hover:text-text-primary transition-colors">Show email on profile</span>
                   </label>
                 </motion.div>
               )}
@@ -783,7 +783,7 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-2 flex items-start gap-1.5 justify-center md:justify-start overflow-hidden"
                 >
-                  <div className="flex items-center md:mt-2 gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-[11px] font-medium text-gray-500">
+                  <div className="flex items-center md:mt-2 gap-1.5 px-3 py-1.5 bg-surface-subtle border border-border-subtle rounded-lg text-[11px] font-medium text-text-muted">
                     <span className="text-sm leading-none">💡</span>
                     <span>Tip: Paste links in your bio to display them on your profile (e.g. www.instagram.com/username)</span>
                   </div>
@@ -928,18 +928,18 @@ export function ProfileView({ avatarId, initialProfile }: ProfileViewProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="py-24 text-center bg-white rounded-3xl border-2 border-primary border-dashed shadow-xl shadow-primary/5 max-w-2xl mx-auto px-8"
+            className="py-24 text-center bg-surface-primary rounded-3xl border-2 border-primary border-dashed shadow-xl shadow-primary/5 max-w-2xl mx-auto px-8"
           >
-            <div className="w-20 h-20 bg-[#FFF6DD] rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-6">
               <Heart className="w-10 h-10 text-primary fill-primary" />
             </div>
-            <h3 className="text-3xl font-semibold mb-4 text-black">Coming Soon!</h3>
-            <p className="text-gray-500 text-[16px] leading-relaxed max-w-sm mx-auto">
+            <h3 className="text-3xl font-semibold mb-4 text-text-primary">Coming Soon!</h3>
+            <p className="text-text-muted text-[16px] leading-relaxed max-w-sm mx-auto">
               You'll soon be able to bookmark your favorite works to build your personal inspiration board.
             </p>
-            <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-gray-100 rounded-full">
+            <div className="mt-10 inline-flex items-center gap-2 px-6 py-2 bg-surface-interactive rounded-full">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Development in Progress</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-text-muted">Development in Progress</span>
             </div>
           </motion.div>
         )}

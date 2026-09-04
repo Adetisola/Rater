@@ -80,16 +80,22 @@ export default async function PremiumAvatarPage({ params }: { params: Promise<{ 
       redirect(`/@${data.username}`);
     } else {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-white">
-          <h2 className="text-2xl font-semibold mb-3 text-black">This profile doesn’t exist.</h2>
-          <p className="text-gray-500">The creative you're looking for could not be found or may have changed their @username.</p>
+        <div
+          className="min-h-screen flex flex-col items-center justify-center text-center p-8 bg-canvas text-text-primary"
+          style={{ backgroundColor: 'var(--canvas)', color: 'var(--text-primary)' }}
+        >
+          <h2 className="text-2xl font-semibold mb-3 text-text-primary">This profile doesn’t exist.</h2>
+          <p className="text-text-muted">The creative you're looking for could not be found or may have changed their @username.</p>
         </div>
       );
     }
   }
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col font-sans text-black">
+    <div
+      className="min-h-screen w-full bg-canvas flex flex-col font-sans text-text-primary"
+      style={{ backgroundColor: 'var(--canvas)', color: 'var(--text-primary)' }}
+    >
       <div className="flex-1 w-full pt-4">
         <ProfileView avatarId={profile.id} initialProfile={profile} />
       </div>

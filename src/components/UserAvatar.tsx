@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -28,6 +28,10 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const [hasError, setHasError] = useState(false);
 
+  useEffect(() => {
+    setHasError(false);
+  }, [avatarUrl]);
+
   const optimizedUrl = useMemo(() => {
     return optimizeAvatarUrl(avatarUrl, size);
   }, [avatarUrl, size]);
@@ -39,7 +43,7 @@ export function UserAvatar({
     <div
       className={cn(
         "rounded-full flex items-center justify-center shrink-0 overflow-hidden relative select-none",
-        !showImage && "bg-gray-100 border border-gray-200/50",
+        !showImage && "bg-surface-interactive border border-border-default",
         className
       )}
     >
@@ -56,7 +60,7 @@ export function UserAvatar({
           className="w-full h-full object-cover rounded-full" 
         />
       ) : (
-        <User className={cn("w-1/2 h-1/2 text-gray-400", iconClassName)} strokeWidth={2.5} />
+        <User className={cn("w-1/2 h-1/2 text-text-muted", iconClassName)} strokeWidth={2.5} />
       )}
     </div>
   );

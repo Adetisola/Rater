@@ -61,35 +61,35 @@ function LinkSuggestion({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -4 }}
       transition={{ duration: 0.2 }}
-      className="flex items-center gap-2 mt-2 py-1.5 px-3 rounded-full bg-gray-50 border border-gray-100 text-xs w-fit"
+      className="flex items-center gap-2 mt-2 py-1.5 px-3 rounded-full bg-surface-subtle border border-border-default text-xs w-fit"
     >
       {isDuplicate ? (
         <>
           <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          <span className="text-gray-500">
-            You already added a <strong className="text-gray-700">{meta.label}</strong> link
+          <span className="text-text-muted">
+            You already added a <strong className="text-text-primary">{meta.label}</strong> link
           </span>
           <button
             onClick={onDismiss}
-            className="ml-1 text-gray-400 hover:text-gray-600 transition-colors"
+            className="ml-1 text-text-muted hover:text-text-primary transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </>
       ) : (
         <>
-          <span className="text-gray-500">
+          <span className="text-text-muted">
             Convert to <strong style={{ color: meta.color }}>{meta.label}</strong> link?
           </span>
           <button
             onClick={onConvert}
-            className="px-2.5 py-0.5 rounded-full bg-[#111111] text-white font-medium hover:bg-[#333333] transition-colors"
+            className="px-2.5 py-0.5 rounded-full bg-surface-interactive text-text-primary font-medium hover:bg-surface-hover border border-border-subtle transition-colors"
           >
             Convert
           </button>
           <button
             onClick={onDismiss}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-text-muted hover:text-text-primary transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -112,12 +112,12 @@ function SocialIconView({ link }: { link: SocialLink }) {
         rel="noopener noreferrer"
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-gray-50 transition-all group"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-surface-hover transition-all group"
         title={link.url}
       >
-        <Icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-700 transition-colors" />
+        <Icon className="w-3.5 h-3.5 text-text-muted group-hover:text-text-primary transition-colors" />
         {link.username && (
-          <span className="text-xs text-gray-500 group-hover:text-gray-700 font-medium transition-colors">
+          <span className="text-xs text-text-muted group-hover:text-text-primary font-medium transition-colors">
             {link.username}
           </span>
         )}
@@ -128,10 +128,9 @@ function SocialIconView({ link }: { link: SocialLink }) {
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 4 }}
-            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1 rounded-lg bg-[#111111] text-white text-[10px] whitespace-nowrap z-50 pointer-events-none shadow-lg"
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1 rounded-lg bg-surface-elevated border border-border-default text-text-primary text-[10px] whitespace-nowrap z-50 pointer-events-none shadow-lg"
           >
             {link.url}
-            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-[#111111]" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -210,12 +209,12 @@ function SocialIconEdit({
         onClick={() => setShowDropdown(!showDropdown)}
         className={cn(
           "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all group",
-          showDropdown ? "bg-gray-100" : "hover:bg-gray-50"
+          showDropdown ? "bg-surface-interactive" : "hover:bg-surface-hover"
         )}
       >
-        <Icon className="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-700 transition-colors" />
+        <Icon className="w-3.5 h-3.5 text-text-muted group-hover:text-text-primary transition-colors" />
         {link.username && (
-          <span className="text-xs text-gray-500 group-hover:text-gray-700 font-medium transition-colors">
+          <span className="text-xs text-text-muted group-hover:text-text-primary font-medium transition-colors">
             {link.username}
           </span>
         )}
@@ -228,20 +227,20 @@ function SocialIconEdit({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 top-full mt-1 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 min-w-[200px] overflow-hidden"
+            className="absolute left-0 top-full mt-1 bg-surface-elevated rounded-2xl shadow-xl border border-border-default z-50 min-w-[200px] overflow-hidden"
           >
             {!isEditingUrl ? (
               <>
                 <button
                   onClick={() => { setIsEditingUrl(true); setEditUrl(link.url); }}
-                  className="w-full px-4 py-3 flex items-center gap-2.5 text-gray-600 hover:bg-gray-50 transition-colors text-sm font-medium"
+                  className="w-full px-4 py-3 flex items-center gap-2.5 text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors text-sm font-medium"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   Edit link
                 </button>
                 <button
                   onClick={() => { onRemove(); setShowDropdown(false); }}
-                  className="w-full px-4 py-3 flex items-center gap-2.5 text-red-500 hover:bg-red-50 transition-colors text-sm font-medium"
+                  className="w-full px-4 py-3 flex items-center gap-2.5 text-status-error-fg hover:bg-status-error-bg transition-colors text-sm font-medium"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Remove
@@ -249,7 +248,7 @@ function SocialIconEdit({
               </>
             ) : (
               <div className="p-3 space-y-2">
-                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Edit {meta.label} link</p>
+                <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Edit {meta.label} link</p>
                 <input
                   ref={inputRef}
                   type="text"
@@ -257,22 +256,22 @@ function SocialIconEdit({
                   onChange={e => { setEditUrl(e.target.value); setEditError(''); }}
                   onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') { setIsEditingUrl(false); setEditError(''); } }}
                   className={cn(
-                    "w-full text-sm px-3 py-2 rounded-lg border bg-gray-50 outline-none transition-all focus:bg-white focus:border-gray-300",
-                    editError ? "border-red-300 bg-red-50/50" : "border-gray-200"
+                    "w-full text-sm px-3 py-2 rounded-lg border bg-input-bg text-text-primary border-input-border outline-none transition-all focus:border-border-strong",
+                    editError ? "border-status-error-border bg-status-error-bg" : "border-border-default"
                   )}
                   placeholder="https://..."
                 />
-                {editError && <p className="text-[11px] text-red-500">{editError}</p>}
+                {editError && <p className="text-[11px] text-status-error-fg">{editError}</p>}
                 <div className="flex gap-2">
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-1.5 rounded-full bg-[#111111] text-white text-xs font-medium hover:bg-[#333333] transition-colors flex items-center justify-center gap-1"
+                    className="flex-1 py-1.5 rounded-full bg-primary text-brand-primary-fg text-xs font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-1"
                   >
                     <Check className="w-3 h-3" /> Save
                   </button>
                   <button
                     onClick={() => { setIsEditingUrl(false); setEditError(''); }}
-                    className="px-3 py-1.5 rounded-full text-gray-500 text-xs font-medium hover:bg-gray-100 transition-colors"
+                    className="px-3 py-1.5 rounded-full text-text-muted text-xs font-medium hover:bg-surface-hover hover:text-text-primary transition-colors"
                   >
                     Cancel
                   </button>
@@ -424,11 +423,11 @@ export function SocialLinksRow({
             <div className="relative group/email">
               <a
                 href={`mailto:${email}`}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-gray-50 transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full hover:bg-surface-hover transition-all"
                 title={email}
               >
-                <Mail className="w-3.5 h-3.5 text-gray-400 group-hover/email:text-[#FEC312] transition-colors" />
-                <span className="text-xs text-gray-500 group-hover/email:text-gray-700 font-medium transition-colors">
+                <Mail className="w-3.5 h-3.5 text-text-muted group-hover/email:text-primary transition-colors" />
+                <span className="text-xs text-text-muted group-hover/email:text-text-primary font-medium transition-colors">
                   Contact
                 </span>
               </a>

@@ -419,15 +419,27 @@ function HeaderContent({
               className="w-[44px] h-[44px] sm:w-12 sm:h-12 rounded-xl flex items-center justify-center cursor-pointer group relative shrink-0"
               aria-label="Rater Home"
             >
+              {/* Light Theme Logo Assets */}
               <img
                 src="/icons/rater-logo-transparent-bg-stroked.svg"
                 alt="Rater Logo"
-                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0"
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-100 group-hover:opacity-0 dark:hidden"
               />
               <img
                 src="/icons/rater-logo-black-bg.svg"
                 alt="Rater Logo Hover"
-                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100"
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 opacity-0 group-hover:opacity-100 dark:hidden"
+              />
+              {/* Dark Theme Logo Assets */}
+              <img
+                src="/icons/rater-logo-black-bg-stroked.svg"
+                alt="Rater Logo"
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 hidden dark:block opacity-100 group-hover:opacity-0"
+              />
+              <img
+                src="/icons/rater-logo-white-bg-stroked.svg"
+                alt="Rater Logo Hover"
+                className="w-full h-full object-contain absolute inset-0 transition-opacity duration-300 hidden dark:block opacity-0 group-hover:opacity-100"
               />
             </Link>
           )}
