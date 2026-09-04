@@ -60,14 +60,14 @@ export function NotificationPopover({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 8, scale: 0.96 }}
         transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute right-0 top-full mt-2.5 w-[390px] sm:w-[420px] bg-white rounded-3xl shadow-2xl border border-gray-100/90 overflow-hidden z-100 flex flex-col max-h-[560px]"
+        className="absolute right-0 top-full mt-2.5 w-[390px] sm:w-[420px] bg-surface-elevated rounded-3xl shadow-2xl border border-border-default overflow-hidden z-100 flex flex-col max-h-[560px]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-border-default shrink-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-base text-gray-900 tracking-tight">Notifications</h3>
+            <h3 className="font-medium text-base text-text-primary tracking-tight">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-primary/20 text-gray-900">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-primary/20 text-text-primary">
                 {unreadCount}
               </span>
             )}
@@ -77,7 +77,7 @@ export function NotificationPopover({
             {unreadCount > 0 && (
               <button
                 onClick={onMarkAllAsRead}
-                className="p-1.5 text-xs text-gray-500 hover:text-black hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-1 font-medium"
+                className="p-1.5 text-xs text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-xl transition-colors flex items-center gap-1 font-medium"
                 title="Mark all as read"
               > 
                 <CheckCheck size={15} />
@@ -89,7 +89,7 @@ export function NotificationPopover({
                 onClose();
                 showSettings('notifications');
               }}
-              className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-1.5 text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-xl transition-colors"
               title="Notification settings"
             >
               <Settings size={15} />
@@ -98,15 +98,15 @@ export function NotificationPopover({
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center px-4 py-2.5 bg-white border-b border-gray-100 shrink-0 gap-2">
+        <div className="flex items-center px-4 py-2.5 bg-surface-elevated border-b border-border-default shrink-0 gap-2">
           <button
             type="button"
             onClick={() => onFilterChange('all')}
             className={cn(
               "px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200",
               activeFilter === 'all'
-                ? "bg-primary/10 border-primary/40 text-black font-semibold"
-                : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+                : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
             )}
           >
             All
@@ -117,8 +117,8 @@ export function NotificationPopover({
             className={cn(
               "px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5",
               activeFilter === 'unread'
-                ? "bg-primary/10 border-primary/40 text-black font-semibold"
-                : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+                : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
             )}
           >
             <span>Unread</span>
@@ -131,7 +131,7 @@ export function NotificationPopover({
         {/* Notification List Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1 min-h-[160px]">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-16 text-text-muted">
               <Loader2 className="w-6 h-6 animate-spin mb-2 text-primary" />
               <span className="text-xs">Loading notifications...</span>
             </div>
@@ -150,11 +150,11 @@ export function NotificationPopover({
         </div>
 
         {/* Footer Link to Full Page */}
-        <div className="p-3 border-t border-gray-100 bg-gray-50/50 text-center shrink-0">
+        <div className="p-3 border-t border-border-default bg-surface-subtle text-center shrink-0">
           <Link
             href="/notifications"
             onClick={onClose}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-gray-700 hover:text-black transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors"
           >
             <span>View all notifications</span>
             <ExternalLink size={12} className="opacity-60" />

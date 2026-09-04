@@ -124,7 +124,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
       ) : variant === 'nav' ? (
         <div 
           onClick={() => setIsOpen(!isOpen)} 
-          className="group flex items-center h-[44px] bg-transparent hover:bg-gray-100 rounded-[22px] transition-all duration-200 ease-out cursor-pointer"
+          className="group flex items-center h-[44px] bg-transparent hover:bg-surface-interactive rounded-[22px] transition-all duration-200 ease-out cursor-pointer"
           aria-haspopup="menu"
           aria-expanded={isOpen}
         >
@@ -137,16 +137,16 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
             <UserAvatar avatarUrl={currentProfile.avatar_url} size="sm" priority={true} className="w-[44px] h-[44px] shadow-xs" />
           </Link>
           <div className="w-0 overflow-hidden transition-all duration-200 ease-out group-hover:w-8 flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <ChevronDown size={16} className="text-gray-500 mr-1" />
+            <ChevronDown size={16} className="text-text-muted mr-1" />
           </div>
         </div>
       ) : (
         <div onClick={() => setIsOpen(!isOpen)} className="cursor-pointer" aria-haspopup="menu" aria-expanded={isOpen}>
           <button 
-            className="w-10 h-10 p-0 rounded-full bg-white border-2 border-gray-100 hover:bg-gray-50 flex items-center justify-center transition-all"
+            className="w-10 h-10 p-0 rounded-full bg-surface-primary border border-border-default hover:bg-surface-hover flex items-center justify-center transition-all text-text-secondary hover:text-text-primary"
             aria-label="Open menu"
           >
-            <MoreHorizontal className="w-5 h-5 text-black" />
+            <MoreHorizontal className="w-5 h-5" />
           </button>
         </div>
       )}
@@ -181,7 +181,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                   <Link
                     href={`/@${currentProfile.username}`}
                     onClick={handleCloseAll}
-                    className="flex items-center justify-between p-3.5 hover:bg-surface-hover transition-colors border-b border-border-subtle group"
+                    className="flex items-center justify-between p-3.5 hover:bg-surface-hover transition-colors border-b border-border-default group"
                     role="menuitem"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -200,7 +200,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                 )}
 
                 {/* 2. Primary Creative Actions */}
-                <div className="p-1.5 space-y-0.5 border-b border-border-subtle">
+                <div className="p-1.5 space-y-0.5 border-b border-border-default">
                   {onEditProfile ? (
                     <button
                       onClick={() => { handleCloseAll(); onEditProfile(); }}
@@ -303,7 +303,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
 
                 {/* 4. Admin Dashboard (Admin Only) */}
                 {currentProfile.is_admin && (
-                  <div className="p-1.5 border-t border-border-subtle">
+                  <div className="p-1.5 border-t border-border-default">
                     <Link
                       href="/admin/dashboard"
                       onClick={handleCloseAll}
@@ -317,7 +317,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                 )}
 
                 {/* 5. Logout */}
-                <div className="p-1.5 border-t border-border-subtle">
+                <div className="p-1.5 border-t border-border-default">
                   <button
                     onClick={() => {
                       handleCloseAll();
@@ -341,7 +341,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                   className="absolute inset-0 bg-surface-elevated flex flex-col z-20"
                 >
                   {/* Back Button Header */}
-                  <div className="p-2 border-b border-border-subtle flex items-center">
+                  <div className="p-2 border-b border-border-default flex items-center">
                     <button
                       onClick={() => setShowHelpSubmenu(false)}
                       className="flex items-center gap-1.5 px-2 py-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-hover transition-colors"
@@ -380,7 +380,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     </div>
 
                     {/* Resources */}
-                    <div className="space-y-0.5 border-t border-border-subtle pt-2">
+                    <div className="space-y-0.5 border-t border-border-default pt-2">
                       <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Resources
                       </p>
@@ -419,7 +419,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     </div>
 
                     {/* Legal */}
-                    <div className="space-y-0.5 border-t border-border-subtle pt-2">
+                    <div className="space-y-0.5 border-t border-border-default pt-2">
                       <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Legal
                       </p>
@@ -462,7 +462,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     aria-label="Help & Resources submenu"
                   >
                     {/* Support & Feedback */}
-                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-border-subtle">
+                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-border-default">
                       <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Support & Feedback
                       </p>
@@ -490,7 +490,7 @@ export function UserMenu({ trigger, align = 'left', variant = 'nav', onEditProfi
                     </div>
 
                     {/* Resources */}
-                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-border-subtle">
+                    <div className="space-y-0.5 pb-1.5 mb-1.5 border-b border-border-default">
                       <p className="px-3 py-1 text-[10px] font-semibold text-text-muted uppercase tracking-wider">
                         Resources
                       </p>

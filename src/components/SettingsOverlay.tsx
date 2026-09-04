@@ -420,17 +420,17 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* App & Experience Section (PWA) */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">App & Experience</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">App & Experience</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3.5">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary p-4 space-y-3.5">
                         <div className="flex items-center justify-between gap-3 sm:gap-4">
                           <div className="flex items-start gap-3 min-w-0 flex-1">
-                            <div className="w-9 h-9 rounded-xl bg-gray-100 border border-gray-200/60 flex items-center justify-center text-gray-700 shrink-0 mt-0.5">
+                            <div className="w-9 h-9 rounded-xl bg-surface-subtle border border-border-default flex items-center justify-center text-text-primary shrink-0 mt-0.5">
                               <Smartphone size={18} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-gray-900">Install Rater App</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              <p className="text-sm font-semibold text-text-primary">Install Rater App</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                                 Fast launch from your home screen or desktop dock with full-screen view.
                               </p>
                             </div>
@@ -438,7 +438,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                           <div className="shrink-0">
                             {isInstalled ? (
-                              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70 text-xs sm:text-[13px] font-medium whitespace-nowrap shrink-0">
+                              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs sm:text-[13px] font-medium whitespace-nowrap shrink-0">
                                 <CheckCircle2 size={14} />
                                 <span>Installed</span>
                               </div>
@@ -471,9 +471,9 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Profile & Security Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Profile & Security</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Profile & Security</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         {/* Profile Row */}
                         {currentProfile && (
                           <div className="p-4 flex items-center justify-between gap-3">
@@ -484,8 +484,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                 className="w-11 h-11 shrink-0"
                               />
                               <div className="min-w-0 flex-1">
-                                <p className="font-semibold text-sm text-gray-900 truncate">{currentProfile.name}</p>
-                                <p className="text-xs text-gray-500 truncate">@{currentProfile.username}</p>
+                                <p className="font-semibold text-sm text-text-primary truncate">{currentProfile.name}</p>
+                                <p className="text-xs text-text-secondary truncate">@{currentProfile.username}</p>
                               </div>
                             </div>
 
@@ -498,7 +498,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                 variant="outline"
                                 className="h-9 px-3.5 text-xs sm:text-[13px] font-medium rounded-full flex items-center gap-1.5 whitespace-nowrap shrink-0"
                               >
-                                <Edit2 size={13} className="text-gray-400" />
+                                <Edit2 size={13} className="text-text-muted" />
                                 <span>Edit Profile</span>
                               </Button>
                             </Link>
@@ -509,10 +509,10 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {currentProfile?.email && (
                           <div className="p-4 flex items-center justify-between gap-3">
                             <div>
-                              <p className="text-sm font-semibold text-gray-900">Email Address</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1">{currentProfile.email}</p>
+                              <p className="text-sm font-semibold text-text-primary">Email Address</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-1">{currentProfile.email}</p>
                             </div>
-                            <div className="flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-full text-xs font-semibold">
+                            <div className="flex items-center gap-1 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full text-xs font-semibold">
                               <ShieldCheck size={13} />
                               <span>Verified</span>
                             </div>
@@ -523,11 +523,11 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         <div className="p-4 space-y-3.5">
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                                <KeyRound size={15} className="text-gray-400 shrink-0" />
+                              <p className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                                <KeyRound size={15} className="text-text-muted shrink-0" />
                                 <span>Password</span>
                               </p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1">Set or update your account password.</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-1">Set or update your account password.</p>
                             </div>
                             <Button
                               variant="outline"
@@ -543,21 +543,21 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           </div>
 
                           {isChangingPassword && (
-                            <form onSubmit={handlePasswordChange} className="pt-3.5 border-t border-gray-100 space-y-3">
+                            <form onSubmit={handlePasswordChange} className="pt-3.5 border-t border-border-default space-y-3">
                               {passwordError && (
-                                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs sm:text-[13px] text-red-600">
+                                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs sm:text-[13px] text-red-400">
                                   {passwordError}
                                 </div>
                               )}
                               {passwordSuccess && (
-                                <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs sm:text-[13px] text-emerald-700 flex items-center gap-1.5">
+                                <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs sm:text-[13px] text-emerald-400 flex items-center gap-1.5">
                                   <CheckCircle2 size={14} />
                                   <span>Password updated successfully!</span>
                                 </div>
                               )}
 
                               <div className="space-y-1">
-                                <label className="text-xs font-medium text-gray-700">New Password</label>
+                                <label className="text-xs font-medium text-text-secondary">New Password</label>
                                 <Input
                                   type="password"
                                   placeholder="Minimum 8 characters"
@@ -569,7 +569,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               </div>
 
                               <div className="space-y-1">
-                                <label className="text-xs font-medium text-gray-700">Confirm New Password</label>
+                                <label className="text-xs font-medium text-text-secondary">Confirm New Password</label>
                                 <Input
                                   type="password"
                                   placeholder="Re-type new password"
@@ -600,16 +600,16 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     {/* Personal Referral Invite Link Section */}
                     {currentProfile && (
                       <div className="space-y-2.5">
-                        <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Referrals & Growth</p>
+                        <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Referrals & Growth</p>
 
-                        <div className="rounded-2xl border border-gray-100 bg-white p-4 space-y-3">
+                        <div className="rounded-2xl border border-border-default bg-surface-primary p-4 space-y-3">
                           <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
-                                <Users size={15} className="text-gray-400 shrink-0" />
+                              <p className="text-sm font-semibold text-text-primary flex items-center gap-1.5">
+                                <Users size={15} className="text-text-muted shrink-0" />
                                 <span>Personal Invite Link</span>
                               </p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                                 Invite fellow designers to join and earn referral attribution.
                               </p>
                             </div>
@@ -630,7 +630,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               type="text"
                               readOnly
                               value={typeof window !== 'undefined' ? `${window.location.origin}/invite/@${currentProfile.username}` : ''}
-                              className="flex-1 min-w-0 bg-gray-50 border border-gray-200/80 rounded-xl px-3.5 py-2 text-xs sm:text-[13px] font-medium text-gray-800 select-all focus:outline-none"
+                              className="flex-1 min-w-0 bg-input-bg border border-border-strong rounded-xl px-3.5 py-2 text-xs sm:text-[13px] font-medium text-text-primary select-all focus:outline-none"
                             />
                             <Button
                               variant="primary"
@@ -652,7 +652,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* Connected Accounts Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Connected Accounts</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Connected Accounts</p>
                       <ConnectedAccounts />
                     </div>
 
@@ -660,11 +660,11 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     <div className="space-y-2.5 pt-2">
                       <p className="text-xs font-bold text-red-500 tracking-wider px-1">Danger Zone</p>
                       
-                      <div className="rounded-2xl border border-red-100 bg-red-50/30 p-4 space-y-3.5">
+                      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-4 space-y-3.5">
                         <div className="flex items-center justify-between gap-3 sm:gap-4">
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-red-900">Delete Account</p>
-                            <p className="text-xs sm:text-[13px] text-red-700/80 mt-1">
+                            <p className="text-sm font-semibold text-red-400">Delete Account</p>
+                            <p className="text-xs sm:text-[13px] text-red-300/80 mt-1">
                               Permanently delete your profile, creative works, and reviews.
                             </p>
                           </div>
@@ -672,7 +672,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <Button
                               variant="outline"
                               onClick={() => setShowDeleteConfirm(true)}
-                              className="h-9 px-3.5 text-xs sm:text-[13px] font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 shrink-0 rounded-full whitespace-nowrap"
+                              className="h-9 px-3.5 text-xs sm:text-[13px] font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/30 shrink-0 rounded-full whitespace-nowrap"
                             >
                               Delete
                             </Button>
@@ -680,14 +680,14 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         </div>
 
                         {showDeleteConfirm && currentProfile && (
-                          <div className="pt-3.5 border-t border-red-100 space-y-3">
+                          <div className="pt-3.5 border-t border-red-500/20 space-y-3">
                             {deleteError && (
-                              <div className="p-2.5 bg-red-100/80 rounded-xl text-xs sm:text-[13px] text-red-700 font-medium">
+                              <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-xs sm:text-[13px] text-red-400 font-medium">
                                 {deleteError}
                               </div>
                             )}
 
-                            <p className="text-xs sm:text-[13px] text-red-800 font-medium">
+                            <p className="text-xs sm:text-[13px] text-red-300 font-medium">
                               Type <strong className="font-bold underline">@{currentProfile.username}</strong> below to confirm deletion:
                             </p>
 
@@ -696,7 +696,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               placeholder={`@${currentProfile.username}`}
                               value={deleteConfirmationText}
                               onChange={(e) => setDeleteConfirmationText(e.target.value)}
-                              className="h-10 text-xs sm:text-[13px] rounded-xl border-red-200 focus:border-red-500 bg-white"
+                              className="h-10 text-xs sm:text-[13px] rounded-xl border-red-500/30 focus:border-red-500 bg-input-bg text-text-primary"
                             />
 
                             <div className="flex items-center justify-end gap-2 pt-1">
@@ -744,15 +744,15 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Delivery Channels Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Delivery Channels</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Delivery Channels</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         {/* Web Push Notifications */}
                         <div className="p-4 space-y-3">
                           <div className="flex items-center justify-between gap-4">
                             <div>
-                              <p className="text-sm font-semibold text-gray-900">Web Push Notifications</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                              <p className="text-sm font-semibold text-text-primary">Web Push Notifications</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                                 Instant browser alerts even when Rater isn&apos;t actively focused.
                               </p>
                             </div>
@@ -763,7 +763,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               onClick={() => handlePreferenceToggle('push_enabled')}
                               className={cn(
                                 "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                                (preferences?.push_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                                (preferences?.push_enabled ?? true) ? "bg-primary" : "bg-surface-interactive"
                               )}
                             >
                               <span
@@ -778,18 +778,18 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           {/* Device Registration Trigger */}
                           {/* iOS — not installed as PWA: show Home Screen install guidance */}
                           {platformInfo.isIOS && !platformInfo.isStandalone ? (
-                            <div className="pt-3 border-t border-gray-100">
-                              <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100">
-                                <Smartphone size={16} className="text-amber-600 mt-0.5 shrink-0" />
+                            <div className="pt-3 border-t border-border-default">
+                              <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                                <Smartphone size={16} className="text-amber-400 mt-0.5 shrink-0" />
                                 <div>
-                                  <p className="text-xs font-semibold text-amber-800">Install Rater to enable push</p>
-                                  <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                                  <p className="text-xs font-semibold text-amber-300">Install Rater to enable push</p>
+                                  <p className="text-xs text-amber-400/90 mt-0.5 leading-relaxed">
                                     iOS requires Rater to be added to your Home Screen before push notifications can be enabled. Tap the share icon in Safari, then tap &ldquo;Add to Home Screen&rdquo;.
                                   </p>
                                   <button
                                     type="button"
                                     onClick={() => showInstallAppModal()}
-                                    className="mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 focus:outline-none"
+                                    className="mt-2 text-xs font-semibold text-amber-300 underline underline-offset-2 focus:outline-none"
                                   >
                                     How to install Rater on iOS
                                   </button>
@@ -797,9 +797,9 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                               </div>
                             </div>
                           ) : (
-                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
-                              <span className="text-xs sm:text-[13px] text-gray-500 min-w-0 flex-1">
-                                Device status: <span className={cn("font-semibold", isPushSubscribed ? "text-emerald-700" : "text-amber-700")}>
+                            <div className="pt-3 border-t border-border-default flex items-center justify-between gap-3">
+                              <span className="text-xs sm:text-[13px] text-text-secondary min-w-0 flex-1">
+                                Device status: <span className={cn("font-semibold", isPushSubscribed ? "text-emerald-400" : "text-amber-400")}>
                                   {isPushSubscribed ? "Active on this device" : "Not enabled on this device"}
                                 </span>
                               </span>
@@ -820,16 +820,16 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             <button
                               type="button"
                               onClick={() => setIsPushTroubleshootOpen(prev => !prev)}
-                              className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-black transition-colors focus:outline-none group text-left"
+                              className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors focus:outline-none group text-left"
                             >
-                              <HelpCircle size={13} className="text-gray-400 group-hover:text-primary transition-colors shrink-0" />
-                              <span className="underline underline-offset-2 decoration-gray-300 group-hover:decoration-gray-700 transition-colors">
+                              <HelpCircle size={13} className="text-text-muted group-hover:text-primary transition-colors shrink-0" />
+                              <span className="underline underline-offset-2 decoration-border-default group-hover:decoration-text-primary transition-colors">
                                 Why don&apos;t push notifications arrive when the app is closed?
                               </span>
                               {isPushTroubleshootOpen ? (
-                                <ChevronUp size={13} className="text-gray-400 group-hover:text-black transition-transform shrink-0" />
+                                <ChevronUp size={13} className="text-text-muted group-hover:text-text-primary transition-transform shrink-0" />
                               ) : (
-                                <ChevronDown size={13} className="text-gray-400 group-hover:text-black transition-transform shrink-0" />
+                                <ChevronDown size={13} className="text-text-muted group-hover:text-text-primary transition-transform shrink-0" />
                               )}
                             </button>
 
@@ -842,71 +842,71 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                   transition={{ duration: 0.2, ease: "easeInOut" }}
                                   className="overflow-hidden"
                                 >
-                                  <div className="mt-2.5 p-3.5 rounded-xl bg-gray-50/90 border border-gray-200/80 text-xs space-y-3">
-                                    <p className="text-gray-600 leading-relaxed">
+                                  <div className="mt-2.5 p-3.5 rounded-xl bg-surface-subtle border border-border-default text-xs space-y-3">
+                                    <p className="text-text-secondary leading-relaxed">
                                       Web browsers rely on device background services to deliver alerts. When your browser is completely closed or inactive, mobile operating systems often suspend background processes to preserve battery.
                                     </p>
 
                                     {/* Priority Platform Tip */}
                                     {platformInfo.isSamsung && (
-                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
-                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                      <div className="p-3 rounded-lg bg-surface-primary border border-border-default space-y-1.5">
+                                        <div className="font-semibold text-text-primary flex items-center justify-between gap-2">
                                           <span>Samsung Internet &amp; Galaxy Devices</span>
                                           <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Browser</span>
                                         </div>
-                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                        <p className="text-text-secondary leading-relaxed text-[11.5px]">
                                           Samsung OneUI aggressively puts background browser daemons to sleep. Push messages are securely queued by Google FCM and deliver as soon as the browser wakes.
                                         </p>
-                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
-                                          <li><strong className="text-gray-800">Unrestricted battery:</strong> Go to phone <span className="font-medium text-gray-800">Settings → Apps → Samsung Internet → Battery</span> and select <span className="font-medium text-gray-800">Unrestricted</span>.</li>
-                                          <li><strong className="text-gray-800">Install as App:</strong> Tap the browser menu (☰) → <span className="font-medium text-gray-800">Install app</span> for elevated background push priority.</li>
+                                        <ul className="list-disc list-inside space-y-1 text-text-secondary text-[11px] leading-relaxed pt-0.5">
+                                          <li><strong className="text-text-primary">Unrestricted battery:</strong> Go to phone <span className="font-medium text-text-primary">Settings → Apps → Samsung Internet → Battery</span> and select <span className="font-medium text-text-primary">Unrestricted</span>.</li>
+                                          <li><strong className="text-text-primary">Install as App:</strong> Tap the browser menu (☰) → <span className="font-medium text-text-primary">Install app</span> for elevated background push priority.</li>
                                         </ul>
                                       </div>
                                     )}
 
                                     {platformInfo.isAndroid && !platformInfo.isSamsung && (
-                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
-                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                      <div className="p-3 rounded-lg bg-surface-primary border border-border-default space-y-1.5">
+                                        <div className="font-semibold text-text-primary flex items-center justify-between gap-2">
                                           <span>Android &amp; Chrome</span>
                                           <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Browser</span>
                                         </div>
-                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                        <p className="text-text-secondary leading-relaxed text-[11.5px]">
                                           Android may pause background web-push when battery saver or adaptive battery is active.
                                         </p>
-                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
-                                          <li><strong className="text-gray-800">Unrestricted battery:</strong> In Android <span className="font-medium text-gray-800">Settings → Apps → Chrome → App battery usage</span>, choose <span className="font-medium text-gray-800">Unrestricted</span>.</li>
-                                          <li><strong className="text-gray-800">Install Rater:</strong> Tap the browser menu (⋮) → <span className="font-medium text-gray-800">Install app</span> for highest delivery reliability.</li>
+                                        <ul className="list-disc list-inside space-y-1 text-text-secondary text-[11px] leading-relaxed pt-0.5">
+                                          <li><strong className="text-text-primary">Unrestricted battery:</strong> In Android <span className="font-medium text-text-primary">Settings → Apps → Chrome → App battery usage</span>, choose <span className="font-medium text-text-primary">Unrestricted</span>.</li>
+                                          <li><strong className="text-text-primary">Install Rater:</strong> Tap the browser menu (⋮) → <span className="font-medium text-text-primary">Install app</span> for highest delivery reliability.</li>
                                         </ul>
                                       </div>
                                     )}
 
                                     {platformInfo.isIOS && (
-                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
-                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                      <div className="p-3 rounded-lg bg-surface-primary border border-border-default space-y-1.5">
+                                        <div className="font-semibold text-text-primary flex items-center justify-between gap-2">
                                           <span>Apple iOS (iPhone &amp; iPad)</span>
                                           <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Device</span>
                                         </div>
-                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                        <p className="text-text-secondary leading-relaxed text-[11.5px]">
                                           Apple requires iOS 16.4+ and only permits Web Push for websites saved to the Home Screen. Regular Safari tabs cannot receive notifications when closed.
                                         </p>
-                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
-                                          <li>Tap the <span className="font-medium text-gray-800">Share</span> icon in Safari → select <span className="font-medium text-gray-800">&ldquo;Add to Home Screen&rdquo;</span>.</li>
+                                        <ul className="list-disc list-inside space-y-1 text-text-secondary text-[11px] leading-relaxed pt-0.5">
+                                          <li>Tap the <span className="font-medium text-text-primary">Share</span> icon in Safari → select <span className="font-medium text-text-primary">&ldquo;Add to Home Screen&rdquo;</span>.</li>
                                           <li>Launch Rater from your Home Screen to enable push.</li>
                                         </ul>
                                       </div>
                                     )}
 
                                     {platformInfo.isDesktop && (
-                                      <div className="p-3 rounded-lg bg-white border border-gray-200/80 space-y-1.5">
-                                        <div className="font-semibold text-gray-900 flex items-center justify-between gap-2">
+                                      <div className="p-3 rounded-lg bg-surface-primary border border-border-default space-y-1.5">
+                                        <div className="font-semibold text-text-primary flex items-center justify-between gap-2">
                                           <span>Desktop Browsers (Chrome, Edge, Brave, Firefox)</span>
                                           <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary text-[10px] font-bold tracking-wide uppercase">Your Device</span>
                                         </div>
-                                        <p className="text-gray-600 leading-relaxed text-[11.5px]">
+                                        <p className="text-text-secondary leading-relaxed text-[11.5px]">
                                           Desktop browsers can deliver alerts with all tabs closed if background processing is allowed in browser settings.
                                         </p>
-                                        <ul className="list-disc list-inside space-y-1 text-gray-600 text-[11px] leading-relaxed pt-0.5">
-                                          <li>In browser settings (e.g. Chrome <span className="font-medium text-gray-800">Settings → System</span>), ensure <span className="font-medium text-gray-800">&ldquo;Continue running background apps when closed&rdquo;</span> is enabled.</li>
+                                        <ul className="list-disc list-inside space-y-1 text-text-secondary text-[11px] leading-relaxed pt-0.5">
+                                          <li>In browser settings (e.g. Chrome <span className="font-medium text-text-primary">Settings → System</span>), ensure <span className="font-medium text-text-primary">&ldquo;Continue running background apps when closed&rdquo;</span> is enabled.</li>
                                           <li>Ensure your OS settings (Windows Notifications / macOS Focus) allow notifications for your browser.</li>
                                         </ul>
                                       </div>
@@ -917,36 +917,36 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                                       <button
                                         type="button"
                                         onClick={() => setShowAllPlatforms(prev => !prev)}
-                                        className="text-[11px] font-medium text-gray-500 hover:text-black transition-colors focus:outline-none flex items-center gap-1"
+                                        className="text-[11px] font-medium text-text-secondary hover:text-text-primary transition-colors focus:outline-none flex items-center gap-1"
                                       >
                                         <span>{showAllPlatforms ? 'Hide other operating systems' : 'View guidelines for other operating systems'}</span>
                                         <ChevronDown size={11} className={cn("transition-transform duration-200", showAllPlatforms && "rotate-180")} />
                                       </button>
 
                                       {showAllPlatforms && (
-                                        <div className="mt-2.5 pt-2.5 border-t border-gray-200/70 space-y-2.5 text-[11px]">
+                                        <div className="mt-2.5 pt-2.5 border-t border-border-default space-y-2.5 text-[11px]">
                                           {!platformInfo.isSamsung && (
                                             <div className="space-y-0.5">
-                                              <p className="font-semibold text-gray-800">Samsung Internet (Galaxy):</p>
-                                              <p className="text-gray-500">Android Settings → Apps → Samsung Internet → Battery → set to &ldquo;Unrestricted&rdquo;.</p>
+                                              <p className="font-semibold text-text-primary">Samsung Internet (Galaxy):</p>
+                                              <p className="text-text-secondary">Android Settings → Apps → Samsung Internet → Battery → set to &ldquo;Unrestricted&rdquo;.</p>
                                             </div>
                                           )}
                                           {(!platformInfo.isAndroid || platformInfo.isSamsung) && (
                                             <div className="space-y-0.5">
-                                              <p className="font-semibold text-gray-800">Android Chrome:</p>
-                                              <p className="text-gray-500">Android Settings → Apps → Chrome → App battery usage → set to &ldquo;Unrestricted&rdquo;.</p>
+                                              <p className="font-semibold text-text-primary">Android Chrome:</p>
+                                              <p className="text-text-secondary">Android Settings → Apps → Chrome → App battery usage → set to &ldquo;Unrestricted&rdquo;.</p>
                                             </div>
                                           )}
                                           {!platformInfo.isIOS && (
                                             <div className="space-y-0.5">
-                                              <p className="font-semibold text-gray-800">iOS (iPhone &amp; iPad):</p>
-                                              <p className="text-gray-500">Requires iOS 16.4+. Safari Share menu → &ldquo;Add to Home Screen&rdquo;.</p>
+                                              <p className="font-semibold text-text-primary">iOS (iPhone &amp; iPad):</p>
+                                              <p className="text-text-secondary">Requires iOS 16.4+. Safari Share menu → &ldquo;Add to Home Screen&rdquo;.</p>
                                             </div>
                                           )}
                                           {!platformInfo.isDesktop && (
                                             <div className="space-y-0.5">
-                                              <p className="font-semibold text-gray-800">Desktop (Windows &amp; macOS):</p>
-                                              <p className="text-gray-500">Ensure browser system settings permit running background apps when closed.</p>
+                                              <p className="font-semibold text-text-primary">Desktop (Windows &amp; macOS):</p>
+                                              <p className="text-text-secondary">Ensure browser system settings permit running background apps when closed.</p>
                                             </div>
                                           )}
                                         </div>
@@ -961,17 +961,17 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           {/* Android browser (not installed): gentle PWA install hint for reliability */}
                           {platformInfo.isAndroid && !isInstalled && isPushSubscribed && (
                             <div className="pt-0">
-                              <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
-                                <Download size={16} className="text-blue-600 mt-0.5 shrink-0" />
+                              <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                                <Download size={16} className="text-blue-400 mt-0.5 shrink-0" />
                                 <div>
-                                  <p className="text-xs font-semibold text-blue-800">Install for more reliable push</p>
-                                  <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
+                                  <p className="text-xs font-semibold text-blue-300">Install for more reliable push</p>
+                                  <p className="text-xs text-blue-300/80 mt-0.5 leading-relaxed">
                                     Installing Rater to your home screen improves push delivery reliability, especially when your browser is in the background.
                                   </p>
                                   <button
                                     type="button"
                                     onClick={handleInstallApp}
-                                    className="mt-2 text-xs font-semibold text-blue-800 underline underline-offset-2 focus:outline-none"
+                                    className="mt-2 text-xs font-semibold text-blue-300 underline underline-offset-2 focus:outline-none"
                                   >
                                     Install Rater
                                   </button>
@@ -984,8 +984,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* In-App Notifications */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">In-App Notifications</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">In-App Notifications</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               Realtime bell alerts and unread counters in the app header.
                             </p>
                           </div>
@@ -996,7 +996,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('in_app_enabled')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.in_app_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.in_app_enabled ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1011,8 +1011,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Email Notifications */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Milestone Emails</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Milestone Emails</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               High-signal emails for score unlocks, insights synthesis, and badges.
                             </p>
                           </div>
@@ -1023,7 +1023,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('email_enabled')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.email_enabled ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.email_enabled ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1039,14 +1039,14 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* Activity Alerts Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Activity Alerts</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Activity Alerts</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         {/* Critiques */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Critiques on your Work</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Critiques on your Work</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               When a creative shares feedback and scores on your published Work.
                             </p>
                           </div>
@@ -1057,7 +1057,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_critiques')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_critiques ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_critiques ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1072,8 +1072,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Replies & Mentions */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Critique Replies & @Mentions</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Critique Replies & @Mentions</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               When creatives reply to your critiques, respond to your comments, or mention you.
                             </p>
                           </div>
@@ -1084,7 +1084,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_replies')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_replies ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_replies ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1099,8 +1099,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Milestones */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Score Unlocks & Badges</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Score Unlocks & Badges</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               When your Work unlocks its Overall Score (3 Critiques) or earns Top Rated.
                             </p>
                           </div>
@@ -1111,7 +1111,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_milestones')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_milestones ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_milestones ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1126,8 +1126,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Insights */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Insights Syntheses</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Insights Syntheses</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               When AI-driven pattern summaries and perception insights are synthesized.
                             </p>
                           </div>
@@ -1138,7 +1138,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_insights')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_insights ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_insights ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1153,8 +1153,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* New Work on Rater */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">New work on Rater</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">New work on Rater</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               Get notified when new work is published on Rater.
                             </p>
                           </div>
@@ -1165,7 +1165,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_new_work')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_new_work ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_new_work ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1181,14 +1181,14 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* Feedback & Community Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Feedback & Community</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Feedback & Community</p>
                       
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         {/* Status Updates & Official Responses */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Status Updates & Official Responses</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Status Updates & Official Responses</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               When followed feature requests change status or receive official team responses.
                             </p>
                           </div>
@@ -1199,7 +1199,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_feedback_status')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_feedback_status ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_feedback_status ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1214,8 +1214,8 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                         {/* Discussion Comments */}
                         <div className="p-4 flex items-center justify-between gap-4">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">Discussion Comments</p>
-                            <p className="text-xs sm:text-[13px] text-gray-500 mt-1 leading-relaxed">
+                            <p className="text-sm font-semibold text-text-primary">Discussion Comments</p>
+                            <p className="text-xs sm:text-[13px] text-text-secondary mt-1 leading-relaxed">
                               When community members share comments on feedback requests you follow or authored.
                             </p>
                           </div>
@@ -1226,7 +1226,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClick={() => handlePreferenceToggle('notify_feedback_comments')}
                             className={cn(
                               "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden",
-                              (preferences?.notify_feedback_comments ?? true) ? "bg-primary" : "bg-gray-200"
+                              (preferences?.notify_feedback_comments ?? true) ? "bg-primary" : "bg-surface-interactive"
                             )}
                           >
                             <span
@@ -1241,9 +1241,9 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     </div>
 
                     {/* System Bypass Notice */}
-                    <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200/60 flex items-start gap-3">
-                      <ShieldCheck className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-                      <p className="text-xs text-gray-500 leading-relaxed">
+                    <div className="p-3.5 rounded-2xl bg-surface-subtle border border-border-default flex items-start gap-3">
+                      <ShieldCheck className="w-4 h-4 text-text-muted shrink-0 mt-0.5" />
+                      <p className="text-xs text-text-secondary leading-relaxed">
                         Security notices, password resets, and critical account moderation alerts always bypass preferences to protect your profile.
                       </p>
                     </div>
@@ -1262,22 +1262,22 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                   >
                     {/* Community & Feedback Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Community & Feedback</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Community & Feedback</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         <Link
                           href="/legal/community-guidelines"
                           onClick={onClose}
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <BookOpen size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <BookOpen size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">Community Guidelines</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">Read our rating standards and creative code of conduct.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">Community Guidelines</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">Read our rating standards and creative code of conduct.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
 
                         <button
@@ -1286,16 +1286,16 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClose();
                             useOverlayStore.getState().openFeedbackDrawer({ defaultType: 'Feature Request' });
                           }}
-                          className="w-full p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group text-left"
+                          className="w-full p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group text-left"
                         >
                           <div className="flex items-center gap-3">
-                            <MessageSquarePlus size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <MessageSquarePlus size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">Feature Requests & Ideas</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">Suggest new features and vote on community ideas.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">Feature Requests & Ideas</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">Suggest new features and vote on community ideas.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </button>
 
                         <button
@@ -1304,82 +1304,82 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                             onClose();
                             useOverlayStore.getState().openFeedbackDrawer({ defaultType: 'Bug Report' });
                           }}
-                          className="w-full p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group text-left"
+                          className="w-full p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group text-left"
                         >
                           <div className="flex items-center gap-3">
-                            <Bug size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <Bug size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">Report a Bug</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">Let our team know about technical issues or glitches.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">Report a Bug</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">Let our team know about technical issues or glitches.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </button>
 
                         <a
                           href="mailto:support@raterapp.site?subject=Rater%20Support%20Inquiry"
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <Mail size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <Mail size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">Contact Support</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">Get direct assistance from the Rater core team.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">Contact Support</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">Get direct assistance from the Rater core team.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </a>
                       </div>
                     </div>
 
                     {/* Legal Policies Section */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Legal Policies</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Legal Policies</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         <Link
                           href="/legal/terms"
                           onClick={onClose}
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <FileText size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <FileText size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">Terms of Service</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">Terms of use, service agreements, and creator rights.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">Terms of Service</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">Terms of use, service agreements, and creator rights.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
 
                         <Link
                           href="/legal/privacy"
                           onClick={onClose}
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <Lock size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <Lock size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">Privacy Policy</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">How we process, store, and protect your data.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">Privacy Policy</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">How we process, store, and protect your data.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
 
                         <Link
                           href="/legal/ai-insights"
                           onClick={onClose}
-                          className="p-4 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-4 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <Sparkles size={17} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <Sparkles size={17} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 group-hover:text-black">AI Insights Disclosure</p>
-                              <p className="text-xs sm:text-[13px] text-gray-500 mt-0.5">Transparent details on AI synthesis and perception modeling.</p>
+                              <p className="text-sm font-semibold text-text-primary group-hover:text-text-primary">AI Insights Disclosure</p>
+                              <p className="text-xs sm:text-[13px] text-text-secondary mt-0.5">Transparent details on AI synthesis and perception modeling.</p>
                             </div>
                           </div>
-                          <ExternalLink size={14} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={14} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
                       </div>
                     </div>
@@ -1397,7 +1397,7 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     className="space-y-6"
                   >
                     {/* 1. App Identity Hero */}
-                    <div className="p-5 rounded-3xl bg-gray-50/60 border border-gray-100 flex items-center gap-3.5">
+                    <div className="p-5 rounded-3xl bg-surface-subtle border border-border-default flex items-center gap-3.5">
                       <div className="w-11 h-11 overflow-hidden shrink-0">
                         <img
                           src="/icons/rater-logo-white-bg-stroked.svg"
@@ -1407,12 +1407,12 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-base font-medium text-gray-900 tracking-tight">Rater</h3>
-                          <span className="text-xs text-gray-400 font-normal">
+                          <h3 className="text-base font-medium text-text-primary tracking-tight">Rater</h3>
+                          <span className="text-xs text-text-muted font-normal">
                             v1.2.2
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                        <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">
                           Real-time design critique and creative discovery platform.
                         </p>
                       </div>
@@ -1421,38 +1421,38 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                     {/* 2. What's New in v1.2.0 (Compact Expandable Accordion) */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <p className="text-xs font-semibold text-gray-400 tracking-wider">What&apos;s New in v1.2</p>
-                        <span className="text-xs text-gray-400 font-normal">Release Highlights</span>
+                        <p className="text-xs font-semibold text-text-muted tracking-wider">What&apos;s New in v1.2</p>
+                        <span className="text-xs text-text-muted font-normal">Release Highlights</span>
                       </div>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         {/* Item 1: Threaded Critique Replies & @Mentions */}
                         <div className="transition-colors">
                           <button
                             type="button"
                             onClick={() => setExpandedChangelog(expandedChangelog === 'replies' ? null : 'replies')}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                            className="w-full p-4 flex items-center justify-between hover:bg-surface-hover transition-colors text-left"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                                 <MessageSquare size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Threaded Critique Replies &amp; @Mentions</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Engage in conversations directly beneath feedback.</p>
+                                <p className="text-sm font-semibold text-text-primary">Threaded Critique Replies &amp; @Mentions</p>
+                                <p className="text-xs text-text-secondary mt-0.5">Engage in conversations directly beneath feedback.</p>
                               </div>
                             </div>
                             {expandedChangelog === 'replies' ? (
-                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                              <ChevronUp size={16} className="text-text-muted shrink-0" />
                             ) : (
-                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                              <ChevronDown size={16} className="text-text-muted shrink-0" />
                             )}
                           </button>
                           {expandedChangelog === 'replies' && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
-                              <p>• <strong>Shallow-Threaded Discussions:</strong> Clean conversational replies under critiques without messy visual staircase nesting.</p>
-                              <p>• <strong>Smart @Mentions &amp; Autocomplete:</strong> Type @ to tag creators with clickable profiles and auto-suggested participants.</p>
-                              <p>• <strong>Unread Tracking &amp; Deep Linking:</strong> &quot;New replies&quot; badges and instant URL navigation jump straight into active threads.</p>
+                            <div className="px-4 pb-4 pt-1 text-xs text-text-secondary space-y-1.5 bg-surface-subtle border-t border-border-default">
+                              <p>• <strong className="text-text-primary">Shallow-Threaded Discussions:</strong> Clean conversational replies under critiques without messy visual staircase nesting.</p>
+                              <p>• <strong className="text-text-primary">Smart @Mentions &amp; Autocomplete:</strong> Type @ to tag creators with clickable profiles and auto-suggested participants.</p>
+                              <p>• <strong className="text-text-primary">Unread Tracking &amp; Deep Linking:</strong> &quot;New replies&quot; badges and instant URL navigation jump straight into active threads.</p>
                             </div>
                           )}
                         </div>
@@ -1462,149 +1462,149 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
                           <button
                             type="button"
                             onClick={() => setExpandedChangelog(expandedChangelog === 'search' ? null : 'search')}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                            className="w-full p-4 flex items-center justify-between hover:bg-surface-hover transition-colors text-left"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
                                 <Search size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Instant Search & Creator Discovery</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Find designers by name, username, or creative works.</p>
+                                <p className="text-sm font-semibold text-text-primary">Instant Search & Creator Discovery</p>
+                                <p className="text-xs text-text-secondary mt-0.5">Find designers by name, username, or creative works.</p>
                               </div>
                             </div>
                             {expandedChangelog === 'search' ? (
-                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                              <ChevronUp size={16} className="text-text-muted shrink-0" />
                             ) : (
-                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                              <ChevronDown size={16} className="text-text-muted shrink-0" />
                             )}
                           </button>
                           {expandedChangelog === 'search' && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
-                              <p>• <strong>Name & Username Discovery:</strong> Search for creators directly to see matching profiles and works.</p>
-                              <p>• <strong>Dynamic 4-Signal Autocomplete:</strong> Suggestions derived from trending queries, live creator names, and design taxonomy.</p>
-                              <p>• <strong>Dual-Action Predictions (↗):</strong> Tap arrow icons to populate query strings or jump straight to results.</p>
+                            <div className="px-4 pb-4 pt-1 text-xs text-text-secondary space-y-1.5 bg-surface-subtle border-t border-border-default">
+                              <p>• <strong className="text-text-primary">Name & Username Discovery:</strong> Search for creators directly to see matching profiles and works.</p>
+                              <p>• <strong className="text-text-primary">Dynamic 4-Signal Autocomplete:</strong> Suggestions derived from trending queries, live creator names, and design taxonomy.</p>
+                              <p>• <strong className="text-text-primary">Dual-Action Predictions (↗):</strong> Tap arrow icons to populate query strings or jump straight to results.</p>
                             </div>
                           )}
                         </div>
 
-                        {/* Item 2: Real-Time Notifications & Web Push */}
+                        {/* Item 3: Real-Time Notifications & Web Push */}
                         <div className="transition-colors">
                           <button
                             type="button"
                             onClick={() => setExpandedChangelog(expandedChangelog === 'push' ? null : 'push')}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                            className="w-full p-4 flex items-center justify-between hover:bg-surface-hover transition-colors text-left"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0">
                                 <Bell size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Real-Time Notifications & Web Push</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Instant critique alerts on phone and desktop.</p>
+                                <p className="text-sm font-semibold text-text-primary">Real-Time Notifications & Web Push</p>
+                                <p className="text-xs text-text-secondary mt-0.5">Instant critique alerts on phone and desktop.</p>
                               </div>
                             </div>
                             {expandedChangelog === 'push' ? (
-                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                              <ChevronUp size={16} className="text-text-muted shrink-0" />
                             ) : (
-                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                              <ChevronDown size={16} className="text-text-muted shrink-0" />
                             )}
                           </button>
                           {expandedChangelog === 'push' && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
-                              <p>• <strong>Browser Web Push (VAPID):</strong> Receive notifications even when Rater is closed in your browser.</p>
-                              <p>• <strong>Granular Channel Controls:</strong> Customize in-app, push, and email preferences per category.</p>
-                              <p>• <strong>Actionable Alerts:</strong> Tap directly to view reviews, comments, and new portfolio works.</p>
+                            <div className="px-4 pb-4 pt-1 text-xs text-text-secondary space-y-1.5 bg-surface-subtle border-t border-border-default">
+                              <p>• <strong className="text-text-primary">Browser Web Push (VAPID):</strong> Receive notifications even when Rater is closed in your browser.</p>
+                              <p>• <strong className="text-text-primary">Granular Channel Controls:</strong> Customize in-app, push, and email preferences per category.</p>
+                              <p>• <strong className="text-text-primary">Actionable Alerts:</strong> Tap directly to view reviews, comments, and new portfolio works.</p>
                             </div>
                           )}
                         </div>
 
-                        {/* Item 3: Community Feedback Hub */}
+                        {/* Item 4: Community Feedback Hub */}
                         <div className="transition-colors">
                           <button
                             type="button"
                             onClick={() => setExpandedChangelog(expandedChangelog === 'feedback' ? null : 'feedback')}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                            className="w-full p-4 flex items-center justify-between hover:bg-surface-hover transition-colors text-left"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
                                 <MessageSquarePlus size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Community Feedback & Roadmap Hub</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Upvote feature requests and shape Rater&apos;s future.</p>
+                                <p className="text-sm font-semibold text-text-primary">Community Feedback & Roadmap Hub</p>
+                                <p className="text-xs text-text-secondary mt-0.5">Upvote feature requests and shape Rater&apos;s future.</p>
                               </div>
                             </div>
                             {expandedChangelog === 'feedback' ? (
-                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                              <ChevronUp size={16} className="text-text-muted shrink-0" />
                             ) : (
-                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                              <ChevronDown size={16} className="text-text-muted shrink-0" />
                             )}
                           </button>
                           {expandedChangelog === 'feedback' && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
-                              <p>• <strong>Interactive Roadmap (/feedback):</strong> Community voting and real-time status stages (Planned, In Progress, Completed).</p>
-                              <p>• <strong>Discussion Drawer:</strong> Threaded creator conversations and official team responses.</p>
+                            <div className="px-4 pb-4 pt-1 text-xs text-text-secondary space-y-1.5 bg-surface-subtle border-t border-border-default">
+                              <p>• <strong className="text-text-primary">Interactive Roadmap (/feedback):</strong> Community voting and real-time status stages (Planned, In Progress, Completed).</p>
+                              <p>• <strong className="text-text-primary">Discussion Drawer:</strong> Threaded creator conversations and official team responses.</p>
                             </div>
                           )}
                         </div>
 
-                        {/* Item 4: Progressive Web App (PWA) Installation */}
+                        {/* Item 5: Progressive Web App (PWA) Installation */}
                         <div className="transition-colors">
                           <button
                             type="button"
                             onClick={() => setExpandedChangelog(expandedChangelog === 'pwa' ? null : 'pwa')}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                            className="w-full p-4 flex items-center justify-between hover:bg-surface-hover transition-colors text-left"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
                                 <Smartphone size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Native App Installation (PWA)</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Install on home screen with full-screen experience.</p>
+                                <p className="text-sm font-semibold text-text-primary">Native App Installation (PWA)</p>
+                                <p className="text-xs text-text-secondary mt-0.5">Install on home screen with full-screen experience.</p>
                               </div>
                             </div>
                             {expandedChangelog === 'pwa' ? (
-                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                              <ChevronUp size={16} className="text-text-muted shrink-0" />
                             ) : (
-                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                              <ChevronDown size={16} className="text-text-muted shrink-0" />
                             )}
                           </button>
                           {expandedChangelog === 'pwa' && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
-                              <p>• <strong>1-Click Install:</strong> Fast native installation on Android, Chrome, and iOS Safari Home Screen.</p>
-                              <p>• <strong>Offline Resilience:</strong> View recently browsed posts and cached search indexes with zero connectivity.</p>
+                            <div className="px-4 pb-4 pt-1 text-xs text-text-secondary space-y-1.5 bg-surface-subtle border-t border-border-default">
+                              <p>• <strong className="text-text-primary">1-Click Install:</strong> Fast native installation on Android, Chrome, and iOS Safari Home Screen.</p>
+                              <p>• <strong className="text-text-primary">Offline Resilience:</strong> View recently browsed posts and cached search indexes with zero connectivity.</p>
                             </div>
                           )}
                         </div>
 
-                        {/* Item 5: Unified Settings & Privacy */}
+                        {/* Item 6: Unified Settings & Privacy */}
                         <div className="transition-colors">
                           <button
                             type="button"
                             onClick={() => setExpandedChangelog(expandedChangelog === 'settings' ? null : 'settings')}
-                            className="w-full p-4 flex items-center justify-between hover:bg-gray-50/70 transition-colors text-left"
+                            className="w-full p-4 flex items-center justify-between hover:bg-surface-hover transition-colors text-left"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-xl bg-gray-100 text-gray-700 flex items-center justify-center shrink-0">
+                              <div className="w-8 h-8 rounded-xl bg-surface-interactive text-text-primary flex items-center justify-center shrink-0">
                                 <Sliders size={16} />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-gray-900">Refined Settings & Privacy Controls</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Unified sliding overlay for profile, accounts, and security.</p>
+                                <p className="text-sm font-semibold text-text-primary">Refined Settings & Privacy Controls</p>
+                                <p className="text-xs text-text-secondary mt-0.5">Unified sliding overlay for profile, accounts, and security.</p>
                               </div>
                             </div>
                             {expandedChangelog === 'settings' ? (
-                              <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                              <ChevronUp size={16} className="text-text-muted shrink-0" />
                             ) : (
-                              <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                              <ChevronDown size={16} className="text-text-muted shrink-0" />
                             )}
                           </button>
                           {expandedChangelog === 'settings' && (
-                            <div className="px-4 pb-4 pt-1 text-xs text-gray-600 space-y-1.5 bg-gray-50/50 border-t border-gray-100">
-                              <p>• <strong>Consolidated Navigation:</strong> Instant access to account details, password updates, and notification channels.</p>
-                              <p>• <strong>Privacy & Security:</strong> Multi-tier moderation safeguards and immediate account controls.</p>
+                            <div className="px-4 pb-4 pt-1 text-xs text-text-secondary space-y-1.5 bg-surface-subtle border-t border-border-default">
+                              <p>• <strong className="text-text-primary">Consolidated Navigation:</strong> Instant access to account details, password updates, and notification channels.</p>
+                              <p>• <strong className="text-text-primary">Privacy & Security:</strong> Multi-tier moderation safeguards and immediate account controls.</p>
                             </div>
                           )}
                         </div>
@@ -1613,74 +1613,74 @@ export function SettingsOverlay({ isOpen, initialTab = 'general', onClose }: Set
 
                     {/* 3. Platform Policies & Resources */}
                     <div className="space-y-2.5">
-                      <p className="text-xs font-semibold text-gray-400 tracking-wider px-1">Legal & Platform Ethics</p>
+                      <p className="text-xs font-semibold text-text-muted tracking-wider px-1">Legal & Platform Ethics</p>
 
-                      <div className="rounded-2xl border border-gray-100 bg-white divide-y divide-gray-100 overflow-hidden">
+                      <div className="rounded-2xl border border-border-default bg-surface-primary divide-y divide-border-default overflow-hidden">
                         <Link
                           href="/legal/community-guidelines"
                           onClick={onClose}
-                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-3.5 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <BookOpen size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <BookOpen size={16} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">Community Guidelines</p>
-                              <p className="text-[11px] sm:text-xs text-gray-500">Rating standards and critique code of conduct.</p>
+                              <p className="text-xs sm:text-sm font-semibold text-text-primary group-hover:text-text-primary">Community Guidelines</p>
+                              <p className="text-[11px] sm:text-xs text-text-secondary">Rating standards and critique code of conduct.</p>
                             </div>
                           </div>
-                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={13} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
 
                         <Link
                           href="/legal/ai-insights"
                           onClick={onClose}
-                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-3.5 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <Sparkles size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <Sparkles size={16} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">AI Insights & Synthesis Ethics</p>
-                              <p className="text-[11px] sm:text-xs text-gray-500">Perception modeling and creator IP protections.</p>
+                              <p className="text-xs sm:text-sm font-semibold text-text-primary group-hover:text-text-primary">AI Insights & Synthesis Ethics</p>
+                              <p className="text-[11px] sm:text-xs text-text-secondary">Perception modeling and creator IP protections.</p>
                             </div>
                           </div>
-                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={13} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
 
                         <Link
                           href="/legal/terms"
                           onClick={onClose}
-                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-3.5 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <FileText size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <FileText size={16} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">Terms of Service</p>
-                              <p className="text-[11px] sm:text-xs text-gray-500">Creator copyright ownership and platform rules.</p>
+                              <p className="text-xs sm:text-sm font-semibold text-text-primary group-hover:text-text-primary">Terms of Service</p>
+                              <p className="text-[11px] sm:text-xs text-text-secondary">Creator copyright ownership and platform rules.</p>
                             </div>
                           </div>
-                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={13} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
 
                         <Link
                           href="/legal/privacy"
                           onClick={onClose}
-                          className="p-3.5 hover:bg-gray-50/70 transition-colors flex items-center justify-between group"
+                          className="p-3.5 hover:bg-surface-hover transition-colors flex items-center justify-between group"
                         >
                           <div className="flex items-center gap-3">
-                            <Lock size={16} className="text-gray-400 group-hover:text-black transition-colors shrink-0" />
+                            <Lock size={16} className="text-text-muted group-hover:text-text-primary transition-colors shrink-0" />
                             <div>
-                              <p className="text-xs sm:text-sm font-semibold text-gray-900 group-hover:text-black">Privacy Policy</p>
-                              <p className="text-[11px] sm:text-xs text-gray-500">How we store, process, and protect your data.</p>
+                              <p className="text-xs sm:text-sm font-semibold text-text-primary group-hover:text-text-primary">Privacy Policy</p>
+                              <p className="text-[11px] sm:text-xs text-text-secondary">How we store, process, and protect your data.</p>
                             </div>
                           </div>
-                          <ExternalLink size={13} className="text-gray-300 group-hover:text-gray-600 transition-colors shrink-0" />
+                          <ExternalLink size={13} className="text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
                         </Link>
                       </div>
                     </div>
 
                     {/* 4. Footer & Copyright */}
-                    <div className="pt-2 pb-4 text-center space-y-1 text-xs text-gray-400">
-                      <p className="font-medium text-gray-500">Rater &copy; {new Date().getFullYear()} &bull; All Rights Reserved.</p>
+                    <div className="pt-2 pb-4 text-center space-y-1 text-xs text-text-muted">
+                      <p className="font-medium text-text-secondary">Rater &copy; {new Date().getFullYear()} &bull; All Rights Reserved.</p>
                       <p className="text-[11px]">Crafted for the global design community.</p>
                     </div>
                   </motion.div>

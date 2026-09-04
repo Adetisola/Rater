@@ -686,9 +686,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
   if (!currentProfile) {
     return (
       <div className="min-h-[60vh] w-full flex flex-col items-center justify-center text-center p-8 animate-in fade-in duration-500 max-w-2xl mx-auto">
-        <Lock className="w-16 h-16 text-gray-200 mb-6" />
-        <h1 className="text-3xl font-semibold mb-4 text-black">Log in to Publish</h1>
-        <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+        <Lock className="w-16 h-16 text-text-muted mb-6" />
+        <h1 className="text-3xl font-semibold mb-4 text-text-primary">Log in to Publish</h1>
+        <p className="text-text-secondary max-w-md mx-auto leading-relaxed">
           You must be logged in to publish your work and receive structured critique.
         </p>
         <div className="flex gap-4 mt-10">
@@ -721,10 +721,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             }}
           />
         </div>
-        <h1 className="text-2xl font-semibold mb-4 text-black">
+        <h1 className="text-2xl font-semibold mb-4 text-text-primary">
           {isEditing ? "Work Updated!" : "Work Published!"}
         </h1>
-        <div className="text-gray-500 max-w-md mx-auto leading-relaxed">
+        <div className="text-text-secondary max-w-md mx-auto leading-relaxed">
           {isEditing
             ? <AmbientSuccessText />
             : <p>Your work is live! Redirecting you to the studio feed...</p>}
@@ -745,12 +745,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
       )}
     >
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10 pb-6 border-b border-border-default">
         <div>
-          <h1 className="text-3xl font-medium mb-1.5 text-black">
+          <h1 className="text-3xl font-medium mb-1.5 text-text-primary">
             {isEditing ? "Edit Work" : "Publish Work"}
           </h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-text-muted">
             {isEditing ? "Update your work details." : "Share your creative work for structured critique."}
           </p>
         </div>
@@ -779,9 +779,9 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div
               className={cn(
                 "group relative rounded-3xl flex flex-col items-center justify-center overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                !isEditMode ? "flex-1 w-full bg-[#F2F2F2] border-2 border-dashed border-[#CCCCCC] hover:bg-[#FFF6DD] hover:border-primary transition-all cursor-pointer" : "h-95 w-full max-w-125 mx-auto bg-gray-50 border-2 border-solid border-gray-200 cursor-default",
+                !isEditMode ? "flex-1 w-full bg-surface-primary border-2 border-dashed border-border-default hover:bg-surface-hover hover:border-primary transition-all cursor-pointer" : "h-95 w-full max-w-125 mx-auto bg-surface-subtle border-2 border-solid border-border-default cursor-default",
                 !isEditMode && mediaPreviews.length === 0 ? "aspect-video" : "",
-                isDragging && !isEditMode && "bg-[#FFF6DD] border-primary shadow-[0_0_20px_rgba(254,195,18,0.15)]"
+                isDragging && !isEditMode && "bg-surface-hover border-primary shadow-[0_0_20px_rgba(254,195,18,0.15)]"
               )}
               onDragEnter={!isEditMode ? handleDragEnter : undefined}
               onDragOver={!isEditMode ? handleDragOver : undefined}
@@ -805,10 +805,10 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               )}
 
               {isDragging && !isEditMode && mediaFiles.length < 5 ? (
-                <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#FFF6DD]/80 backdrop-blur-sm pointer-events-none transition-opacity duration-200">
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-surface-elevated/90 backdrop-blur-sm pointer-events-none transition-opacity duration-200">
                   <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
                     <FileUp strokeWidth={2} className="w-12 h-12 text-primary mb-3" />
-                    <p className="text-xl font-semibold text-black">Drop images here (Max 5)</p>
+                    <p className="text-xl font-semibold text-text-primary">Drop images here (Max 5)</p>
                   </div>
                 </div>
               ) : null}
@@ -926,11 +926,11 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                 </div>
               ) : (
                 <div className="flex flex-col items-center text-center p-6 pointer-events-none">
-                  <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                    <FileUp strokeWidth={1.5} className="w-15 h-15 opacity-40 group-hover:opacity-60 transition-opacity" />
+                  <div className="w-16 h-16 mb-4 flex items-center justify-center text-text-muted group-hover:text-text-primary transition-colors">
+                    <FileUp strokeWidth={1.5} className="w-15 h-15 opacity-60 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <p className="text-lg font-medium text-black mb-1">Drop your Design</p>
-                  <p className="text-sm text-gray-400">Supports PNG, JPG, WEBP, AVIF (Up to 5 images, Max 8MB per image)</p>
+                  <p className="text-lg font-medium text-text-primary mb-1">Drop your Design</p>
+                  <p className="text-sm text-text-muted">Supports PNG, JPG, WEBP, AVIF (Up to 5 images, Max 8MB per image)</p>
                 </div>
               )}
             </div>
@@ -944,30 +944,30 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             {/* Skeleton Card Preview (Desktop Only) */}
             {!isEditMode && mediaPreviews.length > 0 && (
               <div className="hidden md:block md:col-span-2 pt-0 sticky top-8">
-                <div className="bg-[#ebebeb] p-1.5 rounded-3xl overflow-hidden w-full mx-auto shadow-sm transition-all duration-300">
+                <div className="bg-surface-primary border border-border-default p-1.5 rounded-3xl overflow-hidden w-full mx-auto shadow-sm transition-all duration-300">
                   <div className="relative z-10 flex flex-col">
-                    <div className="w-full aspect-4/3 rounded-3xl overflow-hidden bg-gray-200 mb-4 relative">
+                    <div className="w-full aspect-4/3 rounded-3xl overflow-hidden bg-surface-subtle mb-4 relative">
                       <img src={mediaPreviews[0]} alt="Cover preview" className="w-full h-full object-cover" />
                     </div>
                     <div className="px-2 pt-0 pb-2 flex-1 flex flex-col">
                       <div className="flex justify-between items-center mb-4">
-                        <div className="h-4 w-12 bg-[#d1d5db] rounded-full" />
-                        <div className="h-3 w-10 bg-[#d1d5db] rounded-full" />
+                        <div className="h-4 w-12 bg-border-default rounded-full" />
+                        <div className="h-3 w-10 bg-border-default rounded-full" />
                       </div>
-                      <div className="h-5 w-3/4 bg-[#d1d5db] rounded-lg mb-3" />
+                      <div className="h-5 w-3/4 bg-border-default rounded-lg mb-3" />
                       <div className="space-y-2 mb-6">
-                        <div className="h-3 w-full bg-[#d1d5db] rounded" />
-                        <div className="h-3 w-11/12 bg-[#d1d5db] rounded" />
-                        <div className="h-3 w-2/3 bg-[#d1d5db] rounded" />
+                        <div className="h-3 w-full bg-border-default rounded" />
+                        <div className="h-3 w-11/12 bg-border-default rounded" />
+                        <div className="h-3 w-2/3 bg-border-default rounded" />
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <div className="w-6 h-6 rounded-full bg-[#d1d5db]" />
-                        <div className="h-3 w-20 bg-[#d1d5db] rounded" />
+                        <div className="w-6 h-6 rounded-full bg-border-default" />
+                        <div className="h-3 w-20 bg-border-default rounded" />
                       </div>
                     </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-gray-400 font-medium text-center mt-3 tracking-wider">Feed Preview</p>
+                <p className="text-[11px] text-text-muted font-medium text-center mt-3 tracking-wider">Feed Preview</p>
               </div>
             )}
           </div>
@@ -975,12 +975,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
           {/* TITLE & DESCRIPTION */}
           <div className="space-y-8">
             <div className="space-y-2">
-              <h3 className="font-medium text-[16px] text-black">Title</h3>
+              <h3 className="font-medium text-[16px] text-text-primary">Title</h3>
               <Input
                 placeholder="Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium"
+                className="h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder font-medium"
               />
             </div>
 
@@ -1037,7 +1037,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   }
                 }}
                 className={cn(
-                  "h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium",
+                  "h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder font-medium",
                   categoryError && "border-red-500 focus-visible:border-red-500"
                 )}
               />
@@ -1200,7 +1200,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                             className="fixed inset-0 z-40"
                             onClick={() => setIsAiToolDropdownOpen(false)}
                           />
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-lg z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-surface-elevated border border-border-default rounded-xl shadow-elevated z-50 overflow-hidden max-h-60 overflow-y-auto custom-scrollbar">
                             {AI_TOOLS.map(tool => (
                               <button
                                 key={tool.id}
@@ -1211,8 +1211,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                                   setIsAiToolDropdownOpen(false);
                                 }}
                                 className={cn(
-                                  "px-4 py-3 cursor-pointer text-sm font-medium transition-colors flex items-center justify-between w-full text-left",
-                                  aiTool === tool.id ? "bg-primary/10" : "hover:bg-gray-50"
+                                  "px-4 py-3 cursor-pointer text-sm font-medium transition-colors flex items-center justify-between w-full text-left text-text-primary",
+                                  aiTool === tool.id ? "bg-primary/10" : "hover:bg-surface-hover"
                                 )}
                               >
                                 <div className="flex items-center gap-2.5">
@@ -1243,12 +1243,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                           exit={{ opacity: 0, height: 0, marginTop: 0 }}
                           className="space-y-2 overflow-hidden"
                         >
-                          <h3 className="font-medium text-[15px] text-black">Custom Tool Name <span className="text-red-500">*</span></h3>
+                          <h3 className="font-medium text-[15px] text-text-primary">Custom Tool Name <span className="text-red-500">*</span></h3>
                           <Input
                             placeholder="e.g. ComfyUI, Custom Model"
                             value={customAiTool}
                             onChange={(e) => setCustomAiTool(e.target.value)}
-                            className="h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium"
+                            className="h-12 text-base px-4 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder font-medium"
                           />
                         </motion.div>
                       )}
@@ -1256,8 +1256,8 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
 
                     {/* AI Prompt Textarea */}
                     <div className="space-y-2">
-                      <h3 className="font-medium text-[15px] text-black flex items-center justify-between">
-                        Prompt <span className="text-gray-400 font-normal text-xs">(Optional)</span>
+                      <h3 className="font-medium text-[15px] text-text-primary flex items-center justify-between">
+                        Prompt <span className="text-text-muted font-normal text-xs">(Optional)</span>
                       </h3>
                       <div className="relative">
                         <Textarea
@@ -1265,13 +1265,13 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                           value={aiPrompt}
                           maxLength={8000}
                           onChange={(e) => setAiPrompt(e.target.value)}
-                          className="min-h-30 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-gray-400 font-medium font-mono"
+                          className="min-h-30 text-sm p-4 pb-8 rounded-xl border focus-visible:border-primary placeholder:text-input-placeholder font-medium font-mono"
                         />
-                        <div className="absolute bottom-4 right-4 text-xs font-medium text-gray-400 pointer-events-none">
+                        <div className="absolute bottom-4 right-4 text-xs font-medium text-text-muted pointer-events-none">
                           {aiPrompt.length.toLocaleString()} / 8,000 chars
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 pt-1">
+                      <p className="text-xs text-text-muted pt-1">
                         Prompt sharing helps others study your creative process. Optional.
                       </p>
                     </div>
@@ -1318,12 +1318,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
-                    className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex flex-col gap-2"
+                    className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 flex flex-col gap-2"
                   >
-                    <p className="text-sm text-red-700 font-medium leading-snug">{inlineUploadError}</p>
+                    <p className="text-sm text-red-400 font-medium leading-snug">{inlineUploadError}</p>
                     <button
                       onClick={() => { setInlineUploadError(null); handleSubmit(); }}
-                      className="flex items-center gap-1.5 text-sm font-semibold text-red-700 hover:text-red-900 transition-colors w-fit"
+                      className="flex items-center gap-1.5 text-sm font-semibold text-red-400 hover:text-red-300 transition-colors w-fit"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
                       Try again
@@ -1369,7 +1369,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                     "relative z-10 flex items-center justify-center gap-2 transition-colors",
                     isSubmitting && uploadProgress && uploadProgress.percent > 50
                       ? 'text-white'
-                      : 'text-black group-hover:text-white group-disabled:text-black!'
+                      : 'text-text-primary group-hover:text-white group-disabled:text-text-muted!'
                   )}
                 >
                   {isSubmitting ? (
@@ -1410,7 +1410,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
               {isEditing && (
                 <Button
                   variant="ghost"
-                  className="h-12 rounded-full text-gray-500 font-medium"
+                  className="h-12 rounded-full text-text-muted hover:text-text-primary font-medium"
                   onClick={() => {
                     if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
                     onCancel?.();
@@ -1424,7 +1424,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
         )}
 
         {isOverlay && (
-          <div className="flex flex-col gap-3 pt-6 border-t border-gray-100">
+          <div className="flex flex-col gap-3 pt-6 border-t border-border-default">
             {/* Inline error with retry */}
             <AnimatePresence>
               {inlineUploadError && !isSubmitting && (
@@ -1432,12 +1432,12 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
-                  className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex flex-col gap-2"
+                  className="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-3 flex flex-col gap-2"
                 >
-                  <p className="text-sm text-red-700 font-medium leading-snug">{inlineUploadError}</p>
+                  <p className="text-sm text-red-400 font-medium leading-snug">{inlineUploadError}</p>
                   <button
                     onClick={() => { setInlineUploadError(null); handleSubmit(); }}
-                    className="flex items-center gap-1.5 text-sm font-semibold text-red-700 hover:text-red-900 transition-colors w-fit"
+                    className="flex items-center gap-1.5 text-sm font-semibold text-red-400 hover:text-red-300 transition-colors w-fit"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Try again
@@ -1449,7 +1449,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
             <div className="flex items-center justify-end gap-3">
               <Button
                 variant="ghost"
-                className="h-12 px-8 rounded-full text-gray-500 font-medium"
+                className="h-12 px-8 rounded-full text-text-muted hover:text-text-primary font-medium"
                 onClick={() => {
                   if (formMode === 'create') localStorage.removeItem('rater_post_form_draft');
                   onCancel?.();
@@ -1510,7 +1510,7 @@ export function PostForm({ initialPost, mode, onSuccess, onCancel, isOverlay = f
                     "relative z-10 flex items-center justify-center gap-2 transition-colors",
                     isSubmitting && uploadProgress && uploadProgress.percent > 50
                       ? 'text-white'
-                      : 'text-black group-hover:text-white group-disabled:text-black!'
+                      : 'text-text-primary group-hover:text-white group-disabled:text-text-muted!'
                   )}
                 >
                   {isSubmitting ? (

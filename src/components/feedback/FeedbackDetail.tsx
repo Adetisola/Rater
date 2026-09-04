@@ -230,7 +230,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto py-16 text-center text-gray-400 space-y-3">
+      <div className="max-w-4xl mx-auto py-16 text-center text-text-muted space-y-3">
         <Loader2 size={24} className="animate-spin text-primary mx-auto" />
         <p className="text-xs font-semibold">Loading feedback details...</p>
       </div>
@@ -240,11 +240,11 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
   if (error || !request) {
     return (
       <div className="max-w-4xl mx-auto py-16 px-4 text-center space-y-4">
-        <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto">
+        <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
           <AlertCircle size={24} />
         </div>
-        <h2 className="text-lg font-bold text-gray-950">Feedback Request Not Found</h2>
-        <p className="text-xs sm:text-sm text-gray-500 max-w-sm mx-auto">
+        <h2 className="text-lg font-bold text-text-primary">Feedback Request Not Found</h2>
+        <p className="text-xs sm:text-sm text-text-secondary max-w-sm mx-auto">
           {error || "This feedback request may have been removed or does not exist."}
         </p>
         <Link href="/feedback">
@@ -268,14 +268,14 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
       {/* 1. Breadcrumb Navigation */}
       <Link
         href="/feedback"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-black transition-colors select-none"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors select-none"
       >
         <ChevronLeft size={16} />
         <span>Back to Feedback Board</span>
       </Link>
 
       {/* 2. Hero Request Card */}
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 p-4 sm:p-8 shadow-2xs space-y-3.5 sm:space-y-6 min-w-0">
+      <div className="bg-surface-primary rounded-2xl sm:rounded-3xl border border-border-default p-4 sm:p-8 shadow-2xs space-y-3.5 sm:space-y-6 min-w-0">
         {/* Mobile Top Actions Row (< sm) */}
         <div className="flex sm:hidden items-center justify-between gap-2 min-w-0">
           {/* Mobile Upvote Button */}
@@ -285,8 +285,8 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             className={cn(
               "h-8 px-3 rounded-full border flex items-center gap-1.5 transition-all shrink-0 select-none",
               request.has_voted
-                ? "bg-amber-50 border-primary/60 text-black font-bold shadow-2xs"
-                : "bg-white border-gray-200/80 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                ? "bg-primary/15 border-primary/60 text-text-primary font-bold shadow-2xs"
+                : "bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary"
             )}
             aria-label={`Upvote request (${request.upvote_count || 0} votes)`}
           >
@@ -298,13 +298,13 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             <span
               className={cn(
                 "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0",
-                isPlanned && "bg-blue-50 text-blue-700 border-blue-200/60",
-                isInProgress && "bg-purple-50 text-purple-700 border-purple-200/60",
-                isCompleted && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
-                isUnderReview && "bg-amber-50 text-amber-800 border-amber-200/60",
-                isDeclined && "bg-red-50 text-red-700 border-red-200/60",
-                isDuplicate && "bg-gray-100 text-gray-600 border-gray-200/60",
-                (!request.status || request.status === 'New') && "bg-gray-50 text-gray-600 border-gray-200/60"
+                isPlanned && "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                isInProgress && "bg-purple-500/10 text-purple-400 border-purple-500/30",
+                isCompleted && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+                isUnderReview && "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                isDeclined && "bg-red-500/10 text-red-400 border-red-500/30",
+                isDuplicate && "bg-surface-interactive text-text-muted border-border-default",
+                (!request.status || request.status === 'New') && "bg-surface-interactive text-text-muted border-border-default"
               )}
             >
               {request.status || 'New'}
@@ -317,8 +317,8 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
               className={cn(
                 "h-8 px-2.5 rounded-full border text-xs font-semibold flex items-center gap-1 transition-all shrink-0",
                 request.is_following
-                  ? "bg-amber-50 border-amber-200/80 text-amber-900 shadow-2xs"
-                  : "bg-white border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  ? "bg-primary/15 border-primary/40 text-text-primary"
+                  : "bg-surface-primary border-border-default text-text-secondary hover:text-text-primary hover:bg-surface-hover"
               )}
             >
               {request.is_following ? (
@@ -343,10 +343,10 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             type="button"
             onClick={handleVote}
             className={cn(
-              "hidden sm:flex w-14 sm:w-16 py-3 rounded-2xl border-2 flex-col items-center justify-center transition-all shrink-0 select-none shadow-2xs",
+              "hidden sm:flex w-14 sm:w-16 py-3 rounded-2xl border flex-col items-center justify-center transition-all shrink-0 select-none shadow-2xs",
               request.has_voted
-                ? "bg-amber-50 border-primary/60 text-black font-bold"
-                : "bg-white border-gray-200/80 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
+                ? "bg-primary/15 border-primary/60 text-text-primary font-bold"
+                : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:bg-surface-hover hover:text-text-primary"
             )}
             aria-label={`Upvote request (${request.upvote_count || 0} votes)`}
           >
@@ -357,7 +357,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
           {/* Header & Details */}
           <div className="flex-1 min-w-0 space-y-2.5 sm:space-y-3">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-lg sm:text-xl font-medium text-gray-950 leading-snug sm:leading-tight">
+              <h1 className="text-lg sm:text-xl font-medium text-text-primary leading-snug sm:leading-tight">
                 {request.title}
               </h1>
 
@@ -368,8 +368,8 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                 className={cn(
                   "hidden sm:flex h-9 px-3 rounded-xl border text-xs font-semibold items-center gap-1.5 transition-all shrink-0 self-start",
                   request.is_following
-                    ? "bg-amber-50 border-amber-200/80 text-amber-900 shadow-2xs"
-                    : "bg-white border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "bg-primary/15 border-primary/40 text-text-primary shadow-2xs"
+                    : "bg-surface-primary border-border-default text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                 )}
               >
                 {request.is_following ? (
@@ -389,14 +389,14 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             {/* Badges & Meta Row */}
             <div className="flex flex-wrap items-center gap-2 text-xs">
               {request.is_pinned && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-amber-100 text-amber-900">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-primary/15 text-text-primary">
                   <Pin size={11} />
                   <span>Pinned</span>
                 </span>
               )}
 
               {request.is_locked && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-gray-100 text-gray-700">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-bold bg-surface-interactive text-text-muted">
                   <Lock size={11} />
                   <span>Locked</span>
                 </span>
@@ -405,36 +405,36 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
               {/* Desktop Status Pill (hidden on mobile since it is on the top action bar) */}
               <span
                 className={cn(
-                  "hidden sm:inline-block px-2.5 py-1 rounded-full text-xs font-semibold tracking-wider border border-gray-300",
-                  isPlanned && "bg-blue-50 text-blue-700 border-blue-200/60",
-                  isInProgress && "bg-purple-50 text-purple-700 border-purple-200/60",
-                  isCompleted && "bg-emerald-50 text-emerald-700 border-emerald-200/60",
-                  isUnderReview && "bg-amber-50 text-amber-800 border-amber-200/60",
-                  isDeclined && "bg-red-50 text-red-700 border-red-200/60",
-                  isDuplicate && "bg-gray-100 text-gray-600 border-gray-200/60",
-                  (!request.status || request.status === 'New') && "bg-gray-50 text-gray-600 border-gray-200/60"
+                  "hidden sm:inline-block px-2.5 py-1 rounded-full text-xs font-semibold tracking-wider border",
+                  isPlanned && "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                  isInProgress && "bg-purple-500/10 text-purple-400 border-purple-500/30",
+                  isCompleted && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",
+                  isUnderReview && "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                  isDeclined && "bg-red-500/10 text-red-400 border-red-500/30",
+                  isDuplicate && "bg-surface-interactive text-text-muted border-border-default",
+                  (!request.status || request.status === 'New') && "bg-surface-interactive text-text-muted border-border-default"
                 )}
               >
                 {request.status || 'New'}
               </span>
 
-              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold bg-gray-100 text-gray-600">
+              <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md sm:rounded-lg text-[11px] sm:text-xs font-semibold bg-surface-interactive text-text-secondary">
                 {request.category}
               </span>
 
               {request.author && (
-                <span className="text-[11px] sm:text-xs text-gray-400">
-                  by <span className="font-semibold text-gray-700">{request.author.name}</span>
+                <span className="text-[11px] sm:text-xs text-text-muted">
+                  by <span className="font-semibold text-text-secondary">{request.author.name}</span>
                 </span>
               )}
 
-              <span className="text-[11px] sm:text-xs text-gray-400">
+              <span className="text-[11px] sm:text-xs text-text-muted">
                 {formatRelativeTime(request.created_at)}
               </span>
             </div>
 
             {/* Description Body */}
-            <div className="pt-1 sm:pt-2 text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+            <div className="pt-1 sm:pt-2 text-xs sm:text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
               {request.description}
             </div>
           </div>
@@ -443,7 +443,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
 
       {/* 3. Official Team Response Card (When Present) */}
       {request.official_response && (
-        <div className="bg-amber-50/60 border border-primary/25 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-3 sm:space-y-3.5 shadow-2xs min-w-0 break-words">
+        <div className="bg-primary/10 border border-primary/30 rounded-2xl sm:rounded-3xl p-4 sm:p-8 space-y-3 sm:space-y-3.5 shadow-2xs min-w-0 break-words">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <Image
@@ -455,27 +455,27 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
               />
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-xs sm:text-[13px] font-medium text-gray-950">Official Team Response</h3>
+                  <h3 className="text-xs sm:text-[13px] font-medium text-text-primary">Official Team Response</h3>
                   <ShieldCheck size={14} className="text-primary" />
                 </div>
-                <p className="text-[10px] sm:text-[11px] text-gray-500">
+                <p className="text-[10px] sm:text-[11px] text-text-muted">
                   Updated {formatRelativeTime(request.official_response_at)}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed break-words">
+          <div className="text-xs sm:text-[13px] text-text-primary whitespace-pre-wrap leading-relaxed break-words">
             {request.official_response}
           </div>
         </div>
       )}
 
       {/* 4. Discussion / Comments Card */}
-      <div id="comments" className="bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-2xs overflow-hidden min-w-0">
-        <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 border-b border-gray-100 flex items-center justify-between bg-white">
-          <h3 className="text-sm sm:text-base font-medium text-gray-950 flex items-center gap-2">
-            <MessageSquare size={17} className="text-gray-400" />
+      <div id="comments" className="bg-surface-primary rounded-2xl sm:rounded-3xl border border-border-default shadow-2xs overflow-hidden min-w-0">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4.5 border-b border-border-default flex items-center justify-between bg-surface-primary">
+          <h3 className="text-sm sm:text-base font-medium text-text-primary flex items-center gap-2">
+            <MessageSquare size={17} className="text-text-muted" />
             <span>Discussion ({comments.length})</span>
           </h3>
         </div>
@@ -489,13 +489,13 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             return (
               <div key={c.id} className="flex items-start gap-2.5 sm:gap-3.5 group min-w-0">
                 <UserAvatar avatarUrl={c.author?.avatar_url} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full shrink-0 mt-0.5" />
-                <div className="flex-1 min-w-0 bg-gray-50/70 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100/70 break-words">
+                <div className="flex-1 min-w-0 bg-surface-subtle rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-border-default break-words">
                   <div className="flex items-center justify-between gap-2 mb-1.5 min-w-0">
                     <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                      <span className="text-xs font-bold text-gray-900 truncate">
+                      <span className="text-xs font-bold text-text-primary truncate">
                         {c.author?.name || 'Community Member'}
                       </span>
-                      <span className="text-[10px] sm:text-[11px] text-gray-400 shrink-0">
+                      <span className="text-[10px] sm:text-[11px] text-text-muted shrink-0">
                         {formatRelativeTime(c.created_at)}
                       </span>
                     </div>
@@ -503,12 +503,12 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                     {isAuthor && !isDeleted && (
                       deletingCommentId === c.id ? (
                         <div className="flex items-center gap-1.5 shrink-0 animate-in fade-in zoom-in-95 duration-150 select-none">
-                          <span className="text-[10px] text-gray-500 font-medium hidden xs:inline">Delete?</span>
+                          <span className="text-[10px] text-text-muted font-medium hidden xs:inline">Delete?</span>
                           <button
                             type="button"
                             disabled={isDeletingComment}
                             onClick={() => setDeletingCommentId(null)}
-                            className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-gray-200/80 hover:bg-gray-300 text-gray-700 transition-colors"
+                            className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-surface-interactive hover:bg-surface-hover text-text-secondary transition-colors"
                           >
                             Cancel
                           </button>
@@ -531,7 +531,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                         <button
                           type="button"
                           onClick={() => setDeletingCommentId(c.id)}
-                          className="text-gray-400 hover:text-red-500 transition-colors p-1.5 -mr-1 rounded-md hover:bg-red-50 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
+                          className="text-text-muted hover:text-red-500 transition-colors p-1.5 -mr-1 rounded-md hover:bg-red-500/10 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 shrink-0"
                           title="Delete comment"
                           aria-label="Delete comment"
                         >
@@ -542,9 +542,9 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                   </div>
 
                   {isDeleted ? (
-                    <p className="text-xs italic text-gray-400">Comment deleted by author.</p>
+                    <p className="text-xs italic text-text-muted">Comment deleted by author.</p>
                   ) : (
-                    <p className="text-xs sm:text-[13px] text-gray-800 whitespace-pre-wrap leading-relaxed break-words">
+                    <p className="text-xs sm:text-[13px] text-text-primary whitespace-pre-wrap leading-relaxed break-words">
                       {c.content}
                     </p>
                   )}
@@ -554,21 +554,21 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
           })}
 
           {comments.length === 0 && (
-            <div className="py-6 sm:py-8 text-center text-gray-400 text-xs">
+            <div className="py-6 sm:py-8 text-center text-text-muted text-xs">
               No comments on this request yet. Be the first to join the conversation!
             </div>
           )}
         </div>
 
         {/* Comment Form or Locked Banner */}
-        <div className="p-3.5 sm:p-5 bg-gray-50/70 border-t border-gray-100">
+        <div className="p-3.5 sm:p-5 bg-surface-subtle border-t border-border-default">
           {request.is_locked ? (
-            <div className="p-3.5 bg-amber-50/60 border border-amber-200/50 rounded-2xl text-center space-y-1">
-              <p className="text-xs font-bold text-amber-900 flex items-center justify-center gap-1.5">
+            <div className="p-3.5 bg-primary/10 border border-primary/30 rounded-2xl text-center space-y-1">
+              <p className="text-xs font-bold text-text-primary flex items-center justify-center gap-1.5">
                 <Lock size={14} />
                 <span>Discussion Closed</span>
               </p>
-              <p className="text-[11px] text-amber-800">
+              <p className="text-[11px] text-text-secondary">
                 Comments are closed for this item, but you can still upvote and follow updates.
               </p>
             </div>
@@ -585,12 +585,12 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                   }
                   maxLength={1000}
                   rows={3}
-                  className="w-full min-h-[100px] rounded-xl border border-gray-200 bg-white px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-gray-950 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all shadow-2xs"
+                  className="w-full min-h-[100px] rounded-xl border border-input-border bg-input-bg px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-text-primary placeholder:text-input-placeholder focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all shadow-2xs"
                 />
                 <div
                   className={cn(
                     "absolute bottom-3 right-4 text-[10px] sm:text-xs font-medium pointer-events-none select-none transition-colors",
-                    newComment.length >= 1000 ? "text-red-500 font-bold" : "text-gray-400"
+                    newComment.length >= 1000 ? "text-red-500 font-bold" : "text-text-muted"
                   )}
                 >
                   {newComment.length} / 1000
@@ -602,7 +602,7 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
                   type="submit"
                   variant="primary"
                   disabled={isSubmittingComment || !newComment.trim()}
-                  className="h-10 px-5 rounded-full text-xs sm:text-[13px] font-medium flex items-center gap-1.5 shadow-2xs"
+                  className="h-10 px-5 rounded-full text-xs sm:text-[13px] font-semibold flex items-center gap-1.5 shadow-2xs text-black"
                 >
                   {isSubmittingComment ? (
                     <Loader2 size={14} className="animate-spin" />
@@ -616,11 +616,11 @@ export function FeedbackDetail({ slug }: FeedbackDetailProps) {
             </form>
           ) : (
             <div className="py-4 text-center space-y-2">
-              <p className="text-xs text-gray-500">Sign in to join the discussion.</p>
+              <p className="text-xs text-text-secondary">Sign in to join the discussion.</p>
               <Button 
                 variant="outline" 
                 onClick={() => setShowAuthOverlay(true)}
-                className="h-8 px-4 rounded-full text-xs font-medium hover:bg-gray-100 transition-colors"
+                className="h-8 px-4 rounded-full text-xs font-medium bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
               >
                 Sign In
               </Button>

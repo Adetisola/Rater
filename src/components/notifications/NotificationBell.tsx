@@ -61,8 +61,8 @@ export function NotificationBell() {
         className={cn(
           "relative w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 ease-out shrink-0",
           isOpen
-            ? "bg-gray-100 text-black"
-            : "bg-white border-2 border-gray-100 hover:bg-gray-50 text-gray-700 hover:text-black"
+            ? "bg-surface-interactive text-text-primary"
+            : "bg-surface-primary border border-border-default hover:bg-surface-hover text-text-secondary hover:text-text-primary"
         )}
       >
         <Bell className="w-5 h-5 transition-transform group-hover:scale-105 active:scale-95" />
@@ -75,7 +75,7 @@ export function NotificationBell() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-              className="absolute -top-1 -right-1 min-w-[19px] h-[19px] px-1 bg-primary text-black text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xs leading-none"
+              className="absolute -top-1 -right-1 min-w-[19px] h-[19px] px-1 bg-primary text-black text-[10px] font-black rounded-full flex items-center justify-center border-2 border-canvas shadow-xs leading-none"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </motion.span>

@@ -221,23 +221,23 @@ export function FeedbackDrawer() {
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="relative w-full sm:w-[440px] h-full bg-white shadow-2xl flex flex-col z-10 overflow-hidden border-l border-gray-100"
+          className="relative w-full sm:w-[440px] h-full bg-surface-elevated shadow-2xl flex flex-col z-10 overflow-hidden border-l border-border-default"
         >
           {/* Drawer Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0 bg-white">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-default shrink-0 bg-surface-elevated">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-50 border border-primary/20 flex items-center justify-center text-primary">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
                 <MessageSquarePlus size={16} />
               </div>
               <div>
-                <h2 className="text-base font-semibold text-gray-950 tracking-tight">Feedback & Ideas</h2>
-                <p className="text-xs text-gray-400">Help shape the future of Rater</p>
+                <h2 className="text-base font-semibold text-text-primary tracking-tight">Feedback & Ideas</h2>
+                <p className="text-xs text-text-muted">Help shape the future of Rater</p>
               </div>
             </div>
 
             <button
               onClick={closeFeedbackDrawer}
-              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-black transition-colors"
+              className="w-8 h-8 rounded-full bg-surface-primary hover:bg-surface-hover border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
               aria-label="Close drawer"
             >
               <X size={16} />
@@ -253,12 +253,12 @@ export function FeedbackDrawer() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="py-12 px-4 text-center space-y-4"
               >
-                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200/60 flex items-center justify-center mx-auto shadow-2xs">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-2xs">
                   <CheckCircle2 size={28} />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-lg font-medium text-gray-950">Feedback Submitted 🎉</h3>
-                  <p className="text-xs sm:text-[13px] text-gray-500 max-w-xs mx-auto leading-relaxed">
+                  <h3 className="text-lg font-medium text-text-primary">Feedback Submitted 🎉</h3>
+                  <p className="text-xs sm:text-[13px] text-text-secondary max-w-xs mx-auto leading-relaxed">
                     Thanks for helping shape Rater! Your idea is now live on the public community board.
                   </p>
                 </div>
@@ -270,14 +270,14 @@ export function FeedbackDrawer() {
                       closeFeedbackDrawer();
                       router.push(`/feedback/${submittedSlug}`);
                     }}
-                    className="h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shadow-2xs"
+                    className="h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 shadow-2xs text-black"
                   >
                     <span>View Your Request</span>
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => setSubmittedSlug(null)}
-                    className="h-10 rounded-full text-xs font-medium"
+                    className="h-10 rounded-full text-xs font-medium bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary"
                   >
                     Share Another Idea
                   </Button>
@@ -288,7 +288,7 @@ export function FeedbackDrawer() {
               <>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
-                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 flex items-start gap-2">
+                    <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 flex items-start gap-2">
                       <AlertCircle size={14} className="shrink-0 mt-0.5" />
                       <span>{error}</span>
                     </div>
@@ -296,8 +296,8 @@ export function FeedbackDrawer() {
 
                   {/* Type Selector Tabs */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 tracking-wider">Type</label>
-                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-gray-100/70 rounded-xl">
+                    <label className="text-xs font-semibold text-text-secondary tracking-wider">Type</label>
+                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-surface-primary border border-border-default rounded-xl">
                       {FEEDBACK_TYPES.map(t => {
                         const isSelected = type === t.id;
                         return (
@@ -308,8 +308,8 @@ export function FeedbackDrawer() {
                             className={cn(
                               "py-1.5 px-2 rounded-full text-center select-none text-xs font-medium md:font-semibold transition-all",
                               isSelected
-                                ? "bg-white text-black"
-                                : "text-gray-500 hover:text-gray-900"
+                                ? "bg-surface-interactive text-text-primary shadow-xs font-semibold"
+                                : "text-text-secondary hover:text-text-primary"
                             )}
                           >
                             {t.label}
@@ -321,7 +321,7 @@ export function FeedbackDrawer() {
 
                   {/* Category Selector */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 tracking-wider">Category</label>
+                    <label className="text-xs font-semibold text-text-secondary tracking-wider">Category</label>
                     <SelectDropdown
                       options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
                       value={category}
@@ -334,14 +334,14 @@ export function FeedbackDrawer() {
 
                   {/* Title Input */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 tracking-wider">Title</label>
+                    <label className="text-xs font-semibold text-text-secondary tracking-wider">Title</label>
                     <input
                       type="text"
                       value={title}
                       onChange={e => setTitle(e.target.value)}
                       placeholder="Short, descriptive title"
                       maxLength={120}
-                      className="w-full h-10 bg-white border border-gray-200/80 rounded-xl px-3.5 text-xs sm:text-[13px] font-medium text-gray-950 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+                      className="w-full h-10 bg-input-bg border border-input-border rounded-xl px-3.5 text-xs sm:text-[13px] font-medium text-text-primary placeholder:text-input-placeholder focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
                       required
                     />
                   </div>
@@ -351,9 +351,9 @@ export function FeedbackDrawer() {
                     <motion.div
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-3.5 bg-amber-50/70 border border-amber-200/60 rounded-2xl space-y-2.5 shadow-2xs"
+                      className="p-3.5 bg-primary/10 border border-primary/30 rounded-2xl space-y-2.5 shadow-2xs"
                     >
-                      <div className="flex items-center gap-1.5 text-amber-900">
+                      <div className="flex items-center gap-1.5 text-text-primary">
                         {isSearchingSimilar ? (
                           <Loader2 size={14} className="animate-spin text-primary shrink-0" />
                         ) : (
@@ -361,7 +361,7 @@ export function FeedbackDrawer() {
                         )}
                         <p className="text-xs font-medium">Similar community requests</p>
                       </div>
-                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                      <p className="text-[11px] text-text-secondary leading-relaxed">
                         Looks similar? You can upvote an existing request or continue submitting below.
                       </p>
 
@@ -369,20 +369,20 @@ export function FeedbackDrawer() {
                         {similarRequests.map(sim => (
                           <div
                             key={sim.id}
-                            className="flex items-center justify-between gap-2 p-2 bg-white/90 rounded-xl border border-amber-200/40"
+                            className="flex items-center justify-between gap-2 p-2 bg-surface-primary rounded-xl border border-border-default"
                           >
                             <Link
                               href={`/feedback/${sim.slug}`}
                               onClick={closeFeedbackDrawer}
-                              className="text-xs font-semibold text-gray-900 hover:underline truncate"
+                              className="text-xs font-semibold text-text-primary hover:underline truncate"
                             >
                               {sim.title}
                             </Link>
                             <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface-interactive text-text-muted">
                                 {sim.status}
                               </span>
-                              <span className="text-xs font-bold text-gray-700">
+                              <span className="text-xs font-bold text-text-secondary">
                                 ▲ {sim.upvote_count || 0}
                               </span>
                             </div>
@@ -394,7 +394,7 @@ export function FeedbackDrawer() {
 
                   {/* Description Textarea */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-500 tracking-wider">Details</label>
+                    <label className="text-xs font-semibold text-text-secondary tracking-wider">Details</label>
                     <div className="relative">
                       <textarea
                         value={description}
@@ -406,13 +406,13 @@ export function FeedbackDrawer() {
                         }
                         rows={4}
                         maxLength={2000}
-                        className="w-full min-h-[120px] rounded-xl border border-gray-200 bg-white px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-gray-950 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all"
+                        className="w-full min-h-[120px] rounded-xl border border-input-border bg-input-bg px-4 pt-3 pb-8 text-xs sm:text-[13px] font-sans text-text-primary placeholder:text-input-placeholder focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 resize-none transition-all"
                         required
                       />
                       <div
                         className={cn(
                           "absolute bottom-3 right-4 text-[10px] sm:text-xs font-medium pointer-events-none select-none transition-colors",
-                          description.length >= 2000 ? "text-red-500 font-bold" : "text-gray-400"
+                          description.length >= 2000 ? "text-red-500 font-bold" : "text-text-muted"
                         )}
                       >
                         {description.length} / 2000
@@ -425,7 +425,7 @@ export function FeedbackDrawer() {
                     type="submit"
                     variant="outline"
                     disabled={isSubmitting || !title.trim() || !description.trim()}
-                    className="w-full h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5"
+                    className="w-full h-10 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center gap-1.5 bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary disabled:opacity-40 disabled:hover:bg-surface-primary disabled:hover:text-text-secondary"
                   >
                     {isSubmitting ? (
                       <Loader2 size={15} className="animate-spin" />
@@ -438,28 +438,28 @@ export function FeedbackDrawer() {
                 </form>
 
                 {/* Popular Community Requests Section */}
-                <div className="pt-5 border-t border-gray-100 space-y-3">
+                <div className="pt-5 border-t border-border-default space-y-3">
                   <div className="flex items-center justify-between px-1">
                     <div className="flex items-center gap-1.5">
                       <Flame size={15} className="text-amber-500" />
-                      <h3 className="text-xs font-medium text-gray-900 tracking-tight">Popular Active Requests</h3>
+                      <h3 className="text-xs font-medium text-text-primary tracking-tight">Popular Active Requests</h3>
                     </div>
-                    <span className="text-[11px] text-gray-400">Past 90 days</span>
+                    <span className="text-[11px] text-text-muted">Past 90 days</span>
                   </div>
 
                   {isLoadingPopular ? (
-                    <div className="py-6 text-center text-gray-400 text-xs flex items-center justify-center gap-2">
+                    <div className="py-6 text-center text-text-muted text-xs flex items-center justify-center gap-2">
                       <Loader2 size={14} className="animate-spin text-primary" />
                       <span>Loading popular requests...</span>
                     </div>
                   ) : popularRequests.length === 0 ? (
-                    <p className="text-xs text-gray-400 text-center py-4">No active popular requests yet.</p>
+                    <p className="text-xs text-text-muted text-center py-4">No active popular requests yet.</p>
                   ) : (
                     <div className="space-y-2">
                       {popularRequests.map(pop => (
                         <div
                           key={pop.id}
-                          className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-gray-100 hover:border-gray-200/80 bg-gray-50/40 hover:bg-white transition-all shadow-2xs group"
+                          className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-border-default hover:border-border-strong bg-surface-primary hover:bg-surface-hover transition-all shadow-2xs group"
                         >
                           <button
                             type="button"
@@ -469,8 +469,8 @@ export function FeedbackDrawer() {
                             className={cn(
                               "w-9 h-11 rounded-xl flex flex-col items-center justify-center border transition-all shrink-0",
                               pop.has_voted
-                                ? "bg-amber-50 border-primary/40 text-black font-bold"
-                                : "bg-white border-gray-200/70 text-gray-500 hover:border-gray-300"
+                                ? "bg-primary/15 border-primary/40 text-text-primary font-bold"
+                                : "bg-surface-interactive border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
                             )}
                           >
                             <ChevronUp size={14} strokeWidth={3} className={pop.has_voted ? "text-primary" : ""} />
@@ -481,21 +481,21 @@ export function FeedbackDrawer() {
                             <Link
                               href={`/feedback/${pop.slug}`}
                               onClick={closeFeedbackDrawer}
-                              className="text-xs font-semibold text-gray-900 group-hover:text-black line-clamp-1 hover:underline"
+                              className="text-xs font-semibold text-text-primary group-hover:text-primary line-clamp-1 hover:underline"
                             >
                               {pop.title}
                             </Link>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={cn(
-                                "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
-                                pop.status === 'Planned' && "bg-blue-50 text-blue-700 border border-blue-200/50",
-                                pop.status === 'In Progress' && "bg-purple-50 text-purple-700 border border-purple-200/50",
-                                pop.status === 'Under Review' && "bg-amber-50 text-amber-800 border border-amber-200/50",
-                                (!pop.status || pop.status === 'New') && "bg-gray-100 text-gray-600"
+                                "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border",
+                                pop.status === 'Planned' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
+                                pop.status === 'In Progress' && "bg-purple-500/10 text-purple-400 border-purple-500/30",
+                                pop.status === 'Under Review' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
+                                (!pop.status || pop.status === 'New') && "bg-surface-interactive text-text-muted border-border-default"
                               )}>
                                 {pop.status || 'New'}
                               </span>
-                              <span className="text-[11px] text-gray-400 truncate">{pop.category}</span>
+                              <span className="text-[11px] text-text-muted truncate">{pop.category}</span>
                             </div>
                           </div>
                         </div>
@@ -508,16 +508,16 @@ export function FeedbackDrawer() {
           </div>
 
           {/* Drawer Footer */}
-          <div className="p-4 border-t border-gray-100 bg-gray-50/70 flex items-center justify-between shrink-0">
+          <div className="p-4 border-t border-border-default bg-surface-subtle flex items-center justify-between shrink-0">
             <Link
               href="/feedback"
               onClick={closeFeedbackDrawer}
-              className="text-xs font-medium md:font-semibold text-gray-700 hover:text-black inline-flex items-center gap-1.5 transition-colors"
+              className="text-xs font-medium md:font-semibold text-text-secondary hover:text-text-primary inline-flex items-center gap-1.5 transition-colors"
             >
               <span>View full feedback board</span>
               <ExternalLink size={13} />
             </Link>
-            <span className="text-[11px] text-gray-400">Rater</span>
+            <span className="text-[11px] text-text-muted">Rater</span>
           </div>
         </motion.div>
       </div>

@@ -39,7 +39,7 @@ export function CritiqueReplyItem({
     return (
       <div
         id={`reply-${reply.id}`}
-        className="w-full py-2.5 px-3 rounded-xl bg-gray-50/60 border border-dashed border-gray-200 text-xs text-gray-400 italic flex items-center gap-2"
+        className="w-full py-2.5 px-3 rounded-xl bg-surface-subtle border border-dashed border-border-default text-xs text-text-muted italic flex items-center gap-2"
       >
         <span>
           {isViolationRemoval
@@ -73,8 +73,8 @@ export function CritiqueReplyItem({
       id={`reply-${reply.id}`}
       className={`group/reply w-full rounded-2xl p-3.5 transition-all duration-300 ${
         isHighlighted
-          ? 'bg-primary/5 ring-2 ring-primary/40'
-          : 'bg-gray-50/50 hover:bg-gray-50'
+          ? 'bg-primary/5 ring-2 ring-primary/40 border border-primary/20'
+          : 'bg-surface-subtle hover:bg-surface-interactive border border-border-subtle'
       } ${reply.is_optimistic ? 'opacity-70' : ''}`}
     >
       {/* Header: Author + Replying-to + Timestamp */}
@@ -110,30 +110,30 @@ export function CritiqueReplyItem({
               href={`/@${username}`}
               scroll={false}
               onClick={(e) => e.stopPropagation()}
-              className="text-xs font-semibold text-black hover:text-primary truncate transition-colors focus:outline-none"
+              className="text-xs font-semibold text-text-primary hover:text-primary truncate transition-colors focus:outline-none"
             >
               {displayName}
             </Link>
           ) : (
-            <span className="text-xs font-semibold text-black truncate">{displayName}</span>
+            <span className="text-xs font-semibold text-text-primary truncate">{displayName}</span>
           )}
 
           {isPostAuthor && (
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium tracking-tight bg-primary/20 text-gray-900 border border-primary/30 select-none shrink-0">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium tracking-tight bg-primary/20 text-text-primary border border-primary/30 select-none shrink-0">
               Author
             </span>
           )}
 
           {/* Contextual "Replying to @username" indicator */}
           {reply.parent_reply_author_username && (
-            <div className="flex items-center gap-1 text-[11px] text-gray-400 shrink-0">
-              <CornerDownRight className="w-3 h-3 text-gray-400" />
+            <div className="flex items-center gap-1 text-[11px] text-text-muted shrink-0">
+              <CornerDownRight className="w-3 h-3 text-text-muted" />
               <span>replying to</span>
               <Link
                 href={`/@${reply.parent_reply_author_username}`}
                 scroll={false}
                 onClick={(e) => e.stopPropagation()}
-                className="font-medium text-gray-600 hover:text-primary transition-colors focus:outline-none"
+                className="font-medium text-text-secondary hover:text-primary transition-colors focus:outline-none"
               >
                 @{reply.parent_reply_author_username}
               </Link>
@@ -141,7 +141,7 @@ export function CritiqueReplyItem({
           )}
 
           <span 
-            className="text-[11px] text-gray-400 font-normal shrink-0" 
+            className="text-[11px] text-text-muted font-normal shrink-0" 
             title={fullTime}
             suppressHydrationWarning
           >
@@ -151,17 +151,17 @@ export function CritiqueReplyItem({
       </div>
 
       {/* Content */}
-      <div className="text-xs text-gray-800 leading-relaxed pl-8.5 pr-1">
+      <div className="text-xs text-text-primary leading-relaxed pl-8.5 pr-1">
         <MentionRenderer content={reply.content} />
       </div>
 
       {/* Actions */}
       {!reply.is_optimistic && (
-        <div className="flex items-center gap-3 mt-2 pl-8.5 text-[11px] font-medium text-gray-400">
+        <div className="flex items-center gap-3 mt-2 pl-8.5 text-[11px] font-medium text-text-muted">
           <button
             type="button"
             onClick={() => onReplyTo(reply)}
-            className="hover:text-black transition-colors focus:outline-none flex items-center gap-1"
+            className="hover:text-text-primary transition-colors focus:outline-none flex items-center gap-1"
           >
             <span>Reply</span>
           </button>
@@ -179,7 +179,7 @@ export function CritiqueReplyItem({
                       <button
                         type="button"
                         onClick={handleDelete}
-                        className="hover:underline text-red-600 focus:outline-none"
+                        className="hover:underline text-red-400 focus:outline-none"
                       >
                         Yes
                       </button>
@@ -187,7 +187,7 @@ export function CritiqueReplyItem({
                       <button
                         type="button"
                         onClick={() => setIsConfirmingDelete(false)}
-                        className="hover:underline text-gray-500 font-normal focus:outline-none"
+                        className="hover:underline text-text-muted font-normal focus:outline-none"
                       >
                         No
                       </button>

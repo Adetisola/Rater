@@ -42,7 +42,7 @@ export function NotificationItem({
     if (c === 'system') return <ShieldAlert className="w-3.5 h-3.5 text-red-500" />;
     if (c === 'community') return <MessageSquare className="w-3.5 h-3.5 text-primary" />;
     if (c === 'activity') return <MessageSquare className="w-3.5 h-3.5 text-primary" />;
-    return <Layers className="w-3.5 h-3.5 text-gray-500" />;
+    return <Layers className="w-3.5 h-3.5 text-text-muted" />;
   };
 
   const getFormattedTime = (dateStr?: string) => {
@@ -81,8 +81,8 @@ export function NotificationItem({
       className={cn(
         "group relative flex w-full items-start gap-3.5 p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer",
         notification.is_read
-          ? "bg-white hover:bg-gray-50/90 border-gray-100"
-          : "bg-amber-50/25 hover:bg-amber-50/50 border-primary/25 ring-1 ring-primary/10"
+          ? "bg-surface-primary hover:bg-surface-hover border-border-default"
+          : "bg-primary/5 hover:bg-primary/10 border-primary/30 ring-1 ring-primary/20"
       )}
     >
       {/* Actor Avatar or Category Icon */}
@@ -91,17 +91,17 @@ export function NotificationItem({
           <UserAvatar
             avatarUrl={notification.actor.avatar_url}
             size="sm"
-            className="w-10 h-10 rounded-full border border-gray-100 shadow-2xs"
+            className="w-10 h-10 rounded-full border border-border-default shadow-2xs"
           />
         ) : (
-          <div className="w-10 h-10 rounded-2xl bg-gray-100/80 flex items-center justify-center border border-gray-200/60 shadow-2xs">
+          <div className="w-10 h-10 rounded-2xl bg-surface-interactive flex items-center justify-center border border-border-default shadow-2xs">
             {getCategoryIcon(notification.category, notification.type)}
           </div>
         )}
 
         {/* Small Category Badge Indicator */}
         {notification.actor && (
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-xs border border-gray-100">
+          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-surface-elevated flex items-center justify-center shadow-xs border border-border-default">
             {getCategoryIcon(notification.category, notification.type)}
           </div>
         )}
@@ -112,22 +112,22 @@ export function NotificationItem({
         <div className="flex items-center justify-between gap-2 mb-1">
           <p className={cn(
             "text-xs sm:text-[13px] truncate tracking-tight",
-            notification.is_read ? "font-semibold text-gray-800" : "font-bold text-gray-950"
+            notification.is_read ? "font-semibold text-text-secondary" : "font-bold text-text-primary"
           )}>
             {notification.title}
           </p>
-          <span className="text-[10px] sm:text-[11px] text-gray-400 shrink-0 font-mono">
+          <span className="text-[10px] sm:text-[11px] text-text-muted shrink-0 font-mono">
             {getFormattedTime(notification.created_at)}
           </span>
         </div>
 
-        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mb-2.5 font-normal">
+        <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed mb-2.5 font-normal">
           {notification.message}
         </p>
 
         {/* Action Button */}
         <div className="flex items-center justify-between pt-0.5">
-          <div className="inline-flex items-center px-3 py-1 rounded-full bg-white border border-gray-200/90 group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-gray-900 shadow-2xs transition-all">
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-surface-interactive border border-border-default group-hover:border-primary/50 group-hover:bg-primary/10 text-[11px] font-bold text-text-primary shadow-2xs transition-all">
             <span>{notification.action_label || 'View'}</span>
           </div>
         </div>
@@ -135,7 +135,7 @@ export function NotificationItem({
 
       {/* Right Compact Post Thumbnail (if linked to a Work) */}
       {notification.post?.image_url && (
-        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200/80 shadow-2xs mt-0.5">
+        <div className="shrink-0 relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden bg-surface-interactive border border-border-default shadow-2xs mt-0.5">
           <img
             src={notification.post.image_url}
             alt={notification.post.title || "Work preview"}

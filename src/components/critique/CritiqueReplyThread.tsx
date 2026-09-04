@@ -287,24 +287,24 @@ export function CritiqueReplyThread({
   }, [critique.author, post.author, replies]);
 
   return (
-    <div ref={threadContainerRef} className="w-full mt-2 pt-2 border-t border-gray-100/80">
+    <div ref={threadContainerRef} className="w-full mt-2 pt-2 border-t border-border-default">
       {/* Collapsed / Expand Control Bar */}
-      <div className="flex items-center justify-between text-xs font-medium text-gray-500">
+      <div className="flex items-center justify-between text-xs font-medium text-text-muted">
         <div className="flex items-center gap-2">
           {replyCount > 0 ? (
             <button
               type="button"
               onClick={handleToggleExpand}
-              className="inline-flex items-center gap-1.5 hover:text-black transition-colors focus:outline-none py-1 group/btn"
+              className="inline-flex items-center gap-1.5 hover:text-text-primary transition-colors focus:outline-none py-1 group/btn"
             >
-              <MessageSquare className="w-3.5 h-3.5 text-gray-400 group-hover/btn:text-black transition-colors" />
+              <MessageSquare className="w-3.5 h-3.5 text-text-muted group-hover/btn:text-text-primary transition-colors" />
               <span>
                 {isExpanded ? 'Hide replies' : `View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`}
               </span>
               {isExpanded ? (
-                <ChevronUp className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronUp className="w-3.5 h-3.5 text-text-muted" />
               ) : (
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
               )}
             </button>
           ) : null}
@@ -333,12 +333,12 @@ export function CritiqueReplyThread({
       {isExpanded && (
         <div className="mt-3 space-y-2.5 pl-2 sm:pl-4 border-l-2 border-primary/20 animate-in fade-in duration-200">
           {isLoading ? (
-            <div className="py-4 flex items-center justify-center gap-2 text-xs text-gray-400 font-medium">
+            <div className="py-4 flex items-center justify-center gap-2 text-xs text-text-muted font-medium">
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
               <span>Loading discussion...</span>
             </div>
           ) : replies.length === 0 ? (
-            <div className="py-2 text-xs text-gray-400 italic">
+            <div className="py-2 text-xs text-text-muted italic">
               No replies yet. Start the conversation.
             </div>
           ) : (
@@ -363,7 +363,7 @@ export function CritiqueReplyThread({
                     type="button"
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className="text-xs font-semibold text-primary hover:text-[#E5B011] disabled:text-gray-400 flex items-center gap-1.5 focus:outline-none transition-colors"
+                    className="text-xs font-semibold text-primary hover:text-[#E5B011] disabled:text-text-muted flex items-center gap-1.5 focus:outline-none transition-colors"
                   >
                     {isLoadingMore ? (
                       <>

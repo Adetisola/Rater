@@ -91,15 +91,15 @@ export function FeedbackForm({ onClose }: FeedbackFormProps) {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-2xl bg-surface-elevated rounded-[32px] border border-border-default shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
-        <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-          <h2 className="text-xl font-bold text-gray-900">New Feedback</h2>
+        <div className="px-6 py-5 border-b border-border-default flex items-center justify-between sticky top-0 bg-surface-elevated z-10">
+          <h2 className="text-xl font-bold text-text-primary">New Feedback</h2>
           <button 
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-full bg-surface-primary hover:bg-surface-hover border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
           >
-            <X size={20} className="text-gray-600" />
+            <X size={20} className="text-text-secondary" />
           </button>
         </div>
 
@@ -109,26 +109,26 @@ export function FeedbackForm({ onClose }: FeedbackFormProps) {
             {/* Type & Category */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700">Type</label>
+                <label className="text-sm font-bold text-text-secondary">Type</label>
                 <select 
                   value={type}
                   onChange={e => setType(e.target.value)}
-                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-gray-900 focus:outline-none focus:border-primary focus:bg-white transition-all"
+                  className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-medium text-text-primary focus:outline-none focus:border-primary transition-all"
                 >
-                  <option>Feature Request</option>
-                  <option>Bug Report</option>
-                  <option>General Feedback</option>
+                  <option className="bg-surface-elevated text-text-primary">Feature Request</option>
+                  <option className="bg-surface-elevated text-text-primary">Bug Report</option>
+                  <option className="bg-surface-elevated text-text-primary">General Feedback</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-700">Category</label>
+                <label className="text-sm font-bold text-text-secondary">Category</label>
                 <select 
                   value={category}
                   onChange={e => setCategory(e.target.value)}
-                  className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-gray-900 focus:outline-none focus:border-primary focus:bg-white transition-all"
+                  className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-medium text-text-primary focus:outline-none focus:border-primary transition-all"
                 >
                   {['UI', 'Search', 'Performance', 'Profiles', 'Reviews', 'Mobile', 'Accessibility', 'Notifications'].map(cat => (
-                    <option key={cat}>{cat}</option>
+                    <option key={cat} className="bg-surface-elevated text-text-primary">{cat}</option>
                   ))}
                 </select>
               </div>
@@ -136,13 +136,13 @@ export function FeedbackForm({ onClose }: FeedbackFormProps) {
 
             {/* Title with Duplicate Detection */}
             <div className="space-y-2 relative">
-              <label className="text-sm font-bold text-gray-700">Title</label>
+              <label className="text-sm font-bold text-text-secondary">Title</label>
               <input 
                 type="text" 
                 value={title}
                 onChange={e => setTitle(e.target.value)}
                 placeholder="Short, descriptive title"
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-gray-900 focus:outline-none focus:border-primary focus:bg-white transition-all"
+                className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-medium text-text-primary placeholder:text-input-placeholder focus:outline-none focus:border-primary transition-all"
                 required
               />
               
@@ -153,30 +153,30 @@ export function FeedbackForm({ onClose }: FeedbackFormProps) {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="mt-2 bg-blue-50 border border-blue-100 rounded-xl p-4"
+                    className="mt-2 bg-primary/10 border border-primary/30 rounded-xl p-4"
                   >
                     <div className="flex items-start gap-3">
-                      <Search className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
+                      <Search className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                       <div>
-                        <p className="text-sm font-bold text-blue-900 mb-2">Did you mean...</p>
+                        <p className="text-sm font-bold text-text-primary mb-2">Did you mean...</p>
                         <div className="space-y-2">
                           {similarRequests.map(req => (
                             <button 
                               key={req.id}
                               type="button"
-                              className="w-full flex items-center justify-between text-left px-3 py-2 bg-white rounded-lg hover:bg-blue-50 border border-blue-100 transition-colors group"
+                              className="w-full flex items-center justify-between text-left px-3 py-2 bg-surface-primary rounded-lg hover:bg-surface-hover border border-border-default transition-colors group"
                             >
-                              <span className="flex items-center gap-2 text-sm font-medium text-gray-700 group-hover:text-blue-700">
-                                <CheckCircle2 className="w-4 h-4 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <span className="flex items-center gap-2 text-sm font-medium text-text-primary group-hover:text-primary">
+                                <CheckCircle2 className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                                 {req.title}
                               </span>
-                              <span className="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                              <span className="text-xs font-bold text-text-muted bg-surface-interactive px-2 py-1 rounded-md group-hover:text-text-primary transition-colors">
                                 {req.upvote_count || 0} votes
                               </span>
                             </button>
                           ))}
                         </div>
-                        <p className="text-xs text-blue-600 mt-3 font-medium">If your idea is already listed, upvote it instead of creating a new one!</p>
+                        <p className="text-xs text-text-secondary mt-3 font-medium">If your idea is already listed, upvote it instead of creating a new one!</p>
                       </div>
                     </div>
                   </motion.div>
@@ -186,13 +186,13 @@ export function FeedbackForm({ onClose }: FeedbackFormProps) {
 
             {/* Description */}
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700">Description</label>
+              <label className="text-sm font-bold text-text-secondary">Description</label>
               <textarea 
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Provide details, use cases, or steps to reproduce..."
                 rows={5}
-                className="w-full bg-gray-50 border-2 border-gray-100 rounded-xl px-4 py-3 font-medium text-gray-900 focus:outline-none focus:border-primary focus:bg-white transition-all resize-none custom-scrollbar"
+                className="w-full bg-input-bg border-2 border-input-border rounded-xl px-4 py-3 font-medium text-text-primary placeholder:text-input-placeholder focus:outline-none focus:border-primary transition-all resize-none custom-scrollbar"
                 required
               />
             </div>
@@ -200,9 +200,9 @@ export function FeedbackForm({ onClose }: FeedbackFormProps) {
           </form>
         </div>
 
-        <div className="px-6 py-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 sticky bottom-0 z-10">
-          <Button variant="outline" onClick={onClose} type="button">Cancel</Button>
-          <Button variant="primary" type="submit" form="feedback-form" disabled={isSubmitting || !title.trim() || !description.trim()}>
+        <div className="px-6 py-5 border-t border-border-default bg-surface-subtle flex justify-end gap-3 sticky bottom-0 z-10">
+          <Button variant="outline" onClick={onClose} type="button" className="bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary">Cancel</Button>
+          <Button variant="primary" type="submit" form="feedback-form" disabled={isSubmitting || !title.trim() || !description.trim()} className="text-black">
             {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
           </Button>
         </div>

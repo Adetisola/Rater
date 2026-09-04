@@ -77,17 +77,17 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
       />
 
       {/* Modal Content */}
-      <div className="w-full max-w-md bg-white rounded-[32px] p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 text-center">
+      <div className="w-full max-w-md bg-surface-elevated rounded-[32px] p-10 shadow-2xl relative z-10 animate-in zoom-in-95 duration-200 text-center border border-border-default">
         
-        <h2 className="text-xl font-medium text-black mb-1">Share this Work</h2>
-        <p className="text-sm text-gray-500 mb-4">Invite others to critique or study this work.</p>
+        <h2 className="text-xl font-medium text-text-primary mb-1">Share this Work</h2>
+        <p className="text-sm text-text-secondary mb-4">Invite others to critique or study this work.</p>
 
         {/* URL Input */}
-        <div className="flex items-center gap-2 border-2 border-[#111111] rounded-xl px-4 py-3 mb-6">
+        <div className="flex items-center gap-2 border-2 border-border-strong rounded-xl px-4 py-3 mb-6 bg-input-bg">
             <input 
                 readOnly
                 value={shareUrl}
-                className="flex-1 bg-transparent text-sm text-gray-500 outline-none w-full"
+                className="flex-1 bg-transparent text-sm text-text-secondary outline-none w-full"
             />
         </div>
 
@@ -153,7 +153,7 @@ export function SharePostOverlay({ onClose, post_id }: SharePostOverlayProps) {
             </button>
         </div>
         
-        <p className="text-[10px] text-gray-400">Shared works are public.</p>
+        <p className="text-[10px] text-text-muted">Shared works are public.</p>
 
       </div>
     </div>,

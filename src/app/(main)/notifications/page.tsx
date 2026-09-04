@@ -92,11 +92,11 @@ export default function NotificationsPage() {
   if (!currentProfile) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <div className="w-16 h-16 rounded-3xl bg-amber-50 flex items-center justify-center mx-auto mb-4 border border-primary/20">
+        <div className="w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center mx-auto mb-4 border border-primary/30">
           <Bell className="w-8 h-8 text-primary" />
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Sign in to view notifications</h2>
-        <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+        <h2 className="text-xl font-bold text-text-primary mb-2">Sign in to view notifications</h2>
+        <p className="text-sm text-text-secondary max-w-sm mx-auto mb-6">
           Track critiques, unlocked scores, and studio milestones on your Work.
         </p>
       </div>
@@ -108,15 +108,15 @@ export default function NotificationsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-xl font-semibold text-gray-950 tracking-tight flex items-center gap-3">
+          <h1 className="text-xl font-semibold text-text-primary tracking-tight flex items-center gap-3">
             <span>Notifications</span>
             {unreadCount > 0 && (
-              <span className="px-3 py-0.5 rounded-full text-xs font-black bg-primary/20 text-gray-900">
+              <span className="px-3 py-0.5 rounded-full text-xs font-black bg-primary/20 text-text-primary">
                 {unreadCount} new
               </span>
             )}
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-text-secondary mt-1">
             Realtime critiques, milestone unlock alerts, and studio updates.
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function NotificationsPage() {
             <Button
               variant="outline"
               onClick={() => markAllAsRead(currentProfile.id)}
-              className="h-9 px-3.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 hover:bg-white"
+              className="h-9 px-3.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary"
             >
               <CheckCheck size={16} />
               <span>Mark all read</span>
@@ -137,7 +137,7 @@ export default function NotificationsPage() {
           <Button
             variant="outline"
             onClick={() => showSettings('notifications')}
-            className="h-9 w-9 p-0 rounded-xl flex items-center justify-center hover:bg-white text-gray-600"
+            className="h-9 w-9 p-0 rounded-xl flex items-center justify-center bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary"
             aria-label="Notification settings"
           >
             <Settings size={16} />
@@ -153,8 +153,8 @@ export default function NotificationsPage() {
           className={cn(
             "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200",
             activeFilter === 'all'
-              ? "bg-primary/10 border-primary/40 text-black font-semibold"
-              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+              ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+              : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
           )}
         >
           All
@@ -166,8 +166,8 @@ export default function NotificationsPage() {
           className={cn(
             "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5",
             activeFilter === 'unread'
-              ? "bg-primary/10 border-primary/40 text-black font-semibold"
-              : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+              ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+              : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
           )}
         >
           <span>Unread</span>
@@ -179,12 +179,12 @@ export default function NotificationsPage() {
 
       {/* Main Content Feed */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 text-gray-400">
+        <div className="flex flex-col items-center justify-center py-24 text-text-muted">
           <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
           <span className="text-sm font-medium">Loading your notification feed...</span>
         </div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-xs">
+        <div className="bg-surface-primary rounded-3xl border border-border-default p-8 shadow-xs">
           <NotificationEmptyState filter={activeFilter} />
         </div>
       ) : (
@@ -192,10 +192,10 @@ export default function NotificationsPage() {
           {groupedNotifications.map((group) => (
             <div key={group.label} className="space-y-2.5">
               <div className="flex items-center gap-2 px-1 mb-1">
-                <h3 className="text-xs font-bold text-gray-800 tracking-tight">
+                <h3 className="text-xs font-bold text-text-primary tracking-tight">
                   {group.label}
                 </h3>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-500">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-interactive text-text-muted">
                   {group.items.length}
                 </span>
               </div>
@@ -219,7 +219,7 @@ export default function NotificationsPage() {
                 variant="outline"
                 disabled={isLoadingMore}
                 onClick={() => loadMore(currentProfile.id)}
-                className="h-10 px-6 rounded-full text-xs font-bold"
+                className="h-10 px-6 rounded-full text-xs font-bold bg-surface-primary border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary"
               >
                 {isLoadingMore ? (
                   <>

@@ -194,15 +194,15 @@ export function ReplyComposer({
     <div className="w-full mt-3">
       {/* Replying-to Target Chip */}
       {replyingTo && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium mb-1.5 px-1 animate-in fade-in duration-150">
+        <div className="flex items-center gap-1.5 text-xs text-text-muted font-medium mb-1.5 px-1 animate-in fade-in duration-150">
           <CornerDownRight className="w-3.5 h-3.5 text-primary shrink-0" />
           <span>
-            Replying to <span className="text-black font-semibold">@{replyingTo.username}</span>
+            Replying to <span className="text-text-primary font-semibold">@{replyingTo.username}</span>
           </span>
           <button
             type="button"
             onClick={onClearReplyingTo}
-            className="p-0.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-black transition-colors ml-1 focus:outline-none"
+            className="p-0.5 rounded-full hover:bg-surface-hover text-text-muted hover:text-text-primary transition-colors ml-1 focus:outline-none"
             title="Cancel reply targeting"
           >
             <X className="w-3 h-3" />
@@ -211,11 +211,11 @@ export function ReplyComposer({
       )}
 
       {/* Composer Input Box */}
-      <div className="relative bg-gray-50/80 border border-gray-200 focus-within:border-primary/60 focus-within:bg-white rounded-2xl transition-all duration-200 p-2.5 sm:p-3">
+      <div className="relative bg-surface-primary border border-border-default focus-within:border-primary/60 focus-within:bg-surface-elevated rounded-2xl transition-all duration-200 p-2.5 sm:p-3">
         {/* Autocomplete Suggestions Popover */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden max-h-48 overflow-y-auto animate-in zoom-in-95 duration-150">
-            <div className="px-3 py-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 border-b border-gray-100">
+          <div className="absolute bottom-full left-0 right-0 mb-1.5 bg-surface-elevated border border-border-default rounded-xl shadow-xl z-30 overflow-hidden max-h-48 overflow-y-auto animate-in zoom-in-95 duration-150">
+            <div className="px-3 py-1.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider bg-surface-subtle border-b border-border-default">
               People
             </div>
             {suggestions.map((item, idx) => (
@@ -227,12 +227,12 @@ export function ReplyComposer({
                   handleSelectMention(item.username);
                 }}
                 className={`w-full px-3 py-2 text-left flex items-center gap-2.5 text-sm transition-colors ${
-                  idx === selectedSuggestionIndex ? 'bg-primary/10 text-black font-medium' : 'hover:bg-gray-50 text-gray-700'
+                  idx === selectedSuggestionIndex ? 'bg-primary/10 text-text-primary font-medium' : 'hover:bg-surface-hover text-text-secondary'
                 }`}
               >
                 <UserAvatar avatarUrl={item.avatar_url} size="xs" className="w-5 h-5" />
-                <span className="truncate font-medium text-black">{item.name}</span>
-                <span className="text-xs text-gray-400 font-normal truncate">@{item.username}</span>
+                <span className="truncate font-medium text-text-primary">{item.name}</span>
+                <span className="text-xs text-text-muted font-normal truncate">@{item.username}</span>
               </button>
             ))}
           </div>
@@ -258,13 +258,13 @@ export function ReplyComposer({
               maxLength={1000}
               placeholder={currentProfile ? placeholder : "Sign in to reply..."}
               disabled={isSubmitting}
-              className="w-full bg-transparent text-sm text-black placeholder:text-gray-400 resize-none focus:outline-none leading-relaxed py-0.5"
+              className="w-full bg-transparent text-sm text-text-primary placeholder:text-text-muted resize-none focus:outline-none leading-relaxed py-0.5"
             />
           </div>
 
           <div className="shrink-0 flex items-center gap-1.5 self-end">
             {content.length > 800 && (
-              <span className={`text-[11px] font-medium ${content.length >= 1000 ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+              <span className={`text-[11px] font-medium ${content.length >= 1000 ? 'text-red-500 font-bold' : 'text-text-muted'}`}>
                 {1000 - content.length}
               </span>
             )}

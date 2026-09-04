@@ -950,7 +950,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 {timeLabel}
                             </span>
                             {currentAvatar?.id === review.reviewer_id ? (
-                                <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
+                                <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
                                     <button 
                                         onClick={() => {
                                             if (editingReview && editingReview.id !== review.id) {
@@ -972,7 +972,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                             <span>Are you sure?</span>
                                             <button onClick={() => handleDeleteReview(review.id)} className="hover:underline">Yes</button>
                                             <span>/</span>
-                                            <button onClick={() => setReviewToDelete(null)} className="hover:underline text-gray-400">No</button>
+                                            <button onClick={() => setReviewToDelete(null)} className="hover:underline text-text-muted">No</button>
                                         </div>
                                     ) : (
                                         <button 
@@ -984,7 +984,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex items-center text-xs font-medium text-gray-400">
+                                <div className="flex items-center text-xs font-medium text-text-muted">
                                     <button 
                                         type="button"
                                         onClick={() => setReportTarget({ targetType: 'review', targetId: review.id })}
@@ -998,7 +998,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                     </div>
 
                     {review.comment && (
-                        <div className="text-sm text-black leading-relaxed mb-3">
+                        <div className="text-sm text-text-primary leading-relaxed mb-3">
                             <div className="markdown-content text-sm wrap-break-word">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]} components={safeMarkdownComponents}>
                                     {review.comment}
@@ -1010,7 +1010,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                     <div className="flex items-center gap-4 mt-2">
                         <div className="flex flex-wrap gap-3 xs:gap-4">
                             {modeConfig.criteria.map(c => (
-                                <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-black" title={c.label}>
+                                <div key={c.dbKey} className="flex items-center gap-1.5 text-sm font-semibold text-text-primary" title={c.label}>
                                     <img src={c.iconUrl} alt={c.label} className="w-5 h-5 object-contain" />
                                     {review.ratings?.[c.dbKey] || '-'}
                                 </div>
@@ -1040,7 +1040,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.15, ease: "easeIn" } }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="w-full bg-white relative min-h-screen"
+            className="w-full bg-canvas relative min-h-screen"
         >
             <div className="max-w-300 mx-auto px-4 sm:px-6 pt-4 md:pt-6 pb-8">
 
@@ -1147,7 +1147,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 )}
                             </div>
                             <span
-                                className="text-xs font-medium text-gray-400"
+                                className="text-xs font-medium text-text-muted"
                                 title={getFullTimestamp(post.created_at)}
                                 suppressHydrationWarning
                             >
@@ -1258,8 +1258,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     onClick={() => post.ai_prompt && setIsAiPromptExpanded(!isAiPromptExpanded)}
                                     className={cn(
                                         "inline-flex self-start items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors",
-                                        post.ai_prompt ? "cursor-pointer hover:bg-gray-50 border-gray-200" : "cursor-default border-gray-100 bg-gray-50",
-                                        isAiPromptExpanded && "bg-gray-50 border-gray-200"
+                                        post.ai_prompt ? "cursor-pointer hover:bg-surface-hover border-border-default bg-surface-primary" : "cursor-default border-border-default bg-surface-primary",
+                                        isAiPromptExpanded && "bg-surface-hover border-border-default"
                                     )}
                                 >
                                     <svg 
@@ -1283,7 +1283,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                             fill="url(#rater-star-grad)" 
                                         />
                                     </svg>
-                                    <span className="text-gray-700">
+                                    <span className="text-text-secondary">
                                         AI-assisted • {post.ai_tool === 'other' || !post.ai_tool 
                                             ? 'Custom Tool' 
                                             : AI_TOOLS.find(t => t.id === post.ai_tool)?.label || post.ai_tool}
@@ -1298,7 +1298,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                             exit={{ opacity: 0, height: 0 }}
                                             className="overflow-hidden"
                                         >
-                                            <div className="mt-2 bg-gray-50 border border-gray-100 rounded-2xl p-4 relative group">
+                                            <div className="mt-2 bg-surface-primary border border-border-default rounded-2xl p-4 relative group">
                                                 <button
                                                     onClick={() => {
                                                         if (post.ai_prompt) {
@@ -1308,12 +1308,12 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                             setTimeout(() => setAiPromptCopied(false), 2000);
                                                         }
                                                     }}
-                                                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-white rounded-lg shadow-sm border border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 active:scale-95"
+                                                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-surface-elevated rounded-lg shadow-sm border border-border-default opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface-hover active:scale-95 text-text-secondary"
                                                     title="Copy Prompt"
                                                 >
-                                                    {aiPromptCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-500" />}
+                                                    {aiPromptCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-text-muted" />}
                                                 </button>
-                                                <p className="text-sm font-mono text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word pr-8">
+                                                <p className="text-sm font-mono text-text-secondary leading-relaxed whitespace-pre-wrap wrap-break-word pr-8">
                                                     {post.ai_prompt}
                                                 </p>
                                             </div>
@@ -1337,8 +1337,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     className="w-10 h-10 shrink-0 ring-2 ring-transparent group-hover/author:ring-primary transition-all flex items-center justify-center" 
                                 />
                                 <div className="text-left flex flex-col min-w-0">
-                                    <span className="block text-sm font-medium text-black group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
-                                    <span className="block text-[10px] text-gray-400 font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
+                                    <span className="block text-sm font-medium text-text-primary group-hover/author:text-primary transition-colors truncate">{avatar?.name || 'Unknown'}</span>
+                                    <span className="block text-[10px] text-text-muted font-medium tracking-wider truncate mt-0.5">@{avatar?.username || post.avatar_id}</span>
                                 </div>
                             </Link>
 
@@ -1346,8 +1346,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                 {!metrics?.rating_unlocked ? (
                                     <div className="relative group/lock cursor-help flex items-center gap-1.5 pl-2">
                                         <img src="/icons/star-inactive.svg" alt="rating locked" className="w-5 h-5 group-hover/lock:opacity-80 transition-all" />
-                                        <Lock className="w-4 h-4 text-gray-400 group-hover/lock:text-gray-500 transition-colors" />
-                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-white border-2 border-primary text-black text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
+                                        <Lock className="w-4 h-4 text-text-muted group-hover/lock:text-text-secondary transition-colors" />
+                                        <div className="absolute bottom-full right-0 mb-3 w-48 p-3 bg-surface-elevated border-2 border-primary text-text-primary text-[11px] rounded-xl shadow-xl z-50 pointer-events-none opacity-0 invisible translate-y-2 group-hover/lock:opacity-100 group-hover/lock:visible group-hover/lock:translate-y-0 transition-all duration-200 hidden md:block">
                                             <p className="leading-relaxed text-center font-medium">Overall score unlocks after 3 critiques</p>
                                         </div>
                                     </div>
@@ -1363,7 +1363,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                 />
                                             ))}
                                         </div>
-                                        <span className="text-lg md:text-xl font-semibold text-black">{metrics.average_score}</span>
+                                        <span className="text-lg md:text-xl font-semibold text-text-primary">{metrics.average_score}</span>
                                     </>
                                 )}
                             </div>
@@ -1448,24 +1448,24 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                         transition={{ duration: 0.15 }}
                                                     >
                                                         {isSelfPost ? (
-                                                            <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
-                                                                <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
-                                                                <h3 className="font-semibold text-lg mb-1 text-gray-700">Self-Critique Locked</h3>
-                                                                <p className="text-sm text-gray-500">You cannot critique your own work.</p>
+                                                            <div className="bg-surface-primary p-12 rounded-3xl text-center border-2 border-dashed border-border-default">
+                                                                <div className="w-16 h-16 bg-surface-subtle text-text-muted rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">🚫</div>
+                                                                <h3 className="font-semibold text-lg mb-1 text-text-primary">Self-Critique Locked</h3>
+                                                                <p className="text-sm text-text-secondary">You cannot critique your own work.</p>
                                                             </div>
                                                         ) : !currentAvatar ? (
                                                             <motion.div
                                                                 initial={{ opacity: 0, y: 16 }}
                                                                 animate={{ opacity: 1, y: 0 }}
-                                                                className="py-8 px-3 bg-gray-50 rounded-[20px] border border-gray-100 flex flex-col items-center text-center"
+                                                                className="py-8 px-3 bg-surface-primary rounded-[20px] border border-border-default flex flex-col items-center text-center"
                                                             >
                                                                 <img
                                                                     src="/icons/rater-logo-white-bg.svg"
                                                                     alt="Rater"
                                                                     className="w-12 h-12 mb-4"
                                                                 />
-                                                                <h3 className="text-md font-medium text-black mb-1.5">Have feedback?</h3>
-                                                                <p className="text-xs text-gray-500 mb-6 max-w-65 leading-relaxed">
+                                                                <h3 className="text-md font-medium text-text-primary mb-1.5">Have feedback?</h3>
+                                                                <p className="text-xs text-text-secondary mb-6 max-w-65 leading-relaxed">
                                                                     Create a profile to submit a critique, join the conversation, and contribute to the overall score.
                                                                 </p>
                                                                 <Button onClick={() => setShowAuthOverlay(true)} variant="primary" className="px-6 h-10 rounded-full font-medium text-sm">
@@ -1484,8 +1484,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                                     onCancelEdit={() => setEditingReview(null)}
                                                                 />
                                                         ) : (
-                                                            <div className="bg-gray-50 p-10 rounded-3xl text-center">
-                                                                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-white border border-gray-100">
+                                                            <div className="bg-surface-primary border border-border-default p-10 rounded-3xl text-center">
+                                                                <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-surface-elevated border border-border-default">
                                                                     <svg className="w-7 h-7 filter" viewBox="0 0 83 80">
                                                                         <defs>
                                                                             <linearGradient id="success-star-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1519,8 +1519,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                                                         />
                                                                     </svg>
                                                                 </div>
-                                                                <h3 className="font-medium text-xl mb-2">Critique submitted</h3>
-                                                                <p className="text-gray-500">Your critique has been added to this work.</p>
+                                                                <h3 className="font-medium text-xl mb-2 text-text-primary">Critique submitted</h3>
+                                                                <p className="text-text-secondary">Your critique has been added to this work.</p>
                                                             </div>
                                                         )}
                                                     </motion.div>
@@ -1565,9 +1565,9 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                 </div>
 
                 {/* BOTTOM SECTION: Reviews List */}
-                <div ref={critiquesSectionRef} id="critiques-section" className="border-t border-gray-100 pt-8 xs:pt-15 scroll-mt-6 sm:scroll-mt-10">
+                <div ref={critiquesSectionRef} id="critiques-section" className="border-t border-border-default pt-8 xs:pt-15 scroll-mt-6 sm:scroll-mt-10">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-                        <h2 className="text-lg font-medium text-black shrink-0">
+                        <h2 className="text-lg font-medium text-text-primary shrink-0">
                             Critiques ({isFetchingReviews ? (metrics.review_count ?? post.review_count ?? 0) : allReviews.length})
                         </h2>
 
@@ -1578,8 +1578,8 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                                     type="button"
                                     onClick={() => setSortBy(option)}
                                     className={`px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all duration-200 ${sortBy === option
-                                        ? "bg-primary/10 border-primary/40 text-black"
-                                        : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                                        ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+                                        : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
                                         }`}
                                 >
                                     {option}
@@ -1590,7 +1590,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
 
                     <div className="space-y-4">
                         {isFetchingReviews ? (
-                            <div className="py-20 text-center text-gray-400 font-medium"><AmbientLoadingText /></div>
+                            <div className="py-20 text-center text-text-muted font-medium"><AmbientLoadingText /></div>
                         ) : loadError ? (
                             <div className="w-full">
                                <AppErrorState
@@ -1603,34 +1603,34 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                             <motion.div
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="py-20 px-8 text-center bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200"
+                                className="py-20 px-8 text-center bg-surface-primary rounded-3xl border-2 border-dashed border-border-default"
                             >
                                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <Plus className="w-8 h-8 text-primary" />
                                 </div>
-                                <h3 className="text-xl font-semibold text-black mb-2">Be the first to critique this work</h3>
-                                <p className="text-gray-500 max-w-xs mx-auto text-[15px] leading-relaxed">
+                                <h3 className="text-xl font-semibold text-text-primary mb-2">Be the first to critique this work</h3>
+                                <p className="text-text-secondary max-w-xs mx-auto text-[15px] leading-relaxed">
                                     Your critique helps the creator sharpen their craft and provides valuable insights for the studio.
                                 </p>
                             </motion.div>
                         ) : (
                             <>
                                 {targetedCritique && (
-                                    <div className="mb-6 pb-6 border-b border-gray-200/80 flex flex-col gap-3">
+                                    <div className="mb-6 pb-6 border-b border-border-default flex flex-col gap-3">
                                         <div className="flex items-center justify-between px-1">
                                             <div className="flex items-center gap-2">
                                                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/15 text-primary border border-primary/25">
                                                     <Sparkles className="w-3.5 h-3.5" />
                                                     Targeted Critique
                                                 </span>
-                                                <span className="text-xs text-gray-400">
+                                                <span className="text-xs text-text-muted">
                                                     Referenced in notification
                                                 </span>
                                             </div>
                                             <button
                                                 type="button"
                                                 onClick={() => setTargetedCritique(null)}
-                                                className="text-xs font-medium text-gray-400 hover:text-black transition-colors focus:outline-none"
+                                                className="text-xs font-medium text-text-muted hover:text-text-primary transition-colors focus:outline-none"
                                             >
                                                 Dismiss
                                             </button>
@@ -1653,7 +1653,7 @@ export function PostDetailCore({ post, isAdjacent, onDisableSwipe, disableEntryA
                         </div>
                     )}
                     {!hasMoreReviews && sortedReviews.length > REVIEWS_PER_PAGE && (
-                        <div className="flex justify-center mt-10"><span className="text-sm text-gray-400 font-medium">All reviews shown</span></div>
+                        <div className="flex justify-center mt-10"><span className="text-sm text-text-muted font-medium">All reviews shown</span></div>
                     )}
                 </div>
 

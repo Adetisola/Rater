@@ -139,7 +139,7 @@ export function PostActionsMenu({
     "flex items-center justify-center rounded-full active:scale-90",
     buttonClassName || cn(
       "w-8 h-8 transition-all",
-      "bg-white/20 text-white hover:bg-white/40 backdrop-blur-md border border-white/30"
+      "bg-surface-primary text-text-primary hover:bg-surface-hover backdrop-blur-md border border-border-default"
     ),
     iconClassName
   );
@@ -147,18 +147,18 @@ export function PostActionsMenu({
   const moreBtnClass = cn(
     "flex items-center justify-center rounded-full active:scale-90",
     buttonClassName
-      ? cn(buttonClassName, isOpen && "ring-2 ring-black/10")
+      ? cn(buttonClassName, isOpen && "ring-2 ring-primary/40 bg-surface-hover")
       : cn(
           "w-8 h-8 transition-all",
           isOpen
-            ? "bg-white text-black shadow-lg"
-            : "bg-white/20 text-white hover:bg-white/40 backdrop-blur-md border border-white/30"
+            ? "bg-surface-elevated text-text-primary shadow-lg border border-border-default"
+            : "bg-surface-primary text-text-primary hover:bg-surface-hover backdrop-blur-md border border-border-default"
         ),
     iconClassName
   );
 
   // — Menu item class —
-  const menuItemClass = "w-full px-4 py-3 flex items-center gap-2.5 hover:bg-gray-50 transition-colors text-sm font-medium";
+  const menuItemClass = "w-full px-4 py-3 flex items-center gap-2.5 hover:bg-surface-hover transition-colors text-sm font-medium";
 
   // ── Abstracted Menu Content ──
   const menuContent = (
@@ -168,7 +168,7 @@ export function PostActionsMenu({
         <button
           type="button"
           onClick={handleShare}
-          className={cn(menuItemClass, "text-gray-600")}
+          className={cn(menuItemClass, "text-text-secondary hover:text-text-primary")}
         >
           <Share2 className="w-4 h-4" />
           Share Work
@@ -186,7 +186,7 @@ export function PostActionsMenu({
               setEditingPost(post);
               setIsOpen(false);
             }}
-            className={cn(menuItemClass, "text-gray-600")}
+            className={cn(menuItemClass, "text-text-secondary hover:text-text-primary")}
           >
             <Edit2 className="w-4 h-4" />
             Edit Work
@@ -199,17 +199,17 @@ export function PostActionsMenu({
               showDeleteConfirmation(post.id);
               setIsOpen(false);
             }}
-            className={cn(menuItemClass, "text-red-500 hover:bg-red-50")}
+            className={cn(menuItemClass, "text-red-500 hover:bg-red-500/10")}
           >
             <Trash2 className="w-4 h-4" />
             Remove Work
           </button>
-          <div className="border-t border-gray-100 mx-3" />
+          <div className="border-t border-border-default mx-3" />
           {post.ai_prompt && (
             <button
               type="button"
               onClick={handleCopyPrompt}
-              className={cn(menuItemClass, "text-gray-600")}
+              className={cn(menuItemClass, "text-text-secondary hover:text-text-primary")}
             >
               <Copy className="w-4 h-4" />
               Copy Prompt
@@ -218,7 +218,7 @@ export function PostActionsMenu({
           <button
             type="button"
             onClick={handleDownload}
-            className={cn(menuItemClass, "text-gray-600")}
+            className={cn(menuItemClass, "text-text-secondary hover:text-text-primary")}
           >
             <Download className="w-4 h-4" />
             Download Image
@@ -231,7 +231,7 @@ export function PostActionsMenu({
             <button
               type="button"
               onClick={handleCopyPrompt}
-              className={cn(menuItemClass, "text-gray-600")}
+              className={cn(menuItemClass, "text-text-secondary hover:text-text-primary")}
             >
               <Copy className="w-4 h-4" />
               Copy Prompt
@@ -240,16 +240,16 @@ export function PostActionsMenu({
           <button
             type="button"
             onClick={handleDownload}
-            className={cn(menuItemClass, "text-gray-600")}
+            className={cn(menuItemClass, "text-text-secondary hover:text-text-primary")}
           >
             <Download className="w-4 h-4" />
             Download Image
           </button>
-          <div className="border-t border-gray-100 mx-3" />
+          <div className="border-t border-border-default mx-3" />
           <button
             type="button"
             onClick={handleReport}
-            className={cn(menuItemClass, "text-red-500 hover:bg-red-50")}
+            className={cn(menuItemClass, "text-red-500 hover:bg-red-500/10")}
           >
             <Flag className="w-4 h-4" />
             Report Work
@@ -322,11 +322,11 @@ export function PostActionsMenu({
                   animate={{ y: 0 }}
                   exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="w-full bg-white rounded-t-4xl overflow-hidden shadow-2xl relative z-10 pb-6"
+                  className="w-full bg-surface-elevated rounded-t-4xl overflow-hidden shadow-2xl relative z-10 pb-6 border-t border-border-default"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex justify-center pt-4 pb-2">
-                    <div className="w-12 h-1.5 bg-gray-200 rounded-full" />
+                    <div className="w-12 h-1.5 bg-border-default rounded-full" />
                   </div>
                   <div className="px-2 py-2">
                     {menuContent}
@@ -345,7 +345,7 @@ export function PostActionsMenu({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 4 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-2 w-max min-w-48 bg-white rounded-2xl overflow-hidden shadow-xl border border-gray-100 z-100 origin-top-right flex flex-col"
+              className="absolute right-0 top-full mt-2 w-max min-w-48 bg-surface-elevated rounded-2xl overflow-hidden shadow-xl border border-border-default z-100 origin-top-right flex flex-col"
             >
               {menuContent}
             </motion.div>

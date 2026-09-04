@@ -117,11 +117,11 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
       />
 
       {/* Modal Content */}
-      <div className="w-full sm:max-w-100 bg-white rounded-t-4xl sm:rounded-4xl p-6 sm:p-8 shadow-2xl relative z-10 animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
+      <div className="w-full sm:max-w-100 bg-surface-elevated rounded-t-4xl sm:rounded-4xl p-6 sm:p-8 shadow-2xl relative z-10 animate-in slide-in-from-bottom-full sm:zoom-in-95 duration-300 flex flex-col max-h-[85vh] border border-border-default">
         
         <div className="text-center mb-6 shrink-0">
-          <h2 className="text-xl font-medium text-black mb-1">Download Images</h2>
-          <p className="text-sm text-gray-500">Save images to your device</p>
+          <h2 className="text-xl font-medium text-text-primary mb-1">Download Images</h2>
+          <p className="text-sm text-text-secondary">Save images to your device</p>
         </div>
 
         {/* Scrollable vertical list */}
@@ -135,7 +135,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                 key={index}
                 className={cn(
                   "flex items-center justify-between p-2 rounded-2xl transition-colors",
-                  "border border-transparent hover:bg-gray-50"
+                  "border border-border-default bg-surface-primary hover:bg-surface-hover"
                 )}
               >
                 <div className="flex items-center gap-4">
@@ -152,7 +152,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                   
                   {/* Label */}
                   <div className="flex flex-col justify-center">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-text-primary">
                       Image {index + 1}
                     </span>
                   </div>
@@ -166,8 +166,8 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all",
                     isDownloaded 
-                      ? "bg-green-100 text-green-600" 
-                      : "bg-transparent border-2 border-gray-300 text-gray-700 hover:bg-white hover:text-black active:scale-95 disabled:opacity-50"
+                      ? "bg-green-500/20 text-green-500 border border-green-500/30" 
+                      : "bg-surface-interactive border border-border-default text-text-secondary hover:bg-surface-hover hover:text-text-primary active:scale-95 disabled:opacity-50"
                   )}
                 >
                   {isDownloading ? (
@@ -184,7 +184,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-6 pt-4 border-t border-gray-100 shrink-0 flex flex-col gap-3">
+        <div className="mt-6 pt-4 border-t border-border-default shrink-0 flex flex-col gap-3">
             <Button 
                 variant='outline'
                 onClick={handleDownloadAll}
@@ -214,7 +214,7 @@ export function DownloadImageOverlay({ isOpen, onClose, post }: DownloadImageOve
             
             <Button 
                 variant="ghost"
-                className="h-10 w-full rounded-full text-sm font-medium text-gray-500 transition-all"
+                className="h-10 w-full rounded-full text-sm font-medium text-text-secondary transition-all"
                 onClick={onClose}
                 disabled={isDownloadingAll}
             >

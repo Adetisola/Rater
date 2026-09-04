@@ -91,20 +91,20 @@ export function FilterDropdown({
 
       {/* Expanded Container */}
       <div className={cn(
-        "absolute bg-white rounded-4xl border-2 border-primary z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden shadow-2xl",
+        "absolute bg-surface-elevated rounded-4xl border-2 border-primary z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden shadow-2xl",
         className
       )}>
 
         {/* TOP SECTION: Search Bar Area */}
         <div className="relative w-full min-h-[48px] flex items-center px-1 my-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 opacity-40 z-10" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-text-muted z-10" />
 
           <div
             className="w-full min-h-[48px] pl-12 pr-16 py-1.5 flex items-center flex-wrap gap-2"
           >
             {/* Category Pills */}
             {selectedCategories.map(cat => (
-              <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gray-100 text-xs font-bold text-black whitespace-nowrap animate-in fade-in zoom-in duration-200">
+              <span key={cat} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-interactive text-xs font-bold text-text-primary whitespace-nowrap animate-in fade-in zoom-in duration-200 border border-border-default">
                 {cat}
                 <button
                   onClick={(e) => {
@@ -112,9 +112,9 @@ export function FilterDropdown({
                     const newCats = selectedCategories.filter(c => c !== cat);
                     onCategoryChange(newCats);
                   }}
-                  className="p-0.5 rounded-full hover:bg-gray-200 transition-colors"
+                  className="p-0.5 rounded-full hover:bg-surface-hover transition-colors"
                 >
-                  <X size={12} className="text-gray-500" />
+                  <X size={12} className="text-text-muted hover:text-text-primary" />
                 </button>
               </span>
             ))}
@@ -135,14 +135,14 @@ export function FilterDropdown({
                 }
               }}
               placeholder={selectedCategories.length === 0 ? "Search work, creatives, or categories..." : ""}
-              className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base placeholder:text-gray-400 h-8"
+              className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base text-text-primary placeholder:text-text-muted h-8"
             />
           </div>
 
           {/* Active Filter Toggle */}
           <button
             onClick={onClose}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-primary text-white hover:bg-[#eeb40e] transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-primary text-black hover:bg-primary/90 transition-colors"
           >
             <ListFilter className="h-5 w-5" />
           </button>
@@ -151,23 +151,23 @@ export function FilterDropdown({
         <div className="px-8 pb-8 pt-2">
 
           {/* DIVIDER */}
-          <div className="h-px w-full bg-gray-100 mb-6"></div>
+          <div className="h-px w-full bg-border-default mb-6"></div>
 
           {/* SORT BY SECTION */}
           <div className="mb-8 relative flex items-center gap-4">
-            <label className="text-sm font-semibold text-black whitespace-nowrap">Sort by</label>
+            <label className="text-sm font-semibold text-text-primary whitespace-nowrap">Sort by</label>
             <div className="relative">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className="w-48 py-2 px-4 bg-transparent border border-surface rounded-full flex items-center justify-between text-left hover:border-gray-300 transition-colors focus:ring-2 focus:ring-primary/10"
+                className="w-48 py-2 px-4 bg-transparent border border-border-default rounded-full flex items-center justify-between text-left hover:border-border-strong transition-colors focus:ring-2 focus:ring-primary/20"
               >
-                <span className="text-sm font-medium text-black">{getSortLabel(sortBy)}</span>
-                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
+                <span className="text-sm font-medium text-text-primary">{getSortLabel(sortBy)}</span>
+                <ChevronDown className={`w-4 h-4 text-text-muted transition-transform ${isSortOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Custom Select Dropdown */}
               {isSortOpen && (
-                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-xl py-2 z-20 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200">
+                <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-surface-elevated border border-border-default rounded-xl shadow-xl py-2 z-20 max-h-60 overflow-y-auto scrollbar-thin">
                   {SORT_OPTIONS.map(({ key, label }) => (
                     <button
                       key={key}
@@ -175,7 +175,7 @@ export function FilterDropdown({
                         onSortChange(key);
                         setIsSortOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-black hover:bg-gray-50 flex items-center justify-between transition-colors"
+                      className="w-full text-left px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-hover flex items-center justify-between transition-colors"
                     >
                       {label}
                       {sortBy === key && <Check className="w-4 h-4 text-primary" strokeWidth={2.5} />}
@@ -188,7 +188,7 @@ export function FilterDropdown({
 
           {/* CATEGORY SECTION */}
           <div className="mb-10">
-            <label className="block text-sm font-semibold text-black mb-3">Category</label>
+            <label className="block text-sm font-semibold text-text-primary mb-3">Category</label>
             <div className="flex flex-wrap gap-2.5">
               {CATEGORIES.map(cat => {
                 const isSelected = selectedCategories.includes(cat);
@@ -199,8 +199,8 @@ export function FilterDropdown({
                     className={cn(
                       "group pl-1.5 pr-2.5 py-2 rounded-full border text-sm font-medium transition-all duration-200 flex items-center gap-1.5",
                       isSelected
-                        ? "bg-primary/10 border-primary/40 text-black"
-                        : "bg-white border-gray-100 text-gray-600 hover:border-gray-200 hover:text-black"
+                        ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+                        : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
                     )}
                   >
                     {/* Toggle Indicator */}
@@ -208,9 +208,9 @@ export function FilterDropdown({
                       "w-5 h-5 rounded-md flex items-center justify-center transition-all duration-200",
                       isSelected
                         ? "bg-primary"
-                        : "border-[1.5px] border-[#E0E0E0]"
+                        : "border-[1.5px] border-border-default"
                     )}>
-                      {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
+                      {isSelected && <Check className="w-3 h-3 text-black" strokeWidth={4} />}
                     </div>
 
                     {cat}
@@ -221,7 +221,7 @@ export function FilterDropdown({
           </div>
 
           {/* FOOTER ACTIONS */}
-          <div className="flex items-center justify-start gap-4 pt-6 border-t border-[#F5F5F5]">
+          <div className="flex items-center justify-start gap-4 pt-6 border-t border-border-default">
             <Button
               variant="ghost"
               className="h-10 px-6 rounded-full text-sm font-medium transition-all"
@@ -237,7 +237,7 @@ export function FilterDropdown({
               Reset
             </Button>
             <Button
-              className="rounded-full px-5 bg-white border-2 border-primary text-black font-semibold hover:bg-primary hover:text-white transition-all duration-300 shadow-none border-solid"
+              className="rounded-full px-5 bg-surface-primary border-2 border-primary text-text-primary font-semibold hover:bg-primary hover:text-brand-primary-fg transition-all duration-300 shadow-none border-solid"
               onClick={onClose}
             >
               Apply
