@@ -15,11 +15,18 @@ export function NotificationEmptyState({ filter = 'all', onCloseParent }: Notifi
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
       {isUnreadFilter ? (
-        <img 
-          src="/icons/rater-logo-white-bg.svg" 
-          alt="Rater" 
-          className="w-10 h-10 object-contain mb-3.5" 
-        />
+        <div className="relative w-10 h-10 mb-3.5">
+          <img 
+            src="/icons/rater-logo-transparent-bg-stroked.svg" 
+            alt="Rater" 
+            className="w-10 h-10 object-contain dark:hidden" 
+          />
+          <img 
+            src="/icons/rater-logo-black-bg-stroked.svg" 
+            alt="Rater" 
+            className="w-10 h-10 object-contain hidden dark:block" 
+          />
+        </div>
       ) : (
         <div className="w-10 h-10 flex items-center justify-center mb-3.5">
           <BellOff className="w-6 h-6 text-text-muted" />

@@ -45,6 +45,14 @@ const TRENDING_FEEDBACK_TOPICS = [
   'Portfolio review',
 ];
 
+function MobileSearchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M34.3135 0C53.2246 0.000142146 68.626 15.4024 68.626 34.3135C68.6259 42.213 65.9295 49.4921 61.4229 55.2979L80.6826 74.5576C81.0918 74.954 81.4184 75.4271 81.6445 75.9502C81.873 76.479 81.9941 77.048 82 77.624C82.0059 78.2003 81.8965 78.7722 81.6787 79.3057C81.4609 79.8392 81.1389 80.324 80.7314 80.7314C80.324 81.1389 79.8392 81.4609 79.3057 81.6787C78.7722 81.8965 78.2003 82.0059 77.624 82C77.048 81.9941 76.479 81.873 75.9502 81.6445C75.4271 81.4184 74.954 81.0908 74.5576 80.6816L55.2979 61.4229C49.4921 65.9295 42.213 68.6259 34.3135 68.626C15.4024 68.626 0.000142138 53.2246 0 34.3135C0 15.4023 15.4023 0 34.3135 0ZM34.3135 8.66309C20.1076 8.66309 8.66309 20.1076 8.66309 34.3135C8.66323 48.5192 20.1077 59.9639 34.3135 59.9639C48.5191 59.9637 59.9637 48.5191 59.9639 34.3135C59.9639 20.1077 48.5192 8.66323 34.3135 8.66309Z" fill="currentColor"/>
+    </svg>
+  );
+}
+
 interface MobileSearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
@@ -236,27 +244,25 @@ export function MobileSearchOverlay({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.98 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-60 bg-white flex flex-col"
+          className="fixed inset-0 z-60 bg-surface-elevated flex flex-col"
         >
           {/* Header */}
-          <div className="sticky top-0 px-3 py-3 border-b border-gray-100 flex items-center gap-3 bg-white z-10 shrink-0">
+          <div className="sticky top-0 px-3 py-3 border-b border-border-default flex items-center gap-3 bg-surface-elevated z-10 shrink-0">
             <button 
               onClick={onClose}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors shrink-0"
               aria-label="Close search"
             >
-              <X size={20} className="text-gray-600" />
+              <X size={20} className="text-current" />
             </button>
 
             <motion.div 
               layoutId={activeLayoutId}
-              className="flex-1 relative flex items-center bg-white rounded-full border-2 border-primary overflow-hidden focus-within:ring-4 focus-within:ring-primary/10"
+              className="flex-1 relative flex items-center bg-surface-interactive rounded-full border-2 border-primary overflow-hidden focus-within:ring-4 focus-within:ring-primary/10"
               style={{ borderRadius: 9999 }}
             >
-              <img 
-                src="/icons/search.svg" 
-                alt="Search" 
-                className={`absolute left-4 h-5 w-5 z-10 shrink-0 pointer-events-none transition-opacity ${isSearching ? 'opacity-20' : 'opacity-40'}`} 
+              <MobileSearchIcon 
+                className={`absolute left-4 h-5 w-5 z-10 shrink-0 pointer-events-none transition-opacity text-text-muted ${isSearching ? 'opacity-30' : 'opacity-70'}`} 
               />
               <input 
                 ref={searchInputRef}
@@ -265,7 +271,7 @@ export function MobileSearchOverlay({
                 onChange={(e) => onSearchChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Start typing to search..." 
-                className="w-full h-11 pl-12 pr-10 bg-transparent font-sans text-base placeholder:text-gray-400 focus:outline-none"
+                className="w-full h-11 pl-12 pr-10 bg-transparent font-sans text-base text-text-primary placeholder:text-text-muted focus:outline-none"
               />
               <AnimatePresence>
                 {searchQuery && (
@@ -278,7 +284,7 @@ export function MobileSearchOverlay({
                       onSearchChange('');
                       searchInputRef.current?.focus();
                     }}
-                    className="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 active:bg-gray-100 transition-colors"
+                    className="absolute right-2 w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:text-text-primary active:bg-surface-hover transition-colors"
                   >
                     <X size={16} strokeWidth={2.5} />
                   </motion.button>
@@ -288,7 +294,7 @@ export function MobileSearchOverlay({
 
             <button 
               onClick={() => setIsFilterOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors shrink-0"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-hover text-text-secondary hover:text-text-primary transition-colors shrink-0"
               aria-label="Open filter settings"
             >
               <ListFilter className="h-5 w-5" />
@@ -297,30 +303,30 @@ export function MobileSearchOverlay({
 
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             {(sortBy !== 'balanced' || selectedCategories.length > 0) && (
-              <div className="px-4 py-3 border-b border-gray-100 flex flex-wrap items-center gap-2">
+              <div className="px-4 py-3 border-b border-border-default flex flex-wrap items-center gap-2 bg-surface-subtle">
                 {sortBy !== 'balanced' && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 border border-primary rounded-full">
-                    <span className="text-xs font-medium text-black">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
+                    <span className="text-xs font-medium text-text-primary">{SORT_OPTION_LABELS[sortBy] ?? sortBy}</span>
                     <button 
                       onClick={() => onSortChange('balanced')}
-                      className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-[#e6b00f] transition-colors"
+                      className="w-4 h-4 flex items-center justify-center rounded-full bg-primary hover:bg-primary/90 transition-colors"
                     >
-                      <X className="w-2.5 h-2.5 text-white" />
+                      <X className="w-2.5 h-2.5 text-black" />
                     </button>
                   </div>
                 )}
                 
                 {selectedCategories.map(cat => (
-                  <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-full">
-                    <span className="text-xs font-medium text-black">{cat}</span>
+                  <div key={cat} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-surface-interactive border border-border-default rounded-full">
+                    <span className="text-xs font-medium text-text-primary">{cat}</span>
                     <button 
                       onClick={() => {
                         const newCats = selectedCategories.filter(c => c !== cat);
                         onCategoryChange(newCats);
                       }}
-                      className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-400 hover:bg-gray-500 transition-colors"
+                      className="w-4 h-4 flex items-center justify-center rounded-full bg-surface-hover hover:bg-border-strong transition-colors"
                     >
-                      <X className="w-2.5 h-2.5 text-white" />
+                      <X className="w-2.5 h-2.5 text-text-muted" />
                     </button>
                   </div>
                 ))}
@@ -328,21 +334,21 @@ export function MobileSearchOverlay({
             )}
 
             {isSearching ? (
-              <div className="flex items-center justify-center h-40 text-gray-400 text-sm">Searching...</div>
+              <div className="flex items-center justify-center h-40 text-text-muted text-sm">Searching...</div>
             ) : isRecentMode ? (
               /* HYBRID HUB EMPTY STATE */
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border-subtle">
                 {recentItems.length > 0 && (
                   <div>
-                    <div className="px-4 py-3 bg-gray-50 flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Recent Searches</span>
+                    <div className="px-4 py-3 bg-surface-subtle flex items-center justify-between">
+                      <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Recent Searches</span>
                       <button 
                         onMouseDown={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           clearAll?.();
                         }}
-                        className="text-xs font-semibold text-gray-400 hover:text-red-500 transition-colors px-2 py-0.5 rounded-full hover:bg-red-50"
+                        className="text-xs font-semibold text-text-muted hover:text-red-500 transition-colors px-2 py-0.5 rounded-full hover:bg-red-500/10"
                       >
                         Clear all
                       </button>
@@ -356,7 +362,7 @@ export function MobileSearchOverlay({
                               e.stopPropagation(); 
                               removeItem(index); 
                             }}
-                            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all shrink-0 ml-1"
+                            className="w-9 h-9 flex items-center justify-center text-text-muted hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all shrink-0 ml-1"
                             aria-label="Remove item"
                           >
                             <X className="w-4 h-4" />
@@ -365,20 +371,20 @@ export function MobileSearchOverlay({
 
                         if (item.type === 'search') {
                           return (
-                            <div key={`rec-search-${item.query}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                            <div key={`rec-search-${item.query}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                               <div
                                 onMouseDown={(e) => { 
-                                  e.preventDefault(); e.stopPropagation(); 
+                                   e.preventDefault(); e.stopPropagation(); 
                                   handleSuggestionClick(item.query);
                                 }}
                                 className="flex-1 min-w-0 p-3 flex gap-3 items-center cursor-pointer"
                               >
-                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-gray-500">
+                                <div className="w-8 h-8 rounded-lg bg-surface-interactive border border-border-subtle flex items-center justify-center shrink-0 text-text-muted">
                                   <Search className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0 flex items-center justify-between">
-                                  <span className="font-medium text-sm text-black truncate">{item.query}</span>
-                                  <span className="text-[11px] font-semibold text-gray-400">Search</span>
+                                  <span className="font-medium text-sm text-text-primary truncate">{item.query}</span>
+                                  <span className="text-[11px] font-semibold text-text-muted">Search</span>
                                 </div>
                               </div>
                               {removeBtn}
@@ -390,7 +396,7 @@ export function MobileSearchOverlay({
                           const avatar = profileMap[item.avatarId];
                           if (!avatar) return null;
                           return (
-                            <div key={`rec-av-${item.avatarId}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                            <div key={`rec-av-${item.avatarId}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                               <div className="flex-1 min-w-0">
                                 <AvatarResultItem avatar={avatar} onClick={() => handleAvatarClick(avatar)} />
                               </div>
@@ -403,7 +409,7 @@ export function MobileSearchOverlay({
                           const postObj = allPosts[item.postId];
                           if (!postObj) return null;
                           return (
-                            <div key={`rec-post-${item.postId}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                            <div key={`rec-post-${item.postId}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                               <div className="flex-1 min-w-0">
                                 <PostResultItem post={postObj} onClick={() => handlePostClick(postObj, recentItems.filter(i => i.type === 'post').map(i => i.postId as string))} />
                               </div>
@@ -414,7 +420,7 @@ export function MobileSearchOverlay({
 
                         if (item.type === 'category') {
                           return (
-                            <div key={`rec-cat-${item.category}`} className="flex items-center group rounded-xl hover:bg-gray-50 transition-colors">
+                            <div key={`rec-cat-${item.category}`} className="flex items-center group rounded-xl hover:bg-surface-hover transition-colors">
                               <div className="flex-1 min-w-0">
                                 <CategoryResultItem category={item.category} onClick={() => handleCategoryClick(item.category)} />
                               </div>
@@ -439,7 +445,7 @@ export function MobileSearchOverlay({
                           e.stopPropagation();
                           handleSuggestionClick(topic);
                         }}
-                        className="px-3.5 py-1.5 rounded-full bg-gray-100 active:bg-gray-200 text-xs font-semibold text-gray-700 transition-all active:scale-95"
+                        className="px-3.5 py-1.5 rounded-full bg-surface-interactive border border-border-default active:bg-surface-hover text-xs font-semibold text-text-secondary hover:text-text-primary transition-all active:scale-95"
                       >
                         {topic}
                       </button>
@@ -450,11 +456,11 @@ export function MobileSearchOverlay({
             ) : isNoResults ? (
               /* NO RESULTS STATE */
               <div className="p-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 text-gray-400">
+                <div className="w-12 h-12 rounded-full bg-surface-interactive border border-border-default flex items-center justify-center mx-auto mb-3 text-text-muted">
                   <Search className="w-6 h-6" />
                 </div>
-                <h4 className="font-medium text-base text-black mb-1">No results for "{debouncedQuery}"</h4>
-                <p className="text-xs text-gray-500 max-w-xs mx-auto mb-5">
+                <h4 className="font-medium text-base text-text-primary mb-1">No results for "{debouncedQuery}"</h4>
+                <p className="text-xs text-text-muted max-w-xs mx-auto mb-5">
                   Try searching for another keyword or creator name, or explore these categories:
                 </p>
                 <div className="flex flex-wrap justify-center gap-2 max-w-sm mx-auto">
@@ -466,7 +472,7 @@ export function MobileSearchOverlay({
                         e.stopPropagation();
                         handleCategoryClick(cat);
                       }}
-                      className="px-3.5 py-1.5 rounded-full bg-gray-100 active:bg-gray-200 text-xs font-semibold text-gray-700 active:scale-95"
+                      className="px-3.5 py-1.5 rounded-full bg-surface-interactive border border-border-default active:bg-surface-hover text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors active:scale-95"
                     >
                       {cat}
                     </button>
@@ -475,12 +481,12 @@ export function MobileSearchOverlay({
               </div>
             ) : (
               /* ACTIVE SUGGESTIONS & RESULTS */
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border-subtle">
                 {/* Query Suggestions with 44px Dual-Action */}
                 {suggestions.length > 0 && (
                   <div className="p-2">
                     {suggestions.map((sug) => (
-                      <div key={`m-sug-${sug}`} className="flex items-center rounded-xl hover:bg-gray-50 transition-colors group">
+                      <div key={`m-sug-${sug}`} className="flex items-center rounded-xl hover:bg-surface-hover transition-colors group">
                         <div
                           onMouseDown={(e) => {
                             e.preventDefault();
@@ -489,8 +495,8 @@ export function MobileSearchOverlay({
                           }}
                           className="flex-1 min-w-0 p-3 flex items-center gap-3 cursor-pointer"
                         >
-                          <Search className="w-4 h-4 text-gray-400 shrink-0" />
-                          <span className="font-medium text-sm text-black truncate">{sug}</span>
+                          <Search className="w-4 h-4 text-text-muted shrink-0" />
+                          <span className="font-medium text-sm text-text-primary truncate">{sug}</span>
                         </div>
                         <button
                           onMouseDown={(e) => {
@@ -498,7 +504,7 @@ export function MobileSearchOverlay({
                             e.stopPropagation();
                             handlePopulateSearch(sug);
                           }}
-                          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 active:text-black active:bg-gray-200/60 rounded-full transition-colors shrink-0 mr-1"
+                          className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-text-muted active:text-text-primary hover:text-text-primary active:bg-surface-hover rounded-full transition-colors shrink-0 mr-1"
                           aria-label={`Complete search with "${sug}"`}
                         >
                           <ArrowUpRight className="w-4 h-4" />
@@ -510,8 +516,8 @@ export function MobileSearchOverlay({
 
                 {searchResults.categories.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 bg-gray-50">
-                      <span className="text-xs font-medium text-gray-500 tracking-wide">Categories</span>
+                    <div className="px-4 py-2 bg-surface-subtle border-y border-border-subtle">
+                      <span className="text-xs font-medium text-text-muted tracking-wide">Categories</span>
                     </div>
                     <div className="p-2">
                       {searchResults.categories.map(({ category }) => (
@@ -527,8 +533,8 @@ export function MobileSearchOverlay({
 
                 {searchResults.avatars.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 bg-gray-50">
-                      <span className="text-xs font-medium text-gray-500 tracking-wide">Creatives</span>
+                    <div className="px-4 py-2 bg-surface-subtle border-y border-border-subtle">
+                      <span className="text-xs font-medium text-text-muted tracking-wide">Creatives</span>
                     </div>
                     <div className="p-2">
                       {searchResults.avatars.map(({ avatar }) => (
@@ -544,8 +550,8 @@ export function MobileSearchOverlay({
 
                 {searchResults.posts.length > 0 && (
                   <div>
-                    <div className="px-4 py-2 bg-gray-50">
-                      <span className="text-xs font-medium text-gray-500 tracking-wide">Works</span>
+                    <div className="px-4 py-2 bg-surface-subtle border-y border-border-subtle">
+                      <span className="text-xs font-medium text-text-muted tracking-wide">Works</span>
                     </div>
                     <div className="p-2">
                       {searchResults.posts.map((result) => (
@@ -593,12 +599,12 @@ function AvatarResultItem({ avatar, onClick }: AvatarResultItemProps) {
     <button
       type="button"
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
+      className="w-full text-left p-3 rounded-xl hover:bg-surface-hover transition-colors flex gap-3 items-center cursor-pointer"
     >
       <UserAvatar avatarUrl={avatar.avatar_url} size="xs" className="w-10 h-10" />
       <div className="flex-1 min-w-0">
-        <span className="font-medium text-sm text-black">{avatar.name}</span>
-        <p className="text-xs text-gray-400">{avatar.role || 'Creative'}</p>
+        <span className="font-medium text-sm text-text-primary">{avatar.name}</span>
+        <p className="text-xs text-text-muted">{avatar.role || 'Creative'}</p>
       </div>
     </button>
   );
@@ -613,7 +619,7 @@ function PostResultItem({ post, onClick }: PostResultItemProps) {
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-4 items-start"
+      className="w-full text-left p-3 rounded-xl hover:bg-surface-hover transition-colors flex gap-4 items-start"
     >
       <PostThumbnail
         imageUrl={post.image_url}
@@ -622,8 +628,8 @@ function PostResultItem({ post, onClick }: PostResultItemProps) {
         alt={post.title}
       />
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-sm text-black truncate">{post.title}</h4>
-        <p className="text-xs text-gray-500 line-clamp-1 mt-0.5">{post.description}</p>
+        <h4 className="font-medium text-sm text-text-primary truncate">{post.title}</h4>
+        <p className="text-xs text-text-muted line-clamp-1 mt-0.5">{post.description}</p>
       </div>
     </button>
   );
@@ -638,12 +644,12 @@ function CategoryResultItem({ category, onClick }: CategoryResultItemProps) {
   return (
     <div
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
-      className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors flex gap-3 items-center cursor-pointer"
+      className="w-full text-left p-3 rounded-xl hover:bg-surface-hover transition-colors flex gap-3 items-center cursor-pointer"
     >
-      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+      <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
         <span className="text-primary text-sm">📁</span>
       </div>
-      <span className="font-medium text-sm text-black">{category}</span>
+      <span className="font-medium text-sm text-text-primary">{category}</span>
     </div>
   );
 }

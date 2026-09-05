@@ -73,17 +73,17 @@ export function NotificationSheet({
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-          className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden z-10"
+          className="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-surface-elevated rounded-t-[32px] shadow-2xl flex flex-col overflow-hidden z-10 border-t border-border-default"
         >
           {/* Drag Handle Bar */}
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+          <div className="w-12 h-1.5 bg-border-strong rounded-full mx-auto mt-3 mb-1 shrink-0" />
 
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 shrink-0">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-border-subtle shrink-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-medium text-lg text-gray-900 tracking-tight">Notifications</h3>
+              <h3 className="font-medium text-lg text-text-primary tracking-tight">Notifications</h3>
               {unreadCount > 0 && (
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-primary/20 text-gray-900">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/20 text-primary border border-primary/30">
                   {unreadCount}
                 </span>
               )}
@@ -93,7 +93,7 @@ export function NotificationSheet({
               {unreadCount > 0 && (
                 <button
                   onClick={onMarkAllAsRead}
-                  className="p-2 text-xs text-gray-600 hover:text-black hover:bg-gray-100 rounded-full transition-colors flex items-center gap-1 font-semibold"
+                  className="p-2 text-xs text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-full transition-colors flex items-center gap-1 font-semibold"
                 >
                   <CheckCheck size={16} />
                   <span>Mark read</span>
@@ -104,14 +104,14 @@ export function NotificationSheet({
                   onClose();
                   showSettings('notifications');
                 }}
-                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                className="w-9 h-9 rounded-full bg-surface-interactive hover:bg-surface-hover flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
                 aria-label="Notification settings"
               >
                 <Settings size={17} />
               </button>
               <button
                 onClick={onClose}
-                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors"
+                className="w-9 h-9 rounded-full bg-surface-interactive hover:bg-surface-hover flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
                 aria-label="Close"
               >
                 <X size={18} />
@@ -120,15 +120,15 @@ export function NotificationSheet({
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex items-center px-6 py-3 bg-white border-b border-gray-100 shrink-0 gap-2">
+          <div className="flex items-center px-6 py-3 bg-surface-elevated border-b border-border-subtle shrink-0 gap-2">
             <button
               type="button"
               onClick={() => onFilterChange('all')}
               className={cn(
                 "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200",
                 activeFilter === 'all'
-                  ? "bg-primary/10 border-primary/40 text-black font-semibold"
-                  : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                  ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+                  : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
               )}
             >
               All
@@ -139,8 +139,8 @@ export function NotificationSheet({
               className={cn(
                 "px-4 py-2 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5",
                 activeFilter === 'unread'
-                  ? "bg-primary/10 border-primary/40 text-black font-semibold"
-                  : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                  ? "bg-primary/10 border-primary/40 text-text-primary font-semibold"
+                  : "bg-surface-primary border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
               )}
             >
               <span>Unread</span>
@@ -153,7 +153,7 @@ export function NotificationSheet({
           {/* Scrollable Notification List */}
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1.5 min-h-[220px]">
             {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+              <div className="flex flex-col items-center justify-center py-20 text-text-muted">
                 <Loader2 className="w-7 h-7 animate-spin mb-2 text-primary" />
                 <span className="text-xs font-medium">Loading notifications...</span>
               </div>
@@ -172,11 +172,11 @@ export function NotificationSheet({
           </div>
 
           {/* Footer Link to Full Page */}
-          <div className="p-4 border-t border-gray-100 bg-gray-50/50 text-center shrink-0">
+          <div className="p-4 border-t border-border-subtle bg-surface-subtle text-center shrink-0">
             <Link
               href="/notifications"
               onClick={onClose}
-              className="inline-flex items-center justify-center w-full py-3 rounded-2xl bg-white border border-gray-200/80 text-xs font-bold text-gray-900 shadow-2xs gap-1.5"
+              className="inline-flex items-center justify-center w-full py-3 rounded-2xl bg-surface-interactive hover:bg-surface-hover border border-border-default text-xs font-semibold text-text-primary gap-1.5 transition-colors"
             >
               <span>View full notification history</span>
               <ExternalLink size={13} className="opacity-60" />

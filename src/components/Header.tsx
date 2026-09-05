@@ -48,6 +48,14 @@ export interface HeaderProps {
   onMobileSearchOpen?: (activeId: string) => void;
 }
 
+function MobileSearchIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <path d="M34.3135 0C53.2246 0.000142146 68.626 15.4024 68.626 34.3135C68.6259 42.213 65.9295 49.4921 61.4229 55.2979L80.6826 74.5576C81.0918 74.954 81.4184 75.4271 81.6445 75.9502C81.873 76.479 81.9941 77.048 82 77.624C82.0059 78.2003 81.8965 78.7722 81.6787 79.3057C81.4609 79.8392 81.1389 80.324 80.7314 80.7314C80.324 81.1389 79.8392 81.4609 79.3057 81.6787C78.7722 81.8965 78.2003 82.0059 77.624 82C77.048 81.9941 76.479 81.873 75.9502 81.6445C75.4271 81.4184 74.954 81.0908 74.5576 80.6816L55.2979 61.4229C49.4921 65.9295 42.213 68.6259 34.3135 68.626C15.4024 68.626 0.000142138 53.2246 0 34.3135C0 15.4023 15.4023 0 34.3135 0ZM34.3135 8.66309C20.1076 8.66309 8.66309 20.1076 8.66309 34.3135C8.66323 48.5192 20.1077 59.9639 34.3135 59.9639C48.5191 59.9637 59.9637 48.5191 59.9639 34.3135C59.9639 20.1077 48.5192 8.66323 34.3135 8.66309Z" fill="currentColor"/>
+    </svg>
+  );
+}
+
 function HeaderContent({
   onPostClick: _onPostClick,
   onLogoClick,
@@ -598,7 +606,7 @@ function HeaderContent({
               style={{ borderRadius: 9999 }}
               aria-label="Open mobile search"
             >
-              <img src="/icons/search.svg" alt="Search" className="w-6 h-6 opacity-70 group-hover:brightness-0 group-hover:invert transition-all duration-300" />
+              <MobileSearchIcon className="w-5 h-5 text-text-primary group-hover:text-brand-primary-fg transition-colors" />
             </motion.button>
 
             {/* Tablet Search Pill Trigger (480px - 768px) */}
@@ -618,7 +626,7 @@ function HeaderContent({
                 aria-label="Open tablet search"
               >
                 <div className="flex items-center gap-2 sm:gap-3 overflow-hidden w-full">
-                  <img src="/icons/search.svg" alt="Search" className="h-4 w-4 sm:h-5 sm:w-5 opacity-40 shrink-0" />
+                  <MobileSearchIcon className="h-4 w-4 sm:h-5 sm:w-5 text-text-muted shrink-0" />
                   <div className="flex flex-1 items-center gap-1.5 overflow-hidden pr-2">
                     {selectedCategories.length > 0 ? (
                       <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-surface-subtle text-[10px] sm:text-xs font-bold text-text-primary whitespace-nowrap overflow-hidden">

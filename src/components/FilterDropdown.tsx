@@ -134,7 +134,7 @@ export function FilterDropdown({
                   onClose();
                 }
               }}
-              placeholder={selectedCategories.length === 0 ? "Search work, creatives, or categories..." : ""}
+              placeholder={selectedCategories.length === 0 ? "Search works, creatives, or categories..." : ""}
               className="flex-1 min-w-[120px] bg-transparent border-none outline-none focus:ring-0 p-0 font-sans text-base text-text-primary placeholder:text-text-muted h-8"
             />
           </div>

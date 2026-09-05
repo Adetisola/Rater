@@ -318,13 +318,13 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             className="w-full flex flex-col items-center"
           >
             <div className="text-center mb-6 pt-2">
-              <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-black'}`}>Create your Profile</h2>
+              <h2 className={`${isEmbedded ? 'hidden' : 'text-2xl font-semibold mb-3 text-text-primary'}`}>Create your Profile</h2>
 
               <div className="w-full max-w-sm mx-auto mb-2">
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full h-12 rounded-xl flex items-center justify-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-primary hover:text-black transition-colors"
+                  className="w-full h-12 rounded-xl flex items-center justify-center gap-2 border-border-default text-text-primary hover:bg-surface-hover hover:border-primary transition-colors"
                   onClick={loginWithGoogle}
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -337,15 +337,15 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 </Button>
 
                 <div className="relative flex items-center py-2 pt-2">
-                  <div className="grow border-t border-gray-100"></div>
-                  <span className="shrink-0 mx-4 text-gray-400 text-[11px] font-bold tracking-widest uppercase">or</span>
-                  <div className="grow border-t border-gray-100"></div>
+                  <div className="grow border-t border-border-subtle"></div>
+                  <span className="shrink-0 mx-4 text-text-muted text-[11px] font-bold tracking-widest uppercase">or</span>
+                  <div className="grow border-t border-border-subtle"></div>
                 </div>
               </div>
 
               <div className="relative w-24 h-24 mx-auto -mb-2">
                 <div
-                  className={`w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-primary opacity-80 cursor-wait' : avatarUploadState === 'error' ? 'border-red-400 bg-red-50' : 'border-gray-100 hover:bg-gray-200 cursor-pointer'}`}
+                  className={`w-20 h-20 bg-surface-interactive rounded-full flex items-center justify-center mx-auto relative transition-all border-2 border-dashed group overflow-hidden ${avatarUploadState === 'uploading' ? 'border-primary opacity-80 cursor-wait' : avatarUploadState === 'error' ? 'border-red-400 bg-red-500/10' : 'border-border-default hover:bg-surface-hover cursor-pointer'}`}
                   onClick={() => !avatarPreview && avatarUploadState !== 'uploading' && fileInputRef.current?.click()}
                 >
                   {avatarUploadState === 'uploading' ? (
@@ -360,7 +360,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     avatarPreview ? (
                       <img src={avatarPreview} alt="Profile Picture Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <UserRound className={`w-10 h-10 transition-colors ${avatarUploadState === 'error' ? 'text-red-300' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                      <UserRound className={`w-10 h-10 transition-colors ${avatarUploadState === 'error' ? 'text-red-400' : 'text-text-muted group-hover:text-text-secondary'}`} />
                     )
                   ) : avatarPreview && avatarUploadState === 'uploading' ? (
                     <img src={avatarPreview} alt="Profile Picture Preview" className="w-full h-full object-cover blur-sm" />
@@ -379,7 +379,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-1 right-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-gray-600 hover:text-black hover:scale-105 hover:shadow-lg transition-all z-20"
+                        className="absolute bottom-1 right-0 w-7 h-7 bg-surface-elevated rounded-full shadow-md border border-border-default flex items-center justify-center text-text-secondary hover:text-text-primary hover:scale-105 hover:shadow-lg transition-all z-20"
                       >
                         <Camera className="w-3.5 h-3.5" />
                       </button>
@@ -388,7 +388,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="absolute bottom-1 left-0 w-7 h-7 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-red-500 hover:text-red-600 hover:scale-105 hover:shadow-lg hover:bg-red-50 transition-all z-20"
+                        className="absolute bottom-1 left-0 w-7 h-7 bg-surface-elevated rounded-full shadow-md border border-border-default flex items-center justify-center text-red-500 hover:text-red-400 hover:scale-105 hover:shadow-lg hover:bg-red-500/10 transition-all z-20"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -402,7 +402,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   {avatarErrorMsg}
                 </p>
               ) : !avatarPreview && (
-                <p className="text-[11px] text-gray-400 font-medium mb-2">
+                <p className="text-[11px] text-text-muted font-medium mb-2">
                   Upload a picture
                 </p>
               )}
@@ -425,9 +425,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     setName(e.target.value);
                     setNameError(null);
                   }}
-                  className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${nameError
+                  className={`h-12 rounded-xl text-base px-4 border transition-all outline-none text-text-primary ${nameError
                     ? 'border-red-400 text-red-600 focus-visible:border-red-400'
-                    : 'border-gray-300 focus-visible:border-primary'
+                    : 'border-border-default focus-visible:border-primary'
                     }`}
                 />
                 {nameError ? (
@@ -436,14 +436,14 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   </p>
                 ) : (
                   <div className="flex justify-between items-start px-2 mt-1">
-                    <p className="text-[11px] text-gray-500 leading-tight pr-2">
+                    <p className="text-[11px] text-text-muted leading-tight pr-2">
                       Your display name across Rater (emojis supported).
                     </p>
                     {name.trim() && (
-                      <p className="text-[11px] font-medium text-gray-400 shrink-0 select-none flex items-center gap-1">
+                      <p className="text-[11px] font-medium text-text-muted shrink-0 select-none flex items-center gap-1">
                         {isCheckingAvailability ? (
                           <>
-                            <Loader2 className="w-3 h-3 animate-spin text-gray-400" />
+                            <Loader2 className="w-3 h-3 animate-spin text-text-muted" />
                             Checking...
                           </>
                         ) : (
@@ -469,9 +469,9 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     setEmail(e.target.value);
                     setEmailError(null);
                   }}
-                  className={`h-12 rounded-xl text-base px-4 border transition-all outline-none ${emailError
+                  className={`h-12 rounded-xl text-base px-4 border transition-all outline-none text-text-primary ${emailError
                     ? 'border-red-400 text-red-600 focus-visible:border-red-400'
-                    : 'border-gray-300 focus-visible:border-primary'
+                    : 'border-border-default focus-visible:border-primary'
                     }`}
                 />
                 {emailError && (
@@ -501,14 +501,14 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     onChange={(e) => setPasskey(e.target.value)}
                     onFocus={() => { }}
                     maxLength={64}
-                    className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border ${passkey.length > 0 && !validation.canSubmit
+                    className={`h-12 rounded-xl text-base px-4 pr-12 transition-all outline-none border text-text-primary ${passkey.length > 0 && !validation.canSubmit
                       ? 'border-amber-400 focus-visible:border-amber-400'
                       : validation.canSubmit
                         ? 'border-green-400 focus-visible:border-green-400'
-                        : 'border-gray-300 focus-visible:border-primary'
+                        : 'border-border-default focus-visible:border-primary'
                       }`}
                   />
-                  <button type="button" onClick={() => setShowPasskey(!showPasskey)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <button type="button" onClick={() => setShowPasskey(!showPasskey)} className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
                     {showPasskey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
@@ -517,7 +517,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   <div className="px-1 space-y-3 pt-1">
                     {/* Progress Bar */}
                     <div className="flex items-center gap-3">
-                      <div className="flex-1 h-1.5 bg-gray-50 rounded-full overflow-hidden border border-gray-100/50">
+                      <div className="flex-1 h-1.5 bg-surface-interactive rounded-full overflow-hidden border border-border-subtle">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${validation.score}%` }}
@@ -538,8 +538,8 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                       <div className="space-y-1.5 px-0.5">
                         {validation.hints.slice(0, 2).map((hint, index) => (
                           <div key={index} className="flex items-start gap-1.5 animate-in fade-in slide-in-from-left-1">
-                            <div className="w-1 h-1 rounded-full bg-gray-300 mt-1.5 shrink-0" />
-                            <p className="text-[11px] text-gray-500 font-medium leading-tight">
+                            <div className="w-1 h-1 rounded-full bg-text-muted mt-1.5 shrink-0" />
+                            <p className="text-[11px] text-text-muted font-medium leading-tight">
                               {hint}
                             </p>
                           </div>
@@ -556,7 +556,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   placeholder="Confirm Password"
                   value={confirmPasskey}
                   onChange={(e) => setConfirmPasskey(e.target.value)}
-                  className={`h-12 rounded-xl text-base px-4 transition-all outline-none border ${passkeyMismatch ? 'border-red-400 focus-visible:border-red-400' : 'border-gray-300 focus-visible:border-primary'
+                  className={`h-12 rounded-xl text-base px-4 transition-all outline-none border text-text-primary ${passkeyMismatch ? 'border-red-400 focus-visible:border-red-400' : 'border-border-default focus-visible:border-primary'
                     }`}
                 />
                 {passkeyMismatch && <p className="text-xs text-red-500 ml-1">Passwords don't match</p>}
@@ -564,7 +564,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
               <div className="pt-4 flex flex-col items-center justify-center gap-4 w-full">
                 <div className="flex items-center justify-center gap-6 w-full">
-                  <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-black font-medium">Close</Button>
+                  <Button variant='ghost' onClick={onClose} type="button" className="py-3 px-10 rounded-full text-base text-text-primary font-medium hover:bg-surface-hover">Close</Button>
                   <Button variant='outline' type="submit" disabled={isSubmitting || !validation.canSubmit || passkeyMismatch || name.trim().length === 0 || email.trim().length === 0} className="min-w-35 h-12 rounded-full text-lg font-medium transition-all">
                     {isSubmitting ? (
                       <div className="flex items-center justify-center gap-2">
@@ -577,22 +577,22 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   </Button>
                 </div>
                 <div className="px-2">
-                  <p className="text-[11px] text-center text-gray-400">
+                  <p className="text-[11px] text-center text-text-muted">
                     By creating a profile, you agree to our{' '}
-                    <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Terms of Service</a>{' '}
+                    <a href="/legal/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-text-secondary hover:text-text-primary transition-colors underline">Terms of Service</a>{' '}
                     and acknowledge our{' '}
-                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-gray-500 hover:text-black transition-colors underline">Privacy Policy</a>.
+                    <a href="/legal/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-text-secondary hover:text-text-primary transition-colors underline">Privacy Policy</a>.
                   </p>
                 </div>
               </div>
               {onLogin && (
                 <div className="text-center pt-2">
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-text-secondary">
                     Already have an account?{' '}
                     <button
                       type="button"
                       onClick={onLogin}
-                      className="text-black font-medium hover:text-primary"
+                      className="text-text-primary font-medium hover:text-primary transition-colors"
                     >
                       Log in
                     </button>
@@ -613,16 +613,16 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             className="w-full flex flex-col items-center"
           >
             <div className="text-center mb-10 mt-8">
-              <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <AtSign className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-xl font-medium text-black mb-1">Claim your @username</h2>
-              <p className="text-gray-400 text-sm">This is your unique identity on Rater</p>
+              <h2 className="text-xl font-medium text-text-primary mb-1">Claim your @username</h2>
+              <p className="text-text-muted text-sm">This is your unique identity on Rater</p>
             </div>
 
             <div className="w-full space-y-6 px-1">
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-gray-400 pointer-events-none group-focus-within:text-black">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 text-text-muted pointer-events-none group-focus-within:text-text-primary">
                   <span className="text-[13px] font-medium tracking-tight">raterapp.site/@</span>
                 </div>
                 <Input
@@ -630,10 +630,10 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   value={usernameInput}
                   onChange={(e) => handleUsernameChange(e.target.value)}
                   className={cn(
-                    "h-12 pl-28.75 pr-4 text-base font-normal rounded-xl border transition-all outline-none",
+                    "h-12 pl-28.75 pr-4 text-base font-normal rounded-xl border transition-all outline-none text-text-primary",
                     validationResult.status === 'valid' && "border-green-400 focus-visible:border-green-400 bg-green-50/10",
                     validationResult.status === 'taken' && "border-red-400 focus-visible:border-red-400 bg-red-50/10",
-                    (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-gray-300 focus-visible:border-primary"
+                    (validationResult.status === 'idle' || validationResult.status === 'unchanged') && "border-border-default focus-visible:border-primary"
                   )}
                   disabled={isSubmitting}
                 />
@@ -649,7 +649,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                 {validationResult.status === 'taken' && validationResult.suggestions.length > 0 && (
                   <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="flex flex-wrap gap-2 px-2">
                     {validationResult.suggestions.map(s => (
-                      <button key={s} onClick={() => handleUsernameChange(s)} className="px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-full text-xs font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
+                      <button key={s} onClick={() => handleUsernameChange(s)} className="px-3 py-1.5 bg-surface-interactive border border-border-default rounded-full text-xs font-semibold text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors">
                         @{s}
                       </button>
                     ))}
@@ -673,7 +673,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     setDirection(-1);
                     setStep('create');
                   }}
-                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-medium hover:bg-gray-50"
+                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-border-default font-medium hover:bg-surface-hover text-text-primary transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" /> Go back
                 </Button>
@@ -692,11 +692,11 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
             className="w-full flex flex-col items-center"
           >
             <div className="text-center mb-8 mt-8">
-              <div className="w-16 h-16 bg-[#FFF6DD] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
-              <h2 className="text-xl font-medium text-black mb-1">What do you create?</h2>
-              <p className="text-gray-400 text-sm">Tell us your creative role, or write your own.</p>
+              <h2 className="text-xl font-medium text-text-primary mb-1">What do you create?</h2>
+              <p className="text-text-muted text-sm">Tell us your creative role, or write your own.</p>
             </div>
 
             <div className="w-full space-y-6 px-1">
@@ -708,15 +708,15 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   onChange={(e) => setSelectedRole(e.target.value.slice(0, 50))}
                   placeholder="e.g. Visual Storyteller"
                   className={cn(
-                    "h-12 px-4 text-base font-normal rounded-xl border transition-all outline-none",
-                    selectedRole.trim() ? "border-primary focus-visible:border-primary" : "border-gray-300 focus-visible:border-primary"
+                    "h-12 px-4 text-base font-normal rounded-xl border transition-all outline-none text-text-primary",
+                    selectedRole.trim() ? "border-primary focus-visible:border-primary" : "border-border-default focus-visible:border-primary"
                   )}
                   disabled={isSubmitting}
                   maxLength={50}
                 />
                 <span className={cn(
                   "absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-medium transition-opacity duration-200",
-                  selectedRole.length > 0 ? "text-gray-300 opacity-100" : "opacity-0"
+                  selectedRole.length > 0 ? "text-text-muted opacity-100" : "opacity-0"
                 )}>
                   {selectedRole.length}/50
                 </span>
@@ -732,8 +732,8 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     className={cn(
                       "px-3.5 py-2 rounded-full text-[13px] font-medium border transition-all duration-200",
                       selectedRole === role
-                        ? "bg-primary/10 border-primary/40 text-black"
-                        : "bg-white border-gray-100 text-gray-500 hover:border-gray-200 hover:text-black"
+                        ? "bg-primary/15 border-primary text-text-primary font-semibold"
+                        : "bg-surface-interactive border-border-default text-text-secondary hover:border-border-strong hover:text-text-primary"
                     )}
                   >
                     {role}
@@ -743,7 +743,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
 
               <div className="flex flex-col gap-3 pt-4">
                 {signupError && (
-                  <div className="p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 mb-2">
+                  <div className="p-3 bg-red-500/10 text-red-500 text-sm rounded-xl border border-red-500/20 mb-2">
                     {signupError}
                   </div>
                 )}
@@ -761,7 +761,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                   type="button"
                   onClick={handleSkipRole}
                   disabled={isSubmitting}
-                  className="w-full h-12 rounded-full text-base font-medium transition-all text-gray-500 hover:text-black"
+                  className="w-full h-12 rounded-full text-base font-medium transition-all text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                 >
                   Skip
                 </Button>
@@ -771,7 +771,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
                     setDirection(-1);
                     setStep('username');
                   }}
-                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-gray-100 font-medium hover:bg-gray-50"
+                  className="flex items-center justify-center rounded-full gap-2 pl-3 pr-5 border-2 border-border-default font-medium hover:bg-surface-hover text-text-primary transition-colors"
                   disabled={isSubmitting}
                 >
                   <ChevronLeft className="w-4 h-4" /> Go back
@@ -798,7 +798,7 @@ export function CreateAvatarOverlay({ onClose, onCreate, isEmbedded, prefillName
   return createPortal(
     <div className="fixed inset-0 z-70 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={onClose} />
-      <div className="bg-white w-full max-w-md rounded-4xl relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-surface-elevated border border-border-default w-full max-w-md rounded-4xl relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8 flex flex-col items-center">
           {stepContent}
         </div>
